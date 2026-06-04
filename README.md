@@ -8,7 +8,8 @@ Plataforma inicial para OficiosPro: técnicos verificados para hogar y empresas,
 - TypeScript
 - Tailwind CSS
 - Cloudflare Pages compatible mediante export estático
-- Supabase preparado con `supabase/schema.sql`
+- Datos mock por defecto
+- Supabase opcional, documentado en `supabase/schema.sql`
 
 ## Rutas incluidas
 
@@ -63,28 +64,23 @@ Root directory: /
 
 El proyecto usa `output: "export"` en `next.config.ts`, por eso Cloudflare Pages publica HTML/CSS/JS estático desde `out`.
 
-## Supabase
+## Supabase opcional
 
-Variables esperadas:
+La app no requiere variables de entorno para compilar en Cloudflare Pages. Por defecto usa datos mock y `localStorage`.
 
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-```
-
-El cliente está en:
+El stub opcional está en:
 
 ```text
 src/lib/supabase.ts
 ```
 
-El SQL inicial está en:
+El SQL inicial de referencia está en:
 
 ```text
 supabase/schema.sql
 ```
 
-Por ahora la plataforma usa datos mock y `localStorage`; el próximo paso es reemplazar `src/lib/storage.ts` por consultas a Supabase.
+Cuando se decida conectar Supabase, el próximo paso será reemplazar `src/lib/storage.ts` por consultas reales y activar un cliente en `src/lib/supabase.ts`.
 
 ## Subir a GitHub
 

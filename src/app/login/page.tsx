@@ -6,7 +6,7 @@ export default function LoginPage() {
   return (
     <main className="section grid gap-6">
       <PlatformNav />
-      <AppHero eyebrow="Acceso" title="Ingresa a OficiosPro" subtitle="Acceso mock para probar navegación, dashboards y reservas antes de conectar Supabase Auth." />
+      <AppHero eyebrow="Acceso" title="Ingresa a OficiosPro" subtitle="Acceso mock para probar navegación, dashboards y reservas antes de conectar autenticación real." />
       <section className="grid gap-5 lg:grid-cols-2">
         <LoginForm />
         <aside className="panel">

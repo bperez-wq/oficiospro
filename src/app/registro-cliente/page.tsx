@@ -5,7 +5,7 @@ export default function ClientRegisterPage() {
   return (
     <main className="section grid gap-6">
       <PlatformNav />
-      <AppHero eyebrow="Registro cliente" title="Crea tu cuenta Club Hogar" subtitle="Guarda datos en localStorage por ahora. La estructura ya separa usuario, comuna, plan y créditos para migrar a Supabase." />
+      <AppHero eyebrow="Registro cliente" title="Crea tu cuenta Club Hogar" subtitle="Guarda datos en localStorage por ahora. La estructura ya separa usuario, comuna, plan y créditos para conectar una base de datos después." />
       <section className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
         <ClientRegisterForm />
         <article className="panel bg-brand text-white">
