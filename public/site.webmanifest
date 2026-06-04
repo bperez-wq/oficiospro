@@ -1,0 +1,18 @@
+{
+  "name": "OficiosPro",
+  "short_name": "OficiosPro",
+  "description": "Tecnicos verificados para hogares y empresas en Chile.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f7f8",
+  "theme_color": "#0b6f6b",
+  "lang": "es-CL",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "64x64",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
