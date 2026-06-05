@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { CompanyRequestForm } from "@/components/Forms";
-import { companyDashboard, companyPlans, companyUseCases } from "@/data/mock";
+import { PlanActionCard } from "@/components/PlanActionCard";
+import { companyDashboard, companyUseCases } from "@/data/mock";
+import { subscriptionPlans } from "@/data/marketplace";
 
 export default function EmpresasPage() {
+  const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
+
   return (
     <main className="section grid gap-8">
       <PlatformNav />
@@ -67,19 +71,8 @@ export default function EmpresasPage() {
           <p className="section-lead">Diseñado para empresas que necesitan respuesta operacional, control y trazabilidad.</p>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
-          {companyPlans.map((plan) => (
-            <article key={plan.name} className={`rounded-[28px] border p-6 shadow-soft ${plan.highlight ? "border-brand bg-brand text-white" : "border-line bg-white"}`}>
-              <span className={plan.highlight ? "font-black text-white/70" : "font-black text-brand"}>{plan.name}</span>
-              <strong className="my-3 block text-3xl font-black">{plan.price}</strong>
-              <p className={plan.highlight ? "text-sm font-semibold leading-6 text-white/75" : "text-sm font-semibold leading-6 text-muted"}>{plan.text}</p>
-              <div className="mt-5 grid gap-2">
-                {plan.bullets.map((bullet) => (
-                  <span key={bullet} className={plan.highlight ? "rounded-2xl bg-white/10 p-3 text-sm font-black" : "rounded-2xl bg-slate-50 p-3 text-sm font-black text-ink"}>
-                    {bullet}
-                  </span>
-                ))}
-              </div>
-            </article>
+          {enterprisePlans.map((plan) => (
+            <PlanActionCard key={plan.id} plan={plan} featured={plan.id === "empresa"} />
           ))}
         </div>
       </section>

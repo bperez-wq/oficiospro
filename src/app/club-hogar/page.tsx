@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { TransactionList } from "@/components/Lists";
-import { clubPlans, defaultTransactions, workStories } from "@/data/mock";
+import { PlanActionCard } from "@/components/PlanActionCard";
+import { defaultTransactions, workStories } from "@/data/mock";
+import { subscriptionPlans } from "@/data/marketplace";
 
 export default function ClubHogarPage() {
+  const clientPlans = subscriptionPlans.filter((plan) => plan.audience === "cliente");
+
   return (
     <main className="section grid gap-8">
       <PlatformNav />
@@ -21,8 +25,8 @@ export default function ClubHogarPage() {
       </AppHero>
 
       <section className="grid gap-5 md:grid-cols-3">
-        {clubPlans.map((plan) => (
-          <Plan key={plan.name} name={plan.name} price={plan.price} credits={plan.credits} text={plan.text} featured={plan.highlight} />
+        {clientPlans.map((plan) => (
+          <PlanActionCard key={plan.id} plan={plan} featured={plan.id === "plus"} />
         ))}
       </section>
 
@@ -82,19 +86,5 @@ export default function ClubHogarPage() {
         </article>
       </section>
     </main>
-  );
-}
-
-function Plan({ name, price, credits, text, featured = false }: { name: string; price: string; credits: number; text: string; featured?: boolean }) {
-  return (
-    <article className={`rounded-[28px] border p-6 shadow-soft ${featured ? "border-brand bg-brand text-white" : "border-line bg-white"}`}>
-      <span className={featured ? "font-black text-white/70" : "font-black text-brand"}>{name}</span>
-      <strong className="my-3 block text-3xl font-black">{price}</strong>
-      <div className={featured ? "rounded-2xl bg-white/10 p-4" : "rounded-2xl bg-brand-soft p-4"}>
-        <span className={featured ? "text-sm font-black text-white/70" : "text-sm font-black text-brand-dark"}>Créditos mensuales</span>
-        <strong className="block text-3xl font-black">{credits}</strong>
-      </div>
-      <p className={featured ? "mt-4 text-sm font-semibold leading-6 text-white/75" : "mt-4 text-sm font-semibold leading-6 text-muted"}>{text}</p>
-    </article>
   );
 }

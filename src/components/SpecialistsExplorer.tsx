@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { chileCommunes } from "@/data/chileCommunes";
-import { distanceInKm } from "@/data/marketplace";
+import { allServiceSpecialties, distanceInKm, getSpecialtiesByServiceType, serviceTypes } from "@/data/marketplace";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import { getBookings, getTransactions, getWallet, saveBookings, saveTransactions, saveWallet, seedMockState } from "@/lib/storage";
 
@@ -23,9 +23,15 @@ export function SpecialistsExplorer() {
     seedMockState();
   }, []);
 
-  const categories = [...new Set(specialists.map((specialist) => specialist.category))].sort();
-  const specialties = [...new Set(specialists.map((specialist) => specialist.specialty))].sort();
-  const zones = [...new Set([...chileCommunes.map((commune) => commune.name), ...specialists.map((specialist) => specialist.zone)])].sort();
+  useEffect(() => {
+    setSpecialty("all");
+  }, [category]);
+
+  const specialties =
+    category === "all"
+      ? [...new Set(allServiceSpecialties.map((item) => item.name))].sort()
+      : getSpecialtiesByServiceType(category);
+  const zones = [...new Set([...chileCommunes.map((commune) => commune.name), ...specialists.map((specialist) => specialist.commune ?? specialist.zone)])].sort();
 
   const visible = useMemo(() => {
     const clientLocation = { lat: clientLat, lng: clientLng };
@@ -35,9 +41,9 @@ export function SpecialistsExplorer() {
         ...item,
         distance: item.geo ? Number(distanceInKm(clientLocation, item.geo).toFixed(1)) : item.distance,
       }))
-      .filter((item) => category === "all" || item.category === category)
-      .filter((item) => specialty === "all" || item.specialty === specialty)
-      .filter((item) => zone === "all" || item.zone === zone)
+      .filter((item) => category === "all" || item.serviceTypeId === category)
+      .filter((item) => specialty === "all" || item.specialty === specialty || item.specialties?.includes(specialty))
+      .filter((item) => zone === "all" || item.zone === zone || item.commune === zone)
       .filter((item) => availability === "all" || item.availability === availability)
       .filter((item) => item.rating >= rating)
       .filter((item) => item.credits <= maxCredits)
@@ -107,9 +113,9 @@ export function SpecialistsExplorer() {
           <label className="field">
             Tipo de servicio
             <select value={category} onChange={(event) => setCategory(event.target.value)}>
-              <option value="all">Todas las categorías</option>
-              {categories.map((item) => (
-                <option key={item}>{item}</option>
+              <option value="all">Todos los tipos</option>
+              {serviceTypes.map((item) => (
+                <option key={item.id} value={item.id}>{item.name}</option>
               ))}
             </select>
           </label>

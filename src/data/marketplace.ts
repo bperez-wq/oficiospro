@@ -12,6 +12,37 @@ export type MarketplaceCategory = {
   specialties: string[];
 };
 
+export type ServiceType = {
+  id: string;
+  name: string;
+  description: string;
+  marginType: "home" | "company";
+  specialties: string[];
+};
+
+export type SubscriptionPlan = {
+  id: string;
+  name: string;
+  audience: "cliente" | "empresa";
+  priceCLP: number;
+  monthlyCredits: number;
+  accumulatesMonths: number;
+  description: string;
+  benefits: string[];
+  ctaLabel?: string;
+};
+
+export type CommercialConfig = {
+  creditValueCLP: number;
+  minHomeMarginCLP: number;
+  minCompanyMarginCLP: number;
+  homeVisitFeeCLP: number;
+  companyVisitFeeCLP: number;
+  creditExpirationMonths: number;
+  clientReferralBonusCredits: number;
+  specialistReferralBonus: string;
+};
+
 export type SpecialistRank = "Fundador" | "Bronce" | "Plata" | "Oro" | "Platino";
 
 export const specialistRanks: { rank: SpecialistRank; minJobs: number; minRating: number; benefits: string }[] = [
@@ -30,6 +61,371 @@ export const validationRequirements = [
   "Mínimo 3 referencias laborales",
   "Portafolio fotográfico",
 ];
+
+export const defaultCommercialConfig: CommercialConfig = {
+  creditValueCLP: 1000,
+  minHomeMarginCLP: 5000,
+  minCompanyMarginCLP: 10000,
+  homeVisitFeeCLP: 0,
+  companyVisitFeeCLP: 12000,
+  creditExpirationMonths: 24,
+  clientReferralBonusCredits: 10,
+  specialistReferralBonus: "Badge Fundador o créditos de reputación",
+};
+
+export const serviceTypes: ServiceType[] = [
+  {
+    id: "hogar",
+    name: "Hogar",
+    marginType: "home",
+    description: "Servicios recurrentes y reparaciones para casas y departamentos.",
+    specialties: [
+      "Gasfitería domiciliaria",
+      "Electricidad domiciliaria",
+      "Cerrajería",
+      "Pintura",
+      "Carpintería",
+      "Armado de muebles",
+      "Instalación de cortinas",
+      "Reparaciones menores",
+      "Mantención de piscina",
+      "Jardinería hogar",
+      "Instalación de TV",
+      "Instalación de lámparas",
+      "Cambio de grifería",
+      "Destape de lavaplatos",
+      "Reparación de filtraciones",
+    ],
+  },
+  {
+    id: "empresas",
+    name: "Empresas",
+    marginType: "company",
+    description: "Mantención bajo demanda para oficinas, retail, restaurantes, bodegas y comunidades.",
+    specialties: [
+      "Mantención oficinas",
+      "Mantención retail",
+      "Mantención restaurantes",
+      "Mantención bodegas",
+      "Mantención comunidades",
+      "Mantención plantas productivas",
+      "Electricidad comercial",
+      "Gasfitería comercial",
+      "Climatización comercial",
+      "Cerrajería empresas",
+      "Control de acceso empresas",
+      "Seguridad electrónica",
+      "Pintura oficinas",
+      "Muebles corporativos",
+      "Proveedor residente",
+    ],
+  },
+  {
+    id: "climatizacion-refrigeracion",
+    name: "Climatización y Refrigeración",
+    marginType: "company",
+    description: "Frío, calor, ventilación y continuidad térmica para hogares y empresas.",
+    specialties: [
+      "Aire acondicionado residencial",
+      "Aire acondicionado comercial",
+      "Bombas de calor",
+      "Mantención HVAC",
+      "Ventilación",
+      "Refrigeración comercial",
+      "Cámaras frigoríficas",
+      "Chillers",
+      "VRF / VRV",
+      "Vitrinas refrigeradas",
+      "Compresores de frío",
+      "Fan coil",
+      "Ductos de climatización",
+      "Extracción de aire",
+      "Limpieza de filtros HVAC",
+    ],
+  },
+  {
+    id: "construccion",
+    name: "Construcción",
+    marginType: "home",
+    description: "Obras menores, terminaciones, instalaciones y remodelaciones.",
+    specialties: [
+      "Maestro constructor",
+      "Albañilería",
+      "Carpintería",
+      "Cerámicas",
+      "Instalación de pisos",
+      "Pintura interior",
+      "Pintura exterior",
+      "Techumbre",
+      "Impermeabilización",
+      "Tabiquería",
+      "Yesería",
+      "Reparación de muros",
+      "Remodelación baños",
+      "Remodelación cocinas",
+      "Soldadura estructuras menores",
+    ],
+  },
+  {
+    id: "electricidad",
+    name: "Electricidad",
+    marginType: "home",
+    description: "Electricidad domiciliaria, comercial, certificada e industrial.",
+    specialties: [
+      "Electricista SEC",
+      "Tableros eléctricos",
+      "Instalación de enchufes",
+      "Instalación de luminarias",
+      "Normalización eléctrica",
+      "Certificación TE1",
+      "Empalmes eléctricos",
+      "Mallas a tierra",
+      "Canalización eléctrica",
+      "Iluminación LED",
+      "Portones eléctricos",
+      "Respaldo UPS",
+      "Medición eléctrica",
+      "Cortocircuitos",
+      "Electricidad industrial",
+    ],
+  },
+  {
+    id: "gasfiteria",
+    name: "Gasfitería",
+    marginType: "home",
+    description: "Agua, gas, sanitarios, calefont, bombas y urgencias.",
+    specialties: [
+      "Gasfíter certificado",
+      "Redes de agua",
+      "Redes de gas",
+      "Mantención calefont",
+      "Instalación calefont",
+      "Termos eléctricos",
+      "Reparación alcantarillado",
+      "Bombas de agua",
+      "Presurizadores",
+      "Detección de fugas",
+      "Artefactos sanitarios",
+      "Cambio de cañerías",
+      "Destapes",
+      "Instalación lavadora",
+      "Instalación lavavajillas",
+    ],
+  },
+  {
+    id: "jardineria",
+    name: "Jardinería",
+    marginType: "home",
+    description: "Mantención, paisajismo, riego, piscinas y exteriores.",
+    specialties: [
+      "Jardinería hogar",
+      "Paisajismo",
+      "Poda de árboles",
+      "Riego automático",
+      "Mantención de piscina",
+      "Control de plagas",
+      "Fumigación",
+      "Corte de pasto",
+      "Recuperación de césped",
+      "Jardines verticales",
+      "Limpieza de canaletas",
+      "Lavado de terrazas",
+      "Mantención quinchos",
+      "Instalación pasto sintético",
+      "Huertos urbanos",
+    ],
+  },
+  {
+    id: "agroindustria",
+    name: "Agroindustria",
+    marginType: "company",
+    description: "Packing, riego, maquinaria, frío agrícola y líneas de proceso.",
+    specialties: [
+      "Mantención packing",
+      "Frigoristas",
+      "Bombas de riego",
+      "Automatización agrícola",
+      "Calderas",
+      "Compresores",
+      "Líneas de proceso",
+      "Hidráulica",
+      "Neumática",
+      "Mecánica agrícola",
+      "Electromecánica agrícola",
+      "Riego tecnificado",
+      "Sensores agrícolas",
+      "Invernaderos",
+      "Control de plagas agrícola",
+    ],
+  },
+  {
+    id: "industria",
+    name: "Industria",
+    marginType: "company",
+    description: "Mantención industrial, electromecánica, automatización y paradas de planta.",
+    specialties: [
+      "Mecánico industrial",
+      "Electromecánico",
+      "Instrumentista",
+      "Soldador certificado",
+      "Técnico PLC",
+      "Automatización industrial",
+      "Mantención motores",
+      "Bombas industriales",
+      "Correas transportadoras",
+      "Hidráulica industrial",
+      "Neumática industrial",
+      "Lubricación industrial",
+      "Montaje industrial",
+      "Vibraciones mecánicas",
+      "Paradas de planta",
+    ],
+  },
+  {
+    id: "emergencias",
+    name: "Emergencias",
+    marginType: "home",
+    description: "Respuesta rápida para incidentes críticos de hogar y operación.",
+    specialties: [
+      "Cerrajero emergencia",
+      "Gasfíter emergencia",
+      "Electricista emergencia",
+      "Destape emergencia",
+      "Fuga de agua",
+      "Fuga de gas",
+      "Corte eléctrico",
+      "Calefont detenido",
+      "Refrigeración crítica",
+      "Aire acondicionado crítico",
+      "Portón detenido",
+      "Filtración lluvia",
+      "Bomba detenida",
+      "Cerradura digital bloqueada",
+      "Soporte TI urgente",
+    ],
+  },
+];
+
+export const serviceTypeOptions = serviceTypes.map((type) => ({ id: type.id, name: type.name }));
+
+export const allServiceSpecialties = serviceTypes.flatMap((type) =>
+  type.specialties.map((specialty) => ({
+    serviceTypeId: type.id,
+    serviceTypeName: type.name,
+    marginType: type.marginType,
+    name: specialty,
+    slug: toSlug(specialty),
+  })),
+);
+
+export const subscriptionPlans: SubscriptionPlan[] = [
+  {
+    id: "basico",
+    name: "Club Hogar Básico",
+    audience: "cliente",
+    priceCLP: 19990,
+    monthlyCredits: 20,
+    accumulatesMonths: 24,
+    description: "Para mantenciones simples y primeros usos.",
+    benefits: ["20 créditos mensuales", "Técnicos verificados", "Pago protegido"],
+  },
+  {
+    id: "plus",
+    name: "Club Hogar Plus",
+    audience: "cliente",
+    priceCLP: 39990,
+    monthlyCredits: 45,
+    accumulatesMonths: 24,
+    description: "El equilibrio ideal para familias activas.",
+    benefits: ["45 créditos mensuales", "Prioridad de agenda", "Garantía OficiosPro"],
+  },
+  {
+    id: "familiar",
+    name: "Club Hogar Familiar",
+    audience: "cliente",
+    priceCLP: 69990,
+    monthlyCredits: 85,
+    accumulatesMonths: 24,
+    description: "Más créditos, prioridad y respaldo extendido.",
+    benefits: ["85 créditos mensuales", "Atención prioritaria", "Historial familiar"],
+  },
+  {
+    id: "pyme",
+    name: "Plan Empresa Pyme",
+    audience: "empresa",
+    priceCLP: 49990,
+    monthlyCredits: 50,
+    accumulatesMonths: 24,
+    description: "Cuenta corporativa para oficinas pequeñas, locales y restaurantes.",
+    benefits: ["Facturación mensual", "50 créditos iniciales", "Dashboard empresa"],
+  },
+  {
+    id: "empresa",
+    name: "Plan Empresa",
+    audience: "empresa",
+    priceCLP: 149990,
+    monthlyCredits: 200,
+    accumulatesMonths: 24,
+    description: "Múltiples sucursales, historial y créditos mensuales.",
+    benefits: ["200 créditos mensuales", "Múltiples sucursales", "Reportes mensuales"],
+  },
+  {
+    id: "corporativo",
+    name: "Plan Corporativo",
+    audience: "empresa",
+    priceCLP: 499990,
+    monthlyCredits: 650,
+    accumulatesMonths: 24,
+    description: "SLA, ejecutivo asignado, reportes mensuales y créditos personalizados para operación crítica.",
+    benefits: ["SLA garantizado", "Ejecutivo asignado", "Reportes mensuales", "Créditos por volumen"],
+    ctaLabel: "Solicitar evaluación",
+  },
+];
+
+export function getServiceTypeById(id: string) {
+  return serviceTypes.find((type) => type.id === id);
+}
+
+export function getSpecialtiesByServiceType(id: string) {
+  return getServiceTypeById(id)?.specialties ?? [];
+}
+
+export function getPlanById(id: string | null | undefined) {
+  return subscriptionPlans.find((plan) => plan.id === id) ?? subscriptionPlans[1];
+}
+
+export function formatCLP(value: number) {
+  return new Intl.NumberFormat("es-CL", {
+    style: "currency",
+    currency: "CLP",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+export function calculateServiceEconomics({
+  clientCredits,
+  specialistPayoutCLP,
+  serviceTypeId,
+  config = defaultCommercialConfig,
+}: {
+  clientCredits: number;
+  specialistPayoutCLP: number;
+  serviceTypeId: string;
+  config?: CommercialConfig;
+}) {
+  const serviceType = getServiceTypeById(serviceTypeId);
+  const incomeCLP = clientCredits * config.creditValueCLP;
+  const marginCLP = incomeCLP - specialistPayoutCLP;
+  const minMarginCLP = serviceType?.marginType === "company" ? config.minCompanyMarginCLP : config.minHomeMarginCLP;
+
+  return {
+    incomeCLP,
+    specialistPayoutCLP,
+    marginCLP,
+    minMarginCLP,
+    status: marginCLP >= minMarginCLP ? "OK" : "Revisar",
+  };
+}
 
 export const marketplaceCategories: MarketplaceCategory[] = [
   {

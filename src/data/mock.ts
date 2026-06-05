@@ -1,4 +1,4 @@
-import type { GeoPoint, SpecialistRank } from "@/data/marketplace";
+import { getServiceTypeById, serviceTypes, type GeoPoint, type SpecialistRank } from "@/data/marketplace";
 
 export type Availability = "now" | "today" | "tomorrow";
 
@@ -45,6 +45,17 @@ export type Specialist = {
   workHistory: WorkHistory[];
   reviews: Review[];
   description: string;
+  serviceTypeId?: string;
+  serviceType?: string;
+  specialties?: string[];
+  commune?: string;
+  region?: string;
+  lat?: number;
+  lng?: number;
+  radioCoberturaKm?: number;
+  trabajosCompletados?: number;
+  precioDesdeCreditos?: number;
+  foto?: string;
   geo?: GeoPoint;
   coverageRadiusKm?: number;
   rank?: SpecialistRank;
@@ -596,10 +607,242 @@ export const specialistOperationalProfiles: Record<
   },
 };
 
-export const specialists: Specialist[] = baseSpecialists.map((specialist) => ({
-  ...specialist,
-  ...specialistOperationalProfiles[specialist.id],
-}));
+const baseServiceTypeMap: Record<string, { serviceTypeId: string; specialties: string[]; region?: string }> = {
+  "victor-araya": {
+    serviceTypeId: "climatizacion-refrigeracion",
+    specialties: ["Mantención HVAC", "Aire acondicionado residencial", "Bombas de calor"],
+  },
+  "carolina-mendez": {
+    serviceTypeId: "electricidad",
+    specialties: ["Electricista SEC", "Tableros eléctricos", "Instalación de luminarias"],
+  },
+  "miguel-soto": {
+    serviceTypeId: "hogar",
+    specialties: ["Gasfitería domiciliaria", "Reparación de filtraciones", "Mantención calefont"],
+  },
+  "daniela-fuentes": {
+    serviceTypeId: "climatizacion-refrigeracion",
+    specialties: ["Refrigeración comercial", "Cámaras frigoríficas", "Vitrinas refrigeradas"],
+  },
+  "felipe-rojas": {
+    serviceTypeId: "empresas",
+    specialties: ["Seguridad electrónica", "Control de acceso empresas", "Mantención oficinas"],
+  },
+  "patricio-herrera": {
+    serviceTypeId: "industria",
+    specialties: ["Soldador certificado", "Montaje industrial", "Paradas de planta"],
+  },
+  "sofia-vergara": {
+    serviceTypeId: "jardineria",
+    specialties: ["Jardinería hogar", "Paisajismo", "Riego automático"],
+  },
+  "andres-ibarra": {
+    serviceTypeId: "emergencias",
+    specialties: ["Cerrajero emergencia", "Cerradura digital bloqueada", "Portón detenido"],
+  },
+  "nicolas-bravo": {
+    serviceTypeId: "hogar",
+    specialties: ["Armado de muebles", "Reparaciones menores", "Instalación de cortinas"],
+  },
+  "valentina-rivas": {
+    serviceTypeId: "construccion",
+    specialties: ["Pintura interior", "Reparación de muros", "Pintura oficinas"],
+  },
+  "rodrigo-palma": {
+    serviceTypeId: "empresas",
+    specialties: ["Mantención oficinas", "Seguridad electrónica", "Proveedor residente"],
+  },
+  "elena-morales": {
+    serviceTypeId: "jardineria",
+    specialties: ["Mantención de piscina", "Bombas de agua", "Jardinería hogar"],
+  },
+};
+
+const generatedLocations = [
+  { commune: "Valparaíso", region: "Valparaíso", lat: -33.0472, lng: -71.6127 },
+  { commune: "Viña del Mar", region: "Valparaíso", lat: -33.0245, lng: -71.5518 },
+  { commune: "Quilpué", region: "Valparaíso", lat: -33.045, lng: -71.449 },
+  { commune: "Rancagua", region: "O'Higgins", lat: -34.1708, lng: -70.7444 },
+  { commune: "San Fernando", region: "O'Higgins", lat: -34.5833, lng: -70.9833 },
+  { commune: "Talca", region: "Maule", lat: -35.4264, lng: -71.6554 },
+  { commune: "Curicó", region: "Maule", lat: -34.9828, lng: -71.2394 },
+  { commune: "Linares", region: "Maule", lat: -35.8467, lng: -71.5931 },
+  { commune: "Chillán", region: "Ñuble", lat: -36.6063, lng: -72.1034 },
+  { commune: "Concepción", region: "Biobío", lat: -36.8269, lng: -73.0498 },
+  { commune: "Talcahuano", region: "Biobío", lat: -36.7248, lng: -73.1168 },
+  { commune: "Los Ángeles", region: "Biobío", lat: -37.4697, lng: -72.3537 },
+  { commune: "Temuco", region: "La Araucanía", lat: -38.7359, lng: -72.5904 },
+  { commune: "Villarrica", region: "La Araucanía", lat: -39.2857, lng: -72.2279 },
+  { commune: "Valdivia", region: "Los Ríos", lat: -39.8196, lng: -73.2452 },
+  { commune: "Osorno", region: "Los Lagos", lat: -40.574, lng: -73.1335 },
+  { commune: "Puerto Montt", region: "Los Lagos", lat: -41.4693, lng: -72.9424 },
+  { commune: "Puerto Varas", region: "Los Lagos", lat: -41.3167, lng: -72.9833 },
+  { commune: "La Serena", region: "Coquimbo", lat: -29.9027, lng: -71.2519 },
+  { commune: "Coquimbo", region: "Coquimbo", lat: -29.9533, lng: -71.3436 },
+  { commune: "Antofagasta", region: "Antofagasta", lat: -23.6509, lng: -70.3975 },
+  { commune: "Calama", region: "Antofagasta", lat: -22.4544, lng: -68.9294 },
+  { commune: "Iquique", region: "Tarapacá", lat: -20.2307, lng: -70.1357 },
+  { commune: "Arica", region: "Arica y Parinacota", lat: -18.4783, lng: -70.3126 },
+  { commune: "Coyhaique", region: "Aysén", lat: -45.5712, lng: -72.0685 },
+  { commune: "Punta Arenas", region: "Magallanes", lat: -53.1638, lng: -70.9171 },
+  { commune: "Colina", region: "Metropolitana de Santiago", lat: -33.2037, lng: -70.6755 },
+  { commune: "Puente Alto", region: "Metropolitana de Santiago", lat: -33.6167, lng: -70.5758 },
+];
+
+const generatedNames = [
+  "Ignacio Campos",
+  "Fernanda Tapia",
+  "Jorge Salinas",
+  "Camila Arancibia",
+  "Sebastián Muñoz",
+  "Paula Contreras",
+  "Héctor Vidal",
+  "Francisca Leiva",
+  "Cristóbal Herrera",
+  "María José Pino",
+  "Eduardo Cárdenas",
+  "Isidora Lagos",
+  "Álvaro Medina",
+  "Tamara Espinoza",
+  "Claudio Riquelme",
+  "Javiera Núñez",
+  "Renato Bravo",
+  "Constanza Silva",
+  "Matías Fuentes",
+  "Natalia Quezada",
+  "Diego Carrasco",
+  "Daniela Morales",
+  "Gonzalo Reyes",
+  "Josefina Soto",
+  "Felipe Álvarez",
+  "Catalina Vargas",
+  "Marco Peña",
+  "Antonia Herrera",
+];
+
+function initialsFromName(name: string) {
+  return name
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+}
+
+function slugFromName(name: string) {
+  return name
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+function rankFor(jobs: number, rating: number): SpecialistRank {
+  if (jobs >= 260 && rating >= 4.85) return "Platino";
+  if (jobs >= 120 && rating >= 4.7) return "Oro";
+  if (jobs >= 45 && rating >= 4.5) return "Plata";
+  return "Bronce";
+}
+
+const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
+  const serviceType = serviceTypes[index % serviceTypes.length];
+  const location = generatedLocations[index % generatedLocations.length];
+  const mainSpecialty = serviceType.specialties[(index * 2) % serviceType.specialties.length];
+  const extraSpecialty = serviceType.specialties[(index * 2 + 1) % serviceType.specialties.length];
+  const jobs = 52 + index * 7;
+  const rating = Number((4.55 + (index % 5) * 0.08).toFixed(1));
+  const credits = 18 + (index % 8) * 6 + (serviceType.marginType === "company" ? 10 : 0);
+  const image = [bathroom, electrical, garden, hvac, enterprise][index % 5];
+  const responseTime = `${(0.8 + (index % 7) * 0.35).toFixed(1)} h`;
+
+  return {
+    id: slugFromName(name),
+    name,
+    initials: initialsFromName(name),
+    specialty: mainSpecialty,
+    category: serviceType.name,
+    serviceTypeId: serviceType.id,
+    serviceType: serviceType.name,
+    specialties: [mainSpecialty, extraSpecialty],
+    zone: location.commune,
+    commune: location.commune,
+    region: location.region,
+    availability: (["now", "today", "tomorrow"] as Availability[])[index % 3],
+    rating,
+    jobs,
+    trabajosCompletados: jobs,
+    recommendation: 91 + (index % 8),
+    credits,
+    precioDesdeCreditos: credits,
+    demand: index % 3 === 0 ? "Alta demanda" : index % 3 === 1 ? "Demanda media" : "Demanda estable",
+    responseTime,
+    years: 2 + (index % 7),
+    top: index % 4 === 0,
+    badges: ["Verificado", index % 4 === 0 ? "Top especialista" : "Certificado", serviceType.marginType === "company" ? "Empresas" : "Club Hogar"],
+    image,
+    foto: image,
+    gallery: [mainSpecialty, extraSpecialty, "Diagnóstico"],
+    galleryImages: [image, [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5], [bathroom, electrical, garden, hvac, enterprise][(index + 2) % 5]],
+    distance: 4 + (index % 10),
+    verified: true,
+    photos: true,
+    certifications: [serviceType.marginType === "company" ? "Certificación empresa" : "Certificación oficio", mainSpecialty],
+    servicesOffered: [mainSpecialty, extraSpecialty, `Visita diagnóstico ${serviceType.marginType === "company" ? "empresa" : "hogar"}`],
+    workHistory: [
+      { title: `${mainSpecialty} completado`, commune: location.commune, credits, rating, image },
+      { title: `Mantención preventiva`, commune: location.commune, credits: credits + 8, rating: Math.min(5, rating + 0.1), image: [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5] },
+    ],
+    reviews: [
+      { author: "Cliente verificado", rating, date: "2026-05-22", text: "Coordinación clara, trabajo documentado y pago cerrado en créditos." },
+      { author: "Operación local", rating: Math.min(5, rating + 0.1), date: "2026-05-10", text: "Buen tiempo de respuesta y reporte final simple de revisar." },
+    ],
+    description: `${mainSpecialty} y ${extraSpecialty} con cobertura en ${location.commune} y comunas cercanas.`,
+    geo: { lat: location.lat, lng: location.lng },
+    lat: location.lat,
+    lng: location.lng,
+    coverageRadiusKm: serviceType.marginType === "company" ? 45 : 18,
+    radioCoberturaKm: serviceType.marginType === "company" ? 45 : 18,
+    rank: rankFor(jobs, rating),
+    validation: {
+      rut: "approved",
+      identityDocument: "approved",
+      selfie: "approved",
+      certifications: index % 5 === 0 ? "pending" : "approved",
+      references: 3 + (index % 4),
+      portfolioPhotos: 6 + (index % 10),
+    },
+  };
+});
+
+function normalizeBaseSpecialist(specialist: Specialist): Specialist {
+  const profile = specialistOperationalProfiles[specialist.id];
+  const serviceMeta = baseServiceTypeMap[specialist.id] ?? { serviceTypeId: "hogar", specialties: [specialist.specialty] };
+  const serviceType = getServiceTypeById(serviceMeta.serviceTypeId) ?? serviceTypes[0];
+  const geo = profile?.geo ?? specialist.geo;
+  const coverageRadiusKm = profile?.coverageRadiusKm ?? specialist.coverageRadiusKm ?? (serviceType.marginType === "company" ? 35 : 16);
+
+  return {
+    ...specialist,
+    ...profile,
+    category: serviceType.name,
+    serviceTypeId: serviceType.id,
+    serviceType: serviceType.name,
+    specialties: serviceMeta.specialties,
+    commune: specialist.zone,
+    region: serviceMeta.region ?? "Metropolitana de Santiago",
+    lat: geo?.lat,
+    lng: geo?.lng,
+    geo,
+    coverageRadiusKm,
+    radioCoberturaKm: coverageRadiusKm,
+    trabajosCompletados: specialist.jobs,
+    precioDesdeCreditos: specialist.credits,
+    foto: specialist.image,
+  };
+}
+
+export const specialists: Specialist[] = [...baseSpecialists.map(normalizeBaseSpecialist), ...generatedSpecialists];
 
 export const categories = [
   { id: "hogar", name: "Hogar", description: "Gasfitería, electricidad, jardinería, pintura, cerrajería y reparaciones menores." },
@@ -647,36 +890,6 @@ export const testimonials = [
     quote: "Ahora mi perfil muestra reputación real y recibo reservas mejor filtradas.",
     author: "Carolina Méndez",
     role: "Electricista SEC",
-  },
-];
-
-export const clubPlans = [
-  { name: "Básico", price: "$19.990/mes", credits: 20, text: "Para mantenciones simples y primeros usos.", highlight: false },
-  { name: "Plus", price: "$39.990/mes", credits: 45, text: "El equilibrio ideal para familias activas.", highlight: true },
-  { name: "Familiar", price: "$69.990/mes", credits: 85, text: "Más créditos, prioridad y respaldo extendido.", highlight: false },
-];
-
-export const companyPlans = [
-  {
-    name: "Plan Pyme",
-    price: "$49.990/mes",
-    text: "Membresía fija mensual + bolsa de créditos para oficinas pequeñas, locales y restaurantes.",
-    bullets: ["Cuenta corporativa", "Facturación mensual", "50 créditos iniciales"],
-    highlight: false,
-  },
-  {
-    name: "Plan Empresa",
-    price: "$149.990/mes",
-    text: "Dashboard, múltiples sucursales, historial de servicios y créditos mensuales para operación recurrente.",
-    bullets: ["Múltiples sucursales", "Historial completo", "200 créditos mensuales"],
-    highlight: true,
-  },
-  {
-    name: "Corporativo",
-    price: "Desde $499.990/mes",
-    text: "SLA, atención prioritaria, ejecutivo asignado, reportes mensuales e integración futura.",
-    bullets: ["SLA garantizado", "Ejecutivo asignado", "Créditos personalizados"],
-    highlight: false,
   },
 ];
 

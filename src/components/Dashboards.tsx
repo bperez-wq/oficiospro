@@ -4,18 +4,33 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { companyDashboard, specialists, type Booking, type CreditTransaction } from "@/data/mock";
 import { BookingList, TransactionList } from "@/components/Lists";
-import { getBookings, getTransactions, getWallet, seedMockState } from "@/lib/storage";
+import {
+  getBookings,
+  getReferralState,
+  getSubscription,
+  getTransactions,
+  getWallet,
+  seedMockState,
+  simulateAcceptedClientReferral,
+  simulateAcceptedSpecialistReferral,
+  type MockSubscription,
+  type ReferralState,
+} from "@/lib/storage";
 
 export function ClientDashboard() {
   const [balance, setBalance] = useState(135);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
+  const [subscription, setSubscription] = useState<MockSubscription | null>(null);
+  const [referrals, setReferrals] = useState<ReferralState | null>(null);
 
   useEffect(() => {
     seedMockState();
     setBalance(getWallet().balance);
     setBookings(getBookings());
     setTransactions(getTransactions());
+    setSubscription(getSubscription());
+    setReferrals(getReferralState());
   }, []);
 
   const upcoming = bookings.filter((booking) => booking.status !== "Finalizada");
@@ -53,6 +68,36 @@ export function ClientDashboard() {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
+          <p className="eyebrow">Suscripción</p>
+          <h2 className="text-2xl font-black">{subscription ? subscription.planName : "Sin plan activo"}</h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-muted">
+            {subscription
+              ? `Renovación ${subscription.renewal}, ${subscription.monthlyCredits} créditos mensuales y vigencia de ${subscription.accumulatesMonths} meses.`
+              : "Contrata Club Hogar para activar créditos mensuales y pago protegido."}
+          </p>
+        </article>
+        <article className="panel">
+          <p className="eyebrow">Mis referidos</p>
+          <h2 className="text-2xl font-black">{referrals?.clientCode ?? "OP-CLIENTE-10"}</h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-muted">
+            Invitaciones aceptadas: {referrals?.clientInvitations ?? 0}. Créditos ganados: {referrals?.clientCreditsEarned ?? 0}.
+          </p>
+          <button
+            className="btn-secondary mt-4"
+            type="button"
+            onClick={() => {
+              setReferrals(simulateAcceptedClientReferral());
+              setBalance(getWallet().balance);
+              setTransactions(getTransactions());
+            }}
+          >
+            Simular amigo registrado
+          </button>
+        </article>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-2">
+        <article className="panel">
           <h2 className="mb-4 text-2xl font-black">Reservas próximas</h2>
           <BookingList bookings={upcoming} />
         </article>
@@ -85,16 +130,25 @@ export function ClientDashboard() {
 export function SpecialistDashboard() {
   const specialist = specialists[0];
   const [bookings, setBookings] = useState<Booking[]>([]);
+  const [referrals, setReferrals] = useState<ReferralState | null>(null);
+  const [submittedNotice, setSubmittedNotice] = useState(false);
 
   useEffect(() => {
     seedMockState();
     setBookings(getBookings().filter((booking) => booking.specialistId === specialist.id));
+    setReferrals(getReferralState());
+    setSubmittedNotice(new URLSearchParams(window.location.search).get("submitted") === "1");
   }, [specialist.id]);
 
   const earnedCredits = bookings.reduce((sum, booking) => sum + booking.credits, 0);
 
   return (
     <div className="grid gap-6">
+      {submittedNotice ? (
+        <div className="rounded-3xl border border-brand/20 bg-brand-soft p-4 font-black text-brand-dark">
+          Tu perfil fue enviado para revisión.
+        </div>
+      ) : null}
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
           <img src={specialist.image} alt={specialist.name} className="h-80 w-full object-cover" />
@@ -139,6 +193,20 @@ export function SpecialistDashboard() {
             ))}
           </div>
         </article>
+      </section>
+      <section className="panel">
+        <p className="eyebrow">Mis referidos especialista</p>
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <h2 className="text-2xl font-black">{referrals?.specialistCode ?? "OP-FUNDADOR"}</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+              Invitaciones aprobadas: {referrals?.specialistInvitations ?? 0}. Beneficio: {referrals?.specialistBenefit ?? "Badge Fundador o créditos de reputación"}.
+            </p>
+          </div>
+          <button className="btn-secondary" type="button" onClick={() => setReferrals(simulateAcceptedSpecialistReferral())}>
+            Simular referido aprobado
+          </button>
+        </div>
       </section>
     </div>
   );

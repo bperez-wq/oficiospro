@@ -1,10 +1,13 @@
 import Link from "next/link";
-import { categories, companyDashboard, companyPlans, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
+import { companyDashboard, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
+import { PlanActionCard } from "@/components/PlanActionCard";
 import { SpecialistCard } from "@/components/SpecialistCard";
+import { serviceTypes, subscriptionPlans } from "@/data/marketplace";
 
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);
+  const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
 
   return (
     <main>
@@ -67,7 +70,7 @@ export default function HomePage() {
       <section className="mx-auto -mt-8 grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
           ["4,9/5", "satisfacción"],
-          ["12", "especialistas mock"],
+          [specialists.length.toString(), "especialistas mock"],
           ["35 min", "respuesta rápida"],
           ["24 meses", "créditos acumulables"],
           ["Pago seguro", "al finalizar"],
@@ -189,12 +192,8 @@ export default function HomePage() {
           <DashboardPreview />
         </div>
         <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-5 md:grid-cols-3">
-          {companyPlans.map((plan) => (
-            <article key={plan.name} className={`rounded-[24px] border p-6 ${plan.highlight ? "border-white bg-white text-ink" : "border-white/15 bg-white/10"}`}>
-              <h3 className="text-xl font-black">{plan.name}</h3>
-              <strong className="my-3 block text-3xl font-black">{plan.price}</strong>
-              <p className={plan.highlight ? "text-sm font-semibold leading-6 text-muted" : "text-sm font-semibold leading-6 text-white/70"}>{plan.text}</p>
-            </article>
+          {enterprisePlans.map((plan) => (
+            <PlanActionCard key={plan.id} plan={plan} featured={plan.id === "empresa"} />
           ))}
         </div>
       </section>
@@ -230,7 +229,7 @@ export default function HomePage() {
       <section className="section">
         <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="La plataforma parte con los servicios de mayor confianza y frecuencia para hogares y empresas." />
         <div className="grid gap-4 md:grid-cols-4">
-          {categories.map((category) => (
+          {serviceTypes.map((category) => (
             <article key={category.id} className="panel card-hover">
               <h3 className="text-xl font-black">{category.name}</h3>
               <p className="mt-3 text-sm font-semibold leading-6 text-muted">{category.description}</p>
