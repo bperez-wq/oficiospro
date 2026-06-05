@@ -12,16 +12,17 @@ import {
   getPublishedSpecialists,
   seedMockState,
 } from "@/lib/storage";
-import { communeOptions, serviceTypeOptions } from "@/lib/catalog";
+import { communeOptions, normalizeSearch, serviceTypeOptions } from "@/lib/catalog";
 
 export function SpecialistsExplorer() {
   const { openModal } = useConversionModal();
+  const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [specialty, setSpecialty] = useState("all");
   const [zone, setZone] = useState("all");
   const [availability, setAvailability] = useState("all");
-  const [rating, setRating] = useState(4.5);
-  const [maxCredits, setMaxCredits] = useState(60);
+  const [rating, setRating] = useState(0);
+  const [maxCredits, setMaxCredits] = useState(999);
   const [sort, setSort] = useState("rating");
   const [withinCoverage, setWithinCoverage] = useState(false);
   const [clientLat, setClientLat] = useState(-33.4088);
@@ -36,15 +37,16 @@ export function SpecialistsExplorer() {
     const requestedType = params.get("tipo");
     const requestedCommune = params.get("comuna");
     const requestedSpecialty = params.get("especialidad");
+    const requestedQuery = params.get("q");
     if (requestedType) setCategory(requestedType);
     if (requestedCommune) setZone(requestedCommune);
     if (requestedSpecialty) window.setTimeout(() => setSpecialty(requestedSpecialty), 0);
+    if (requestedQuery) setQuery(requestedQuery);
     const clientProfile = getClientProfile();
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
       setClientLng(clientProfile.lng);
-      if (!requestedCommune) setZone(clientProfile.commune);
-      setNotice(`Mostrando especialistas cerca de ${clientProfile.commune}. Tu ubicación exacta no se publica.`);
+      setNotice(`Ubicación privada disponible para ordenar por cercanía desde ${clientProfile.commune}.`);
     }
   }, []);
 
@@ -64,6 +66,17 @@ export function SpecialistsExplorer() {
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
   const zones = [...new Set([...communeOptions.map((commune) => commune.value), ...marketplaceSpecialists.map((specialist) => specialist.commune ?? specialist.zone)])].sort();
   const zoneFilterOptions = [{ value: "all", label: "Todas las comunas" }, ...zones.map((item) => ({ value: item, label: item }))];
+  const activeFilters = [
+    query ? `Búsqueda: ${query}` : "",
+    category !== "all" ? `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}` : "",
+    specialty !== "all" ? `Especialidad: ${specialty}` : "",
+    zone !== "all" ? `Comuna: ${zone}` : "",
+    availability !== "all" ? `Disponibilidad: ${availability}` : "",
+    rating > 0 ? `Calificación desde ${rating.toFixed(1)}` : "",
+    maxCredits < 999 ? `Hasta ${maxCredits} créditos` : "",
+    withinCoverage ? "Dentro de cobertura" : "",
+  ].filter(Boolean);
+  const hasActiveFilters = activeFilters.length > 0;
 
   useEffect(() => {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
@@ -80,6 +93,24 @@ export function SpecialistsExplorer() {
         ...item,
         distance: item.geo ? Number(distanceInKm(clientLocation, item.geo).toFixed(1)) : item.distance,
       }))
+      .filter((item) => {
+        if (!query.trim()) return true;
+        const haystack = normalizeSearch(
+          [
+            item.name,
+            item.specialty,
+            item.serviceType,
+            item.category,
+            item.commune,
+            item.zone,
+            item.description,
+            ...(item.specialties ?? []),
+            ...(item.servicesOffered ?? []),
+            ...(item.badges ?? []),
+          ].join(" "),
+        );
+        return haystack.includes(normalizeSearch(query));
+      })
       .filter((item) => category === "all" || item.serviceTypeId === category)
       .filter((item) => specialty === "all" || item.specialty === specialty || item.specialties?.includes(specialty))
       .filter((item) => zone === "all" || item.zone === zone || item.commune === zone)
@@ -93,7 +124,19 @@ export function SpecialistsExplorer() {
         if (sort === "distance") return a.distance - b.distance;
         return b.rating - a.rating;
       });
-  }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, rating, sort, specialty, withinCoverage, zone]);
+  }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, query, rating, sort, specialty, withinCoverage, zone]);
+
+  function clearFilters() {
+    setQuery("");
+    setCategory("all");
+    setSpecialty("all");
+    setZone("all");
+    setAvailability("all");
+    setRating(0);
+    setMaxCredits(999);
+    setWithinCoverage(false);
+    setSort("rating");
+  }
 
   function reserve(id: string) {
     const specialist = marketplaceSpecialists.find((item) => item.id === id) as Specialist | undefined;
@@ -114,8 +157,16 @@ export function SpecialistsExplorer() {
           <div>
             <p className="eyebrow">Busca por confianza</p>
             <h2 className="text-2xl font-black">Filtra especialistas</h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-muted">Compara reputación, cercanía, disponibilidad y precio en créditos.</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-muted">Todos los filtros son opcionales. Puedes explorar la red completa o buscar por problema.</p>
           </div>
+          <label className="field">
+            Búsqueda libre
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Busca por oficio, especialidad, comuna o problema"
+            />
+          </label>
           <SearchableSelect
             label="Tipo de servicio"
             value={category}
@@ -156,12 +207,12 @@ export function SpecialistsExplorer() {
             </select>
           </label>
           <label className="field">
-            Calificación mínima {rating.toFixed(1)}
-            <input min="3.5" max="5" step="0.1" type="range" value={rating} onChange={(event) => setRating(Number(event.target.value))} />
+            Calificación mínima {rating > 0 ? rating.toFixed(1) : "sin mínimo"}
+            <input min="0" max="5" step="0.1" type="range" value={rating} onChange={(event) => setRating(Number(event.target.value))} />
           </label>
           <label className="field">
-            Hasta {maxCredits} créditos
-            <input min="15" max="80" step="5" type="range" value={maxCredits} onChange={(event) => setMaxCredits(Number(event.target.value))} />
+            Hasta {maxCredits >= 999 ? "todos los" : maxCredits} créditos
+            <input min="10" max="999" step="5" type="range" value={maxCredits} onChange={(event) => setMaxCredits(Number(event.target.value))} />
           </label>
           <label className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm font-black text-slate-700">
             <input type="checkbox" checked={withinCoverage} onChange={(event) => setWithinCoverage(event.target.checked)} />
@@ -183,6 +234,14 @@ export function SpecialistsExplorer() {
               </span>
             </div>
           </div>
+          <div className="grid gap-2">
+            <button className="btn-primary w-full" type="button" onClick={clearFilters}>
+              Ver todos
+            </button>
+            <button className="btn-secondary w-full" type="button" onClick={clearFilters}>
+              Limpiar filtros
+            </button>
+          </div>
         </aside>
 
         <div className="grid gap-5">
@@ -190,11 +249,21 @@ export function SpecialistsExplorer() {
             <div>
               <p className="eyebrow">Especialistas disponibles</p>
               <h2 className="text-3xl font-black md:text-4xl">Técnicos recomendados</h2>
+              <p className="mt-2 text-sm font-bold text-muted">
+                {hasActiveFilters ? "Resultados según los filtros activos." : "Mostrando todos los especialistas disponibles"}
+              </p>
             </div>
-            <strong className="chip bg-brand-soft text-brand-dark">{visible.length} resultados</strong>
+            <div className="flex flex-wrap items-center gap-2">
+              <strong className="chip bg-brand-soft text-brand-dark">{visible.length} resultados</strong>
+              <button className="rounded-full border border-line px-4 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={clearFilters}>
+                Limpiar filtros
+              </button>
+            </div>
           </div>
           <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-            Precio en créditos con tarifa dinámica. La distancia se calcula usando latitud/longitud del cliente y especialista; cada perfil tiene radio de cobertura.
+            {hasActiveFilters
+              ? `Filtros activos: ${activeFilters.join(" · ")}`
+              : "Explora todos los especialistas verificados disponibles en OficiosPro."}
           </p>
           <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -224,9 +293,30 @@ export function SpecialistsExplorer() {
             </div>
           </section>
           <div className="grid gap-5 xl:grid-cols-2">
-            {visible.map((specialist) => (
-              <SpecialistCard key={specialist.id} specialist={specialist} onReserve={reserve} />
-            ))}
+            {visible.length ? (
+              visible.map((specialist) => (
+                <SpecialistCard key={specialist.id} specialist={specialist} onReserve={reserve} />
+              ))
+            ) : (
+              <div className="rounded-[24px] border border-line bg-slate-50 p-6 xl:col-span-2">
+                <h3 className="text-2xl font-black">No encontramos especialistas con esos filtros.</h3>
+                <p className="mt-2 text-sm font-bold leading-6 text-muted">
+                  Puedes limpiar filtros para volver a ver toda la red o solicitar un servicio especial para que OficiosPro lo revise.
+                </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <button className="btn-secondary" type="button" onClick={clearFilters}>
+                    Limpiar filtros
+                  </button>
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => openModal({ type: "consulta_general", sourceButton: "Solicitar servicio especial" })}
+                  >
+                    Solicitar servicio especial
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </section>

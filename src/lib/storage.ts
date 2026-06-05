@@ -109,7 +109,7 @@ export type PendingSpecialistReference = {
 
 export type PendingSpecialistProfile = {
   id?: string;
-  status: "pendiente" | "aprobado" | "rechazado";
+  status: "pendiente" | "aprobado" | "rechazado" | "info solicitada";
   name: string;
   firstNames?: string;
   lastNames?: string;
@@ -143,7 +143,7 @@ export type ConversionModalType =
   | "referido"
   | "consulta_general";
 
-export type ConversionLeadStatus = "Nuevo" | "Contactado" | "Convertido" | "Perdido";
+export type ConversionLeadStatus = "Nuevo" | "Contactado" | "En proceso" | "Cerrado" | "Convertido" | "Perdido";
 
 export type ConversionEvent = {
   id: string;
@@ -280,6 +280,11 @@ function read<T>(key: string, fallback: T): T {
 function write<T>(key: string, value: T) {
   if (typeof window === "undefined") return;
   window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function remove(key: string) {
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(key);
 }
 
 export function seedMockState() {
@@ -473,10 +478,7 @@ export function approveAndPublishSpecialist(id: string) {
   const request = pending.find((item) => item.id === id);
   if (!request) return null;
 
-  const updatedPending = pending.map((item) =>
-    item.id === id ? { ...item, status: "aprobado" as const, reviewedAt: new Date().toISOString() } : item,
-  );
-  savePendingSpecialists(updatedPending);
+  savePendingSpecialists(pending.filter((item) => item.id !== id));
 
   const published = getPublishedSpecialists();
   const specialist = toPublishedSpecialist(request);
@@ -506,6 +508,10 @@ export function getMockSession() {
 
 export function setMockSession(session: MockSession) {
   write(keys.session, session);
+}
+
+export function clearMockSession() {
+  remove(keys.session);
 }
 
 export function isClientLoggedIn() {
