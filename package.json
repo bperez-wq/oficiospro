@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "prebuild": "node scripts/clean-static-export.js",
     "build": "next build",
     "pages:build": "next build",
     "deploy": "wrangler deploy --assets ./out",
