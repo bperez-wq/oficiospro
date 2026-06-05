@@ -10,12 +10,12 @@ import {
   getSpecialtiesByServiceType,
   serviceTypes,
   subscriptionPlans,
+  type CommercialConfig,
 } from "@/data/marketplace";
 import {
   appendStoredItem,
   getCommercialConfig,
   setMockSession,
-  type CommercialConfig,
 } from "@/lib/storage";
 
 type ServiceDraft = {
