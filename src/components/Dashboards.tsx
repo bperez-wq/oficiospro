@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { companyDashboard, specialists, type Booking, type CreditTransaction } from "@/data/mock";
 import { BookingList, TransactionList } from "@/components/Lists";
@@ -23,11 +24,31 @@ export function ClientDashboard() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Créditos disponibles" value={balance.toString()} />
-        <StatCard label="Reservas próximas" value={upcoming.length.toString()} />
-        <StatCard label="Servicios realizados" value={completed.length.toString()} />
-        <StatCard label="Técnicos favoritos" value={favorites.length.toString()} />
+      <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
+        <article className="enterprise-shell p-6">
+          <p className="eyebrow text-teal-200">Club Hogar</p>
+          <h2 className="text-4xl font-black">{balance} créditos disponibles</h2>
+          <p className="mt-3 font-semibold leading-7 text-white/75">Tus créditos se acumulan hasta 24 meses y se descuentan al reservar especialistas.</p>
+          <div className="mt-6 grid gap-3 sm:grid-cols-3">
+            <MetricDark label="Próximas" value={upcoming.length.toString()} />
+            <MetricDark label="Realizados" value={completed.length.toString()} />
+            <MetricDark label="Favoritos" value={favorites.length.toString()} />
+          </div>
+        </article>
+        <article className="panel">
+          <h2 className="text-2xl font-black">Acciones rápidas</h2>
+          <div className="mt-5 grid gap-3">
+            <Link className="btn-primary" href="/especialistas">
+              Reservar especialista
+            </Link>
+            <Link className="btn-secondary" href="/club-hogar">
+              Ver planes Club Hogar
+            </Link>
+            <Link className="btn-ghost" href="/registro-cliente">
+              Actualizar datos
+            </Link>
+          </div>
+        </article>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -45,15 +66,15 @@ export function ClientDashboard() {
         <h2 className="mb-4 text-2xl font-black">Técnicos favoritos</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {favorites.map((specialist) => (
-            <a key={specialist.id} href={`/especialistas/${specialist.id}`} className="overflow-hidden rounded-2xl border border-line bg-white">
+            <Link key={specialist.id} href={`/especialistas/${specialist.id}`} className="overflow-hidden rounded-2xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
               <img src={specialist.image} alt={specialist.name} className="h-44 w-full object-cover" />
               <div className="p-4">
                 <strong>{specialist.name}</strong>
                 <span className="block text-sm font-bold text-muted">
-                  {specialist.specialty} · {specialist.rating.toFixed(1)}/5
+                  {specialist.specialty} · {specialist.rating.toFixed(1)}/5 · {specialist.credits} créditos
                 </span>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       </section>
@@ -75,29 +96,50 @@ export function SpecialistDashboard() {
   return (
     <div className="grid gap-6">
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
-        <article className="panel">
-          <img src={specialist.image} alt={specialist.name} className="mb-5 h-80 w-full rounded-2xl object-cover" />
-          <h2 className="text-3xl font-black">{specialist.specialty}</h2>
-          <p className="mt-2 text-muted">{specialist.description}</p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {specialist.badges.map((badge) => (
-              <span key={badge} className="chip bg-brand-soft text-brand-dark">
-                {badge}
-              </span>
-            ))}
+        <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
+          <img src={specialist.image} alt={specialist.name} className="h-80 w-full object-cover" />
+          <div className="p-6">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div>
+                <p className="eyebrow">Perfil público</p>
+                <h2 className="text-3xl font-black">{specialist.name}</h2>
+                <p className="font-semibold text-muted">{specialist.specialty} en {specialist.zone}</p>
+              </div>
+              <span className="chip bg-brand-soft text-brand-dark">Verificación activa</span>
+            </div>
+            <p className="mt-4 font-semibold leading-7 text-muted">{specialist.description}</p>
+            <div className="mt-5 flex flex-wrap gap-2">
+              {specialist.badges.map((badge) => (
+                <span key={badge} className="chip bg-brand-soft text-brand-dark">
+                  {badge}
+                </span>
+              ))}
+            </div>
           </div>
         </article>
-        <aside className="panel grid gap-3">
+        <aside className="grid gap-4">
           <StatCard label="Calificación" value={`${specialist.rating.toFixed(1)}/5`} />
           <StatCard label="Trabajos completados" value={specialist.jobs.toString()} />
           <StatCard label="Reservas recibidas" value={bookings.length.toString()} />
           <StatCard label="Créditos ganados" value={earnedCredits.toString()} />
         </aside>
       </section>
-      <article className="panel">
-        <h2 className="mb-4 text-2xl font-black">Reservas recibidas</h2>
-        <BookingList bookings={bookings} />
-      </article>
+      <section className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
+        <article className="panel">
+          <h2 className="mb-4 text-2xl font-black">Reservas recibidas</h2>
+          <BookingList bookings={bookings} />
+        </article>
+        <article className="panel">
+          <h2 className="text-2xl font-black">Estado de reputación</h2>
+          <div className="mt-5 grid gap-3">
+            {["Perfil con foto destacada", "Certificaciones visibles", "Galería de trabajos", "Comentarios verificados"].map((item) => (
+              <span key={item} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
+                {item}
+              </span>
+            ))}
+          </div>
+        </article>
+      </section>
     </div>
   );
 }
@@ -111,19 +153,18 @@ export function CompanyDashboard() {
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Créditos corporativos" value={companyDashboard.creditsAvailable.toString()} />
-        <StatCard label="Usados este mes" value={companyDashboard.creditsUsed.toString()} />
-        <StatCard label="Respuesta promedio" value={companyDashboard.responseTime} />
-        <StatCard label="Sucursales activas" value={companyDashboard.activeBranches.toString()} />
-      </section>
-      <section className="rounded-panel bg-enterprise p-6 text-white shadow-soft">
+      <section className="enterprise-shell p-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <Metric label="Factura estimada" value={companyDashboard.monthlyBilling} />
-          <Metric label="Próximo cierre" value={companyDashboard.nextInvoiceDate} />
-          <Metric label="Servicios abiertos" value="2" />
-          <Metric label="Historial del mes" value={companyDashboard.history.length.toString()} />
+          <MetricDark label="Créditos corporativos" value={companyDashboard.creditsAvailable.toString()} />
+          <MetricDark label="Usados este mes" value={companyDashboard.creditsUsed.toString()} />
+          <MetricDark label="Respuesta promedio" value={companyDashboard.responseTime} />
+          <MetricDark label="Sucursales activas" value={companyDashboard.activeBranches.toString()} />
         </div>
+      </section>
+      <section className="grid gap-5 lg:grid-cols-3">
+        <StatCard label="Gasto mensual mock" value={companyDashboard.monthlyBilling} />
+        <StatCard label="Solicitudes abiertas" value={companyDashboard.openRequests.toString()} />
+        <StatCard label="Proveedores frecuentes" value={companyDashboard.suppliers.toString()} />
       </section>
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
@@ -147,20 +188,30 @@ export function CompanyDashboard() {
           <TransactionList transactions={corporateTransactions} />
         </article>
       </section>
+      <section className="panel">
+        <h2 className="mb-4 text-2xl font-black">Sucursales</h2>
+        <div className="grid gap-3 md:grid-cols-5">
+          {companyDashboard.branches.map((branch) => (
+            <span key={branch} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
+              {branch}
+            </span>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <article className="panel">
+    <article className="panel card-hover">
       <span className="font-bold text-muted">{label}</span>
       <strong className="mt-2 block text-4xl font-black">{value}</strong>
     </article>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
+function MetricDark({ label, value }: { label: string; value: string }) {
   return (
     <article className="rounded-2xl bg-white/10 p-5">
       <span className="font-bold text-white/70">{label}</span>

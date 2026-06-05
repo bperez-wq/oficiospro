@@ -8,81 +8,75 @@ export function SpecialistCard({
   specialist: Specialist;
   onReserve?: (id: string) => void;
 }) {
-  const trustBadges = [
+  const badges = [
     specialist.verified ? "Verificado" : null,
     specialist.top ? "Top especialista" : null,
     specialist.certifications.length ? "Certificado" : null,
-  ].filter(Boolean);
-
-  const badges = [...new Set([...trustBadges, ...specialist.badges])];
+  ].filter(Boolean) as string[];
 
   return (
-    <article className="group overflow-hidden rounded-panel border border-line bg-white shadow-card transition hover:-translate-y-1 hover:shadow-soft">
-      <div className="relative h-60 overflow-hidden bg-brand-soft">
+    <article className="group overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-brand/25 hover:shadow-card">
+      <div className="relative h-64 overflow-hidden bg-brand-soft">
         <img
           src={specialist.image}
           alt={`${specialist.name}, ${specialist.specialty} en ${specialist.zone}`}
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
-        {specialist.top ? (
-          <span className="absolute left-4 top-4 rounded-full bg-white px-4 py-2 text-sm font-black text-brand-dark shadow-soft">
-            Top especialista
+        <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/70 to-transparent" />
+        <span className="absolute left-4 top-4 rounded-full bg-white px-4 py-2 text-xs font-black text-brand-dark shadow-soft">
+          {availabilityLabels[specialist.availability]}
+        </span>
+        <div className="absolute bottom-4 left-4 flex items-center gap-3">
+          <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand text-lg font-black text-white shadow-lg shadow-brand/30">
+            {specialist.initials}
           </span>
-        ) : null}
+          <div className="text-white">
+            <strong className="block text-xl">{specialist.name}</strong>
+            <span className="text-sm font-bold text-white/80">{specialist.zone}</span>
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-4 p-5">
         <div>
-          <h3 className="text-2xl font-black">{specialist.name}</h3>
-          <p className="font-bold text-muted">
-            {specialist.specialty} · {specialist.zone}
-          </p>
+          <p className="font-black text-ink">{specialist.specialty}</p>
+          <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6 text-muted">{specialist.description}</p>
         </div>
 
-        <div className="flex flex-wrap gap-2 text-sm">
-          <strong className="text-gold">{specialist.rating.toFixed(1)}/5</strong>
-          <span className="text-muted">{specialist.jobs} trabajos completados</span>
-          <span className="text-muted">{specialist.responseTime} respuesta</span>
-        </div>
-
-        <div className="flex flex-wrap gap-2">
-          <span className="chip bg-brand-soft text-brand-dark">{availabilityLabels[specialist.availability]}</span>
-          {badges.map((badge) => (
-            <span key={badge} className="chip bg-slate-100 text-slate-700">
-              {badge}
-            </span>
-          ))}
-        </div>
-
-        <p className="text-sm text-muted">{specialist.description}</p>
-
-        <div className="grid grid-cols-2 gap-2 text-sm md:grid-cols-4">
-          <Metric value={specialist.rating.toFixed(1)} label="calidad" />
+        <div className="grid grid-cols-3 gap-2">
+          <Metric value={`${specialist.rating.toFixed(1)}/5`} label="calificación" />
           <Metric value={specialist.jobs.toString()} label="trabajos" />
-          <Metric value={`${specialist.recommendation}%`} label="recomienda" />
           <Metric value={specialist.responseTime} label="respuesta" />
         </div>
 
-        <div className="rounded-2xl bg-gradient-to-br from-brand-soft to-white p-4">
-          <strong className="text-lg">Desde {specialist.credits} créditos</strong>
-          <p className="text-sm font-bold text-muted">{specialist.demand}</p>
+        <div className="flex flex-wrap gap-2">
+          {badges.map((badge) => (
+            <span key={badge} className="chip bg-brand-soft text-brand-dark">
+              {badge}
+            </span>
+          ))}
+          <span className="chip bg-amber-50 text-amber-800">{specialist.recommendation}% recomienda</span>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line pt-4">
-          <div>
-            <strong>Tarifa dinámica</strong>
-            <p className="text-sm text-muted">según demanda y disponibilidad</p>
-          </div>
-          <div className="flex gap-2">
-            <Link href={`/especialistas/${specialist.id}`} className="btn-secondary">
-              Ver perfil
+        <div className="rounded-2xl border border-brand/10 bg-gradient-to-br from-brand-soft to-white p-4">
+          <span className="text-sm font-black uppercase text-muted">Precio desde</span>
+          <strong className="block text-2xl font-black text-ink">{specialist.credits} créditos</strong>
+          <p className="text-sm font-bold text-muted">Tarifa dinámica por demanda y disponibilidad.</p>
+        </div>
+
+        <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
+          <Link href={`/especialistas/${specialist.id}`} className="btn-secondary flex-1">
+            Ver perfil
+          </Link>
+          {onReserve ? (
+            <button className="btn-primary flex-1" type="button" onClick={() => onReserve(specialist.id)}>
+              Reservar
+            </button>
+          ) : (
+            <Link href="/especialistas" className="btn-primary flex-1">
+              Reservar
             </Link>
-            {onReserve ? (
-              <button className="btn-primary" type="button" onClick={() => onReserve(specialist.id)}>
-                Reservar
-              </button>
-            ) : null}
-          </div>
+          )}
         </div>
       </div>
     </article>
@@ -91,9 +85,9 @@ export function SpecialistCard({
 
 function Metric({ value, label }: { value: string; label: string }) {
   return (
-    <span className="rounded-xl bg-slate-50 p-3">
-      <strong className="block text-ink">{value}</strong>
-      <span className="text-xs font-bold text-muted">{label}</span>
+    <span className="rounded-2xl bg-slate-50 p-3">
+      <strong className="block text-sm text-ink md:text-base">{value}</strong>
+      <span className="text-[11px] font-black uppercase text-muted">{label}</span>
     </span>
   );
 }

@@ -3,12 +3,12 @@ import { AdminPanel } from "@/components/AdminPanel";
 
 export default function AdminPage() {
   return (
-    <main className="section grid gap-6">
+    <main className="section grid gap-8">
       <PlatformNav />
       <AppHero
         eyebrow="Admin"
         title="Panel operativo mock para administrar la red."
-        subtitle="Aprobación de especialistas, usuarios, empresas, reservas, categorías y servicios sin backend todavía."
+        subtitle="Aprobación de especialistas, revisión de usuarios, empresas, reservas, categorías, servicios y métricas generales sin backend todavía."
       />
       <AdminPanel />
     </main>

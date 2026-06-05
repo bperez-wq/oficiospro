@@ -4,12 +4,12 @@ import { SpecialistsExplorer } from "@/components/SpecialistsExplorer";
 
 export default function SpecialistsPage() {
   return (
-    <main className="section grid gap-6">
+    <main className="section grid gap-8">
       <PlatformNav />
       <AppHero
-        eyebrow="Especialistas"
-        title="Busca técnicos por comuna, disponibilidad y créditos."
-        subtitle="Listado mock con filtros funcionales, perfiles individuales y reservas que descuentan créditos del usuario demo."
+        eyebrow="Especialistas verificados"
+        title="Busca por comuna, disponibilidad, calificación y precio en créditos."
+        subtitle="Compara perfiles profesionales, trabajos completados, certificaciones, tiempos de respuesta y reserva con créditos desde una experiencia mock funcional."
       >
         <Link className="btn-secondary" href="/dashboard-cliente">
           Ver mis créditos

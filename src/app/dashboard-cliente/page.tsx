@@ -4,14 +4,16 @@ import { ClientDashboard } from "@/components/Dashboards";
 
 export default function DashboardClientePage() {
   return (
-    <main className="section grid gap-6">
+    <main className="section grid gap-8">
       <PlatformNav />
       <AppHero
         eyebrow="Dashboard cliente"
         title="Tu operación de hogar en un solo lugar."
-        subtitle="Billetera de créditos, reservas próximas, historial y técnicos favoritos usando datos mock."
+        subtitle="Billetera de créditos, reservas próximas, servicios realizados, historial y técnicos favoritos usando datos mock."
       >
-        <Link className="btn-primary" href="/especialistas">Reservar técnico</Link>
+        <Link className="btn-primary" href="/especialistas">
+          Reservar técnico
+        </Link>
       </AppHero>
       <ClientDashboard />
     </main>
