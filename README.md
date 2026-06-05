@@ -63,6 +63,14 @@ Deploy command: npx wrangler deploy --assets ./out
 Root directory: /
 ```
 
+El Worker activo configurado en `wrangler.toml` es:
+
+```text
+oficiospro
+```
+
+Ese es el proyecto que actualmente tiene el dominio `oficiospro.cl`.
+
 También se puede ejecutar localmente:
 
 ```bash
