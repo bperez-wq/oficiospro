@@ -26,6 +26,17 @@ Plataforma inicial para OficiosPro: técnicos verificados para hogar y empresas,
 - `/dashboard-empresa`
 - `/admin`
 
+## Base marketplace nacional
+
+La plataforma incluye una primera capa nacional preparada para Chile:
+
+- 346 comunas en `src/data/chileCommunes.ts`, organizadas por región y provincia.
+- Catálogo de más de 100 especialidades en `src/data/marketplace.ts`.
+- Geo mock con latitud, longitud y radio de cobertura para especialistas.
+- Ranking de especialistas: Fundador, Bronce, Plata, Oro y Platino.
+- Requisitos de validación: RUT, documento, selfie, certificaciones, referencias y portafolio.
+- Bloques SEO locales para búsquedas como `aire acondicionado Las Condes` y `electricista SEC Santiago`.
+
 ## Desarrollo local
 
 ```bash

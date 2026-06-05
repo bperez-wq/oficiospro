@@ -1,5 +1,6 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { AdminPanel } from "@/components/AdminPanel";
+import { AdminMarketplaceControls, LocalSeoPanel, NationalCoveragePanel, SpecialistScaleMetrics } from "@/components/MarketplaceOverview";
 
 export default function AdminPage() {
   return (
@@ -10,6 +11,10 @@ export default function AdminPage() {
         title="Panel operativo mock para administrar la red."
         subtitle="Aprobación de especialistas, revisión de usuarios, empresas, reservas, categorías, servicios y métricas generales sin backend todavía."
       />
+      <SpecialistScaleMetrics />
+      <AdminMarketplaceControls />
+      <NationalCoveragePanel />
+      <LocalSeoPanel />
       <AdminPanel />
     </main>
   );

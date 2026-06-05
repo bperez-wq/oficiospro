@@ -50,6 +50,7 @@ export function SpecialistCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
+          {specialist.rank ? <span className="chip bg-amber-50 text-amber-800">{specialist.rank}</span> : null}
           {badges.map((badge) => (
             <span key={badge} className="chip bg-brand-soft text-brand-dark">
               {badge}
@@ -62,6 +63,7 @@ export function SpecialistCard({
           <span className="text-sm font-black uppercase text-muted">Precio desde</span>
           <strong className="block text-2xl font-black text-ink">{specialist.credits} créditos</strong>
           <p className="text-sm font-bold text-muted">Tarifa dinámica por demanda y disponibilidad.</p>
+          {specialist.coverageRadiusKm ? <p className="mt-2 text-sm font-bold text-muted">Radio de cobertura: {specialist.coverageRadiusKm} km</p> : null}
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">

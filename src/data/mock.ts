@@ -1,3 +1,5 @@
+import type { GeoPoint, SpecialistRank } from "@/data/marketplace";
+
 export type Availability = "now" | "today" | "tomorrow";
 
 export type Review = {
@@ -43,6 +45,19 @@ export type Specialist = {
   workHistory: WorkHistory[];
   reviews: Review[];
   description: string;
+  geo?: GeoPoint;
+  coverageRadiusKm?: number;
+  rank?: SpecialistRank;
+  validation?: SpecialistValidation;
+};
+
+export type SpecialistValidation = {
+  rut: "pending" | "approved" | "rejected";
+  identityDocument: "pending" | "approved" | "rejected";
+  selfie: "pending" | "approved" | "rejected";
+  certifications: "pending" | "approved" | "rejected";
+  references: number;
+  portfolioPhotos: number;
 };
 
 export type Booking = {
@@ -80,7 +95,7 @@ const hvac = "/assets/work-hvac.webp";
 const home = "/assets/hero-hogar.webp";
 const enterprise = "/assets/club-empresas.webp";
 
-export const specialists: Specialist[] = [
+const baseSpecialists: Specialist[] = [
   {
     id: "victor-araya",
     name: "Víctor Araya",
@@ -502,6 +517,89 @@ export const specialists: Specialist[] = [
     description: "Mantención de piscinas, bombas, filtros y tratamiento de agua para casas y comunidades.",
   },
 ];
+
+export const specialistOperationalProfiles: Record<
+  string,
+  Required<Pick<Specialist, "geo" | "coverageRadiusKm" | "rank" | "validation">>
+> = {
+  "victor-araya": {
+    geo: { lat: -33.4314, lng: -70.6093 },
+    coverageRadiusKm: 18,
+    rank: "Platino",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 5, portfolioPhotos: 18 },
+  },
+  "carolina-mendez": {
+    geo: { lat: -33.4088, lng: -70.5673 },
+    coverageRadiusKm: 14,
+    rank: "Oro",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 4, portfolioPhotos: 14 },
+  },
+  "miguel-soto": {
+    geo: { lat: -33.4569, lng: -70.5975 },
+    coverageRadiusKm: 16,
+    rank: "Oro",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 4, portfolioPhotos: 12 },
+  },
+  "daniela-fuentes": {
+    geo: { lat: -33.4489, lng: -70.6693 },
+    coverageRadiusKm: 35,
+    rank: "Oro",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 6, portfolioPhotos: 16 },
+  },
+  "felipe-rojas": {
+    geo: { lat: -33.5225, lng: -70.5983 },
+    coverageRadiusKm: 20,
+    rank: "Plata",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "pending", references: 3, portfolioPhotos: 8 },
+  },
+  "patricio-herrera": {
+    geo: { lat: -33.511, lng: -70.757 },
+    coverageRadiusKm: 45,
+    rank: "Plata",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 5, portfolioPhotos: 6 },
+  },
+  "sofia-vergara": {
+    geo: { lat: -33.44, lng: -70.552 },
+    coverageRadiusKm: 12,
+    rank: "Oro",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 4, portfolioPhotos: 22 },
+  },
+  "andres-ibarra": {
+    geo: { lat: -33.391, lng: -70.572 },
+    coverageRadiusKm: 15,
+    rank: "Plata",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "pending", references: 3, portfolioPhotos: 10 },
+  },
+  "nicolas-bravo": {
+    geo: { lat: -33.486, lng: -70.599 },
+    coverageRadiusKm: 18,
+    rank: "Plata",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 3, portfolioPhotos: 11 },
+  },
+  "valentina-rivas": {
+    geo: { lat: -33.4489, lng: -70.6693 },
+    coverageRadiusKm: 16,
+    rank: "Plata",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 3, portfolioPhotos: 13 },
+  },
+  "rodrigo-palma": {
+    geo: { lat: -33.4314, lng: -70.6093 },
+    coverageRadiusKm: 22,
+    rank: "Bronce",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "pending", references: 3, portfolioPhotos: 7 },
+  },
+  "elena-morales": {
+    geo: { lat: -33.351, lng: -70.518 },
+    coverageRadiusKm: 20,
+    rank: "Oro",
+    validation: { rut: "approved", identityDocument: "approved", selfie: "approved", certifications: "approved", references: 4, portfolioPhotos: 15 },
+  },
+};
+
+export const specialists: Specialist[] = baseSpecialists.map((specialist) => ({
+  ...specialist,
+  ...specialistOperationalProfiles[specialist.id],
+}));
 
 export const categories = [
   { id: "hogar", name: "Hogar", description: "Gasfitería, electricidad, jardinería, pintura, cerrajería y reparaciones menores." },

@@ -119,11 +119,29 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
           <article className="panel">
             <h3 className="text-xl font-black">Confianza y garantía</h3>
             <div className="mt-4 flex flex-wrap gap-2">
-              {["Verificado", "Pago protegido", "Garantía OficiosPro", ...specialist.certifications].map((item) => (
+              {["Verificado", specialist.rank ?? "Ranking inicial", "Pago protegido", "Garantía OficiosPro", ...specialist.certifications].map((item) => (
                 <span key={item} className="chip bg-brand-soft text-brand-dark">
                   {item}
                 </span>
               ))}
+            </div>
+          </article>
+          <article className="panel">
+            <h3 className="text-xl font-black">Geo y cobertura</h3>
+            <div className="mt-4 grid gap-2 text-sm font-bold text-muted">
+              <span className="rounded-2xl bg-slate-50 p-3">Latitud: {specialist.geo?.lat.toFixed(4) ?? "pendiente"}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Longitud: {specialist.geo?.lng.toFixed(4) ?? "pendiente"}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Radio: {specialist.coverageRadiusKm ?? 0} km</span>
+            </div>
+          </article>
+          <article className="panel">
+            <h3 className="text-xl font-black">Validación</h3>
+            <div className="mt-4 grid gap-2 text-sm font-bold text-muted">
+              <span className="rounded-2xl bg-slate-50 p-3">RUT: {specialist.validation?.rut ?? "pendiente"}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Documento: {specialist.validation?.identityDocument ?? "pendiente"}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Selfie: {specialist.validation?.selfie ?? "pendiente"}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Referencias: {specialist.validation?.references ?? 0}/3 mínimo</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Fotos portafolio: {specialist.validation?.portfolioPhotos ?? 0}</span>
             </div>
           </article>
           <article className="panel">

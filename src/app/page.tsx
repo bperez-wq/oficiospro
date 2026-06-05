@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { categories, companyDashboard, companyPlans, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
+import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { SpecialistCard } from "@/components/SpecialistCard";
 
 export default function HomePage() {
@@ -236,6 +237,13 @@ export default function HomePage() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="section grid gap-10">
+        <NationalCoveragePanel />
+        <SpecialtyCatalogPreview />
+        <ValidationAndRankPanel />
+        <LocalSeoPanel />
       </section>
     </main>
   );

@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
+import { chileCommunes } from "@/data/chileCommunes";
+import { distanceInKm } from "@/data/marketplace";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import { getBookings, getTransactions, getWallet, saveBookings, saveTransactions, saveWallet, seedMockState } from "@/lib/storage";
 
@@ -13,6 +15,8 @@ export function SpecialistsExplorer() {
   const [rating, setRating] = useState(4.5);
   const [maxCredits, setMaxCredits] = useState(60);
   const [sort, setSort] = useState("rating");
+  const [clientLat, setClientLat] = useState(-33.4088);
+  const [clientLng, setClientLng] = useState(-70.5673);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
@@ -21,10 +25,16 @@ export function SpecialistsExplorer() {
 
   const categories = [...new Set(specialists.map((specialist) => specialist.category))].sort();
   const specialties = [...new Set(specialists.map((specialist) => specialist.specialty))].sort();
-  const zones = [...new Set(specialists.map((specialist) => specialist.zone))].sort();
+  const zones = [...new Set([...chileCommunes.map((commune) => commune.name), ...specialists.map((specialist) => specialist.zone)])].sort();
 
   const visible = useMemo(() => {
+    const clientLocation = { lat: clientLat, lng: clientLng };
+
     return specialists
+      .map((item) => ({
+        ...item,
+        distance: item.geo ? Number(distanceInKm(clientLocation, item.geo).toFixed(1)) : item.distance,
+      }))
       .filter((item) => category === "all" || item.category === category)
       .filter((item) => specialty === "all" || item.specialty === specialty)
       .filter((item) => zone === "all" || item.zone === zone)
@@ -37,7 +47,7 @@ export function SpecialistsExplorer() {
         if (sort === "distance") return a.distance - b.distance;
         return b.rating - a.rating;
       });
-  }, [availability, category, maxCredits, rating, sort, specialty, zone]);
+  }, [availability, category, clientLat, clientLng, maxCredits, rating, sort, specialty, zone]);
 
   function reserve(id: string) {
     const specialist = specialists.find((item) => item.id === id) as Specialist | undefined;
@@ -147,6 +157,17 @@ export function SpecialistsExplorer() {
             Hasta {maxCredits} créditos
             <input min="15" max="80" step="5" type="range" value={maxCredits} onChange={(event) => setMaxCredits(Number(event.target.value))} />
           </label>
+          <div className="grid gap-3 rounded-2xl border border-line bg-white p-4">
+            <p className="text-sm font-black text-ink">Ubicación cliente demo</p>
+            <label className="field">
+              Latitud
+              <input type="number" step="0.0001" value={clientLat} onChange={(event) => setClientLat(Number(event.target.value))} />
+            </label>
+            <label className="field">
+              Longitud
+              <input type="number" step="0.0001" value={clientLng} onChange={(event) => setClientLng(Number(event.target.value))} />
+            </label>
+          </div>
         </aside>
 
         <div className="grid gap-5">
@@ -158,7 +179,7 @@ export function SpecialistsExplorer() {
             <strong className="chip bg-brand-soft text-brand-dark">{visible.length} resultados</strong>
           </div>
           <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-            Precio en créditos con tarifa dinámica según demanda, horario y disponibilidad. La plataforma libera el pago al finalizar el trabajo.
+            Precio en créditos con tarifa dinámica. La distancia se calcula usando latitud/longitud del cliente y especialista; cada perfil tiene radio de cobertura.
           </p>
           <div className="grid gap-5 xl:grid-cols-2">
             {visible.map((specialist) => (

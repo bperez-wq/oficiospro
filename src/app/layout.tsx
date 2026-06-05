@@ -8,6 +8,14 @@ export const metadata: Metadata = {
   title: "OficiosPro Chile | Especialistas verificados para hogar y empresas",
   description:
     "OficiosPro conecta hogares y empresas con gasfíteres, electricistas, jardineros, técnicos HVAC y especialistas verificados usando créditos, reputación y disponibilidad.",
+  keywords: [
+    "aire acondicionado Las Condes",
+    "electricista SEC Santiago",
+    "técnico refrigeración Curicó",
+    "bombas de calor Puerto Varas",
+    "técnicos verificados Chile",
+    "servicios técnicos para empresas",
+  ],
   metadataBase: new URL("https://oficiospro.cl"),
   openGraph: {
     title: "OficiosPro Chile | Especialistas verificados para hogar y empresas",
