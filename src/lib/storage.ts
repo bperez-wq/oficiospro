@@ -61,8 +61,12 @@ export type ReferralState = {
 
 export type ClientProfile = {
   name: string;
+  firstNames?: string;
+  lastNames?: string;
+  rut?: string;
   email: string;
   phone: string;
+  region?: string;
   commune: string;
   address: string;
   lat: number | null;
@@ -75,8 +79,11 @@ export type ClientProfile = {
 export type PendingSpecialistService = {
   serviceTypeId: string;
   specialty: string;
+  isOtherService?: boolean;
+  otherServiceDescription?: string;
   name: string;
   description: string;
+  specialistComments?: string;
   clientCredits: number;
   specialistPayoutCLP: number;
   initialVisitFree: boolean;
@@ -104,6 +111,8 @@ export type PendingSpecialistProfile = {
   id?: string;
   status: "pendiente" | "aprobado" | "rechazado";
   name: string;
+  firstNames?: string;
+  lastNames?: string;
   rut: string;
   phone: string;
   email: string;
@@ -157,8 +166,12 @@ export type HomeLead = {
   status: ConversionLeadStatus;
   sourceButton: string;
   name: string;
+  firstNames?: string;
+  lastNames?: string;
+  rut?: string;
   email: string;
   whatsapp: string;
+  region?: string;
   commune: string;
   planId?: string;
   planName?: string;
@@ -171,13 +184,23 @@ export type EnterpriseLead = {
   status: ConversionLeadStatus;
   sourceButton: string;
   name: string;
+  firstNames?: string;
+  lastNames?: string;
+  businessName?: string;
+  companyRut?: string;
+  companyLine?: string;
   company: string;
   email: string;
   whatsapp: string;
-  industry: string;
+  industry?: string;
   branches: number;
+  region?: string;
   commune: string;
   need: string;
+  serviceType?: string;
+  isOtherService?: boolean;
+  otherServiceDescription?: string;
+  additionalComments?: string;
   planId?: string;
   interest: string;
 };
@@ -188,6 +211,9 @@ export type SpecialistLead = {
   status: ConversionLeadStatus;
   sourceButton: string;
   name: string;
+  firstNames?: string;
+  lastNames?: string;
+  rut?: string;
   phone: string;
   email: string;
   serviceTypeId: string;
@@ -203,11 +229,17 @@ export type ServiceRequestLead = {
   status: ConversionLeadStatus;
   sourceButton: string;
   name: string;
+  firstNames?: string;
+  lastNames?: string;
+  rut?: string;
   email: string;
   whatsapp: string;
   commune: string;
   address: string;
   service: string;
+  isOtherService?: boolean;
+  otherServiceDescription?: string;
+  additionalComments?: string;
   urgency: string;
   specialistId?: string;
   specialistName?: string;
@@ -223,6 +255,9 @@ export type QuickSearchLead = {
   need: string;
   serviceTypeId: string;
   specialty: string;
+  isOtherService?: boolean;
+  otherServiceDescription?: string;
+  additionalComments?: string;
   commune: string;
   urgency: string;
   lat?: number | null;
@@ -565,6 +600,8 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
         },
       ];
   const primaryService = requestServices[0];
+  const displaySpecialty = (service?: PendingSpecialistService) =>
+    service?.isOtherService && service.otherServiceDescription ? service.otherServiceDescription : service?.specialty ?? request.specialty;
   const certifications = request.certifications ?? [];
   const portfolioPhotos = request.portfolioPhotos ?? [];
   const references = request.references ?? [];
@@ -586,11 +623,11 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     id: publicId,
     name: request.name ?? "Especialista OficiosPro",
     initials,
-    specialty: primaryService?.specialty ?? request.specialty,
+    specialty: displaySpecialty(primaryService),
     category: serviceType.name,
     serviceTypeId: serviceType.id,
     serviceType: serviceType.name,
-    specialties: requestServices.map((service) => service.specialty),
+    specialties: requestServices.map((service) => displaySpecialty(service)),
     zone: request.commune ?? "Santiago",
     commune: request.commune ?? "Santiago",
     region: request.region ?? "Metropolitana de Santiago",
@@ -614,10 +651,10 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     verified: true,
     photos: portfolioPhotos.length > 0,
     certifications,
-    servicesOffered: requestServices.map((service) => service.name || service.specialty),
+    servicesOffered: requestServices.map((service) => service.name || displaySpecialty(service)),
     workHistory: [],
     reviews: [],
-    description: `${request.specialty ?? primaryService.specialty} con cobertura en ${request.commune ?? "Santiago"} y radio de ${request.coverageRadiusKm ?? 18} km.`,
+    description: `${displaySpecialty(primaryService)} con cobertura en ${request.commune ?? "Santiago"} y radio de ${request.coverageRadiusKm ?? 18} km.`,
     lat: request.lat ?? -33.4489,
     lng: request.lng ?? -70.6693,
     geo: { lat: request.lat ?? -33.4489, lng: request.lng ?? -70.6693 },

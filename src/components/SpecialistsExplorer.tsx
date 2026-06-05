@@ -2,9 +2,9 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
-import { chileCommunes } from "@/data/chileCommunes";
-import { allServiceSpecialties, distanceInKm, getSpecialtiesByServiceType, serviceTypes } from "@/data/marketplace";
+import { allServiceSpecialties, distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
 import { useConversionModal } from "@/components/ConversionModal";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import {
   getClientProfile,
@@ -12,6 +12,7 @@ import {
   getPublishedSpecialists,
   seedMockState,
 } from "@/lib/storage";
+import { communeOptions, serviceTypeOptions } from "@/lib/catalog";
 
 export function SpecialistsExplorer() {
   const { openModal } = useConversionModal();
@@ -55,8 +56,14 @@ export function SpecialistsExplorer() {
     category === "all"
       ? [...new Set(allServiceSpecialties.map((item) => item.name))].sort()
       : getSpecialtiesByServiceType(category);
+  const typeFilterOptions = [{ value: "all", label: "Todos los tipos" }, ...serviceTypeOptions];
+  const specialtyFilterOptions = [
+    { value: "all", label: "Todas las especialidades" },
+    ...specialties.map((item) => ({ value: item, label: item })),
+  ];
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
-  const zones = [...new Set([...chileCommunes.map((commune) => commune.name), ...marketplaceSpecialists.map((specialist) => specialist.commune ?? specialist.zone)])].sort();
+  const zones = [...new Set([...communeOptions.map((commune) => commune.value), ...marketplaceSpecialists.map((specialist) => specialist.commune ?? specialist.zone)])].sort();
+  const zoneFilterOptions = [{ value: "all", label: "Todas las comunas" }, ...zones.map((item) => ({ value: item, label: item }))];
 
   useEffect(() => {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
@@ -109,33 +116,27 @@ export function SpecialistsExplorer() {
             <h2 className="text-2xl font-black">Filtra especialistas</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-muted">Compara reputación, cercanía, disponibilidad y precio en créditos.</p>
           </div>
-          <label className="field">
-            Tipo de servicio
-            <select value={category} onChange={(event) => setCategory(event.target.value)}>
-              <option value="all">Todos los tipos</option>
-              {serviceTypes.map((item) => (
-                <option key={item.id} value={item.id}>{item.name}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Especialidad
-            <select value={specialty} onChange={(event) => setSpecialty(event.target.value)}>
-              <option value="all">Todas las especialidades</option>
-              {specialties.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
-          <label className="field">
-            Comuna
-            <select value={zone} onChange={(event) => setZone(event.target.value)}>
-              <option value="all">Todas las comunas</option>
-              {zones.map((item) => (
-                <option key={item}>{item}</option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Tipo de servicio"
+            value={category}
+            options={typeFilterOptions}
+            onChange={(nextCategory) => setCategory(nextCategory)}
+            placeholder="Busca hogar, empresa, climatización..."
+          />
+          <SearchableSelect
+            label="Especialidad"
+            value={specialty}
+            options={specialtyFilterOptions}
+            onChange={setSpecialty}
+            placeholder="Busca gasfitería, aire, SEC..."
+          />
+          <SearchableSelect
+            label="Comuna"
+            value={zone}
+            options={zoneFilterOptions}
+            onChange={setZone}
+            placeholder="Busca Vitacura, Curicó, Puerto Varas..."
+          />
           <label className="field">
             Disponibilidad
             <select value={availability} onChange={(event) => setAvailability(event.target.value)}>

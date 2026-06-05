@@ -34,6 +34,19 @@ import { BookingList } from "@/components/Lists";
 type CompanyRequest = {
   id?: string;
   company?: string;
+  businessName?: string;
+  companyRut?: string;
+  companyLine?: string;
+  contact?: string;
+  email?: string;
+  whatsapp?: string;
+  commune?: string;
+  region?: string;
+  branches?: number;
+  serviceType?: string;
+  isOtherService?: boolean;
+  otherServiceDescription?: string;
+  additionalComments?: string;
   plan?: string;
   status?: string;
 };
@@ -185,10 +198,25 @@ export function AdminPanel() {
           <div className="grid gap-3">
             {(companyRequests.length ? companyRequests : [{ company: "Empresa piloto", plan: "Empresa", status: "Pendiente" }]).map((company, index) => (
               <article key={`${company.company}-${index}`} className="rounded-2xl border border-line bg-slate-50 p-4">
-                <strong>{company.company}</strong>
-                <span className="block text-sm font-bold text-muted">
-                  {company.plan} · {company.status}
-                </span>
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{company.businessName ?? company.company}</strong>
+                  <span className="chip bg-white text-brand-dark">{company.status ?? "Pendiente"}</span>
+                </div>
+                <div className="mt-3 grid gap-2 text-sm font-bold text-muted md:grid-cols-2">
+                  <span>RUT: {company.companyRut ?? "sin informar"}</span>
+                  <span>Giro: {company.companyLine ?? "sin informar"}</span>
+                  <span>Contacto: {company.contact ?? "sin informar"}</span>
+                  <span>WhatsApp: {company.whatsapp ?? "sin informar"}</span>
+                  <span>Comuna: {company.commune ?? "sin informar"}</span>
+                  <span>Plan: {company.plan ?? "por definir"}</span>
+                </div>
+                {(company.serviceType || company.otherServiceDescription || company.additionalComments) ? (
+                  <p className="mt-3 rounded-2xl bg-white p-3 text-sm font-bold text-muted">
+                    Servicio: {company.serviceType ?? "por definir"}
+                    {company.otherServiceDescription ? ` · Otro: ${company.otherServiceDescription}` : ""}
+                    {company.additionalComments ? ` · Comentarios: ${company.additionalComments}` : ""}
+                  </p>
+                ) : null}
               </article>
             ))}
           </div>
@@ -251,11 +279,15 @@ type AdminLeadRow = {
   createdAt: string;
   status: ConversionLeadStatus;
   name: string;
+  rut?: string;
   email: string;
   whatsapp: string;
   commune: string;
   interest: string;
   sourceButton: string;
+  service?: string;
+  otherServiceDescription?: string;
+  comments?: string;
 };
 
 function ConversionAdminSection({
@@ -278,6 +310,7 @@ function ConversionAdminSection({
     createdAt: lead.createdAt,
     status: lead.status,
     name: lead.name,
+    rut: lead.rut,
     email: lead.email,
     whatsapp: lead.whatsapp,
     commune: lead.commune,
@@ -289,17 +322,22 @@ function ConversionAdminSection({
     createdAt: lead.createdAt,
     status: lead.status,
     name: `${lead.name} · ${lead.company}`,
+    rut: lead.companyRut,
     email: lead.email,
     whatsapp: lead.whatsapp,
     commune: lead.commune,
     interest: lead.interest,
     sourceButton: lead.sourceButton,
+    service: lead.serviceType,
+    otherServiceDescription: lead.otherServiceDescription,
+    comments: lead.additionalComments,
   }));
   const mappedSpecialistLeads: AdminLeadRow[] = specialistLeads.map((lead) => ({
     id: lead.id,
     createdAt: lead.createdAt,
     status: lead.status,
     name: lead.name,
+    rut: lead.rut,
     email: lead.email,
     whatsapp: lead.phone,
     commune: lead.commune,
@@ -311,11 +349,15 @@ function ConversionAdminSection({
     createdAt: lead.createdAt,
     status: lead.status,
     name: lead.name,
+    rut: lead.rut,
     email: lead.email,
     whatsapp: lead.whatsapp,
     commune: lead.commune,
     interest: lead.interest,
     sourceButton: lead.sourceButton,
+    service: lead.service,
+    otherServiceDescription: lead.otherServiceDescription,
+    comments: lead.additionalComments,
   }));
 
   return (
@@ -379,8 +421,9 @@ function ConversionLeadTable({
                   <strong>{lead.name}</strong>
                   <span className="chip bg-brand-soft text-brand-dark">{lead.status}</span>
                 </div>
-                <div className="mt-2 grid gap-2 text-sm font-bold text-muted md:grid-cols-4">
+                <div className="mt-2 grid gap-2 text-sm font-bold text-muted md:grid-cols-5">
                   <span>{formatShortDate(lead.createdAt)}</span>
+                  <span>RUT: {lead.rut || "sin informar"}</span>
                   <span>{lead.email}</span>
                   <span>{lead.whatsapp}</span>
                   <span>{lead.commune}</span>
@@ -388,6 +431,13 @@ function ConversionLeadTable({
                 <p className="mt-2 text-sm font-semibold leading-6 text-muted">
                   {lead.interest} · Botón: {lead.sourceButton}
                 </p>
+                {(lead.service || lead.otherServiceDescription || lead.comments) ? (
+                  <div className="mt-3 rounded-2xl border border-line bg-slate-50 p-3 text-sm font-bold text-muted">
+                    {lead.service ? <span className="block">Servicio: {lead.service}</span> : null}
+                    {lead.otherServiceDescription ? <span className="block">Otro servicio: {lead.otherServiceDescription}</span> : null}
+                    {lead.comments ? <span className="block">Comentarios: {lead.comments}</span> : null}
+                  </div>
+                ) : null}
               </div>
               <div className="flex flex-wrap gap-2 lg:justify-end">
                 {(["Contactado", "Convertido", "Perdido"] as ConversionLeadStatus[]).map((status) => (
@@ -441,9 +491,22 @@ function ConversionEventsTable({ events }: { events: ConversionEvent[] }) {
 
 function exportCsv(filename: string, rows: AdminLeadRow[]) {
   if (typeof window === "undefined") return;
-  const headers = ["Fecha", "Nombre", "Email", "WhatsApp", "Comuna", "Interés", "Estado", "Botón"];
+  const headers = ["Fecha", "Nombre", "RUT", "Email", "WhatsApp", "Comuna", "Interés", "Servicio", "Otro servicio", "Comentarios", "Estado", "Botón"];
   const body = rows.map((row) =>
-    [row.createdAt, row.name, row.email, row.whatsapp, row.commune, row.interest, row.status, row.sourceButton]
+    [
+      row.createdAt,
+      row.name,
+      row.rut ?? "",
+      row.email,
+      row.whatsapp,
+      row.commune,
+      row.interest,
+      row.service ?? "",
+      row.otherServiceDescription ?? "",
+      row.comments ?? "",
+      row.status,
+      row.sourceButton,
+    ]
       .map((value) => `"${String(value).replace(/"/g, '""')}"`)
       .join(","),
   );
@@ -523,6 +586,12 @@ function SpecialistRequestRow({
           {request.typeServicio ?? "Tipo por definir"} · {request.commune ?? "Comuna pendiente"} · {services.length} servicios · {references.length} referencias
         </span>
         <div className="mt-3 grid gap-2 text-sm font-bold text-muted md:grid-cols-4">
+          <span>RUT: {request.rut ?? "pendiente"}</span>
+          <span>Contacto: {request.phone ?? "pendiente"}</span>
+          <span>Email: {request.email ?? "pendiente"}</span>
+          <span>Región: {request.region ?? "pendiente"}</span>
+        </div>
+        <div className="mt-3 grid gap-2 text-sm font-bold text-muted md:grid-cols-4">
           <span>Especialidad: {request.specialty ?? services[0]?.specialty ?? "Pendiente"}</span>
           <span>Ingreso cliente: {formatCLP(margins[0]?.incomeCLP ?? 0)}</span>
           <span>Pago especialista: {formatCLP(margins[0]?.specialistPayoutCLP ?? 0)}</span>
@@ -540,6 +609,8 @@ function SpecialistRequestRow({
               {services.map((service) => (
                 <span key={`${service.name}-${service.specialty}`} className="text-sm font-bold text-muted">
                   {service.name || service.specialty}: {service.clientCredits} créditos · paga {formatCLP(service.specialistPayoutCLP ?? 0)}
+                  {service.isOtherService && service.otherServiceDescription ? ` · Otro: ${service.otherServiceDescription}` : ""}
+                  {service.specialistComments ? ` · Comentarios: ${service.specialistComments}` : ""}
                 </span>
               ))}
             </div>

@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
-import { chileCommunes } from "@/data/chileCommunes";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   calculateServiceEconomics,
   formatCLP,
   getPlanById,
   getServiceTypeById,
-  getSpecialtiesByServiceType,
   serviceTypes,
   subscriptionPlans,
   type CommercialConfig,
@@ -20,10 +19,19 @@ import {
   setMockSession,
   type PendingSpecialistProfile,
 } from "@/lib/storage";
+import {
+  communesForRegion,
+  OTHER_SERVICE_VALUE,
+  regionOptions,
+  serviceTypeOptions,
+  specialtyOptionsForType,
+} from "@/lib/catalog";
 
 type ServiceDraft = {
   serviceTypeId: string;
   specialty: string;
+  isOtherService: boolean;
+  otherServiceDescription: string;
   name: string;
   description: string;
   clientCredits: number;
@@ -32,6 +40,7 @@ type ServiceDraft = {
   visitCredits: number;
   duration: string;
   emergency: boolean;
+  specialistComments: string;
 };
 
 type ReferenceDraft = {
@@ -49,6 +58,8 @@ function createEmptyService(): ServiceDraft {
   return {
     serviceTypeId: type.id,
     specialty: type.specialties[0],
+    isOtherService: false,
+    otherServiceDescription: "",
     name: "",
     description: "",
     clientCredits: 12,
@@ -57,6 +68,7 @@ function createEmptyService(): ServiceDraft {
     visitCredits: 0,
     duration: "2 horas",
     emergency: false,
+    specialistComments: "",
   };
 }
 
@@ -166,11 +178,19 @@ export function ClientRegisterForm() {
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const firstNames = String(data.get("firstNames") ?? "");
+    const lastNames = String(data.get("lastNames") ?? "");
+    const fullName = `${firstNames} ${lastNames}`.trim();
     appendStoredItem("users", {
       role: "client",
-      name: data.get("name"),
+      firstNames,
+      lastNames,
+      rut: data.get("rut"),
+      name: fullName,
       email: data.get("email"),
-      phone: data.get("phone"),
+      phone: data.get("whatsapp"),
+      whatsapp: data.get("whatsapp"),
+      region,
       commune,
       address: data.get("address"),
       plan: planId,
@@ -180,9 +200,13 @@ export function ClientRegisterForm() {
       createdAt: new Date().toISOString(),
     });
     saveClientProfile({
-      name: String(data.get("name") ?? ""),
+      firstNames,
+      lastNames,
+      rut: String(data.get("rut") ?? ""),
+      name: fullName,
       email: String(data.get("email") ?? ""),
-      phone: String(data.get("phone") ?? ""),
+      phone: String(data.get("whatsapp") ?? ""),
+      region,
       commune,
       address: String(data.get("address") ?? ""),
       lat: geo.lat,
@@ -193,7 +217,7 @@ export function ClientRegisterForm() {
     });
     setMockSession({
       role: "client",
-      name: String(data.get("name") ?? "Cliente OficiosPro"),
+      name: fullName || "Cliente OficiosPro",
       email: String(data.get("email") ?? ""),
       planId,
       createdAt: new Date().toISOString(),
@@ -208,35 +232,44 @@ export function ClientRegisterForm() {
     <FormShell title="Registro cliente" text="Crea tu cuenta para reservar especialistas, activar créditos y encontrar técnicos cerca de ti.">
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
         <label className="field">
-          Nombre completo
-          <input name="name" placeholder="Ej: Benjamín Pérez" required />
+          Nombres
+          <input name="firstNames" placeholder="Ej: Benjamín" required />
+        </label>
+        <label className="field">
+          Apellidos
+          <input name="lastNames" placeholder="Ej: Pérez Peric" required />
+        </label>
+        <label className="field">
+          RUT
+          <input name="rut" placeholder="12.345.678-9" required />
+          <span className="text-xs font-bold text-muted">RUT para boleta, facturación y validación de cuenta.</span>
         </label>
         <label className="field">
           Email
           <input name="email" type="email" placeholder="nombre@email.cl" required />
         </label>
         <label className="field">
-          Teléfono
-          <input name="phone" type="tel" placeholder="+56 9 1234 5678" required />
+          WhatsApp
+          <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
         </label>
-        <label className="field">
-          Comuna
-          <select
-            name="commune"
-            value={`${commune}|${region}`}
-            onChange={(event) => {
-              const [nextCommune, nextRegion] = event.target.value.split("|");
-              setCommune(nextCommune);
-              setRegion(nextRegion);
-            }}
-          >
-            {chileCommunes.map((commune) => (
-              <option key={commune.code} value={`${commune.name}|${commune.regionName}`}>
-                {commune.name} · {commune.regionName}
-              </option>
-            ))}
-          </select>
-        </label>
+        <SearchableSelect
+          label="Región"
+          value={region}
+          options={regionOptions}
+          onChange={(nextRegion) => {
+            setRegion(nextRegion);
+            setCommune(communesForRegion(nextRegion)[0]?.value ?? commune);
+          }}
+          required
+        />
+        <SearchableSelect
+          label="Comuna"
+          value={commune}
+          options={communesForRegion(region)}
+          onChange={setCommune}
+          placeholder="Busca Vitacura, Ñuñoa, Puerto Varas..."
+          required
+        />
         <label className="field md:col-span-2">
           Dirección
           <input name="address" placeholder="Ej: Av. Apoquindo 3000, depto 1204" required />
@@ -316,8 +349,13 @@ export function SpecialistRegisterForm() {
         if (serviceIndex !== index) return service;
         const next = { ...service, ...patch };
         if (patch.serviceTypeId) {
-          const nextSpecialties = getSpecialtiesByServiceType(patch.serviceTypeId);
-          next.specialty = nextSpecialties[0] ?? "";
+          next.specialty = specialtyOptionsForType(patch.serviceTypeId)[0]?.value ?? "";
+          next.isOtherService = false;
+          next.otherServiceDescription = "";
+        }
+        if (patch.specialty) {
+          next.isOtherService = patch.specialty === OTHER_SERVICE_VALUE;
+          if (patch.specialty !== OTHER_SERVICE_VALUE) next.otherServiceDescription = "";
         }
         return next;
       }),
@@ -374,12 +412,17 @@ export function SpecialistRegisterForm() {
     }
 
     const data = new FormData(event.currentTarget);
+    const firstNames = String(data.get("firstNames") ?? "");
+    const lastNames = String(data.get("lastNames") ?? "");
+    const fullName = `${firstNames} ${lastNames}`.trim();
     const mainType = getServiceTypeById(services[0].serviceTypeId);
     const request = appendPendingSpecialist({
       status: "pendiente",
-      name: String(data.get("name") ?? ""),
+      firstNames,
+      lastNames,
+      name: fullName,
       rut: String(data.get("rut") ?? ""),
-      phone: String(data.get("phone") ?? ""),
+      phone: String(data.get("whatsapp") ?? ""),
       email: String(data.get("email") ?? ""),
       profilePhoto,
       address: String(data.get("address") ?? ""),
@@ -389,9 +432,10 @@ export function SpecialistRegisterForm() {
       lng: geo.lng,
       coverageRadiusKm: Number(data.get("coverageRadiusKm")),
       typeServicio: mainType?.name ?? "Hogar",
-      specialty: services[0].specialty,
+      specialty: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
       services: services.map((service) => ({
         ...service,
+        isOtherService: service.specialty === OTHER_SERVICE_VALUE,
         economics: calculateServiceEconomics({
           clientCredits: Number(service.clientCredits),
           specialistPayoutCLP: Number(service.specialistPayoutCLP),
@@ -406,7 +450,7 @@ export function SpecialistRegisterForm() {
     } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
       role: "specialist",
-      name: String(data.get("name") ?? "Especialista OficiosPro"),
+      name: fullName || "Especialista OficiosPro",
       email: String(data.get("email") ?? ""),
       createdAt: new Date().toISOString(),
     });
@@ -421,16 +465,20 @@ export function SpecialistRegisterForm() {
       <form className="grid gap-6" onSubmit={submit}>
         <section className="grid gap-4 md:grid-cols-2">
           <label className="field">
-            Nombre completo
-            <input name="name" placeholder="Ej: Juan Pérez" required />
+            Nombres
+            <input name="firstNames" placeholder="Ej: Juan" required />
+          </label>
+          <label className="field">
+            Apellidos
+            <input name="lastNames" placeholder="Ej: Pérez" required />
           </label>
           <label className="field">
             RUT
             <input name="rut" placeholder="12.345.678-9" required />
           </label>
           <label className="field">
-            Teléfono
-            <input name="phone" type="tel" placeholder="+56 9 1234 5678" required />
+            WhatsApp
+            <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
           </label>
           <label className="field">
             Email
@@ -444,23 +492,23 @@ export function SpecialistRegisterForm() {
             Dirección base
             <input name="address" placeholder="Dirección de referencia" required />
           </label>
-          <label className="field">
-            Comuna base
-            <select
-              value={`${baseCommune}|${baseRegion}`}
-              onChange={(event) => {
-                const [commune, region] = event.target.value.split("|");
-                setBaseCommune(commune);
-                setBaseRegion(region);
-              }}
-            >
-              {chileCommunes.map((commune) => (
-                <option key={commune.code} value={`${commune.name}|${commune.regionName}`}>
-                  {commune.name} · {commune.regionName}
-                </option>
-              ))}
-            </select>
-          </label>
+          <SearchableSelect
+            label="Región base"
+            value={baseRegion}
+            options={regionOptions}
+            onChange={(nextRegion) => {
+              setBaseRegion(nextRegion);
+              setBaseCommune(communesForRegion(nextRegion)[0]?.value ?? baseCommune);
+            }}
+            required
+          />
+          <SearchableSelect
+            label="Comuna base"
+            value={baseCommune}
+            options={communesForRegion(baseRegion)}
+            onChange={setBaseCommune}
+            required
+          />
           <label className="field">
             Radio de cobertura en km
             <input name="coverageRadiusKm" type="number" min="1" max="120" defaultValue="18" required />
@@ -574,7 +622,6 @@ function ServiceEditor({
   config: CommercialConfig;
   onChange: (patch: Partial<ServiceDraft>) => void;
 }) {
-  const serviceType = getServiceTypeById(service.serviceTypeId) ?? serviceTypes[0];
   const economics = calculateServiceEconomics({
     clientCredits: Number(service.clientCredits),
     specialistPayoutCLP: Number(service.specialistPayoutCLP),
@@ -591,24 +638,32 @@ function ServiceEditor({
         </span>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <label className="field">
-          Tipo de servicio
-          <select value={service.serviceTypeId} onChange={(event) => onChange({ serviceTypeId: event.target.value })}>
-            {serviceTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="field">
-          Especialidad
-          <select value={service.specialty} onChange={(event) => onChange({ specialty: event.target.value })}>
-            {serviceType.specialties.map((specialty) => (
-              <option key={specialty}>{specialty}</option>
-            ))}
-          </select>
-        </label>
+        <SearchableSelect
+          label="Tipo de servicio"
+          value={service.serviceTypeId}
+          options={serviceTypeOptions}
+          onChange={(serviceTypeId) => onChange({ serviceTypeId })}
+          required
+        />
+        <SearchableSelect
+          label="Especialidad"
+          value={service.specialty}
+          options={specialtyOptionsForType(service.serviceTypeId)}
+          onChange={(specialty) => onChange({ specialty })}
+          placeholder="Busca gasfitería, aire, refrigeración..."
+          required
+        />
+        {service.specialty === OTHER_SERVICE_VALUE ? (
+          <label className="field md:col-span-2">
+            Describe qué necesitas ofrecer
+            <textarea
+              value={service.otherServiceDescription}
+              onChange={(event) => onChange({ otherServiceDescription: event.target.value })}
+              placeholder="Describe la especialidad o servicio que no aparece en el catálogo."
+              required
+            />
+          </label>
+        ) : null}
         <label className="field">
           Nombre del servicio
           <input value={service.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Ej: Reparación de filtración" required />
@@ -647,6 +702,14 @@ function ServiceEditor({
             <option value="yes">Sí</option>
           </select>
         </label>
+        <label className="field md:col-span-2">
+          Comentarios del especialista
+          <textarea
+            value={service.specialistComments}
+            onChange={(event) => onChange({ specialistComments: event.target.value })}
+            placeholder="Condiciones, cobertura, materiales excluidos o requisitos para tomar el trabajo."
+          />
+        </label>
       </div>
       <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-muted md:grid-cols-5">
         <span>Ingreso cliente: {formatCLP(economics.incomeCLP)}</span>
@@ -661,49 +724,97 @@ function ServiceEditor({
 
 export function CompanyRequestForm() {
   const [status, setStatus] = useState("");
+  const [region, setRegion] = useState("Metropolitana de Santiago");
+  const [commune, setCommune] = useState("Santiago");
+  const [serviceType, setServiceType] = useState("Mantención recurrente");
+  const [otherServiceDescription, setOtherServiceDescription] = useState("");
+  const [additionalComments, setAdditionalComments] = useState("");
+  const enterpriseServiceOptions = [
+    { value: "Mantención recurrente", label: "Mantención recurrente" },
+    { value: "Emergencias", label: "Emergencias" },
+    { value: "Bolsa de créditos", label: "Bolsa de créditos" },
+    { value: "Proveedores técnicos", label: "Proveedores técnicos" },
+    { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" },
+  ];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    const businessName = String(data.get("businessName") ?? "");
+    const firstNames = String(data.get("firstNames") ?? "");
+    const lastNames = String(data.get("lastNames") ?? "");
     appendStoredItem("companies", {
-      company: data.get("company"),
-      rut: data.get("rut"),
-      contact: data.get("contact"),
+      company: businessName,
+      businessName,
+      companyRut: data.get("companyRut"),
+      companyLine: data.get("companyLine"),
+      firstNames,
+      lastNames,
+      contact: `${firstNames} ${lastNames}`.trim(),
       email: data.get("email"),
-      branches: data.get("branches"),
+      whatsapp: data.get("whatsapp"),
+      region,
+      commune,
+      branches: Number(data.get("branches") ?? 1),
       plan: data.get("plan"),
+      serviceType,
+      isOtherService: serviceType === OTHER_SERVICE_VALUE,
+      otherServiceDescription,
+      additionalComments,
       status: "Pendiente",
       createdAt: new Date().toISOString(),
     });
     setMockSession({
       role: "company",
-      name: String(data.get("company") ?? "Empresa OficiosPro"),
+      name: businessName || "Empresa OficiosPro",
       email: String(data.get("email") ?? ""),
       createdAt: new Date().toISOString(),
     });
-    event.currentTarget.reset();
-    setStatus("Solicitud empresa guardada. Quedó visible en admin.");
+    setStatus("Solicitud empresa enviada. Quedó visible para revisión comercial.");
   }
 
   return (
-    <FormShell title="Solicitud empresa" text="Cuéntanos el tamaño de tu operación para simular una cuenta corporativa.">
+    <FormShell title="Solicitud empresa" text="Cuéntanos el tamaño de tu operación para preparar una cuenta corporativa con créditos, sucursales y facturación mensual.">
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
         <label className="field">
-          Empresa
-          <input name="company" placeholder="Nombre empresa" required />
+          Razón social
+          <input name="businessName" placeholder="Nombre empresa" required />
         </label>
         <label className="field">
-          RUT
-          <input name="rut" placeholder="76.123.456-7" />
+          RUT empresa
+          <input name="companyRut" placeholder="76.123.456-7" required />
         </label>
         <label className="field">
-          Contacto
-          <input name="contact" placeholder="Nombre contacto" required />
+          Giro
+          <input name="companyLine" placeholder="Retail, restaurante, comunidad, planta" required />
         </label>
         <label className="field">
-          Email
+          Nombres contacto
+          <input name="firstNames" placeholder="Ej: Camila" required />
+        </label>
+        <label className="field">
+          Apellidos contacto
+          <input name="lastNames" placeholder="Ej: Rojas" required />
+        </label>
+        <label className="field">
+          Email corporativo
           <input name="email" type="email" placeholder="operaciones@empresa.cl" required />
         </label>
+        <label className="field">
+          WhatsApp
+          <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
+        </label>
+        <SearchableSelect
+          label="Región"
+          value={region}
+          options={regionOptions}
+          onChange={(nextRegion) => {
+            setRegion(nextRegion);
+            setCommune(communesForRegion(nextRegion)[0]?.value ?? commune);
+          }}
+          required
+        />
+        <SearchableSelect label="Comuna principal" value={commune} options={communesForRegion(region)} onChange={setCommune} required />
         <label className="field">
           Sucursales
           <input name="branches" type="number" min="1" defaultValue="1" />
@@ -715,6 +826,35 @@ export function CompanyRequestForm() {
             <option>Empresa</option>
             <option>Corporativo</option>
           </select>
+        </label>
+        <SearchableSelect
+          label="Tipo de servicios requeridos"
+          value={serviceType}
+          options={enterpriseServiceOptions}
+          onChange={(nextServiceType) => {
+            setServiceType(nextServiceType);
+            setOtherServiceDescription("");
+          }}
+          required
+        />
+        {serviceType === OTHER_SERVICE_VALUE ? (
+          <label className="field md:col-span-2">
+            Describe qué necesitas
+            <textarea
+              value={otherServiceDescription}
+              onChange={(event) => setOtherServiceDescription(event.target.value)}
+              placeholder="Ej: mantenciones especiales por sucursal, equipos críticos o servicios que no aparecen en la lista."
+              required
+            />
+          </label>
+        ) : null}
+        <label className="field md:col-span-2">
+          Comentarios adicionales
+          <textarea
+            value={additionalComments}
+            onChange={(event) => setAdditionalComments(event.target.value)}
+            placeholder="Horarios, cantidad de locales, necesidades recurrentes, urgencias o contexto operacional."
+          />
         </label>
         <button className="btn-primary md:col-span-2" type="submit">
           Enviar solicitud
