@@ -8,6 +8,8 @@ import { BookingList, TransactionList } from "@/components/Lists";
 import {
   getBookings,
   getClientProfile,
+  getPaymentCreditTransactions,
+  getPaymentCreditWallet,
   getReferralState,
   getSubscription,
   getTransactions,
@@ -33,9 +35,21 @@ export function ClientDashboard() {
 
   useEffect(() => {
     seedMockState();
-    setBalance(getWallet().balance);
+    const paymentWallet = getPaymentCreditWallet();
+    const paymentTransactions = getPaymentCreditTransactions();
+    setBalance(paymentWallet.currentBalance || getWallet().balance);
     setBookings(getBookings());
-    setTransactions(getTransactions());
+    setTransactions(
+      paymentTransactions.length
+        ? paymentTransactions.map((transaction) => ({
+            id: transaction.id,
+            type: transaction.type,
+            detail: transaction.detail,
+            amount: transaction.amount,
+            date: transaction.createdAt.slice(0, 10),
+          }))
+        : getTransactions(),
+    );
     setSubscription(getSubscription());
     setReferrals(getReferralState());
     setClientProfile(getClientProfile());
@@ -114,7 +128,7 @@ export function ClientDashboard() {
               setTransactions(getTransactions());
             }}
           >
-            Simular amigo registrado
+            Registrar referido aceptado
           </button>
         </article>
       </section>
@@ -244,7 +258,7 @@ export function SpecialistDashboard() {
             </p>
           </div>
           <button className="btn-secondary" type="button" onClick={() => setReferrals(simulateAcceptedSpecialistReferral())}>
-            Simular referido aprobado
+            Marcar referido aprobado
           </button>
         </div>
       </section>

@@ -13,29 +13,44 @@ import {
 } from "@/data/marketplace";
 import { communeOptions } from "@/lib/catalog";
 import {
+  addPaymentCredits,
   approveAndPublishSpecialist,
   getCommercialConfig,
   getEnterpriseLeads,
   getHomeLeads,
   getMockSession,
+  getPaymentCreditTransactions,
+  getPaymentCreditWallet,
+  getPaymentRecords,
+  getPaymentSubscriptions,
   getPendingSpecialists,
   getPublishedSpecialists,
   getServiceRequestLeads,
+  getSpecialistPayouts,
   getSpecialistLeads,
   getStoredItems,
+  markSpecialistPayoutPaid,
   rejectPendingSpecialist,
   saveCommercialConfig,
   savePendingSpecialists,
   saveStoredItems,
   seedMockState,
+  updatePaymentSubscriptionStatus,
+  usePaymentCredits,
   updateConversionLeadStatus,
   type ConversionLeadKind,
   type ConversionLeadStatus,
   type EnterpriseLead,
   type HomeLead,
+  type PaymentCreditTransaction,
+  type PaymentCreditWallet,
+  type PaymentRecord,
+  type PaymentSubscriptionRecord,
+  type PaymentSubscriptionStatus,
   type PendingSpecialistProfile,
   type PendingSpecialistService,
   type ServiceRequestLead,
+  type SpecialistPayout,
   type SpecialistLead,
 } from "@/lib/storage";
 
@@ -46,6 +61,7 @@ type AdminSection =
   | "solicitudes"
   | "leads-hogar"
   | "leads-empresas"
+  | "pagos"
   | "catalogo"
   | "comunas"
   | "creditos"
@@ -87,6 +103,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "solicitudes", label: "Solicitudes de clientes" },
   { id: "leads-hogar", label: "Leads Club Hogar" },
   { id: "leads-empresas", label: "Leads Empresas" },
+  { id: "pagos", label: "Pagos y créditos" },
   { id: "catalogo", label: "Catálogo de servicios" },
   { id: "comunas", label: "Comunas y cobertura" },
   { id: "creditos", label: "Créditos y márgenes" },
@@ -155,6 +172,12 @@ export function AdminPanel() {
   const [enterpriseLeads, setEnterpriseLeads] = useState<EnterpriseLead[]>([]);
   const [specialistLeads, setSpecialistLeads] = useState<SpecialistLead[]>([]);
   const [serviceRequests, setServiceRequests] = useState<ServiceRequestLead[]>([]);
+  const [payments, setPayments] = useState<PaymentRecord[]>([]);
+  const [paymentSubscriptions, setPaymentSubscriptions] = useState<PaymentSubscriptionRecord[]>([]);
+  const [paymentTransactions, setPaymentTransactions] = useState<PaymentCreditTransaction[]>([]);
+  const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet>(getPaymentCreditWallet());
+  const [payouts, setPayouts] = useState<SpecialistPayout[]>([]);
+  const [creditAdjustment, setCreditAdjustment] = useState(10);
   const [config, setConfig] = useState<CommercialConfig>(getCommercialConfig());
   const [plans, setPlans] = useState<AdminPlan[]>(defaultPlans());
   const [catalog, setCatalog] = useState<EditableServiceType[]>(defaultCatalog());
@@ -197,6 +220,11 @@ export function AdminPanel() {
     setEnterpriseLeads(getEnterpriseLeads());
     setSpecialistLeads(getSpecialistLeads());
     setServiceRequests(getServiceRequestLeads());
+    setPayments(getPaymentRecords());
+    setPaymentSubscriptions(getPaymentSubscriptions());
+    setPaymentTransactions(getPaymentCreditTransactions());
+    setPaymentWallet(getPaymentCreditWallet());
+    setPayouts(getSpecialistPayouts());
     setConfig(getCommercialConfig());
   }
 
@@ -211,6 +239,8 @@ export function AdminPanel() {
     { label: "Solicitudes nuevas", value: serviceRequests.filter((item) => item.status === "Nuevo").length.toString() },
     { label: "Leads hogar", value: homeLeads.length.toString() },
     { label: "Leads empresa", value: (enterpriseLeads.length + companyRequests.length).toString() },
+    { label: "Pagos recientes", value: payments.length.toString() },
+    { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
     { label: "Créditos vendidos", value: String(defaultBookings.reduce((sum, booking) => sum + booking.credits, 0)) },
     { label: "Margen estimado", value: formatCLP(Math.round(estimatedMargin)) },
     { label: "Comunas cubiertas", value: coverage.filter((item) => item.active).length.toString() },
@@ -284,6 +314,46 @@ export function AdminPanel() {
     setCompanyRequests(next);
     saveStoredItems("companies", next);
     setNotice(`Lead empresa marcado como ${status}.`);
+  }
+
+  function refreshPaymentState() {
+    setPayments(getPaymentRecords());
+    setPaymentSubscriptions(getPaymentSubscriptions());
+    setPaymentTransactions(getPaymentCreditTransactions());
+    setPaymentWallet(getPaymentCreditWallet());
+    setPayouts(getSpecialistPayouts());
+  }
+
+  function addAdminCredits() {
+    addPaymentCredits({
+      amount: Number(creditAdjustment),
+      type: "admin_adjustment",
+      detail: "Ajuste manual desde administración",
+    });
+    refreshPaymentState();
+    setNotice("Saldo de créditos ajustado.");
+  }
+
+  function refundCredits() {
+    usePaymentCredits({
+      amount: Number(creditAdjustment),
+      type: "refund",
+      detail: "Reembolso de créditos desde administración",
+    });
+    refreshPaymentState();
+    setNotice("Reembolso de créditos registrado.");
+  }
+
+  function changeSubscriptionStatus(id: string, status: PaymentSubscriptionStatus) {
+    updatePaymentSubscriptionStatus(id, status);
+    refreshPaymentState();
+    setNotice(`Suscripción marcada como ${status}.`);
+  }
+
+  function paySpecialistPayout(id: string) {
+    markSpecialistPayoutPaid(id);
+    refreshPaymentState();
+    setNotice("Liquidación marcada como pagada.");
   }
 
   function saveNote(id: string, note: string) {
@@ -522,6 +592,22 @@ export function AdminPanel() {
 
         {activeSection === "leads-empresas" ? (
           <LeadsPanel title="Leads Empresas" kind="enterprise" leads={companyLeadRows} onStatus={(_kind, id, status) => updateEnterprisePipeline(id, status)} onExport={() => exportRows("leads-empresas.csv", companyLeadRows)} />
+        ) : null}
+
+        {activeSection === "pagos" ? (
+          <PaymentsAdminPanel
+            payments={payments}
+            subscriptions={paymentSubscriptions}
+            wallet={paymentWallet}
+            transactions={paymentTransactions}
+            payouts={payouts}
+            creditAdjustment={creditAdjustment}
+            onCreditAdjustmentChange={setCreditAdjustment}
+            onAddCredits={addAdminCredits}
+            onRefundCredits={refundCredits}
+            onSubscriptionStatus={changeSubscriptionStatus}
+            onMarkPayoutPaid={paySpecialistPayout}
+          />
         ) : null}
 
         {activeSection === "creditos" || activeSection === "configuracion" ? (
@@ -873,6 +959,178 @@ function toLeadRow(lead: HomeLead | EnterpriseLead | SpecialistLead): LeadRow {
     commune: lead.commune,
     interest: lead.interest,
   };
+}
+
+function PaymentsAdminPanel({
+  payments,
+  subscriptions,
+  wallet,
+  transactions,
+  payouts,
+  creditAdjustment,
+  onCreditAdjustmentChange,
+  onAddCredits,
+  onRefundCredits,
+  onSubscriptionStatus,
+  onMarkPayoutPaid,
+}: {
+  payments: PaymentRecord[];
+  subscriptions: PaymentSubscriptionRecord[];
+  wallet: PaymentCreditWallet;
+  transactions: PaymentCreditTransaction[];
+  payouts: SpecialistPayout[];
+  creditAdjustment: number;
+  onCreditAdjustmentChange: (amount: number) => void;
+  onAddCredits: () => void;
+  onRefundCredits: () => void;
+  onSubscriptionStatus: (id: string, status: PaymentSubscriptionStatus) => void;
+  onMarkPayoutPaid: (id: string) => void;
+}) {
+  const approvedPayments = payments.filter((payment) => payment.status === "approved");
+  const failedSubscriptions = subscriptions.filter((subscription) => subscription.status === "failed_payment");
+  const issuedCredits = transactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0);
+  const usedCredits = transactions.filter((transaction) => transaction.amount < 0).reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+  const pendingPayouts = payouts.filter((payout) => payout.status !== "pagado");
+  const estimatedMargin = payouts.reduce((sum, payout) => sum + payout.platformMarginCLP, 0);
+
+  return (
+    <Panel title="Pagos y créditos" eyebrow="Mercado Pago">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <MiniMetric label="Pagos recientes" value={payments.length.toString()} />
+        <MiniMetric label="Pagos aprobados" value={approvedPayments.length.toString()} />
+        <MiniMetric label="Suscripciones fallidas" value={failedSubscriptions.length.toString()} />
+        <MiniMetric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+        <MiniMetric label="Créditos emitidos" value={issuedCredits.toString()} />
+        <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
+        <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
+        <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">
+        <article className="rounded-[24px] border border-line bg-slate-50 p-5">
+          <h3 className="text-xl font-black">Ajuste de wallet</h3>
+          <p className="mt-2 text-sm font-bold text-muted">Administra ajustes, reembolsos y correcciones de créditos.</p>
+          <label className="field mt-4">
+            Cantidad de créditos
+            <input min="2" step="2" type="number" value={creditAdjustment} onChange={(event) => onCreditAdjustmentChange(Number(event.target.value))} />
+          </label>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="btn-primary" type="button" onClick={onAddCredits}>
+              Ajustar saldo
+            </button>
+            <button className="btn-secondary" type="button" onClick={onRefundCredits}>
+              Reembolsar créditos
+            </button>
+          </div>
+        </article>
+
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Usuarios con saldo alto</h3>
+          <div className="mt-4 rounded-2xl border border-line bg-slate-50 p-4">
+            <strong>{wallet.userId}</strong>
+            <p className="mt-1 text-sm font-bold text-muted">{wallet.currentBalance} créditos disponibles · actualización {new Date(wallet.updatedAt).toLocaleDateString("es-CL")}</p>
+          </div>
+        </article>
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Pagos recientes</h3>
+          <div className="mt-4 grid gap-3">
+            {payments.length ? (
+              payments.map((payment) => (
+                <div key={payment.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong>{payment.planName ?? payment.type}</strong>
+                    <span className="chip bg-brand-soft text-brand-dark">{payment.status}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-bold text-muted">
+                    {payment.payerEmail} · {formatCLP(payment.amountCLP)} · {payment.credits} créditos
+                  </p>
+                </div>
+              ))
+            ) : (
+              <EmptyState text="Aún no hay pagos registrados." />
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Suscripciones</h3>
+          <div className="mt-4 grid gap-3">
+            {subscriptions.length ? (
+              subscriptions.map((subscription) => (
+                <div key={subscription.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong>{subscription.planName}</strong>
+                    <span className="chip bg-white text-brand-dark">{subscription.status}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-bold text-muted">
+                    {formatCLP(subscription.amountCLP)} · {subscription.creditsPerMonth} créditos/mes · próximo cobro {new Date(subscription.nextBillingDate).toLocaleDateString("es-CL")}
+                  </p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button className="rounded-2xl border border-line px-3 py-2 text-xs font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={() => onSubscriptionStatus(subscription.id, "paused")}>
+                      Pausar
+                    </button>
+                    <button className="rounded-2xl border border-line px-3 py-2 text-xs font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={() => onSubscriptionStatus(subscription.id, "cancelled")}>
+                      Cancelar
+                    </button>
+                    <button className="rounded-2xl border border-line px-3 py-2 text-xs font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={() => onSubscriptionStatus(subscription.id, "active")}>
+                      Activar
+                    </button>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <EmptyState text="Aún no hay suscripciones registradas." />
+            )}
+          </div>
+        </article>
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Historial de créditos</h3>
+          <div className="mt-4 grid gap-3">
+            {transactions.slice(0, 8).map((transaction) => (
+              <div key={transaction.id} className="flex items-center justify-between gap-4 rounded-2xl border border-line bg-slate-50 p-4">
+                <div>
+                  <strong>{transaction.detail}</strong>
+                  <p className="mt-1 text-sm font-bold text-muted">{transaction.type} · {new Date(transaction.createdAt).toLocaleDateString("es-CL")}</p>
+                </div>
+                <span className={`text-lg font-black ${transaction.amount >= 0 ? "text-brand" : "text-rose-700"}`}>
+                  {transaction.amount > 0 ? "+" : ""}
+                  {transaction.amount}
+                </span>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Liquidaciones especialistas</h3>
+          <div className="mt-4 grid gap-3">
+            {payouts.map((payout) => (
+              <div key={payout.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{payout.specialistName}</strong>
+                  <span className="chip bg-white text-brand-dark">{payout.status}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">
+                  {payout.serviceName} · cliente {formatCLP(payout.customerChargeCLP)} · especialista {formatCLP(payout.specialistPayoutCLP)} · margen {formatCLP(payout.platformMarginCLP)}
+                </p>
+                {payout.status !== "pagado" ? (
+                  <button className="btn-secondary mt-3" type="button" onClick={() => onMarkPayoutPaid(payout.id)}>
+                    Marcar como pagada
+                  </button>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </Panel>
+  );
 }
 
 function SpecialistDetailPanel({

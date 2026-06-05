@@ -23,6 +23,11 @@ const keys = {
   pendingServiceRequests: "oficiospro.pendingServiceRequests",
   quickSearches: "oficiospro.quickSearches",
   conversionEvents: "oficiospro.conversionEvents",
+  payments: "oficiospro.payments",
+  paymentSubscriptions: "oficiospro.paymentSubscriptions",
+  paymentWallet: "oficiospro.paymentWallet",
+  paymentCreditTransactions: "oficiospro.paymentCreditTransactions",
+  specialistPayouts: "oficiospro.specialistPayouts",
 };
 
 export type Wallet = {
@@ -48,6 +53,89 @@ export type MockSubscription = {
   paymentMethod: string;
   renewal: "mensual automática";
   activatedAt: string;
+};
+
+export type PaymentStatus = "pending" | "approved" | "rejected" | "failed" | "refunded" | "chargeback" | "preparing";
+
+export type PaymentRecord = {
+  id: string;
+  provider: "mercadopago";
+  type: "checkout" | "subscription" | "credits_purchase";
+  planId?: string;
+  planName?: string;
+  userId: string;
+  payerEmail: string;
+  amountCLP: number;
+  credits: number;
+  status: PaymentStatus;
+  mercadoPagoPreferenceId?: string;
+  mercadoPagoPreapprovalId?: string;
+  mercadoPagoPaymentId?: string;
+  initPoint?: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PaymentSubscriptionStatus = "pending" | "active" | "paused" | "cancelled" | "failed_payment";
+
+export type PaymentSubscriptionRecord = {
+  id: string;
+  provider: "mercadopago";
+  userId: string;
+  planId: string;
+  planName: string;
+  amountCLP: number;
+  creditsPerMonth: number;
+  status: PaymentSubscriptionStatus;
+  mercadoPagoPreapprovalId?: string;
+  nextBillingDate: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type PaymentCreditWallet = {
+  userId: string;
+  currentBalance: number;
+  expiringCredits: { amount: number; expiresAt: string }[];
+  updatedAt: string;
+};
+
+export type PaymentCreditTransactionType =
+  | "subscription_credit"
+  | "purchase_credit"
+  | "referral_bonus"
+  | "service_hold"
+  | "service_capture"
+  | "refund"
+  | "expiration"
+  | "admin_adjustment";
+
+export type PaymentCreditTransaction = {
+  id: string;
+  userId: string;
+  type: PaymentCreditTransactionType;
+  amount: number;
+  expiresAt?: string | null;
+  relatedPaymentId?: string;
+  relatedServiceRequestId?: string;
+  detail: string;
+  createdAt: string;
+};
+
+export type SpecialistPayoutStatus = "pendiente" | "aprobado" | "pagado";
+
+export type SpecialistPayout = {
+  id: string;
+  specialistName: string;
+  serviceName: string;
+  customerCredits: number;
+  creditValueCLP: number;
+  customerChargeCLP: number;
+  specialistPayoutCLP: number;
+  platformMarginCLP: number;
+  status: SpecialistPayoutStatus;
+  completedAt: string;
+  paidAt?: string;
 };
 
 export type ReferralState = {
@@ -293,6 +381,7 @@ export function seedMockState() {
   if (!window.localStorage.getItem(keys.bookings)) write(keys.bookings, defaultBookings);
   if (!window.localStorage.getItem(keys.transactions)) write(keys.transactions, defaultTransactions);
   if (!window.localStorage.getItem(keys.commercialConfig)) write(keys.commercialConfig, defaultCommercialConfig);
+  seedPaymentState();
   if (!window.localStorage.getItem(keys.referrals)) {
     write<ReferralState>(keys.referrals, {
       clientCode: "OP-CLIENTE-10",
@@ -537,6 +626,282 @@ export function saveSubscription(plan: SubscriptionPlan, paymentMethod = "Tarjet
 
 export function getSubscription() {
   return read<MockSubscription | null>(keys.subscription, null);
+}
+
+export function seedPaymentState() {
+  if (typeof window === "undefined") return;
+  const now = new Date().toISOString();
+  if (!window.localStorage.getItem(keys.payments)) {
+    write<PaymentRecord[]>(keys.payments, [
+      {
+        id: "pay-op-plus-001",
+        provider: "mercadopago",
+        type: "subscription",
+        planId: "plus",
+        planName: "Club Hogar Plus",
+        userId: "cliente@oficiospro.cl",
+        payerEmail: "cliente@oficiospro.cl",
+        amountCLP: 59000,
+        credits: 65,
+        status: "approved",
+        mercadoPagoPreapprovalId: "preapproval_pending_connection",
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: "pay-op-credits-001",
+        provider: "mercadopago",
+        type: "credits_purchase",
+        userId: "empresa@oficiospro.cl",
+        payerEmail: "empresa@oficiospro.cl",
+        amountCLP: 120000,
+        credits: 120,
+        status: "pending",
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+  }
+  if (!window.localStorage.getItem(keys.paymentSubscriptions)) {
+    write<PaymentSubscriptionRecord[]>(keys.paymentSubscriptions, [
+      {
+        id: "sub-op-plus-001",
+        provider: "mercadopago",
+        userId: "cliente@oficiospro.cl",
+        planId: "plus",
+        planName: "Club Hogar Plus",
+        amountCLP: 59000,
+        creditsPerMonth: 65,
+        status: "active",
+        mercadoPagoPreapprovalId: "preapproval_pending_connection",
+        nextBillingDate: addMonthsLocal(new Date(), 1).toISOString(),
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+  }
+  if (!window.localStorage.getItem(keys.paymentWallet)) {
+    write<PaymentCreditWallet>(keys.paymentWallet, {
+      userId: "cliente@oficiospro.cl",
+      currentBalance: 135,
+      expiringCredits: [{ amount: 135, expiresAt: addMonthsLocal(new Date(), 24).toISOString() }],
+      updatedAt: now,
+    });
+  }
+  if (!window.localStorage.getItem(keys.paymentCreditTransactions)) {
+    write<PaymentCreditTransaction[]>(keys.paymentCreditTransactions, [
+      {
+        id: "ctx-sub-001",
+        userId: "cliente@oficiospro.cl",
+        type: "subscription_credit",
+        amount: 65,
+        expiresAt: addMonthsLocal(new Date(), 24).toISOString(),
+        relatedPaymentId: "pay-op-plus-001",
+        detail: "Créditos mensuales Club Hogar Plus",
+        createdAt: now,
+      },
+      {
+        id: "ctx-hold-001",
+        userId: "cliente@oficiospro.cl",
+        type: "service_hold",
+        amount: -30,
+        relatedServiceRequestId: "service-op-001",
+        detail: "Reserva gasfitería domiciliaria",
+        createdAt: now,
+      },
+    ]);
+  }
+  if (!window.localStorage.getItem(keys.specialistPayouts)) {
+    write<SpecialistPayout[]>(keys.specialistPayouts, [
+      {
+        id: "payout-op-001",
+        specialistName: "Victor Araya",
+        serviceName: "Mantención HVAC",
+        customerCredits: 40,
+        creditValueCLP: 1000,
+        customerChargeCLP: 40000,
+        specialistPayoutCLP: 28000,
+        platformMarginCLP: 12000,
+        status: "pendiente",
+        completedAt: now,
+      },
+      {
+        id: "payout-op-002",
+        specialistName: "Carolina Méndez",
+        serviceName: "Electricidad domiciliaria",
+        customerCredits: 12,
+        creditValueCLP: 1000,
+        customerChargeCLP: 12000,
+        specialistPayoutCLP: 7000,
+        platformMarginCLP: 5000,
+        status: "aprobado",
+        completedAt: now,
+      },
+    ]);
+  }
+}
+
+export function getPaymentRecords() {
+  return read<PaymentRecord[]>(keys.payments, []);
+}
+
+export function savePaymentRecords(items: PaymentRecord[]) {
+  write(keys.payments, items);
+}
+
+export function appendPaymentRecord(record: Omit<PaymentRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
+  const now = new Date().toISOString();
+  const stored: PaymentRecord = {
+    ...record,
+    id: record.id ?? `pay-op-${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+  savePaymentRecords([stored, ...getPaymentRecords()]);
+  return stored;
+}
+
+export function updatePaymentRecord(id: string, patch: Partial<PaymentRecord>) {
+  const now = new Date().toISOString();
+  const next = getPaymentRecords().map((payment) => (payment.id === id ? { ...payment, ...patch, updatedAt: now } : payment));
+  savePaymentRecords(next);
+  return next.find((payment) => payment.id === id) ?? null;
+}
+
+export function getPaymentSubscriptions() {
+  return read<PaymentSubscriptionRecord[]>(keys.paymentSubscriptions, []);
+}
+
+export function savePaymentSubscriptions(items: PaymentSubscriptionRecord[]) {
+  write(keys.paymentSubscriptions, items);
+}
+
+export function upsertPaymentSubscription(subscription: Omit<PaymentSubscriptionRecord, "id" | "createdAt" | "updatedAt"> & { id?: string }) {
+  const now = new Date().toISOString();
+  const stored: PaymentSubscriptionRecord = {
+    ...subscription,
+    id: subscription.id ?? `sub-op-${Date.now()}`,
+    createdAt: now,
+    updatedAt: now,
+  };
+  const existing = getPaymentSubscriptions();
+  savePaymentSubscriptions([stored, ...existing.filter((item) => item.id !== stored.id)]);
+  return stored;
+}
+
+export function updatePaymentSubscriptionStatus(id: string, status: PaymentSubscriptionStatus) {
+  const now = new Date().toISOString();
+  const next = getPaymentSubscriptions().map((subscription) => (subscription.id === id ? { ...subscription, status, updatedAt: now } : subscription));
+  savePaymentSubscriptions(next);
+}
+
+export function getPaymentCreditWallet() {
+  return read<PaymentCreditWallet>(keys.paymentWallet, {
+    userId: "cliente@oficiospro.cl",
+    currentBalance: 0,
+    expiringCredits: [],
+    updatedAt: new Date().toISOString(),
+  });
+}
+
+export function savePaymentCreditWallet(wallet: PaymentCreditWallet) {
+  write(keys.paymentWallet, wallet);
+}
+
+export function getPaymentCreditTransactions() {
+  return read<PaymentCreditTransaction[]>(keys.paymentCreditTransactions, []);
+}
+
+export function savePaymentCreditTransactions(items: PaymentCreditTransaction[]) {
+  write(keys.paymentCreditTransactions, items);
+}
+
+export function addPaymentCredits({
+  userId = "cliente@oficiospro.cl",
+  amount,
+  type = "admin_adjustment",
+  detail,
+  relatedPaymentId,
+}: {
+  userId?: string;
+  amount: number;
+  type?: PaymentCreditTransactionType;
+  detail: string;
+  relatedPaymentId?: string;
+}) {
+  const wallet = getPaymentCreditWallet();
+  const expiresAt = addMonthsLocal(new Date(), getCommercialConfig().creditExpirationMonths).toISOString();
+  const transaction: PaymentCreditTransaction = {
+    id: `ctx-op-${Date.now()}`,
+    userId,
+    type,
+    amount,
+    expiresAt,
+    relatedPaymentId,
+    detail,
+    createdAt: new Date().toISOString(),
+  };
+  savePaymentCreditWallet({
+    userId,
+    currentBalance: wallet.currentBalance + amount,
+    expiringCredits: [...wallet.expiringCredits, { amount, expiresAt }],
+    updatedAt: new Date().toISOString(),
+  });
+  savePaymentCreditTransactions([transaction, ...getPaymentCreditTransactions()]);
+  return transaction;
+}
+
+export function usePaymentCredits({
+  userId = "cliente@oficiospro.cl",
+  amount,
+  type = "service_hold",
+  detail,
+  relatedServiceRequestId,
+}: {
+  userId?: string;
+  amount: number;
+  type?: Extract<PaymentCreditTransactionType, "service_hold" | "service_capture" | "refund" | "expiration">;
+  detail: string;
+  relatedServiceRequestId?: string;
+}) {
+  const wallet = getPaymentCreditWallet();
+  const signedAmount = type === "refund" ? Math.abs(amount) : -Math.abs(amount);
+  const transaction: PaymentCreditTransaction = {
+    id: `ctx-op-${Date.now()}`,
+    userId,
+    type,
+    amount: signedAmount,
+    relatedServiceRequestId,
+    detail,
+    createdAt: new Date().toISOString(),
+  };
+  savePaymentCreditWallet({
+    ...wallet,
+    currentBalance: Math.max(0, wallet.currentBalance + signedAmount),
+    updatedAt: new Date().toISOString(),
+  });
+  savePaymentCreditTransactions([transaction, ...getPaymentCreditTransactions()]);
+  return transaction;
+}
+
+export function getSpecialistPayouts() {
+  return read<SpecialistPayout[]>(keys.specialistPayouts, []);
+}
+
+export function saveSpecialistPayouts(items: SpecialistPayout[]) {
+  write(keys.specialistPayouts, items);
+}
+
+export function markSpecialistPayoutPaid(id: string) {
+  const now = new Date().toISOString();
+  const next = getSpecialistPayouts().map((payout) => (payout.id === id ? { ...payout, status: "pagado" as const, paidAt: now } : payout));
+  saveSpecialistPayouts(next);
+}
+
+function addMonthsLocal(date: Date, months: number) {
+  const next = new Date(date);
+  next.setMonth(next.getMonth() + months);
+  return next;
 }
 
 export function getReferralState() {

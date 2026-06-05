@@ -907,7 +907,7 @@ export const defaultBookings: Booking[] = [
     status: "Confirmada",
     credits: 45,
     commune: "Providencia",
-    customer: "Cliente demo",
+    customer: "Cliente OficiosPro",
     channel: "Club Hogar",
   },
   {
@@ -920,7 +920,7 @@ export const defaultBookings: Booking[] = [
     status: "Finalizada",
     credits: 30,
     commune: "Ñuñoa",
-    customer: "Cliente demo",
+    customer: "Cliente OficiosPro",
     channel: "Club Hogar",
   },
   {
