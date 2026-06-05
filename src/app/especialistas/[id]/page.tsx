@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { ConversionButton } from "@/components/ConversionModal";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { availabilityLabels, specialists } from "@/data/mock";
 
@@ -18,9 +19,9 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
     <main className="section grid gap-8">
       <PlatformNav />
       <AppHero eyebrow={specialist.category} title={specialist.name} subtitle={`${specialist.specialty} en ${specialist.zone}. ${specialist.description}`}>
-        <Link className="btn-primary" href="/especialistas">
+        <ConversionButton type="reserva_especialista" sourceButton="Reservar desde perfil" specialist={specialist} className="btn-primary">
           Reservar por {specialist.credits} créditos
-        </Link>
+        </ConversionButton>
         <Link className="btn-secondary" href="/especialistas">
           Volver al listado
         </Link>
@@ -112,9 +113,9 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
             <span className="font-bold text-muted">Precio desde</span>
             <strong className="block text-4xl font-black">{specialist.credits} créditos</strong>
             <p className="mt-2 text-sm font-semibold leading-6 text-muted">La cantidad puede cambiar por demanda, horario y zona. El pago se libera al finalizar el trabajo.</p>
-            <Link href="/especialistas" className="btn-primary mt-5 w-full">
+            <ConversionButton type="reserva_especialista" sourceButton="Reservar especialista perfil lateral" specialist={specialist} className="btn-primary mt-5 w-full">
               Reservar especialista
-            </Link>
+            </ConversionButton>
           </article>
           <article className="panel">
             <h3 className="text-xl font-black">Confianza y garantía</h3>

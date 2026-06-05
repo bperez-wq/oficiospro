@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { ConversionModalProvider } from "@/components/ConversionModal";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import "./globals.css";
@@ -36,9 +37,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
-        <Header />
-        {children}
-        <Footer />
+        <ConversionModalProvider>
+          <Header />
+          {children}
+          <Footer />
+        </ConversionModalProvider>
       </body>
     </html>
   );

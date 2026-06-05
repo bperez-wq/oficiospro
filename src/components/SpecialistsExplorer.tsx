@@ -4,21 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { chileCommunes } from "@/data/chileCommunes";
 import { allServiceSpecialties, distanceInKm, getSpecialtiesByServiceType, serviceTypes } from "@/data/marketplace";
+import { useConversionModal } from "@/components/ConversionModal";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import {
-  getBookings,
   getClientProfile,
   getMockSession,
   getPublishedSpecialists,
-  getTransactions,
-  getWallet,
-  saveBookings,
-  saveTransactions,
-  saveWallet,
   seedMockState,
 } from "@/lib/storage";
 
 export function SpecialistsExplorer() {
+  const { openModal } = useConversionModal();
   const [category, setCategory] = useState("all");
   const [specialty, setSpecialty] = useState("all");
   const [zone, setZone] = useState("all");
@@ -30,17 +26,23 @@ export function SpecialistsExplorer() {
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
-  const [selectedSpecialist, setSelectedSpecialist] = useState<Specialist | null>(null);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
     seedMockState();
     setApprovedSpecialists(getPublishedSpecialists());
+    const params = new URLSearchParams(window.location.search);
+    const requestedType = params.get("tipo");
+    const requestedCommune = params.get("comuna");
+    const requestedSpecialty = params.get("especialidad");
+    if (requestedType) setCategory(requestedType);
+    if (requestedCommune) setZone(requestedCommune);
+    if (requestedSpecialty) window.setTimeout(() => setSpecialty(requestedSpecialty), 0);
     const clientProfile = getClientProfile();
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
       setClientLng(clientProfile.lng);
-      setZone(clientProfile.commune);
+      if (!requestedCommune) setZone(clientProfile.commune);
       setNotice(`Mostrando especialistas cerca de ${clientProfile.commune}. Tu ubicación exacta no se publica.`);
     }
   }, []);
@@ -60,7 +62,7 @@ export function SpecialistsExplorer() {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
     if (!reserveId || !getMockSession()) return;
     const specialist = marketplaceSpecialists.find((item) => item.id === reserveId);
-    if (specialist) setSelectedSpecialist(specialist);
+    if (specialist) openModal({ type: "reserva_especialista", sourceButton: "Reserva pendiente desde registro", specialist });
   }, [marketplaceSpecialists]);
 
   const visible = useMemo(() => {
@@ -89,51 +91,7 @@ export function SpecialistsExplorer() {
   function reserve(id: string) {
     const specialist = marketplaceSpecialists.find((item) => item.id === id) as Specialist | undefined;
     if (!specialist) return;
-    if (!getMockSession()) {
-      window.location.href = `/registro-cliente?reserve=${specialist.id}`;
-      return;
-    }
-    setSelectedSpecialist(specialist);
-  }
-
-  function confirmReservation() {
-    if (!selectedSpecialist) return;
-
-    const wallet = getWallet();
-    if (wallet.balance < selectedSpecialist.credits) {
-      setNotice(`No tienes créditos suficientes para reservar a ${selectedSpecialist.name}.`);
-      return;
-    }
-
-    saveWallet({ ...wallet, balance: wallet.balance - selectedSpecialist.credits });
-    saveBookings([
-      {
-        id: `bk-${Date.now()}`,
-        specialistId: selectedSpecialist.id,
-        specialistName: selectedSpecialist.name,
-        service: `Reserva ${selectedSpecialist.specialty}`,
-        date: "2026-06-14",
-        time: "11:00",
-        status: "Confirmada",
-        credits: selectedSpecialist.credits,
-        commune: selectedSpecialist.zone,
-        customer: "Cliente OficiosPro",
-        channel: "Club Hogar",
-      },
-      ...getBookings(),
-    ]);
-    saveTransactions([
-      {
-        id: `tx-${Date.now()}`,
-        type: "Reserva",
-        detail: `Reserva ${selectedSpecialist.specialty}`,
-        amount: -selectedSpecialist.credits,
-        date: new Date().toISOString().slice(0, 10),
-      },
-      ...getTransactions(),
-    ]);
-    setNotice(`Reserva confirmada con ${selectedSpecialist.name}. Se descontaron ${selectedSpecialist.credits} créditos.`);
-    setSelectedSpecialist(null);
+    openModal({ type: "reserva_especialista", sourceButton: "Reservar especialista", specialist });
   }
 
   return (
@@ -271,30 +229,6 @@ export function SpecialistsExplorer() {
           </div>
         </div>
       </section>
-      {selectedSpecialist ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-ink/55 p-4">
-          <article className="w-full max-w-xl rounded-[28px] border border-line bg-white p-6 shadow-card">
-            <p className="eyebrow">Confirmar reserva</p>
-            <h2 className="text-3xl font-black">{selectedSpecialist.name}</h2>
-            <p className="mt-2 font-semibold leading-7 text-muted">
-              {selectedSpecialist.specialty} en {selectedSpecialist.zone}. Se descontarán {selectedSpecialist.credits} créditos al confirmar.
-            </p>
-            <div className="mt-5 grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-muted">
-              <span>Distancia aproximada: {selectedSpecialist.distance} km</span>
-              <span>Radio de cobertura: {selectedSpecialist.coverageRadiusKm ?? 0} km</span>
-              <span>Pago liberado al finalizar el trabajo.</span>
-            </div>
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-              <button className="btn-primary flex-1" type="button" onClick={confirmReservation}>
-                Confirmar reserva
-              </button>
-              <button className="btn-secondary flex-1" type="button" onClick={() => setSelectedSpecialist(null)}>
-                Cancelar
-              </button>
-            </div>
-          </article>
-        </div>
-      ) : null}
     </div>
   );
 }

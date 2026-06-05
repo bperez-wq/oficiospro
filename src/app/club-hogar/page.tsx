@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { ConversionButton } from "@/components/ConversionModal";
 import { TransactionList } from "@/components/Lists";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { defaultTransactions, workStories } from "@/data/mock";
@@ -16,12 +16,12 @@ export default function ClubHogarPage() {
         title="Créditos acumulables para resolver tu casa cuando lo necesites."
         subtitle="Una suscripción de tranquilidad para familias: acumula créditos hasta 24 meses, reserva especialistas verificados y libera el pago solo al finalizar el trabajo."
       >
-        <Link className="btn-primary" href="/especialistas">
+        <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-primary">
           Usar créditos
-        </Link>
-        <Link className="btn-secondary" href="/registro-cliente">
+        </ConversionButton>
+        <ConversionButton type="lead_cliente" sourceButton="Crear cuenta Club Hogar" className="btn-secondary">
           Crear cuenta
-        </Link>
+        </ConversionButton>
       </AppHero>
 
       <section className="grid gap-5 md:grid-cols-3">

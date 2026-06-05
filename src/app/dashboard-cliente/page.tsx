@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ClientDashboard } from "@/components/Dashboards";
 
@@ -11,9 +11,9 @@ export default function DashboardClientePage() {
         title="Tu operación de hogar en un solo lugar."
         subtitle="Billetera de créditos, reservas próximas, servicios realizados, historial y técnicos favoritos en un solo lugar."
       >
-        <Link className="btn-primary" href="/especialistas">
+        <ConversionButton type="consulta_general" sourceButton="Reservar técnico dashboard cliente" className="btn-primary">
           Reservar técnico
-        </Link>
+        </ConversionButton>
       </AppHero>
       <ClientDashboard />
     </main>

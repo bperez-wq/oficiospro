@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 
 export default function NotFound() {
   return (
@@ -11,9 +12,9 @@ export default function NotFound() {
           <Link className="btn-primary" href="/">
             Ir al inicio
           </Link>
-          <Link className="btn-secondary" href="/especialistas">
+          <ConversionButton type="consulta_general" sourceButton="Ver técnicos 404" className="btn-secondary">
             Ver técnicos
-          </Link>
+          </ConversionButton>
         </div>
       </section>
     </main>

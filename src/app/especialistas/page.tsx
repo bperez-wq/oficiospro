@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { ConversionButton } from "@/components/ConversionModal";
 import { SpecialistsExplorer } from "@/components/SpecialistsExplorer";
 
 export default function SpecialistsPage() {
@@ -14,9 +15,9 @@ export default function SpecialistsPage() {
         <Link className="btn-secondary" href="/dashboard-cliente">
           Ver mis créditos
         </Link>
-        <Link className="btn-primary" href="/registro-cliente">
+        <ConversionButton type="lead_cliente" sourceButton="Crear cuenta desde especialistas" className="btn-primary">
           Crear cuenta
-        </Link>
+        </ConversionButton>
       </AppHero>
       <SpecialistsExplorer />
     </main>

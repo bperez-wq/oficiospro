@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 
 export function SpecialistCard({
@@ -81,9 +82,9 @@ export function SpecialistCard({
               Reservar
             </button>
           ) : (
-            <Link href="/especialistas" className="btn-primary flex-1">
+            <ConversionButton type="reserva_especialista" sourceButton="Reservar especialista" specialist={specialist} className="btn-primary flex-1">
               Reservar
-            </Link>
+            </ConversionButton>
           )}
         </div>
       </div>

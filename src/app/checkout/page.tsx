@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 import { PlatformNav } from "@/components/PlatformNav";
 import { formatCLP, getPlanById } from "@/data/marketplace";
 import {
@@ -100,9 +100,13 @@ export default function CheckoutPage() {
               ))}
             </div>
           </article>
-          <Link className="btn-secondary" href={plan.audience === "empresa" ? "/empresas" : "/club-hogar"}>
+          <ConversionButton
+            type={plan.audience === "empresa" ? "plan_empresa" : "lead_cliente"}
+            sourceButton="Cambiar plan checkout"
+            className="btn-secondary"
+          >
             Cambiar plan
-          </Link>
+          </ConversionButton>
         </aside>
       </section>
     </main>

@@ -1,14 +1,9 @@
 "use client";
 
+import { ConversionButton } from "@/components/ConversionModal";
 import { formatCLP, type SubscriptionPlan } from "@/data/marketplace";
-import { isClientLoggedIn } from "@/lib/storage";
 
 export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionPlan; featured?: boolean }) {
-  function choosePlan() {
-    const target = isClientLoggedIn() ? `/checkout?plan=${plan.id}` : `/registro-cliente?plan=${plan.id}`;
-    window.location.href = target;
-  }
-
   return (
     <article className={`rounded-[28px] border p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card ${featured ? "border-brand bg-brand text-white" : "border-line bg-white"}`}>
       <span className={featured ? "font-black text-white/70" : "font-black text-brand"}>{plan.name}</span>
@@ -26,9 +21,14 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
           </span>
         ))}
       </div>
-      <button className={featured ? "btn-secondary mt-6 w-full" : "btn-primary mt-6 w-full"} type="button" onClick={choosePlan}>
+      <ConversionButton
+        type={plan.audience === "empresa" ? "plan_empresa" : "plan_hogar"}
+        planId={plan.id}
+        sourceButton={`Elegir plan ${plan.name}`}
+        className={featured ? "btn-secondary mt-6 w-full" : "btn-primary mt-6 w-full"}
+      >
         {plan.ctaLabel ?? "Contratar plan"}
-      </button>
+      </ConversionButton>
     </article>
   );
 }

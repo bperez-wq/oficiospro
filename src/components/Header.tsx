@@ -1,10 +1,10 @@
 import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 
 const navItems = [
   { href: "/especialistas", label: "Especialistas" },
   { href: "/club-hogar", label: "Club Hogar" },
   { href: "/empresas", label: "Empresas" },
-  { href: "/registro-especialista", label: "Trabaja con nosotros" },
 ];
 
 export function Header() {
@@ -24,20 +24,23 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <ConversionButton type="registro_especialista" sourceButton="Trabaja con nosotros" className="transition hover:text-brand">
+            Trabaja con nosotros
+          </ConversionButton>
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
           <Link href="/login" className="rounded-2xl px-4 py-3 text-sm font-black text-muted transition hover:bg-slate-100 hover:text-brand">
             Ingresar
           </Link>
-          <Link href="/especialistas" className="btn-primary">
+          <ConversionButton type="consulta_general" sourceButton="Ver técnicos" className="btn-primary">
             Ver técnicos
-          </Link>
+          </ConversionButton>
         </div>
 
-        <Link href="/especialistas" className="btn-primary px-4 md:hidden">
+        <ConversionButton type="consulta_general" sourceButton="Ver técnicos mobile" className="btn-primary px-4 md:hidden">
           Técnicos
-        </Link>
+        </ConversionButton>
       </div>
       <nav className="flex gap-2 overflow-x-auto border-t border-line/70 bg-white px-5 py-3 text-sm font-black text-muted lg:hidden">
         {navItems.map((item) => (
@@ -45,6 +48,9 @@ export function Header() {
             {item.label}
           </Link>
         ))}
+        <ConversionButton type="registro_especialista" sourceButton="Trabaja con nosotros mobile" className="whitespace-nowrap rounded-full bg-slate-50 px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark">
+          Trabaja con nosotros
+        </ConversionButton>
       </nav>
     </header>
   );

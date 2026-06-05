@@ -17,6 +17,12 @@ const keys = {
   session: "oficiospro.session",
   clientProfile: "oficiospro.clientProfile",
   referrals: "oficiospro.referrals",
+  homeLeads: "oficiospro.homeLeads",
+  enterpriseLeads: "oficiospro.enterpriseLeads",
+  specialistLeads: "oficiospro.specialistLeads",
+  pendingServiceRequests: "oficiospro.pendingServiceRequests",
+  quickSearches: "oficiospro.quickSearches",
+  conversionEvents: "oficiospro.conversionEvents",
 };
 
 export type Wallet = {
@@ -118,6 +124,113 @@ export type PendingSpecialistProfile = {
   reviewedAt?: string;
 };
 
+export type ConversionModalType =
+  | "lead_cliente"
+  | "plan_hogar"
+  | "plan_empresa"
+  | "reserva_especialista"
+  | "registro_especialista"
+  | "contacto_empresa"
+  | "referido"
+  | "consulta_general";
+
+export type ConversionLeadStatus = "Nuevo" | "Contactado" | "Convertido" | "Perdido";
+
+export type ConversionEvent = {
+  id: string;
+  type:
+    | "modal_opened"
+    | "lead_submitted"
+    | "plan_selected"
+    | "specialist_reserved"
+    | "company_lead_created"
+    | "specialist_lead_created";
+  sourceButton: string;
+  page: string;
+  timestamp: string;
+  data: Record<string, unknown>;
+};
+
+export type HomeLead = {
+  id: string;
+  createdAt: string;
+  status: ConversionLeadStatus;
+  sourceButton: string;
+  name: string;
+  email: string;
+  whatsapp: string;
+  commune: string;
+  planId?: string;
+  planName?: string;
+  interest: string;
+};
+
+export type EnterpriseLead = {
+  id: string;
+  createdAt: string;
+  status: ConversionLeadStatus;
+  sourceButton: string;
+  name: string;
+  company: string;
+  email: string;
+  whatsapp: string;
+  industry: string;
+  branches: number;
+  commune: string;
+  need: string;
+  planId?: string;
+  interest: string;
+};
+
+export type SpecialistLead = {
+  id: string;
+  createdAt: string;
+  status: ConversionLeadStatus;
+  sourceButton: string;
+  name: string;
+  phone: string;
+  email: string;
+  serviceTypeId: string;
+  serviceTypeName: string;
+  commune: string;
+  years: number;
+  interest: string;
+};
+
+export type ServiceRequestLead = {
+  id: string;
+  createdAt: string;
+  status: ConversionLeadStatus;
+  sourceButton: string;
+  name: string;
+  email: string;
+  whatsapp: string;
+  commune: string;
+  address: string;
+  service: string;
+  urgency: string;
+  specialistId?: string;
+  specialistName?: string;
+  estimatedCredits?: number;
+  coverageZone?: string;
+  interest: string;
+};
+
+export type QuickSearchLead = {
+  id: string;
+  createdAt: string;
+  sourceButton: string;
+  need: string;
+  serviceTypeId: string;
+  specialty: string;
+  commune: string;
+  urgency: string;
+  lat?: number | null;
+  lng?: number | null;
+};
+
+export type ConversionLeadKind = "home" | "enterprise" | "specialist" | "serviceRequest";
+
 function read<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   const stored = window.localStorage.getItem(key);
@@ -150,6 +263,101 @@ export function seedMockState() {
       specialistBenefit: "Badge Fundador disponible al aprobar referidos",
     });
   }
+}
+
+function currentPage() {
+  if (typeof window === "undefined") return "server";
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+function makeStoredItem<T extends object>(prefix: string, item: T) {
+  return { ...item, id: `${prefix}-${Date.now()}`, createdAt: new Date().toISOString() };
+}
+
+export function appendConversionEvent(event: Omit<ConversionEvent, "id" | "timestamp" | "page"> & { page?: string }) {
+  const existing = read<ConversionEvent[]>(keys.conversionEvents, []);
+  const stored: ConversionEvent = {
+    ...event,
+    id: `conversion-event-${Date.now()}`,
+    page: event.page ?? currentPage(),
+    timestamp: new Date().toISOString(),
+  };
+  write(keys.conversionEvents, [stored, ...existing]);
+  return stored;
+}
+
+export function getConversionEvents() {
+  return read<ConversionEvent[]>(keys.conversionEvents, []);
+}
+
+export function appendHomeLead(item: Omit<HomeLead, "id" | "createdAt" | "status"> & { status?: ConversionLeadStatus }) {
+  const existing = read<HomeLead[]>(keys.homeLeads, []);
+  const stored = makeStoredItem("home-lead", { ...item, status: item.status ?? "Nuevo" }) as HomeLead;
+  write(keys.homeLeads, [stored, ...existing]);
+  return stored;
+}
+
+export function getHomeLeads() {
+  return read<HomeLead[]>(keys.homeLeads, []);
+}
+
+export function appendEnterpriseLead(item: Omit<EnterpriseLead, "id" | "createdAt" | "status"> & { status?: ConversionLeadStatus }) {
+  const existing = read<EnterpriseLead[]>(keys.enterpriseLeads, []);
+  const stored = makeStoredItem("enterprise-lead", { ...item, status: item.status ?? "Nuevo" }) as EnterpriseLead;
+  write(keys.enterpriseLeads, [stored, ...existing]);
+  return stored;
+}
+
+export function getEnterpriseLeads() {
+  return read<EnterpriseLead[]>(keys.enterpriseLeads, []);
+}
+
+export function appendSpecialistLead(item: Omit<SpecialistLead, "id" | "createdAt" | "status"> & { status?: ConversionLeadStatus }) {
+  const existing = read<SpecialistLead[]>(keys.specialistLeads, []);
+  const stored = makeStoredItem("specialist-lead", { ...item, status: item.status ?? "Nuevo" }) as SpecialistLead;
+  write(keys.specialistLeads, [stored, ...existing]);
+  return stored;
+}
+
+export function getSpecialistLeads() {
+  return read<SpecialistLead[]>(keys.specialistLeads, []);
+}
+
+export function appendServiceRequestLead(item: Omit<ServiceRequestLead, "id" | "createdAt" | "status"> & { status?: ConversionLeadStatus }) {
+  const existing = read<ServiceRequestLead[]>(keys.pendingServiceRequests, []);
+  const stored = makeStoredItem("service-request", { ...item, status: item.status ?? "Nuevo" }) as ServiceRequestLead;
+  write(keys.pendingServiceRequests, [stored, ...existing]);
+  return stored;
+}
+
+export function getServiceRequestLeads() {
+  return read<ServiceRequestLead[]>(keys.pendingServiceRequests, []);
+}
+
+export function appendQuickSearchLead(item: Omit<QuickSearchLead, "id" | "createdAt">) {
+  const existing = read<QuickSearchLead[]>(keys.quickSearches, []);
+  const stored = makeStoredItem("quick-search", item) as QuickSearchLead;
+  write(keys.quickSearches, [stored, ...existing]);
+  return stored;
+}
+
+export function getQuickSearchLeads() {
+  return read<QuickSearchLead[]>(keys.quickSearches, []);
+}
+
+export function updateConversionLeadStatus(kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) {
+  const config = {
+    home: keys.homeLeads,
+    enterprise: keys.enterpriseLeads,
+    specialist: keys.specialistLeads,
+    serviceRequest: keys.pendingServiceRequests,
+  } satisfies Record<ConversionLeadKind, string>;
+  const key = config[kind];
+  const items = read<Array<{ id: string; status: ConversionLeadStatus }>>(key, []);
+  write(
+    key,
+    items.map((item) => (item.id === id ? { ...item, status } : item)),
+  );
 }
 
 export function getWallet() {

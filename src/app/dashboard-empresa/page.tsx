@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { CompanyDashboard } from "@/components/Dashboards";
 
@@ -11,12 +11,12 @@ export default function DashboardEmpresaPage() {
         title="Centro operativo para mantenciones corporativas."
         subtitle="Controla créditos, sucursales, servicios solicitados, gastos mensuales, reportes, proveedores frecuentes y facturación mensual consolidada."
       >
-        <Link className="btn-primary" href="/especialistas">
+        <ConversionButton type="contacto_empresa" sourceButton="Solicitar técnico dashboard empresa" className="btn-primary">
           Solicitar técnico
-        </Link>
-        <Link className="btn-secondary" href="/empresas">
+        </ConversionButton>
+        <ConversionButton type="plan_empresa" sourceButton="Ver planes empresa dashboard" className="btn-secondary">
           Ver planes empresa
-        </Link>
+        </ConversionButton>
       </AppHero>
       <CompanyDashboard />
     </main>

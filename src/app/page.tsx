@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { ConversionButton } from "@/components/ConversionModal";
 import { companyDashboard, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -23,15 +23,15 @@ export default function HomePage() {
               revisa calificaciones y recibe atención rápida desde una sola plataforma.
             </p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Link className="btn-primary" href="/especialistas">
+              <ConversionButton type="consulta_general" sourceButton="Ver técnicos disponibles" className="btn-primary">
                 Ver técnicos disponibles
-              </Link>
-              <Link className="btn-secondary" href="/club-hogar">
+              </ConversionButton>
+              <ConversionButton type="lead_cliente" sourceButton="Conocer Club Hogar" className="btn-secondary">
                 Conocer Club Hogar
-              </Link>
-              <Link className="btn-ghost" href="/empresas">
+              </ConversionButton>
+              <ConversionButton type="contacto_empresa" sourceButton="Soluciones para empresas" className="btn-ghost">
                 Soluciones para empresas
-              </Link>
+              </ConversionButton>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {homeBenefits.slice(0, 3).map((benefit) => (
@@ -128,9 +128,9 @@ export default function HomePage() {
       <section className="section" id="especialistas">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Foto protagonista, certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
-          <Link className="btn-secondary" href="/especialistas">
+          <ConversionButton type="consulta_general" sourceButton="Ver todos especialistas" className="btn-secondary">
             Ver todos
-          </Link>
+          </ConversionButton>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {featured.map((specialist) => (
@@ -154,9 +154,9 @@ export default function HomePage() {
                 </span>
               ))}
             </div>
-            <Link className="btn-primary mt-7" href="/club-hogar">
+            <ConversionButton type="lead_cliente" sourceButton="Conocer planes" className="btn-primary mt-7">
               Conocer planes
-            </Link>
+            </ConversionButton>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[["Mes 1", "45 créditos"], ["Mes 2", "90 créditos"], ["Mes 3", "135 créditos"]].map(([label, value]) => (
@@ -185,9 +185,9 @@ export default function HomePage() {
                 </span>
               ))}
             </div>
-            <Link className="btn-primary mt-7" href="/empresas">
+            <ConversionButton type="contacto_empresa" sourceButton="Ver soluciones empresas" className="btn-primary mt-7">
               Ver soluciones empresas
-            </Link>
+            </ConversionButton>
           </div>
           <DashboardPreview />
         </div>
@@ -220,9 +220,9 @@ export default function HomePage() {
 
       <section className="section-compact">
         <div className="grid gap-5 md:grid-cols-3">
-          <CTA title="Soy cliente" text="Busca técnicos, compara reputación y reserva con créditos." href="/registro-cliente" label="Crear cuenta" />
-          <CTA title="Soy empresa" text="Centraliza mantenciones, sucursales, reportes y facturación." href="/empresas" label="Solicitar cuenta" />
-          <CTA title="Soy especialista" text="Crea tu perfil, muestra trabajos y construye reputación real." href="/registro-especialista" label="Postular" />
+          <CTA title="Soy cliente" text="Busca técnicos, compara reputación y reserva con créditos." type="lead_cliente" label="Crear cuenta" />
+          <CTA title="Soy empresa" text="Centraliza mantenciones, sucursales, reportes y facturación." type="contacto_empresa" label="Solicitar cuenta" />
+          <CTA title="Soy especialista" text="Crea tu perfil, muestra trabajos y construye reputación real." type="registro_especialista" label="Postular" />
         </div>
       </section>
 
@@ -309,14 +309,14 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CTA({ title, text, href, label }: { title: string; text: string; href: string; label: string }) {
+function CTA({ title, text, type, label }: { title: string; text: string; type: "lead_cliente" | "contacto_empresa" | "registro_especialista"; label: string }) {
   return (
     <article className="panel card-hover">
       <h3 className="text-2xl font-black">{title}</h3>
       <p className="mt-3 min-h-16 text-sm font-semibold leading-6 text-muted">{text}</p>
-      <Link className="btn-primary mt-5 w-full" href={href}>
+      <ConversionButton className="btn-primary mt-5 w-full" type={type} sourceButton={label}>
         {label}
-      </Link>
+      </ConversionButton>
     </article>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ConversionButton } from "@/components/ConversionModal";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { BookingList, TransactionList } from "@/components/Lists";
 import {
@@ -75,12 +76,12 @@ export function ClientDashboard() {
         <article className="panel">
           <h2 className="text-2xl font-black">Acciones rápidas</h2>
           <div className="mt-5 grid gap-3">
-            <Link className="btn-primary" href="/especialistas">
+            <ConversionButton type="consulta_general" sourceButton="Reservar especialista dashboard cliente" className="btn-primary">
               Reservar especialista
-            </Link>
-            <Link className="btn-secondary" href="/club-hogar">
+            </ConversionButton>
+            <ConversionButton type="lead_cliente" sourceButton="Ver planes Club Hogar dashboard" className="btn-secondary">
               Ver planes Club Hogar
-            </Link>
+            </ConversionButton>
             <Link className="btn-ghost" href="/registro-cliente">
               Actualizar datos
             </Link>

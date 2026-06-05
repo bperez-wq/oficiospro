@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { ConversionButton } from "@/components/ConversionModal";
 import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
@@ -16,9 +17,9 @@ export default function EmpresasPage() {
         title="Mantención bajo demanda para mantener tu operación funcionando."
         subtitle="Accede a una red de especialistas verificados para oficinas, restaurantes, bodegas, locales comerciales, plantas productivas y comunidades."
       >
-        <Link className="btn-primary" href="#empresa-form">
+        <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary">
           Solicitar cuenta empresa
-        </Link>
+        </ConversionButton>
         <Link className="btn-secondary" href="/dashboard-empresa">
           Ver dashboard empresa
         </Link>

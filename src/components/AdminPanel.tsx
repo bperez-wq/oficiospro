@@ -6,15 +6,28 @@ import { defaultBookings, services, specialists } from "@/data/mock";
 import { calculateServiceEconomics, formatCLP, serviceTypes, type CommercialConfig } from "@/data/marketplace";
 import {
   approveAndPublishSpecialist,
+  getConversionEvents,
   getCommercialConfig,
+  getEnterpriseLeads,
+  getHomeLeads,
   getMockSession,
   getPendingSpecialists,
   getPublishedSpecialists,
+  getServiceRequestLeads,
+  getSpecialistLeads,
   getStoredItems,
   rejectPendingSpecialist,
   saveCommercialConfig,
   seedMockState,
+  updateConversionLeadStatus,
+  type ConversionEvent,
+  type ConversionLeadKind,
+  type ConversionLeadStatus,
+  type EnterpriseLead,
+  type HomeLead,
   type PendingSpecialistProfile,
+  type ServiceRequestLead,
+  type SpecialistLead,
 } from "@/lib/storage";
 import { BookingList } from "@/components/Lists";
 
@@ -38,6 +51,11 @@ export function AdminPanel() {
   const [users, setUsers] = useState<UserRequest[]>([]);
   const [config, setConfig] = useState<CommercialConfig | null>(null);
   const [publishedCount, setPublishedCount] = useState(0);
+  const [homeLeads, setHomeLeads] = useState<HomeLead[]>([]);
+  const [enterpriseLeads, setEnterpriseLeads] = useState<EnterpriseLead[]>([]);
+  const [specialistLeads, setSpecialistLeads] = useState<SpecialistLead[]>([]);
+  const [serviceRequestLeads, setServiceRequestLeads] = useState<ServiceRequestLead[]>([]);
+  const [conversionEvents, setConversionEvents] = useState<ConversionEvent[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [notice, setNotice] = useState("");
 
@@ -49,7 +67,16 @@ export function AdminPanel() {
     setPublishedCount(getPublishedSpecialists().length);
     setCompanyRequests(getStoredItems<CompanyRequest>("companies"));
     setUsers(getStoredItems<UserRequest>("users"));
+    refreshConversionData();
   }, []);
+
+  function refreshConversionData() {
+    setHomeLeads(getHomeLeads());
+    setEnterpriseLeads(getEnterpriseLeads());
+    setSpecialistLeads(getSpecialistLeads());
+    setServiceRequestLeads(getServiceRequestLeads());
+    setConversionEvents(getConversionEvents());
+  }
 
   function updateConfig(event: ChangeEvent<HTMLInputElement>) {
     if (!config) return;
@@ -72,6 +99,12 @@ export function AdminPanel() {
     rejectPendingSpecialist(id);
     setSpecialistRequests(getPendingSpecialists());
     setNotice("Especialista rechazado.");
+  }
+
+  function changeLeadStatus(kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) {
+    updateConversionLeadStatus(kind, id, status);
+    refreshConversionData();
+    setNotice(`Lead marcado como ${status}.`);
   }
 
   if (!isAdmin) {
@@ -120,6 +153,15 @@ export function AdminPanel() {
         </section>
       ) : null}
 
+      <ConversionAdminSection
+        homeLeads={homeLeads}
+        enterpriseLeads={enterpriseLeads}
+        specialistLeads={specialistLeads}
+        serviceRequestLeads={serviceRequestLeads}
+        conversionEvents={conversionEvents}
+        onStatusChange={changeLeadStatus}
+      />
+
       <section className="panel">
         <h2 className="mb-4 text-2xl font-black">Solicitudes de especialistas</h2>
         <div className="grid gap-3">
@@ -141,7 +183,7 @@ export function AdminPanel() {
         <article className="panel">
           <h2 className="mb-4 text-2xl font-black">Empresas</h2>
           <div className="grid gap-3">
-            {(companyRequests.length ? companyRequests : [{ company: "Operadora Demo", plan: "Empresa", status: "Pendiente" }]).map((company, index) => (
+            {(companyRequests.length ? companyRequests : [{ company: "Empresa piloto", plan: "Empresa", status: "Pendiente" }]).map((company, index) => (
               <article key={`${company.company}-${index}`} className="rounded-2xl border border-line bg-slate-50 p-4">
                 <strong>{company.company}</strong>
                 <span className="block text-sm font-bold text-muted">
@@ -202,6 +244,226 @@ export function AdminPanel() {
       </article>
     </div>
   );
+}
+
+type AdminLeadRow = {
+  id: string;
+  createdAt: string;
+  status: ConversionLeadStatus;
+  name: string;
+  email: string;
+  whatsapp: string;
+  commune: string;
+  interest: string;
+  sourceButton: string;
+};
+
+function ConversionAdminSection({
+  homeLeads,
+  enterpriseLeads,
+  specialistLeads,
+  serviceRequestLeads,
+  conversionEvents,
+  onStatusChange,
+}: {
+  homeLeads: HomeLead[];
+  enterpriseLeads: EnterpriseLead[];
+  specialistLeads: SpecialistLead[];
+  serviceRequestLeads: ServiceRequestLead[];
+  conversionEvents: ConversionEvent[];
+  onStatusChange: (kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) => void;
+}) {
+  const mappedHomeLeads: AdminLeadRow[] = homeLeads.map((lead) => ({
+    id: lead.id,
+    createdAt: lead.createdAt,
+    status: lead.status,
+    name: lead.name,
+    email: lead.email,
+    whatsapp: lead.whatsapp,
+    commune: lead.commune,
+    interest: lead.interest,
+    sourceButton: lead.sourceButton,
+  }));
+  const mappedEnterpriseLeads: AdminLeadRow[] = enterpriseLeads.map((lead) => ({
+    id: lead.id,
+    createdAt: lead.createdAt,
+    status: lead.status,
+    name: `${lead.name} · ${lead.company}`,
+    email: lead.email,
+    whatsapp: lead.whatsapp,
+    commune: lead.commune,
+    interest: lead.interest,
+    sourceButton: lead.sourceButton,
+  }));
+  const mappedSpecialistLeads: AdminLeadRow[] = specialistLeads.map((lead) => ({
+    id: lead.id,
+    createdAt: lead.createdAt,
+    status: lead.status,
+    name: lead.name,
+    email: lead.email,
+    whatsapp: lead.phone,
+    commune: lead.commune,
+    interest: `${lead.serviceTypeName} · ${lead.years} años`,
+    sourceButton: lead.sourceButton,
+  }));
+  const mappedServiceRequests: AdminLeadRow[] = serviceRequestLeads.map((lead) => ({
+    id: lead.id,
+    createdAt: lead.createdAt,
+    status: lead.status,
+    name: lead.name,
+    email: lead.email,
+    whatsapp: lead.whatsapp,
+    commune: lead.commune,
+    interest: lead.interest,
+    sourceButton: lead.sourceButton,
+  }));
+
+  return (
+    <section className="panel">
+      <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="eyebrow">Leads y conversiones</p>
+          <h2 className="text-3xl font-black">Captura comercial de modales</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-muted">Revisa qué botones convierten, qué planes interesan y qué comunas tienen demanda.</p>
+        </div>
+        <button
+          className="btn-secondary"
+          type="button"
+          onClick={() =>
+            exportCsv("oficiospro-conversiones.csv", [
+              ...mappedHomeLeads,
+              ...mappedEnterpriseLeads,
+              ...mappedSpecialistLeads,
+              ...mappedServiceRequests,
+            ])
+          }
+        >
+          Exportar CSV
+        </button>
+      </div>
+
+      <div className="grid gap-5">
+        <ConversionLeadTable title="Leads Club Hogar" kind="home" leads={mappedHomeLeads} onStatusChange={onStatusChange} />
+        <ConversionLeadTable title="Leads Empresas" kind="enterprise" leads={mappedEnterpriseLeads} onStatusChange={onStatusChange} />
+        <ConversionLeadTable title="Leads Especialistas" kind="specialist" leads={mappedSpecialistLeads} onStatusChange={onStatusChange} />
+        <ConversionLeadTable title="Solicitudes de reserva" kind="serviceRequest" leads={mappedServiceRequests} onStatusChange={onStatusChange} />
+        <ConversionEventsTable events={conversionEvents} />
+      </div>
+    </section>
+  );
+}
+
+function ConversionLeadTable({
+  title,
+  kind,
+  leads,
+  onStatusChange,
+}: {
+  title: string;
+  kind: ConversionLeadKind;
+  leads: AdminLeadRow[];
+  onStatusChange: (kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) => void;
+}) {
+  return (
+    <article className="rounded-[24px] border border-line bg-slate-50 p-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-xl font-black">{title}</h3>
+        <span className="chip bg-white text-brand-dark">{leads.length} registros</span>
+      </div>
+      {leads.length ? (
+        <div className="grid gap-3">
+          {leads.map((lead) => (
+            <article key={lead.id} className="grid gap-3 rounded-2xl border border-line bg-white p-4 lg:grid-cols-[1fr_auto]">
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong>{lead.name}</strong>
+                  <span className="chip bg-brand-soft text-brand-dark">{lead.status}</span>
+                </div>
+                <div className="mt-2 grid gap-2 text-sm font-bold text-muted md:grid-cols-4">
+                  <span>{formatShortDate(lead.createdAt)}</span>
+                  <span>{lead.email}</span>
+                  <span>{lead.whatsapp}</span>
+                  <span>{lead.commune}</span>
+                </div>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+                  {lead.interest} · Botón: {lead.sourceButton}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2 lg:justify-end">
+                {(["Contactado", "Convertido", "Perdido"] as ConversionLeadStatus[]).map((status) => (
+                  <button
+                    key={status}
+                    className="rounded-2xl border border-line px-3 py-2 text-xs font-black text-muted transition hover:border-brand hover:text-brand"
+                    type="button"
+                    onClick={() => onStatusChange(kind, lead.id, status)}
+                  >
+                    {status}
+                  </button>
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">Todavía no hay registros capturados.</p>
+      )}
+    </article>
+  );
+}
+
+function ConversionEventsTable({ events }: { events: ConversionEvent[] }) {
+  return (
+    <article className="rounded-[24px] border border-line bg-slate-50 p-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h3 className="text-xl font-black">Eventos de conversión</h3>
+        <span className="chip bg-white text-brand-dark">{events.length} eventos</span>
+      </div>
+      {events.length ? (
+        <div className="grid gap-3">
+          {events.slice(0, 20).map((event) => (
+            <article key={event.id} className="rounded-2xl border border-line bg-white p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong>{event.type}</strong>
+                <span className="text-sm font-bold text-muted">{formatShortDate(event.timestamp)}</span>
+              </div>
+              <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+                {event.sourceButton} · {event.page}
+              </p>
+            </article>
+          ))}
+        </div>
+      ) : (
+        <p className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">Todavía no hay eventos de conversión.</p>
+      )}
+    </article>
+  );
+}
+
+function exportCsv(filename: string, rows: AdminLeadRow[]) {
+  if (typeof window === "undefined") return;
+  const headers = ["Fecha", "Nombre", "Email", "WhatsApp", "Comuna", "Interés", "Estado", "Botón"];
+  const body = rows.map((row) =>
+    [row.createdAt, row.name, row.email, row.whatsapp, row.commune, row.interest, row.status, row.sourceButton]
+      .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+      .join(","),
+  );
+  const csv = [headers.join(","), ...body].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat("es-CL", {
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
 }
 
 function SpecialistRequestRow({
