@@ -80,7 +80,7 @@ export default function ClubHogarPage() {
           </div>
         </article>
         <article className="panel">
-          <p className="eyebrow">Historial demo</p>
+          <p className="eyebrow">Historial de créditos</p>
           <h2 className="mb-5 text-3xl font-black">Movimientos de créditos</h2>
           <TransactionList transactions={defaultTransactions} />
         </article>

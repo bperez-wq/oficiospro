@@ -1,7 +1,7 @@
 "use client";
 
-import { defaultBookings, defaultTransactions, type Booking, type CreditTransaction } from "@/data/mock";
-import { defaultCommercialConfig, type CommercialConfig, type SubscriptionPlan } from "@/data/marketplace";
+import { defaultBookings, defaultTransactions, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import { defaultCommercialConfig, getServiceTypeById, serviceTypes, type CommercialConfig, type SubscriptionPlan } from "@/data/marketplace";
 
 const keys = {
   wallet: "oficiospro.creditsWallet",
@@ -9,10 +9,13 @@ const keys = {
   transactions: "oficiospro.creditTransactions",
   users: "oficiospro.users",
   specialists: "oficiospro.specialistRequests",
+  pendingSpecialists: "oficiospro.pendingSpecialists",
+  publishedSpecialists: "oficiospro.publishedSpecialists",
   companies: "oficiospro.companyRequests",
   commercialConfig: "oficiospro.commercialConfig",
   subscription: "oficiospro.subscription",
   session: "oficiospro.session",
+  clientProfile: "oficiospro.clientProfile",
   referrals: "oficiospro.referrals",
 };
 
@@ -48,6 +51,71 @@ export type ReferralState = {
   specialistCode: string;
   specialistInvitations: number;
   specialistBenefit: string;
+};
+
+export type ClientProfile = {
+  name: string;
+  email: string;
+  phone: string;
+  commune: string;
+  address: string;
+  lat: number | null;
+  lng: number | null;
+  planId?: string;
+  referralCode?: string;
+  createdAt: string;
+};
+
+export type PendingSpecialistService = {
+  serviceTypeId: string;
+  specialty: string;
+  name: string;
+  description: string;
+  clientCredits: number;
+  specialistPayoutCLP: number;
+  initialVisitFree: boolean;
+  visitCredits: number;
+  duration: string;
+  emergency: boolean;
+  economics?: {
+    incomeCLP: number;
+    specialistPayoutCLP: number;
+    marginCLP: number;
+    minMarginCLP: number;
+    status: string;
+  };
+};
+
+export type PendingSpecialistReference = {
+  name: string;
+  company: string;
+  phone: string;
+  email: string;
+  work: string;
+};
+
+export type PendingSpecialistProfile = {
+  id?: string;
+  status: "pendiente" | "aprobado" | "rechazado";
+  name: string;
+  rut: string;
+  phone: string;
+  email: string;
+  profilePhoto: string;
+  address: string;
+  commune: string;
+  region: string;
+  lat: number;
+  lng: number;
+  coverageRadiusKm: number;
+  typeServicio: string;
+  specialty: string;
+  services: PendingSpecialistService[];
+  references: PendingSpecialistReference[];
+  portfolioPhotos: string[];
+  certifications: string[];
+  submittedAt: string;
+  reviewedAt?: string;
 };
 
 function read<T>(key: string, fallback: T): T {
@@ -121,6 +189,64 @@ export function getStoredItems<T>(key: "users" | "specialists" | "companies") {
 
 export function saveStoredItems<T>(key: "users" | "specialists" | "companies", items: T[]) {
   write(keys[key], items);
+}
+
+export function getClientProfile() {
+  return read<ClientProfile | null>(keys.clientProfile, null);
+}
+
+export function saveClientProfile(profile: ClientProfile) {
+  write(keys.clientProfile, profile);
+}
+
+export function getPendingSpecialists() {
+  const current = read<PendingSpecialistProfile[]>(keys.pendingSpecialists, []);
+  const legacy = read<PendingSpecialistProfile[]>(keys.specialists, []);
+  const merged = [...current, ...legacy.filter((item) => !current.some((existing) => existing.id === item.id))];
+  return merged;
+}
+
+export function savePendingSpecialists(items: PendingSpecialistProfile[]) {
+  write(keys.pendingSpecialists, items);
+}
+
+export function appendPendingSpecialist(item: Omit<PendingSpecialistProfile, "id">) {
+  const existing = getPendingSpecialists();
+  const storedItem: PendingSpecialistProfile = { ...item, id: `pending-specialist-${Date.now()}` };
+  savePendingSpecialists([storedItem, ...existing]);
+  return storedItem;
+}
+
+export function getPublishedSpecialists() {
+  return read<Specialist[]>(keys.publishedSpecialists, []);
+}
+
+export function savePublishedSpecialists(items: Specialist[]) {
+  write(keys.publishedSpecialists, items);
+}
+
+export function approveAndPublishSpecialist(id: string) {
+  const pending = getPendingSpecialists();
+  const request = pending.find((item) => item.id === id);
+  if (!request) return null;
+
+  const updatedPending = pending.map((item) =>
+    item.id === id ? { ...item, status: "aprobado" as const, reviewedAt: new Date().toISOString() } : item,
+  );
+  savePendingSpecialists(updatedPending);
+
+  const published = getPublishedSpecialists();
+  const specialist = toPublishedSpecialist(request);
+  savePublishedSpecialists([specialist, ...published.filter((item) => item.id !== specialist.id)]);
+  return specialist;
+}
+
+export function rejectPendingSpecialist(id: string) {
+  const pending = getPendingSpecialists();
+  const updatedPending = pending.map((item) =>
+    item.id === id ? { ...item, status: "rechazado" as const, reviewedAt: new Date().toISOString() } : item,
+  );
+  savePendingSpecialists(updatedPending);
 }
 
 export function getCommercialConfig() {
@@ -211,4 +337,93 @@ export function simulateAcceptedSpecialistReferral() {
   };
   saveReferralState(updated);
   return updated;
+}
+
+function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
+  const requestServices = request.services?.length
+    ? request.services
+    : [
+        {
+          serviceTypeId: "hogar",
+          specialty: request.specialty ?? "Servicio hogar",
+          name: request.specialty ?? "Servicio hogar",
+          description: "",
+          clientCredits: 20,
+          specialistPayoutCLP: 12000,
+          initialVisitFree: true,
+          visitCredits: 0,
+          duration: "2 horas",
+          emergency: false,
+        },
+      ];
+  const primaryService = requestServices[0];
+  const certifications = request.certifications ?? [];
+  const portfolioPhotos = request.portfolioPhotos ?? [];
+  const references = request.references ?? [];
+  const serviceType = getServiceTypeById(primaryService?.serviceTypeId ?? "hogar") ?? serviceTypes[0];
+  const publicId = `aprobado-${(request.id ?? request.name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")}`;
+  const initials = (request.name ?? "Especialista OficiosPro")
+    .split(" ")
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
+  return {
+    id: publicId,
+    name: request.name ?? "Especialista OficiosPro",
+    initials,
+    specialty: primaryService?.specialty ?? request.specialty,
+    category: serviceType.name,
+    serviceTypeId: serviceType.id,
+    serviceType: serviceType.name,
+    specialties: requestServices.map((service) => service.specialty),
+    zone: request.commune ?? "Santiago",
+    commune: request.commune ?? "Santiago",
+    region: request.region ?? "Metropolitana de Santiago",
+    availability: "today",
+    rating: 4.6,
+    jobs: 0,
+    trabajosCompletados: 0,
+    recommendation: 0,
+    credits: Number(primaryService?.clientCredits ?? 20),
+    precioDesdeCreditos: Number(primaryService?.clientCredits ?? 20),
+    demand: "Nuevo especialista",
+    responseTime: "2.0 h",
+    years: 1,
+    top: false,
+    badges: ["Verificado", "Aprobado", certifications.length ? "Certificado" : "Nuevo"],
+    image: "/assets/hero-hogar.webp",
+    foto: request.profilePhoto,
+    gallery: portfolioPhotos.length ? portfolioPhotos : ["Portafolio recibido"],
+    galleryImages: ["/assets/work-bathroom.webp", "/assets/work-electrical.webp", "/assets/work-hvac.webp"],
+    distance: 0,
+    verified: true,
+    photos: portfolioPhotos.length > 0,
+    certifications,
+    servicesOffered: requestServices.map((service) => service.name || service.specialty),
+    workHistory: [],
+    reviews: [],
+    description: `${request.specialty ?? primaryService.specialty} con cobertura en ${request.commune ?? "Santiago"} y radio de ${request.coverageRadiusKm ?? 18} km.`,
+    lat: request.lat ?? -33.4489,
+    lng: request.lng ?? -70.6693,
+    geo: { lat: request.lat ?? -33.4489, lng: request.lng ?? -70.6693 },
+    coverageRadiusKm: request.coverageRadiusKm ?? 18,
+    radioCoberturaKm: request.coverageRadiusKm ?? 18,
+    rank: "Fundador",
+    validation: {
+      rut: "approved",
+      identityDocument: "pending",
+      selfie: "pending",
+      certifications: certifications.length ? "approved" : "pending",
+      references: references.length,
+      portfolioPhotos: portfolioPhotos.length,
+    },
+    publishedFromAdmin: true,
+  };
 }

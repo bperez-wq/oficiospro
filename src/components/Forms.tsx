@@ -13,9 +13,12 @@ import {
   type CommercialConfig,
 } from "@/data/marketplace";
 import {
+  appendPendingSpecialist,
   appendStoredItem,
   getCommercialConfig,
+  saveClientProfile,
   setMockSession,
+  type PendingSpecialistProfile,
 } from "@/lib/storage";
 
 type ServiceDraft = {
@@ -59,34 +62,63 @@ function createEmptyService(): ServiceDraft {
 
 export function LoginForm() {
   const [status, setStatus] = useState("");
+  const [isLocal, setIsLocal] = useState(false);
+
+  useEffect(() => {
+    setIsLocal(["localhost", "127.0.0.1"].includes(window.location.hostname));
+  }, []);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
-    setMockSession({
-      role: "client",
-      name: "Cliente demo",
-      email: String(data.get("email") ?? ""),
-      createdAt: new Date().toISOString(),
-    });
-    setStatus("Sesión demo iniciada. Puedes entrar a cualquier dashboard o contratar planes.");
+    const email = String(data.get("email") ?? "").trim().toLowerCase();
+    const password = String(data.get("password") ?? "");
+    const credentials = {
+      "admin@oficiospro.cl": { password: "Admin1234!", role: "admin" as const, name: "Administrador OficiosPro", path: "/admin" },
+      "cliente@oficiospro.cl": { password: "Cliente1234!", role: "client" as const, name: "Cliente OficiosPro", path: "/dashboard-cliente" },
+      "especialista@oficiospro.cl": { password: "Especialista1234!", role: "specialist" as const, name: "Especialista OficiosPro", path: "/dashboard-especialista" },
+      "empresa@oficiospro.cl": { password: "Empresa1234!", role: "company" as const, name: "Empresa OficiosPro", path: "/dashboard-empresa" },
+    };
+    const account = credentials[email as keyof typeof credentials];
+
+    if (!account || account.password !== password) {
+      setStatus("Email o contraseña incorrectos.");
+      return;
+    }
+
+    setMockSession({ role: account.role, name: account.name, email, createdAt: new Date().toISOString() });
+    setStatus("Acceso correcto. Redirigiendo...");
+    window.setTimeout(() => {
+      window.location.href = account.path;
+    }, 500);
   }
 
   return (
-    <FormShell title="Ingreso demo" text="Accede con cualquier email para revisar dashboards mock. No se conecta a Supabase todavía.">
+    <FormShell title="Ingresa a OficiosPro" text="Accede a tu cuenta para gestionar reservas, créditos, especialistas o solicitudes de empresa.">
       <form className="grid gap-4" onSubmit={submit}>
         <label className="field">
           Email
-          <input name="email" type="email" placeholder="tu@email.cl" required />
+          <input name="email" type="email" placeholder="tu@email.cl" autoComplete="email" required />
         </label>
         <label className="field">
           Contraseña
-          <input name="password" type="password" minLength={4} placeholder="Clave demo" required />
+          <input name="password" type="password" minLength={8} placeholder="Tu contraseña" autoComplete="current-password" required />
         </label>
         <button className="btn-primary" type="submit">
           Ingresar
         </button>
         {status ? <SuccessMessage>{status}</SuccessMessage> : null}
+        {isLocal ? (
+          <details className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
+            <summary className="cursor-pointer font-black text-ink">Accesos internos</summary>
+            <div className="mt-3 grid gap-2">
+              <span>admin@oficiospro.cl / Admin1234!</span>
+              <span>cliente@oficiospro.cl / Cliente1234!</span>
+              <span>especialista@oficiospro.cl / Especialista1234!</span>
+              <span>empresa@oficiospro.cl / Empresa1234!</span>
+            </div>
+          </details>
+        ) : null}
       </form>
     </FormShell>
   );
@@ -95,13 +127,41 @@ export function LoginForm() {
 export function ClientRegisterForm() {
   const [status, setStatus] = useState("");
   const [planId, setPlanId] = useState("plus");
+  const [commune, setCommune] = useState("Las Condes");
+  const [region, setRegion] = useState("Metropolitana de Santiago");
+  const [geo, setGeo] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
+  const [geoStatus, setGeoStatus] = useState("");
+  const [reserveId, setReserveId] = useState("");
   const selectedPlan = getPlanById(planId);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const requestedPlan = params.get("plan");
+    const requestedReserve = params.get("reserve");
     if (requestedPlan) setPlanId(requestedPlan);
+    if (requestedReserve) setReserveId(requestedReserve);
   }, []);
+
+  function useClientLocation() {
+    setGeoStatus("Solicitando ubicación...");
+    if (!("geolocation" in navigator)) {
+      setGeo({ lat: -33.4088, lng: -70.5673 });
+      setGeoStatus("Tu navegador no entregó ubicación. Usamos una referencia en Las Condes.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeo({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setGeoStatus("Ubicación guardada de forma privada en tu perfil.");
+      },
+      () => {
+        setGeo({ lat: -33.4088, lng: -70.5673 });
+        setGeoStatus("No se pudo obtener permiso. Usamos una ubicación referencial.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
+  }
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -111,26 +171,41 @@ export function ClientRegisterForm() {
       name: data.get("name"),
       email: data.get("email"),
       phone: data.get("phone"),
-      commune: data.get("commune"),
+      commune,
+      address: data.get("address"),
       plan: planId,
       referralCode: data.get("referralCode"),
+      lat: geo.lat,
+      lng: geo.lng,
+      createdAt: new Date().toISOString(),
+    });
+    saveClientProfile({
+      name: String(data.get("name") ?? ""),
+      email: String(data.get("email") ?? ""),
+      phone: String(data.get("phone") ?? ""),
+      commune,
+      address: String(data.get("address") ?? ""),
+      lat: geo.lat,
+      lng: geo.lng,
+      planId,
+      referralCode: String(data.get("referralCode") ?? ""),
       createdAt: new Date().toISOString(),
     });
     setMockSession({
       role: "client",
-      name: String(data.get("name") ?? "Cliente demo"),
+      name: String(data.get("name") ?? "Cliente OficiosPro"),
       email: String(data.get("email") ?? ""),
       planId,
       createdAt: new Date().toISOString(),
     });
-    setStatus(planId ? "Cuenta creada. Te llevaremos al checkout para activar tu plan." : "Cuenta cliente creada en localStorage.");
+    setStatus(reserveId ? "Cuenta creada. Te llevaremos a confirmar tu reserva." : "Cuenta creada. Te llevaremos al checkout para activar tu plan.");
     window.setTimeout(() => {
-      window.location.href = planId ? `/checkout?plan=${planId}` : "/dashboard-cliente";
+      window.location.href = reserveId ? `/especialistas?reserve=${reserveId}` : `/checkout?plan=${planId}`;
     }, 650);
   }
 
   return (
-    <FormShell title="Registro cliente" text="Crea una cuenta demo para reservar especialistas, activar créditos y probar referidos.">
+    <FormShell title="Registro cliente" text="Crea tu cuenta para reservar especialistas, activar créditos y encontrar técnicos cerca de ti.">
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
         <label className="field">
           Nombre completo
@@ -146,13 +221,25 @@ export function ClientRegisterForm() {
         </label>
         <label className="field">
           Comuna
-          <select name="commune" defaultValue="Las Condes">
+          <select
+            name="commune"
+            value={`${commune}|${region}`}
+            onChange={(event) => {
+              const [nextCommune, nextRegion] = event.target.value.split("|");
+              setCommune(nextCommune);
+              setRegion(nextRegion);
+            }}
+          >
             {chileCommunes.map((commune) => (
-              <option key={commune.code} value={commune.name}>
+              <option key={commune.code} value={`${commune.name}|${commune.regionName}`}>
                 {commune.name} · {commune.regionName}
               </option>
             ))}
           </select>
+        </label>
+        <label className="field md:col-span-2">
+          Dirección
+          <input name="address" placeholder="Ej: Av. Apoquindo 3000, depto 1204" required />
         </label>
         <label className="field">
           Plan
@@ -170,6 +257,19 @@ export function ClientRegisterForm() {
           Código referido
           <input name="referralCode" placeholder="Ej: OP-CLIENTE-10" />
         </label>
+        <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <strong>Ubicación privada del cliente</strong>
+              <p className="mt-1 text-sm font-bold text-muted">Se usa solo para ordenar especialistas cercanos; no se muestra públicamente.</p>
+            </div>
+            <button className="btn-secondary" type="button" onClick={useClientLocation}>
+              Usar mi ubicación
+            </button>
+          </div>
+          <MockMapPin title="Tu ubicación privada" lat={geo.lat} lng={geo.lng} />
+          {geoStatus ? <span className="text-sm font-black text-brand-dark">{geoStatus}</span> : null}
+        </div>
         <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
           Seleccionaste {selectedPlan.name}: {formatCLP(selectedPlan.priceCLP)}/mes, {selectedPlan.monthlyCredits} créditos mensuales acumulables hasta {selectedPlan.accumulatesMonths} meses.
         </div>
@@ -190,6 +290,7 @@ export function SpecialistRegisterForm() {
   const [profilePhoto, setProfilePhoto] = useState("");
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
   const [geo, setGeo] = useState({ lat: -33.4489, lng: -70.6693 });
+  const [geoStatus, setGeoStatus] = useState("");
   const [baseCommune, setBaseCommune] = useState("Santiago");
   const [baseRegion, setBaseRegion] = useState("Metropolitana de Santiago");
 
@@ -228,10 +329,28 @@ export function SpecialistRegisterForm() {
   }
 
   function useMockLocation() {
-    setGeo({ lat: -33.4088, lng: -70.5673 });
-    setBaseCommune("Las Condes");
-    setBaseRegion("Metropolitana de Santiago");
-    setStatus("Ubicación mock aplicada: Las Condes.");
+    setGeoStatus("Solicitando ubicación...");
+    if (!("geolocation" in navigator)) {
+      setGeo({ lat: -33.4088, lng: -70.5673 });
+      setBaseCommune("Las Condes");
+      setBaseRegion("Metropolitana de Santiago");
+      setGeoStatus("Tu navegador no entregó ubicación. Usamos una referencia en Las Condes.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setGeo({ lat: position.coords.latitude, lng: position.coords.longitude });
+        setGeoStatus("Ubicación capturada y lista para guardar con tu perfil.");
+      },
+      () => {
+        setGeo({ lat: -33.4088, lng: -70.5673 });
+        setBaseCommune("Las Condes");
+        setBaseRegion("Metropolitana de Santiago");
+        setGeoStatus("No se pudo obtener permiso. Usamos una ubicación referencial.");
+      },
+      { enableHighAccuracy: true, timeout: 8000 },
+    );
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -245,23 +364,31 @@ export function SpecialistRegisterForm() {
       setStatus("Debes completar al menos 3 referencias laborales con nombre, teléfono y trabajo realizado.");
       return;
     }
+    if (!profilePhoto) {
+      setStatus("La foto de perfil es obligatoria.");
+      return;
+    }
+    if (portfolioPhotos.length < 1) {
+      setStatus("Debes cargar al menos una foto de portafolio. Recomendamos 3 o más.");
+      return;
+    }
 
     const data = new FormData(event.currentTarget);
     const mainType = getServiceTypeById(services[0].serviceTypeId);
-    const request = appendStoredItem("specialists", {
+    const request = appendPendingSpecialist({
       status: "pendiente",
-      name: data.get("name"),
-      rut: data.get("rut"),
-      phone: data.get("phone"),
-      email: data.get("email"),
+      name: String(data.get("name") ?? ""),
+      rut: String(data.get("rut") ?? ""),
+      phone: String(data.get("phone") ?? ""),
+      email: String(data.get("email") ?? ""),
       profilePhoto,
-      address: data.get("address"),
+      address: String(data.get("address") ?? ""),
       commune: baseCommune,
       region: baseRegion,
       lat: geo.lat,
       lng: geo.lng,
       coverageRadiusKm: Number(data.get("coverageRadiusKm")),
-      typeServicio: mainType?.name,
+      typeServicio: mainType?.name ?? "Hogar",
       specialty: services[0].specialty,
       services: services.map((service) => ({
         ...service,
@@ -274,23 +401,23 @@ export function SpecialistRegisterForm() {
       })),
       references: completedReferences,
       portfolioPhotos,
-      certifications: data.getAll("certifications"),
+      certifications: data.getAll("certifications").map(String),
       submittedAt: new Date().toISOString(),
-    });
+    } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
       role: "specialist",
-      name: String(data.get("name") ?? "Especialista demo"),
+      name: String(data.get("name") ?? "Especialista OficiosPro"),
       email: String(data.get("email") ?? ""),
       createdAt: new Date().toISOString(),
     });
-    setStatus(`Tu perfil fue enviado para revisión. Solicitud ${"id" in request ? request.id : "mock"} creada.`);
+    setStatus(`Tu perfil fue enviado para revisión. Solicitud ${request.id} creada.`);
     window.setTimeout(() => {
       window.location.href = "/dashboard-especialista?submitted=1";
     }, 900);
   }
 
   return (
-    <FormShell title="Postulación especialista" text="Crea tu perfil profesional, declara servicios en créditos y deja la solicitud lista para revisión admin.">
+    <FormShell title="Postulación especialista" text="Crea tu perfil profesional, declara servicios en créditos y espera aprobación antes de aparecer en el marketplace.">
       <form className="grid gap-6" onSubmit={submit}>
         <section className="grid gap-4 md:grid-cols-2">
           <label className="field">
@@ -311,7 +438,7 @@ export function SpecialistRegisterForm() {
           </label>
           <label className="field">
             Foto de perfil
-            <input type="file" accept="image/*" onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
+            <input type="file" accept="image/*" required onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
           </label>
           <label className="field">
             Dirección base
@@ -340,12 +467,14 @@ export function SpecialistRegisterForm() {
           </label>
           <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <strong>Geolocalización mock</strong>
+              <strong>Geolocalización del especialista</strong>
               <button className="btn-secondary" type="button" onClick={useMockLocation}>
                 Usar mi ubicación
               </button>
             </div>
+            <MockMapPin title="Base operativa del especialista" lat={geo.lat} lng={geo.lng} />
             <span className="text-sm font-bold text-muted">Lat {geo.lat.toFixed(4)} · Lng {geo.lng.toFixed(4)} · {baseCommune}</span>
+            {geoStatus ? <span className="text-sm font-black text-brand-dark">{geoStatus}</span> : null}
           </div>
         </section>
 
@@ -408,6 +537,7 @@ export function SpecialistRegisterForm() {
               type="file"
               accept="image/*"
               multiple
+              required
               onChange={(event) => setPortfolioPhotos(Array.from(event.currentTarget.files ?? []).map((file) => file.name))}
             />
           </label>
@@ -547,7 +677,7 @@ export function CompanyRequestForm() {
     });
     setMockSession({
       role: "company",
-      name: String(data.get("company") ?? "Empresa demo"),
+      name: String(data.get("company") ?? "Empresa OficiosPro"),
       email: String(data.get("email") ?? ""),
       createdAt: new Date().toISOString(),
     });
@@ -618,4 +748,22 @@ function SuccessMessage({ children, className = "" }: { children: ReactNode; cla
 
 function Warning({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 font-black text-amber-800">{children}</p>;
+}
+
+function MockMapPin({ title, lat, lng }: { title: string; lat: number | null; lng: number | null }) {
+  const hasLocation = typeof lat === "number" && typeof lng === "number";
+
+  return (
+    <div className="relative min-h-44 overflow-hidden rounded-2xl border border-line bg-[linear-gradient(135deg,#e8f4f1_25%,#f8fbfa_25%,#f8fbfa_50%,#e8f4f1_50%,#e8f4f1_75%,#f8fbfa_75%)] bg-[length:32px_32px] p-4">
+      <div className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-brand text-xl font-black text-white shadow-card">
+        OP
+      </div>
+      <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-white/95 p-3 shadow-soft">
+        <strong className="block text-sm text-ink">{title}</strong>
+        <span className="text-xs font-bold text-muted">
+          {hasLocation ? `Lat ${lat.toFixed(4)} · Lng ${lng.toFixed(4)}` : "Presiona “Usar mi ubicación” para guardar coordenadas."}
+        </span>
+      </div>
+    </div>
+  );
 }

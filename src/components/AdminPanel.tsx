@@ -1,35 +1,22 @@
 "use client";
 
 import { useEffect, useState, type ChangeEvent } from "react";
+import Link from "next/link";
 import { defaultBookings, services, specialists } from "@/data/mock";
 import { calculateServiceEconomics, formatCLP, serviceTypes, type CommercialConfig } from "@/data/marketplace";
-import { getCommercialConfig, getStoredItems, saveCommercialConfig, saveStoredItems, seedMockState } from "@/lib/storage";
+import {
+  approveAndPublishSpecialist,
+  getCommercialConfig,
+  getMockSession,
+  getPendingSpecialists,
+  getPublishedSpecialists,
+  getStoredItems,
+  rejectPendingSpecialist,
+  saveCommercialConfig,
+  seedMockState,
+  type PendingSpecialistProfile,
+} from "@/lib/storage";
 import { BookingList } from "@/components/Lists";
-
-type SpecialistRequestService = {
-  serviceTypeId?: string;
-  specialty?: string;
-  clientCredits?: number;
-  specialistPayoutCLP?: number;
-  economics?: {
-    incomeCLP: number;
-    specialistPayoutCLP: number;
-    marginCLP: number;
-    minMarginCLP: number;
-    status: string;
-  };
-};
-
-type SpecialistRequest = {
-  id?: string;
-  name?: string;
-  typeServicio?: string;
-  specialty?: string;
-  commune?: string;
-  services?: SpecialistRequestService[];
-  references?: unknown[];
-  status?: string;
-};
 
 type CompanyRequest = {
   id?: string;
@@ -45,40 +32,21 @@ type UserRequest = {
   role?: string;
 };
 
-const fallbackSpecialists: SpecialistRequest[] = [
-  {
-    id: "fallback-1",
-    name: "Juan Pérez",
-    typeServicio: "Hogar",
-    specialty: "Gasfitería domiciliaria",
-    commune: "La Reina",
-    status: "pendiente",
-    services: [{ serviceTypeId: "hogar", specialty: "Gasfitería domiciliaria", clientCredits: 12, specialistPayoutCLP: 7000 }],
-    references: [{}, {}, {}],
-  },
-  {
-    id: "fallback-2",
-    name: "Paola Castillo",
-    typeServicio: "Jardinería",
-    specialty: "Jardinería hogar",
-    commune: "Peñalolén",
-    status: "pendiente",
-    services: [{ serviceTypeId: "jardineria", specialty: "Jardinería hogar", clientCredits: 18, specialistPayoutCLP: 12000 }],
-    references: [{}, {}, {}],
-  },
-];
-
 export function AdminPanel() {
-  const [specialistRequests, setSpecialistRequests] = useState<SpecialistRequest[]>([]);
+  const [specialistRequests, setSpecialistRequests] = useState<PendingSpecialistProfile[]>([]);
   const [companyRequests, setCompanyRequests] = useState<CompanyRequest[]>([]);
   const [users, setUsers] = useState<UserRequest[]>([]);
   const [config, setConfig] = useState<CommercialConfig | null>(null);
+  const [publishedCount, setPublishedCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [notice, setNotice] = useState("");
 
   useEffect(() => {
     seedMockState();
+    setIsAdmin(getMockSession()?.role === "admin");
     setConfig(getCommercialConfig());
-    setSpecialistRequests(getStoredItems<SpecialistRequest>("specialists"));
+    setSpecialistRequests(getPendingSpecialists());
+    setPublishedCount(getPublishedSpecialists().length);
     setCompanyRequests(getStoredItems<CompanyRequest>("companies"));
     setUsers(getStoredItems<UserRequest>("users"));
   }, []);
@@ -88,18 +56,36 @@ export function AdminPanel() {
     const next = { ...config, [event.target.name]: Number(event.target.value) };
     setConfig(next);
     saveCommercialConfig(next);
-    setNotice("Configuración comercial guardada en localStorage.");
+    setNotice("Configuración comercial guardada.");
   }
 
-  function updateRequestStatus(id: string | undefined, status: "aprobado" | "rechazado") {
-    const source = specialistRequests.length ? specialistRequests : fallbackSpecialists;
-    const updated = source.map((item) => (item.id === id ? { ...item, status } : item));
-    setSpecialistRequests(updated);
-    if (specialistRequests.length) saveStoredItems("specialists", updated);
-    setNotice(status === "aprobado" ? "Especialista aprobado en el mock admin." : "Especialista rechazado en el mock admin.");
+  function approveRequest(id: string | undefined) {
+    if (!id) return;
+    approveAndPublishSpecialist(id);
+    setSpecialistRequests(getPendingSpecialists());
+    setPublishedCount(getPublishedSpecialists().length);
+    setNotice("Especialista aprobado y publicado en el marketplace.");
   }
 
-  const requestsToShow = specialistRequests.length ? specialistRequests : fallbackSpecialists;
+  function rejectRequest(id: string | undefined) {
+    if (!id) return;
+    rejectPendingSpecialist(id);
+    setSpecialistRequests(getPendingSpecialists());
+    setNotice("Especialista rechazado.");
+  }
+
+  if (!isAdmin) {
+    return (
+      <section className="panel">
+        <p className="eyebrow">Acceso administrador</p>
+        <h2 className="text-3xl font-black">Inicia sesión para gestionar OficiosPro.</h2>
+        <p className="mt-3 font-semibold leading-7 text-muted">El panel administra especialistas, márgenes, créditos y publicación en marketplace.</p>
+        <Link className="btn-primary mt-6" href="/login">
+          Ir al login
+        </Link>
+      </section>
+    );
+  }
 
   return (
     <div className="grid gap-6">
@@ -107,9 +93,9 @@ export function AdminPanel() {
 
       <section className="enterprise-shell p-6">
         <div className="grid gap-4 md:grid-cols-5">
-          <Metric label="Usuarios mock" value={users.length.toString()} />
-          <Metric label="Especialistas red" value={specialists.length.toString()} />
-          <Metric label="Por aprobar" value={requestsToShow.filter((item) => item.status !== "aprobado").length.toString()} />
+          <Metric label="Usuarios" value={users.length.toString()} />
+          <Metric label="Especialistas red" value={(specialists.length + publishedCount).toString()} />
+          <Metric label="Por aprobar" value={specialistRequests.filter((item) => item.status === "pendiente").length.toString()} />
           <Metric label="Empresas" value={companyRequests.length.toString()} />
           <Metric label="Reservas" value={defaultBookings.length.toString()} />
         </div>
@@ -137,15 +123,17 @@ export function AdminPanel() {
       <section className="panel">
         <h2 className="mb-4 text-2xl font-black">Solicitudes de especialistas</h2>
         <div className="grid gap-3">
-          {requestsToShow.map((request) => (
+          {specialistRequests.length ? specialistRequests.map((request) => (
             <SpecialistRequestRow
               key={request.id ?? request.name}
               request={request}
               config={config ?? getCommercialConfig()}
-              onApprove={() => updateRequestStatus(request.id, "aprobado")}
-              onReject={() => updateRequestStatus(request.id, "rechazado")}
+              onApprove={() => approveRequest(request.id)}
+              onReject={() => rejectRequest(request.id)}
             />
-          ))}
+          )) : (
+            <p className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-muted">No hay especialistas pendientes por ahora.</p>
+          )}
         </div>
       </section>
 
@@ -222,12 +210,29 @@ function SpecialistRequestRow({
   onApprove,
   onReject,
 }: {
-  request: SpecialistRequest;
+  request: PendingSpecialistProfile;
   config: CommercialConfig;
   onApprove: () => void;
   onReject: () => void;
 }) {
-  const services = request.services?.length ? request.services : [{ serviceTypeId: "hogar", clientCredits: 12, specialistPayoutCLP: 7000 }];
+  const services: PendingSpecialistProfile["services"] = request.services?.length
+    ? request.services
+    : [
+        {
+          serviceTypeId: "hogar",
+          specialty: "Gasfitería domiciliaria",
+          name: "Servicio declarado",
+          description: "",
+          clientCredits: 12,
+          specialistPayoutCLP: 7000,
+          initialVisitFree: true,
+          visitCredits: 0,
+          duration: "2 horas",
+          emergency: false,
+        },
+      ];
+  const references = request.references ?? [];
+  const portfolioPhotos = request.portfolioPhotos ?? [];
   const margins = services.map((service) =>
     service.economics ??
     calculateServiceEconomics({
@@ -253,7 +258,7 @@ function SpecialistRequestRow({
           </span>
         </div>
         <span className="mt-1 block text-sm font-bold text-muted">
-          {request.typeServicio ?? "Tipo por definir"} · {request.commune ?? "Comuna pendiente"} · {services.length} servicios · {request.references?.length ?? 0} referencias
+          {request.typeServicio ?? "Tipo por definir"} · {request.commune ?? "Comuna pendiente"} · {services.length} servicios · {references.length} referencias
         </span>
         <div className="mt-3 grid gap-2 text-sm font-bold text-muted md:grid-cols-4">
           <span>Especialidad: {request.specialty ?? services[0]?.specialty ?? "Pendiente"}</span>
@@ -261,12 +266,39 @@ function SpecialistRequestRow({
           <span>Pago especialista: {formatCLP(margins[0]?.specialistPayoutCLP ?? 0)}</span>
           <span>Margen estimado: {formatCLP(averageMargin)}</span>
         </div>
+        <div className="mt-4 grid gap-3 rounded-2xl bg-white p-4 text-sm font-bold text-muted md:grid-cols-3">
+          <span>Foto: {request.profilePhoto ?? "pendiente"}</span>
+          <span>Portafolio: {portfolioPhotos.length} fotos</span>
+          <span>Lat/Lng: {request.lat?.toFixed(4) ?? "pendiente"}, {request.lng?.toFixed(4) ?? "pendiente"}</span>
+        </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-2">
+          <div className="rounded-2xl bg-white p-4">
+            <strong className="text-sm text-ink">Servicios declarados</strong>
+            <div className="mt-2 grid gap-2">
+              {services.map((service) => (
+                <span key={`${service.name}-${service.specialty}`} className="text-sm font-bold text-muted">
+                  {service.name || service.specialty}: {service.clientCredits} créditos · paga {formatCLP(service.specialistPayoutCLP ?? 0)}
+                </span>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-2xl bg-white p-4">
+            <strong className="text-sm text-ink">Referencias</strong>
+            <div className="mt-2 grid gap-2">
+              {references.map((reference) => (
+                <span key={`${reference.name}-${reference.phone}`} className="text-sm font-bold text-muted">
+                  {reference.name} · {reference.company} · {reference.phone}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
       <div className="flex gap-2 lg:justify-end">
-        <button className="btn-primary flex-1" type="button" onClick={onApprove}>
-          Aprobar
+        <button className="btn-primary flex-1 disabled:opacity-50" type="button" onClick={onApprove} disabled={request.status === "aprobado"}>
+          Aprobar y publicar
         </button>
-        <button className="btn-secondary flex-1" type="button" onClick={onReject}>
+        <button className="btn-secondary flex-1 disabled:opacity-50" type="button" onClick={onReject} disabled={request.status === "rechazado"}>
           Rechazar
         </button>
       </div>

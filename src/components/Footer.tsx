@@ -22,7 +22,7 @@ const groups = [
     links: [
       { href: "/registro-cliente", label: "Registro cliente" },
       { href: "/registro-especialista", label: "Registro especialista" },
-      { href: "/admin", label: "Admin demo" },
+      { href: "/admin", label: "Admin" },
     ],
   },
 ];
@@ -40,7 +40,7 @@ export function Footer() {
             Técnicos verificados, créditos acumulables y dashboards para convertir mantenciones del hogar y operación empresarial en una experiencia confiable.
           </p>
           <div className="mt-6 flex flex-wrap gap-2">
-            {["Pago seguro", "Garantía OficiosPro", "Datos mock hoy", "Supabase opcional"].map((item) => (
+            {["Pago seguro", "Garantía OficiosPro", "Técnicos verificados", "Cobertura nacional"].map((item) => (
               <span key={item} className="chip bg-white/10 text-white">
                 {item}
               </span>

@@ -28,7 +28,7 @@ export default function CheckoutPage() {
   function activate() {
     setMockSession({
       role: plan.audience === "empresa" ? "company" : "client",
-      name: plan.audience === "empresa" ? "Empresa demo" : "Cliente demo",
+      name: plan.audience === "empresa" ? "Empresa OficiosPro" : "Cliente OficiosPro",
       planId: plan.id,
       createdAt: new Date().toISOString(),
     });
@@ -55,10 +55,10 @@ export default function CheckoutPage() {
       <PlatformNav />
       <section className="grid gap-6 lg:grid-cols-[1fr_420px]">
         <article className="panel">
-          <p className="eyebrow">Checkout mock</p>
+          <p className="eyebrow">Checkout seguro</p>
           <h1 className="text-4xl font-black md:text-5xl">Activa tu suscripción OficiosPro.</h1>
           <p className="mt-4 max-w-2xl font-semibold leading-7 text-muted">
-            Este flujo simula pago recurrente mensual y deja la plataforma lista para conectar Mercado Pago, Webpay o cobro automático más adelante.
+            Confirma tu plan, medio de pago y renovación mensual para activar tus créditos acumulables.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -73,8 +73,8 @@ export default function CheckoutPage() {
               Medio de pago simulado
               <select value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value)}>
                 <option>Tarjeta terminada en 4242</option>
-                <option>Webpay mock</option>
-                <option>Mercado Pago mock</option>
+                <option>Webpay</option>
+                <option>Mercado Pago</option>
               </select>
             </label>
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">

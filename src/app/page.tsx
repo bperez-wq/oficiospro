@@ -70,7 +70,7 @@ export default function HomePage() {
       <section className="mx-auto -mt-8 grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
           ["4,9/5", "satisfacción"],
-          [specialists.length.toString(), "especialistas mock"],
+          [specialists.length.toString(), "especialistas verificados"],
           ["35 min", "respuesta rápida"],
           ["24 meses", "créditos acumulables"],
           ["Pago seguro", "al finalizar"],

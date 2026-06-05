@@ -9,7 +9,7 @@ export default function DashboardEmpresaPage() {
       <AppHero
         eyebrow="Dashboard empresa"
         title="Centro operativo para mantenciones corporativas."
-        subtitle="Vista mock para controlar créditos, sucursales, servicios solicitados, gastos mensuales, reportes, proveedores frecuentes y facturación mensual consolidada."
+        subtitle="Controla créditos, sucursales, servicios solicitados, gastos mensuales, reportes, proveedores frecuentes y facturación mensual consolidada."
       >
         <Link className="btn-primary" href="/especialistas">
           Solicitar técnico

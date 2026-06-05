@@ -30,7 +30,7 @@ export function NationalCoveragePanel() {
       <article className="panel">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="eyebrow">Mapa operativo mock</p>
+            <p className="eyebrow">Mapa operativo</p>
             <h3 className="text-3xl font-black">Búsqueda por cercanía y radio de cobertura.</h3>
           </div>
           <span className="chip bg-brand-soft text-brand-dark">10.000 especialistas objetivo</span>
@@ -190,7 +190,7 @@ export function SpecialistScaleMetrics() {
 
   return (
     <section className="grid gap-4 md:grid-cols-4">
-      <Metric label="Especialistas mock" value={specialists.length.toString()} />
+      <Metric label="Especialistas" value={specialists.length.toString()} />
       <Metric label="Validados" value={verified.toString()} />
       <Metric label="Oro o Platino" value={top.toString()} />
       <Metric label="Meta nacional" value={nationalCoverageStats.targetSpecialists.toLocaleString("es-CL")} />

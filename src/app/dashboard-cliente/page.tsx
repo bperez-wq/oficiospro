@@ -9,7 +9,7 @@ export default function DashboardClientePage() {
       <AppHero
         eyebrow="Dashboard cliente"
         title="Tu operación de hogar en un solo lugar."
-        subtitle="Billetera de créditos, reservas próximas, servicios realizados, historial y técnicos favoritos usando datos mock."
+        subtitle="Billetera de créditos, reservas próximas, servicios realizados, historial y técnicos favoritos en un solo lugar."
       >
         <Link className="btn-primary" href="/especialistas">
           Reservar técnico

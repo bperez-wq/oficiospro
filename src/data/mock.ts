@@ -60,6 +60,7 @@ export type Specialist = {
   coverageRadiusKm?: number;
   rank?: SpecialistRank;
   validation?: SpecialistValidation;
+  publishedFromAdmin?: boolean;
 };
 
 export type SpecialistValidation = {

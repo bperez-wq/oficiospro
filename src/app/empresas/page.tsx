@@ -20,7 +20,7 @@ export default function EmpresasPage() {
           Solicitar cuenta empresa
         </Link>
         <Link className="btn-secondary" href="/dashboard-empresa">
-          Ver dashboard demo
+          Ver dashboard empresa
         </Link>
       </AppHero>
 
@@ -99,7 +99,7 @@ export default function EmpresasPage() {
           <p className="eyebrow">Solicitud empresa</p>
           <h2 className="text-3xl font-black">Cuéntanos tu operación.</h2>
           <p className="mt-3 font-semibold leading-7 text-muted">
-            Por ahora el formulario guarda datos en localStorage. La estructura queda preparada para conectar Supabase y pagos más adelante.
+            Recibiremos la solicitud con datos de contacto, sucursales y plan objetivo para activar una cuenta corporativa.
           </p>
           <img src="/assets/club-empresas.webp" alt="Equipo técnico trabajando en una empresa" className="mt-6 h-72 w-full rounded-2xl object-cover" />
         </article>

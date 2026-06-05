@@ -8,8 +8,8 @@ export default function AdminPage() {
       <PlatformNav />
       <AppHero
         eyebrow="Admin"
-        title="Panel operativo mock para administrar la red."
-        subtitle="Aprobación de especialistas, revisión de usuarios, empresas, reservas, categorías, servicios y métricas generales sin backend todavía."
+        title="Panel operativo para administrar la red."
+        subtitle="Aprobación de especialistas, revisión de usuarios, empresas, reservas, categorías, servicios y métricas generales de OficiosPro."
       />
       <SpecialistScaleMetrics />
       <AdminMarketplaceControls />

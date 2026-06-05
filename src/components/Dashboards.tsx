@@ -2,20 +2,24 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { companyDashboard, specialists, type Booking, type CreditTransaction } from "@/data/mock";
+import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { BookingList, TransactionList } from "@/components/Lists";
 import {
   getBookings,
+  getClientProfile,
   getReferralState,
   getSubscription,
   getTransactions,
   getWallet,
+  getPublishedSpecialists,
   seedMockState,
   simulateAcceptedClientReferral,
   simulateAcceptedSpecialistReferral,
+  type ClientProfile,
   type MockSubscription,
   type ReferralState,
 } from "@/lib/storage";
+import { distanceInKm } from "@/data/marketplace";
 
 export function ClientDashboard() {
   const [balance, setBalance] = useState(135);
@@ -23,6 +27,8 @@ export function ClientDashboard() {
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [subscription, setSubscription] = useState<MockSubscription | null>(null);
   const [referrals, setReferrals] = useState<ReferralState | null>(null);
+  const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
+  const [publishedSpecialists, setPublishedSpecialists] = useState<Specialist[]>([]);
 
   useEffect(() => {
     seedMockState();
@@ -31,11 +37,27 @@ export function ClientDashboard() {
     setTransactions(getTransactions());
     setSubscription(getSubscription());
     setReferrals(getReferralState());
+    setClientProfile(getClientProfile());
+    setPublishedSpecialists(getPublishedSpecialists());
   }, []);
 
   const upcoming = bookings.filter((booking) => booking.status !== "Finalizada");
   const completed = bookings.filter((booking) => booking.status === "Finalizada");
   const favorites = specialists.filter((specialist) => specialist.top).slice(0, 3);
+  const clientLocation =
+    clientProfile?.lat !== null && clientProfile?.lat !== undefined && clientProfile?.lng !== null && clientProfile?.lng !== undefined
+      ? { lat: clientProfile.lat, lng: clientProfile.lng }
+      : null;
+  const nearbySpecialists = [...specialists, ...publishedSpecialists]
+    .map((specialist) => ({
+      ...specialist,
+      distance:
+        clientLocation && specialist.geo
+          ? Number(distanceInKm(clientLocation, specialist.geo).toFixed(1))
+          : specialist.distance,
+    }))
+    .sort((a, b) => a.distance - b.distance)
+    .slice(0, 3);
 
   return (
     <div className="grid gap-6">
@@ -94,6 +116,23 @@ export function ClientDashboard() {
             Simular amigo registrado
           </button>
         </article>
+      </section>
+
+      <section className="panel">
+        <h2 className="mb-4 text-2xl font-black">Especialistas cerca de ti</h2>
+        <p className="mb-5 text-sm font-semibold leading-6 text-muted">
+          Usamos tu comuna y coordenadas privadas para ordenar resultados. Tu dirección exacta no se publica.
+        </p>
+        <div className="grid gap-4 md:grid-cols-3">
+          {nearbySpecialists.map((specialist) => (
+            <Link key={specialist.id} href="/especialistas" className="rounded-2xl border border-line bg-slate-50 p-4 transition hover:-translate-y-1 hover:shadow-card">
+              <strong>{specialist.name}</strong>
+              <span className="block text-sm font-bold text-muted">
+                {specialist.specialty} · {specialist.zone} · {specialist.distance} km
+              </span>
+            </Link>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -230,7 +269,7 @@ export function CompanyDashboard() {
         </div>
       </section>
       <section className="grid gap-5 lg:grid-cols-3">
-        <StatCard label="Gasto mensual mock" value={companyDashboard.monthlyBilling} />
+        <StatCard label="Gasto mensual" value={companyDashboard.monthlyBilling} />
         <StatCard label="Solicitudes abiertas" value={companyDashboard.openRequests.toString()} />
         <StatCard label="Proveedores frecuentes" value={companyDashboard.suppliers.toString()} />
       </section>
