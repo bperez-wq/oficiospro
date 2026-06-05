@@ -7,7 +7,7 @@ Plataforma inicial para OficiosPro: técnicos verificados para hogar y empresas,
 - Next.js
 - TypeScript
 - Tailwind CSS
-- Cloudflare Pages compatible mediante export estático
+- Cloudflare Workers & Pages compatible mediante Worker con assets estáticos
 - Datos mock por defecto
 - Supabase opcional, documentado en `supabase/schema.sql`
 
@@ -39,7 +39,7 @@ Abrir:
 http://localhost:3000
 ```
 
-## Build para Cloudflare Pages
+## Build para Cloudflare Workers & Pages
 
 ```bash
 npm run build
@@ -51,18 +51,32 @@ La salida estática queda en:
 out
 ```
 
-## Configuración Cloudflare Pages
+## Configuración Cloudflare Workers & Pages
 
-Conectar el repositorio GitHub y usar:
+El proyecto está configurado para desplegar el export estático de Next desde `out` usando Workers Static Assets.
+
+En Cloudflare usar:
 
 ```text
-Framework preset: Next.js
 Build command: npm run build
-Build output directory: out
+Deploy command: npx wrangler deploy --assets ./out
 Root directory: /
 ```
 
-El proyecto usa `output: "export"` en `next.config.ts`, por eso Cloudflare Pages publica HTML/CSS/JS estático desde `out`.
+También se puede ejecutar localmente:
+
+```bash
+npm run deploy
+```
+
+`wrangler.toml` apunta a:
+
+```toml
+[assets]
+directory = "./out"
+```
+
+El proyecto usa `output: "export"` en `next.config.ts`, por eso `npm run build` genera HTML/CSS/JS estático en `out`. No hay entrypoint Worker porque el sitio solo necesita servir assets estáticos.
 
 ## Supabase opcional
 

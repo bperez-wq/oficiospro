@@ -1,0 +1,7 @@
+name = "oficiospro-web"
+compatibility_date = "2026-06-04"
+
+[assets]
+directory = "./out"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"
