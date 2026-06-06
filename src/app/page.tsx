@@ -24,7 +24,7 @@ export default function HomePage() {
               revisa reputación real y recibe atención rápida desde una sola plataforma.
             </p>
             <HeroSearchPanel />
-            <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
               <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos disponibles" className="btn-primary">
                 Ver técnicos disponibles
               </ConversionButton>
@@ -35,7 +35,7 @@ export default function HomePage() {
                 Soluciones para empresas
               </ConversionButton>
             </div>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {homeBenefits.slice(0, 3).map((benefit) => (
                 <span key={benefit} className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm font-black text-ink">
                   {benefit}

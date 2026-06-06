@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { communeOptions, serviceTypeOptions } from "@/lib/catalog";
+import { communeOptions, heroServiceTypeOptions } from "@/lib/catalog";
 
-const examples = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego tecnificado"];
+// Tags cortos sugeridos. Los dos últimos solo se muestran en desktop (máx 6 desktop / 4 mobile).
+const suggestedTags = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego"];
 
 export function HeroSearchPanel() {
   const [query, setQuery] = useState("");
@@ -20,8 +21,8 @@ export function HeroSearchPanel() {
   }
 
   return (
-    <div className="mt-8 rounded-[28px] border border-line bg-white p-4 shadow-card">
-      <div className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr_0.9fr_auto] lg:items-end">
+    <div className="relative z-20 mt-8 rounded-[28px] border border-line bg-white p-5 shadow-card md:p-6">
+      <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr_0.9fr_auto] lg:items-end lg:gap-5">
         <label className="field">
           Busca por oficio, problema, comuna o servicio
           <input
@@ -33,7 +34,7 @@ export function HeroSearchPanel() {
         <SearchableSelect
           label="Tipo de servicio"
           value={serviceTypeId}
-          options={serviceTypeOptions}
+          options={heroServiceTypeOptions}
           onChange={setServiceTypeId}
           placeholder="Hogar, empresas, riego..."
         />
@@ -44,19 +45,22 @@ export function HeroSearchPanel() {
           onChange={setCommune}
           placeholder="Vitacura, Curicó, Talca..."
         />
-        <button className="btn-primary h-12 px-6" type="button" onClick={submit}>
+        <button className="btn-primary h-12 w-full px-6 lg:w-auto" type="button" onClick={submit}>
           Buscar especialista
         </button>
       </div>
-      <div className="mt-4 flex flex-wrap gap-2">
-        {examples.map((example) => (
+      <div className="mt-5 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-black uppercase tracking-normal text-muted">Sugerencias:</span>
+        {suggestedTags.map((tag, index) => (
           <button
-            key={example}
-            className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark"
+            key={tag}
+            className={`rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark ${
+              index >= 4 ? "hidden sm:inline-flex" : "inline-flex"
+            }`}
             type="button"
-            onClick={() => setQuery(example)}
+            onClick={() => setQuery(tag)}
           >
-            {example}
+            {tag}
           </button>
         ))}
       </div>

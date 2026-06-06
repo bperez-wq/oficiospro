@@ -53,6 +53,56 @@ export const serviceTypeOptions: SelectOption[] = sortByLabel(
   })),
 );
 
+// Nombres cortos + subtítulo para el buscador del hero (no afecta los formularios internos).
+const heroServiceTypeOverrides: Record<string, { label: string; meta: string }> = {
+  hogar: { label: "Hogar", meta: "Servicios técnicos y reparaciones para casa" },
+  empresas: { label: "Empresas", meta: "Mantención, oficinas, retail y comunidades" },
+  "climatizacion-refrigeracion": { label: "Climatización", meta: "Aire acondicionado, bombas de calor y HVAC" },
+  emergencias: { label: "Emergencias", meta: "Servicios urgentes 24/7" },
+  "agricultura-campos": { label: "Agricultura y campos", meta: "Riego, contratistas y operación rural" },
+  agroindustria: { label: "Agroindustria", meta: "Packing, frío, líneas de proceso y mantención" },
+  industria: { label: "Industria", meta: "Mantención, mecánica, automatización y equipos" },
+};
+
+const heroServiceTypeOrder = [
+  "hogar",
+  "empresas",
+  "climatizacion-refrigeracion",
+  "emergencias",
+  "agricultura-campos",
+  "agroindustria",
+  "industria",
+];
+
+export const heroServiceTypeOptions: SelectOption[] = (() => {
+  const byId = new Map(serviceTypes.map((type) => [type.id, type] as const));
+  const seen = new Set<string>();
+  const toOption = (id: string): SelectOption | null => {
+    const type = byId.get(id);
+    if (!type) return null;
+    const override = heroServiceTypeOverrides[id];
+    return { value: id, label: override?.label ?? type.name, meta: override?.meta ?? type.description };
+  };
+
+  const ordered: SelectOption[] = [];
+  for (const id of heroServiceTypeOrder) {
+    const option = toOption(id);
+    if (option) {
+      seen.add(id);
+      ordered.push(option);
+    }
+  }
+
+  const rest = sortByLabel(
+    serviceTypes
+      .filter((type) => !seen.has(type.id))
+      .map((type) => toOption(type.id))
+      .filter((option): option is SelectOption => option !== null),
+  );
+
+  return [...ordered, ...rest];
+})();
+
 export function specialtyOptionsForType(serviceTypeId: string, includeOther = true) {
   const type = serviceTypes.find((item) => item.id === serviceTypeId);
   const specialties = type?.specialties ?? allServiceSpecialties.map((item) => item.name);
