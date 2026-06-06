@@ -9,9 +9,53 @@ export type SelectOption = {
   value: string;
   label: string;
   meta?: string;
+  group?: string;
 };
 
 const collator = new Intl.Collator("es-CL", { sensitivity: "base", numeric: true });
+const canonicalPlaces: Record<string, string> = {
+  biobio: "Biobío",
+  camina: "Camiña",
+  chillan: "Chillán",
+  "chillan viejo": "Chillán Viejo",
+  concepcion: "Concepción",
+  concon: "Concón",
+  copiapo: "Copiapó",
+  curacavi: "Curacaví",
+  curico: "Curicó",
+  diguillin: "Diguillín",
+  "juan fernandez": "Juan Fernández",
+  "la union": "La Unión",
+  limari: "Limarí",
+  "los angeles": "Los Ángeles",
+  "los rios": "Los Ríos",
+  mafil: "Máfil",
+  maipu: "Maipú",
+  "maria elena": "María Elena",
+  "maria pinto": "María Pinto",
+  nuble: "Ñuble",
+  niquen: "Ñiquén",
+  nunoa: "Ñuñoa",
+  olmue: "Olmué",
+  penalolen: "Peñalolén",
+  "penasco": "Peñasco",
+  "penaflor": "Peñaflor",
+  puchuncavi: "Puchuncaví",
+  quilpue: "Quilpué",
+  quillon: "Quillón",
+  "rio bueno": "Río Bueno",
+  "rio hurtado": "Río Hurtado",
+  "san fabian": "San Fabián",
+  "san joaquin": "San Joaquín",
+  "san jose de maipo": "San José de Maipo",
+  "san nicolas": "San Nicolás",
+  "san ramon": "San Ramón",
+  "santa maria": "Santa María",
+  tarapaca: "Tarapacá",
+  valparaiso: "Valparaíso",
+  vicuna: "Vicuña",
+  "vina del mar": "Viña del Mar",
+};
 
 export function normalizeSearch(value: string) {
   return value
@@ -21,27 +65,37 @@ export function normalizeSearch(value: string) {
     .trim();
 }
 
+export function normalizePlaceName(value: string) {
+  return canonicalPlaces[normalizeSearch(value)] ?? value;
+}
+
 export function sortByLabel<T extends { label: string }>(items: T[]) {
   return [...items].sort((a, b) => collator.compare(a.label, b.label));
 }
 
 export const communeOptions: SelectOption[] = sortByLabel(
-  Array.from(new Map(chileCommunes.map((commune) => [commune.name, commune])).values()).map((commune) => ({
-    value: commune.name,
-    label: commune.name,
-    meta: commune.regionName,
-  })),
+  Array.from(
+    chileCommunes
+      .map((commune) => ({
+        value: normalizePlaceName(commune.name),
+        label: normalizePlaceName(commune.name),
+        meta: normalizePlaceName(commune.regionName),
+        group: normalizePlaceName(commune.regionName),
+      }))
+      .reduce((map, commune) => map.set(normalizeSearch(commune.label), commune), new Map<string, SelectOption>())
+      .values(),
+  ),
 );
 
 export const regionOptions: SelectOption[] = sortByLabel(
-  Array.from(new Set(chileCommunes.map((commune) => commune.regionName))).map((region) => ({
+  Array.from(new Set(chileCommunes.map((commune) => normalizePlaceName(commune.regionName)))).map((region) => ({
     value: region,
     label: region,
   })),
 );
 
 export function communesForRegion(region: string) {
-  const filtered = region ? communeOptions.filter((commune) => commune.meta === region) : communeOptions;
+  const filtered = region ? communeOptions.filter((commune) => normalizeSearch(commune.meta ?? "") === normalizeSearch(region)) : communeOptions;
   return filtered.length ? filtered : communeOptions;
 }
 
@@ -50,6 +104,7 @@ export const serviceTypeOptions: SelectOption[] = sortByLabel(
     value: type.id,
     label: type.name,
     meta: type.description,
+    group: type.marginType === "company" ? "Empresas e industria" : "Hogar y personas",
   })),
 );
 
@@ -107,7 +162,13 @@ export function specialtyOptionsForType(serviceTypeId: string, includeOther = tr
   const type = serviceTypes.find((item) => item.id === serviceTypeId);
   const specialties = type?.specialties ?? allServiceSpecialties.map((item) => item.name);
   const unique = Array.from(new Set(specialties.filter((specialty) => !normalizeSearch(specialty).startsWith("otro servicio"))));
-  const options = sortByLabel(unique.map((specialty) => ({ value: specialty, label: specialty })));
+  const options = sortByLabel(
+    unique.map((specialty) => ({
+      value: specialty,
+      label: specialty,
+      group: type?.name,
+    })),
+  );
   return includeOther ? [...options, { value: OTHER_SERVICE_VALUE, label: otherLabelForType(type?.appliesTo ?? []) }] : options;
 }
 

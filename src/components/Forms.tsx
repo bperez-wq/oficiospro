@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
@@ -119,9 +120,29 @@ export function LoginForm() {
           Contraseña
           <input name="password" type="password" minLength={8} placeholder="Tu contraseña" autoComplete="current-password" required />
         </label>
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm font-bold text-muted">
+          <label className="flex items-center gap-2">
+            <input name="remember" type="checkbox" />
+            Recordarme
+          </label>
+          <Link className="font-black text-brand-dark transition hover:text-brand" href="/registro-cliente">
+            Olvidé mi contraseña
+          </Link>
+        </div>
         <button className="btn-primary" type="submit">
           Ingresar
         </button>
+        <div className="grid gap-2 rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted sm:grid-cols-3">
+          <Link className="font-black text-brand-dark transition hover:text-brand" href="/registro-cliente">
+            Crear cuenta
+          </Link>
+          <Link className="font-black text-brand-dark transition hover:text-brand" href="/registro-especialista">
+            Soy especialista
+          </Link>
+          <Link className="font-black text-brand-dark transition hover:text-brand" href="/empresas">
+            Soy empresa
+          </Link>
+        </div>
         {status ? <SuccessMessage>{status}</SuccessMessage> : null}
         {isLocal ? (
           <details className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">

@@ -3,18 +3,19 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { TransactionList } from "@/components/Lists";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { defaultTransactions, workStories } from "@/data/mock";
-import { subscriptionPlans } from "@/data/marketplace";
+import { formatCLP, subscriptionPlans } from "@/data/marketplace";
 
 export default function ClubHogarPage() {
   const clientPlans = subscriptionPlans.filter((plan) => plan.audience === "cliente");
+  const featuredPlan = clientPlans.find((plan) => plan.id === "plus") ?? clientPlans[0];
 
   return (
     <main className="section grid gap-8">
       <PlatformNav />
       <AppHero
         eyebrow="Club Hogar"
-        title="Créditos acumulables para resolver tu casa cuando lo necesites."
-        subtitle="Una suscripción de tranquilidad para familias: acumula créditos hasta 24 meses, reserva especialistas verificados y libera el pago solo al finalizar el trabajo."
+        title="Tus créditos son tu cuenta de ahorro para mantenciones."
+        subtitle="Acumula créditos hasta 24 meses, reserva especialistas verificados y libera el pago solo al finalizar el trabajo."
       >
         <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-primary">
           Usar créditos
@@ -33,18 +34,25 @@ export default function ClubHogarPage() {
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <article className="panel">
           <p className="eyebrow">Simulador visual</p>
-          <h2 className="text-3xl font-black">Si pagas $35.000/mes, acumulas 35 créditos.</h2>
+          <h2 className="text-3xl font-black">Con {featuredPlan.name}, acumulas {featuredPlan.monthlyCredits} créditos cada mes.</h2>
           <p className="mt-3 font-semibold leading-7 text-muted">
-            En 3 meses tienes 105 créditos disponibles para gasfitería, electricidad, jardín o climatización.
+            Por {formatCLP(featuredPlan.priceCLP)}/mes puedes planificar visitas, diagnósticos y mantenciones sin partir desde cero cada vez.
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
-            {["35 créditos", "70 créditos", "105 créditos"].map((item, index) => (
-              <div key={item} className="rounded-2xl bg-brand-soft p-5">
-                <span className="font-black text-muted">Mes {index + 1}</span>
-                <strong className="block text-2xl font-black">{item}</strong>
+            {[
+              ["3 meses", featuredPlan.monthlyCredits * 3],
+              ["6 meses", featuredPlan.monthlyCredits * 6],
+              ["12 meses", featuredPlan.monthlyCredits * 12],
+            ].map(([label, credits]) => (
+              <div key={label} className="rounded-2xl bg-brand-soft p-5">
+                <span className="font-black text-muted">{label}</span>
+                <strong className="block text-2xl font-black">{credits} créditos</strong>
               </div>
             ))}
           </div>
+          <p className="mt-4 rounded-2xl bg-sun-soft p-4 text-sm font-black text-sun-dark">
+            Renovación automática mensual. Los créditos vencen a los 24 meses.
+          </p>
         </article>
         <article className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
           <img src="/assets/work-bathroom.webp" alt="Especialista reparando un baño en un hogar" className="h-72 w-full object-cover" />
@@ -65,6 +73,18 @@ export default function ClubHogarPage() {
         <article className="panel">
           <p className="eyebrow">Casos de uso</p>
           <h2 className="mb-5 text-3xl font-black">Problemas reales que puedes resolver con créditos.</h2>
+          <div className="mb-5 grid gap-3 sm:grid-cols-3">
+            {[
+              ["6-12 cr", "Ajustes simples y revisiones menores"],
+              ["18-30 cr", "Visitas, diagnósticos y reparaciones frecuentes"],
+              ["40-60 cr", "Mantenciones completas o servicios técnicos"],
+            ].map(([credits, text]) => (
+              <span key={credits} className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-black text-ink">
+                {credits}
+                <small className="mt-1 block text-xs font-bold text-muted">{text}</small>
+              </span>
+            ))}
+          </div>
           <div className="grid gap-4 md:grid-cols-2">
             {workStories.map((work) => (
               <article key={work.title} className="flex gap-4 rounded-2xl border border-line bg-slate-50 p-3">

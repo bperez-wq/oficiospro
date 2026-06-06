@@ -372,70 +372,70 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05101",
-        "name":  "Valparaiso",
+        "name":  "Valparaíso",
         "slug":  "valparaiso"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05102",
         "name":  "Casablanca",
         "slug":  "casablanca"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05103",
         "name":  "Concon",
         "slug":  "concon"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05104",
         "name":  "Juan Fernandez",
         "slug":  "juan-fernandez"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05105",
         "name":  "Puchuncavi",
         "slug":  "puchuncavi"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05107",
         "name":  "Quintero",
         "slug":  "quintero"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "051",
-        "provinceName":  "Valparaiso",
+        "provinceName":  "Valparaíso",
         "code":  "05109",
-        "name":  "Vina del Mar",
+        "name":  "Viña del Mar",
         "slug":  "vina-del-mar"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "052",
         "provinceName":  "Isla de Pascua",
         "code":  "05201",
@@ -444,7 +444,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "053",
         "provinceName":  "Los Andes",
         "code":  "05301",
@@ -453,7 +453,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "053",
         "provinceName":  "Los Andes",
         "code":  "05302",
@@ -462,7 +462,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "053",
         "provinceName":  "Los Andes",
         "code":  "05303",
@@ -471,7 +471,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "053",
         "provinceName":  "Los Andes",
         "code":  "05304",
@@ -480,7 +480,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "054",
         "provinceName":  "Petorca",
         "code":  "05401",
@@ -489,7 +489,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "054",
         "provinceName":  "Petorca",
         "code":  "05402",
@@ -498,7 +498,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "054",
         "provinceName":  "Petorca",
         "code":  "05403",
@@ -507,7 +507,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "054",
         "provinceName":  "Petorca",
         "code":  "05404",
@@ -516,7 +516,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "054",
         "provinceName":  "Petorca",
         "code":  "05405",
@@ -525,7 +525,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "055",
         "provinceName":  "Quillota",
         "code":  "05501",
@@ -534,7 +534,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "055",
         "provinceName":  "Quillota",
         "code":  "05502",
@@ -543,7 +543,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "055",
         "provinceName":  "Quillota",
         "code":  "05503",
@@ -552,7 +552,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "055",
         "provinceName":  "Quillota",
         "code":  "05504",
@@ -561,7 +561,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "055",
         "provinceName":  "Quillota",
         "code":  "05506",
@@ -570,7 +570,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05601",
@@ -579,7 +579,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05602",
@@ -588,7 +588,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05603",
@@ -597,7 +597,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05604",
@@ -606,7 +606,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05605",
@@ -615,7 +615,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "056",
         "provinceName":  "San Antonio",
         "code":  "05606",
@@ -624,7 +624,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05701",
@@ -633,7 +633,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05702",
@@ -642,7 +642,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05703",
@@ -651,7 +651,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05704",
@@ -660,7 +660,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05705",
@@ -669,7 +669,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "057",
         "provinceName":  "San Felipe de Aconcagua",
         "code":  "05706",
@@ -678,16 +678,16 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "058",
         "provinceName":  "Marga Marga",
         "code":  "05801",
-        "name":  "Quilpue",
+        "name":  "Quilpué",
         "slug":  "quilpue"
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "058",
         "provinceName":  "Marga Marga",
         "code":  "05802",
@@ -696,7 +696,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "058",
         "provinceName":  "Marga Marga",
         "code":  "05803",
@@ -705,7 +705,7 @@ export const chileCommunes: ChileCommune[] = [
     },
     {
         "regionId":  "05",
-        "regionName":  "Valparaiso",
+        "regionName":  "Valparaíso",
         "provinceId":  "058",
         "provinceName":  "Marga Marga",
         "code":  "05804",
@@ -1130,16 +1130,16 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07301",
-        "name":  "Curico",
+        "name":  "Curicó",
         "slug":  "curico"
     },
     {
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07302",
         "name":  "Hualane",
         "slug":  "hualane"
@@ -1148,7 +1148,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07303",
         "name":  "Licanten",
         "slug":  "licanten"
@@ -1157,7 +1157,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07304",
         "name":  "Molina",
         "slug":  "molina"
@@ -1166,7 +1166,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07305",
         "name":  "Rauco",
         "slug":  "rauco"
@@ -1175,7 +1175,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07306",
         "name":  "Romeral",
         "slug":  "romeral"
@@ -1184,7 +1184,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07307",
         "name":  "Sagrada Familia",
         "slug":  "sagrada-familia"
@@ -1193,7 +1193,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07308",
         "name":  "Teno",
         "slug":  "teno"
@@ -1202,7 +1202,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "07",
         "regionName":  "Maule",
         "provinceId":  "073",
-        "provinceName":  "Curico",
+        "provinceName":  "Curicó",
         "code":  "07309",
         "name":  "Vichuquen",
         "slug":  "vichuquen"
@@ -1283,16 +1283,16 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08101",
-        "name":  "Concepcion",
+        "name":  "Concepción",
         "slug":  "concepcion"
     },
     {
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08102",
         "name":  "Coronel",
         "slug":  "coronel"
@@ -1301,7 +1301,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08103",
         "name":  "Chiguayante",
         "slug":  "chiguayante"
@@ -1310,7 +1310,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08104",
         "name":  "Florida",
         "slug":  "florida"
@@ -1319,7 +1319,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08105",
         "name":  "Hualqui",
         "slug":  "hualqui"
@@ -1328,7 +1328,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08106",
         "name":  "Lota",
         "slug":  "lota"
@@ -1337,7 +1337,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08107",
         "name":  "Penco",
         "slug":  "penco"
@@ -1346,7 +1346,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08108",
         "name":  "San Pedro de la Paz",
         "slug":  "san-pedro-de-la-paz"
@@ -1355,7 +1355,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08109",
         "name":  "Santa Juana",
         "slug":  "santa-juana"
@@ -1364,7 +1364,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08110",
         "name":  "Talcahuano",
         "slug":  "talcahuano"
@@ -1373,7 +1373,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08111",
         "name":  "Tome",
         "slug":  "tome"
@@ -1382,7 +1382,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "08",
         "regionName":  "Biobio",
         "provinceId":  "081",
-        "provinceName":  "Concepcion",
+        "provinceName":  "Concepción",
         "code":  "08112",
         "name":  "Hualpen",
         "slug":  "hualpen"
@@ -2491,7 +2491,7 @@ export const chileCommunes: ChileCommune[] = [
         "provinceId":  "131",
         "provinceName":  "Santiago",
         "code":  "13119",
-        "name":  "Maipu",
+        "name":  "Maipú",
         "slug":  "maipu"
     },
     {
@@ -2500,7 +2500,7 @@ export const chileCommunes: ChileCommune[] = [
         "provinceId":  "131",
         "provinceName":  "Santiago",
         "code":  "13120",
-        "name":  "Nunoa",
+        "name":  "Ñuñoa",
         "slug":  "nunoa"
     },
     {

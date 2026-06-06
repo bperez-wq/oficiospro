@@ -5,11 +5,14 @@ export default function LoginPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <section className="grid overflow-hidden rounded-[32px] border border-line bg-white shadow-soft lg:grid-cols-[1fr_0.9fr]">
+      <section className="grid overflow-hidden rounded-[32px] border border-line bg-white shadow-card lg:grid-cols-[1fr_0.9fr]">
         <div className="p-6 md:p-10">
-          <p className="eyebrow">Acceso seguro</p>
+          <span className="eyebrow-pill">
+            <span className="h-2 w-2 rounded-full bg-brand" />
+            Acceso seguro
+          </span>
           <h1 className="max-w-3xl text-4xl font-black leading-tight text-ink md:text-6xl">
-            Entra a tu cuenta OficiosPro.
+            Accede a tu cuenta <span className="gradient-text">OficiosPro</span>.
           </h1>
           <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-muted">
             Gestiona reservas, créditos, solicitudes, servicios y operación desde una plataforma preparada para hogares, especialistas y empresas.

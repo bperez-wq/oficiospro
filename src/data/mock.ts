@@ -119,7 +119,7 @@ const baseSpecialists: Specialist[] = [
     rating: 4.9,
     jobs: 285,
     recommendation: 98,
-    credits: 45,
+    credits: 50,
     demand: "Alta demanda",
     responseTime: "1.1 h",
     years: 4,
@@ -134,7 +134,7 @@ const baseSpecialists: Specialist[] = [
     certifications: ["HVAC certificado", "Bombas de calor", "Refrigeración"],
     servicesOffered: ["Mantención aire acondicionado", "Instalación split", "Diagnóstico HVAC", "Limpieza de filtros"],
     workHistory: [
-      { title: "Aire acondicionado recuperado", commune: "Providencia", credits: 45, rating: 4.9, image: hvac },
+      { title: "Aire acondicionado recuperado", commune: "Providencia", credits: 50, rating: 4.9, image: hvac },
       { title: "Mantención preventiva oficina", commune: "Las Condes", credits: 52, rating: 4.8, image: enterprise },
     ],
     reviews: [
@@ -154,7 +154,7 @@ const baseSpecialists: Specialist[] = [
     rating: 4.8,
     jobs: 176,
     recommendation: 96,
-    credits: 25,
+    credits: 24,
     demand: "Demanda media",
     responseTime: "1.4 h",
     years: 3,
@@ -294,7 +294,7 @@ const baseSpecialists: Specialist[] = [
     rating: 4.5,
     jobs: 112,
     recommendation: 91,
-    credits: 55,
+    credits: 60,
     demand: "Alta demanda",
     responseTime: "3.1 h",
     years: 6,
@@ -309,7 +309,7 @@ const baseSpecialists: Specialist[] = [
     certifications: ["Soldadura MIG", "Estructuras metálicas"],
     servicesOffered: ["Reparación de portones", "Estructuras metálicas", "Rejas", "Soportes industriales"],
     workHistory: [
-      { title: "Portón industrial reparado", commune: "Maipú", credits: 55, rating: 4.6, image: enterprise },
+      { title: "Portón industrial reparado", commune: "Maipú", credits: 60, rating: 4.6, image: enterprise },
       { title: "Estructura liviana instalada", commune: "Cerrillos", credits: 70, rating: 4.5, image: garden },
     ],
     reviews: [
@@ -329,7 +329,7 @@ const baseSpecialists: Specialist[] = [
     rating: 4.9,
     jobs: 164,
     recommendation: 97,
-    credits: 35,
+    credits: 40,
     demand: "Demanda media",
     responseTime: "1.8 h",
     years: 5,
@@ -344,7 +344,7 @@ const baseSpecialists: Specialist[] = [
     certifications: ["Paisajismo", "Riego automático"],
     servicesOffered: ["Mantención de jardín", "Poda", "Instalación de riego", "Recuperación de césped"],
     workHistory: [
-      { title: "Jardín recuperado", commune: "La Reina", credits: 35, rating: 4.9, image: garden },
+      { title: "Jardín recuperado", commune: "La Reina", credits: 40, rating: 4.9, image: garden },
       { title: "Riego automático ajustado", commune: "Peñalolén", credits: 42, rating: 4.8, image: home },
     ],
     reviews: [
@@ -415,7 +415,7 @@ const baseSpecialists: Specialist[] = [
     servicesOffered: ["Armado de muebles", "Reparaciones menores", "Instalación de cortinas", "Sellos y terminaciones"],
     workHistory: [
       { title: "Mueble instalado y nivelado", commune: "Macul", credits: 28, rating: 4.6, image: bathroom },
-      { title: "Reparación de muro interior", commune: "Ñuñoa", credits: 35, rating: 4.5, image: home },
+      { title: "Reparación de muro interior", commune: "Ñuñoa", credits: 30, rating: 4.5, image: home },
     ],
     reviews: [
       { author: "Camila T.", rating: 4.6, date: "2026-05-24", text: "Resolvió varias tareas en una sola visita." },
@@ -897,11 +897,11 @@ export const categories = [
 
 export const services = [
   { id: "srv-gasfiteria", categoryId: "hogar", name: "Visita gasfitería", baseCredits: 30 },
-  { id: "srv-electricidad", categoryId: "hogar", name: "Diagnóstico eléctrico", baseCredits: 25 },
-  { id: "srv-jardin", categoryId: "hogar", name: "Mantención de jardín", baseCredits: 35 },
-  { id: "srv-hvac", categoryId: "climatizacion", name: "Mantención HVAC", baseCredits: 45 },
+  { id: "srv-electricidad", categoryId: "hogar", name: "Diagnóstico eléctrico", baseCredits: 24 },
+  { id: "srv-jardin", categoryId: "hogar", name: "Mantención de jardín", baseCredits: 40 },
+  { id: "srv-hvac", categoryId: "climatizacion", name: "Mantención HVAC", baseCredits: 50 },
   { id: "srv-cctv", categoryId: "tecnologia", name: "Instalación de cámaras", baseCredits: 20 },
-  { id: "srv-industrial", categoryId: "industrial", name: "Servicio industrial", baseCredits: 55 },
+  { id: "srv-industrial", categoryId: "industrial", name: "Servicio industrial", baseCredits: 60 },
 ];
 
 export const homeBenefits = [
@@ -915,8 +915,8 @@ export const homeBenefits = [
 export const workStories: WorkHistory[] = [
   { title: "Baño reparado", commune: "Ñuñoa", credits: 30, rating: 4.8, image: bathroom },
   { title: "Tablero eléctrico renovado", commune: "Las Condes", credits: 38, rating: 4.9, image: electrical },
-  { title: "Aire acondicionado instalado", commune: "Providencia", credits: 45, rating: 4.9, image: hvac },
-  { title: "Jardín recuperado", commune: "La Reina", credits: 35, rating: 4.9, image: garden },
+  { title: "Aire acondicionado instalado", commune: "Providencia", credits: 50, rating: 4.9, image: hvac },
+  { title: "Jardín recuperado", commune: "La Reina", credits: 40, rating: 4.9, image: garden },
 ];
 
 export const testimonials = [
@@ -937,7 +937,7 @@ export const testimonials = [
   },
 ];
 
-export const companyUseCases = ["Oficinas", "Restaurantes", "Bodegas", "Comunidades", "Plantas productivas"];
+export const companyUseCases = ["Restaurantes", "Oficinas", "Bodegas", "Comunidades", "Retail", "Plantas productivas", "Agroindustria"];
 
 export const defaultBookings: Booking[] = [
   {
@@ -948,7 +948,7 @@ export const defaultBookings: Booking[] = [
     date: "2026-06-10",
     time: "10:30",
     status: "Confirmada",
-    credits: 45,
+    credits: 50,
     commune: "Providencia",
     customer: "Cliente OficiosPro",
     channel: "Club Hogar",
@@ -987,17 +987,17 @@ export const defaultBookings: Booking[] = [
     date: "2026-06-08",
     time: "19:00",
     status: "Confirmada",
-    credits: 42,
+    credits: 40,
     commune: "Vitacura",
-    customer: "Operadora Demo",
+    customer: "Operadora Norte",
     channel: "Empresas",
   },
 ];
 
 export const defaultTransactions: CreditTransaction[] = [
-  { id: "tx-001", type: "Carga mensual", detail: "Plan Plus Club Hogar", amount: 45, date: "2026-06-01" },
+  { id: "tx-001", type: "Carga mensual", detail: "Plan Plus Club Hogar", amount: 60, date: "2026-06-01" },
   { id: "tx-002", type: "Reserva", detail: "Reparación de filtración", amount: -30, date: "2026-05-28" },
-  { id: "tx-003", type: "Carga mensual", detail: "Plan Plus Club Hogar", amount: 45, date: "2026-05-01" },
+  { id: "tx-003", type: "Carga mensual", detail: "Plan Plus Club Hogar", amount: 60, date: "2026-05-01" },
   { id: "tx-004", type: "Bono de bienvenida", detail: "Créditos iniciales", amount: 20, date: "2026-04-28" },
 ];
 
@@ -1012,13 +1012,13 @@ export const companyDashboard = {
   openRequests: 3,
   services: [
     { service: "Electricista", branch: "Vitacura", status: "Finalizado", credits: 42 },
-    { service: "Técnico HVAC", branch: "Quilicura", status: "En ruta", credits: 55 },
+    { service: "Técnico HVAC", branch: "Quilicura", status: "En ruta", credits: 60 },
     { service: "Cerrajero", branch: "Las Condes", status: "Solicitado", credits: 18 },
     { service: "Refrigeración comercial", branch: "Santiago Centro", status: "Agendado", credits: 50 },
   ],
   history: [
     { service: "Refrigeración comercial", branch: "Santiago Centro", date: "2026-06-03", credits: 50, status: "Finalizado" },
-    { service: "Normalización eléctrica", branch: "Vitacura", date: "2026-06-01", credits: 42, status: "Finalizado" },
+    { service: "Normalización eléctrica", branch: "Vitacura", date: "2026-06-01", credits: 40, status: "Finalizado" },
     { service: "Mantención preventiva", branch: "Quilicura", date: "2026-05-29", credits: 36, status: "Finalizado" },
   ],
   branches: ["Casa matriz", "Local Vitacura", "Bodega Quilicura", "Sucursal Las Condes", "Local Providencia"],

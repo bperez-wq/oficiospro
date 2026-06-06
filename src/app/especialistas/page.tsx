@@ -9,8 +9,8 @@ export default function SpecialistsPage() {
       <PlatformNav />
       <AppHero
         eyebrow="Especialistas verificados"
-        title="Busca por comuna, disponibilidad, calificación y precio en créditos."
-        subtitle="Compara perfiles profesionales, trabajos completados, certificaciones, tiempos de respuesta y reserva con créditos desde una experiencia simple y confiable."
+        title="Encuentra especialistas verificados"
+        subtitle="Busca por oficio, problema, comuna, disponibilidad o reputación. Sin filtros verás todos los perfiles disponibles."
       >
         <Link className="btn-secondary" href="/dashboard-cliente">
           Ver mis créditos

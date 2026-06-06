@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ConversionButton } from "@/components/ConversionModal";
 import { CompanyRequestForm } from "@/components/Forms";
@@ -14,15 +13,15 @@ export default function EmpresasPage() {
       <PlatformNav />
       <AppHero
         eyebrow="OficiosPro Empresas"
-        title="Mantención bajo demanda para mantener tu operación funcionando."
-        subtitle="Accede a una red de especialistas verificados para oficinas, restaurantes, bodegas, locales comerciales, plantas productivas y comunidades."
+        title="Centraliza mantenciones, sucursales y créditos corporativos."
+        subtitle="Accede a una red de especialistas verificados para oficinas, restaurantes, bodegas, retail, plantas productivas, agroindustria y comunidades."
       >
         <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary">
-          Solicitar cuenta empresa
+          Solicitar contacto
         </ConversionButton>
-        <Link className="btn-secondary" href="/dashboard-empresa">
-          Ver dashboard empresa
-        </Link>
+        <ConversionButton type="contacto_empresa" sourceButton="Ver planes empresa" className="btn-secondary">
+          Ver planes empresa
+        </ConversionButton>
       </AppHero>
 
       <section className="enterprise-shell p-6 md:p-8">
@@ -85,7 +84,7 @@ export default function EmpresasPage() {
           ["SLA y priorización", "Respuesta rápida para operación crítica."],
           ["Gestión por sucursal", "Ordena locales, oficinas, bodegas y comunidades."],
           ["Reportes mensuales", "Control de mantenciones, gastos y proveedores."],
-          ["Menos tiempo buscando", "La red de especialistas ya está verificada."],
+          ["Casos corporativos", "Restaurantes, oficinas, bodegas, comunidades, retail, plantas productivas y agroindustria."],
         ].map(([title, text]) => (
           <article key={title} className="panel card-hover">
             <h3 className="text-xl font-black">{title}</h3>

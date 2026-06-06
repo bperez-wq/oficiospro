@@ -27,7 +27,7 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
         sourceButton={`Elegir plan ${plan.name}`}
         className={featured ? "btn-secondary mt-6 w-full" : "btn-primary mt-6 w-full"}
       >
-        {plan.ctaLabel ?? "Contratar plan"}
+        {plan.ctaLabel ?? "Elegir plan"}
       </ConversionButton>
     </article>
   );

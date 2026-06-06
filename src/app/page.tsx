@@ -1,6 +1,6 @@
 import { ConversionButton } from "@/components/ConversionModal";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
-import { companyDashboard, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
+import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { SpecialistCard } from "@/components/SpecialistCard";
@@ -12,54 +12,65 @@ export default function HomePage() {
 
   return (
     <main>
-      <section className="overflow-hidden border-b border-line bg-white">
+      <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
+        <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
         <div className="section grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
-          <div>
-            <p className="eyebrow">Empoderamos el oficio. Empoderamos al trabajador.</p>
+          <div className="animate-fade-up">
+            <span className="eyebrow-pill">
+              <span className="h-2 w-2 rounded-full bg-brand" />
+              Empoderamos el oficio. Empoderamos al trabajador.
+            </span>
             <h1 className="max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">
-              Encuentra especialistas verificados para tu hogar, empresa o campo en minutos.
+              Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
             </h1>
             <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-muted">
-              Reserva especialistas confiables en gasfitería, electricidad, climatización, jardinería, mantención, agricultura e industria. Paga con créditos,
-              revisa reputación real y recibe atención rápida desde una sola plataforma.
+              Encuentra técnicos confiables, acumula créditos y resuelve mantenciones con respaldo OficiosPro.
             </p>
             <HeroSearchPanel />
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
-              <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos disponibles" className="btn-primary">
-                Ver técnicos disponibles
+              <ConversionButton type="busqueda_rapida" sourceButton="Buscar especialista hero" className="btn-primary">
+                Buscar especialista
               </ConversionButton>
-              <ConversionButton type="lead_cliente" sourceButton="Conocer Club Hogar" className="btn-secondary">
-                Conocer Club Hogar
+              <ConversionButton type="registro_especialista" sourceButton="Inscribir mi oficio hero" className="btn-sun">
+                Inscribir mi oficio
               </ConversionButton>
-              <ConversionButton type="contacto_empresa" sourceButton="Soluciones para empresas" className="btn-ghost">
-                Soluciones para empresas
+              <ConversionButton type="contacto_empresa" sourceButton="Soluciones empresas hero" className="btn-secondary">
+                Soluciones empresas
               </ConversionButton>
             </div>
-            <div className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {homeBenefits.slice(0, 3).map((benefit) => (
-                <span key={benefit} className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm font-black text-ink">
-                  {benefit}
+            <div className="mt-10 flex flex-wrap gap-2.5">
+              {[
+                ["★", "4,9 promedio", "chip-sun"],
+                ["✓", "Pago protegido", "chip-brand"],
+                ["◆", "Créditos acumulables", "chip-accent"],
+                ["✓", "Técnicos verificados", "chip-emerald"],
+                ["↗", "Respuesta rápida", "chip-sun"],
+                ["◎", "Cobertura nacional", "chip-brand"],
+              ].map(([icon, label, cls]) => (
+                <span key={label} className={`${cls} px-3.5 py-2 text-[13px]`}>
+                  <span aria-hidden>{icon}</span> {label}
                 </span>
               ))}
             </div>
           </div>
 
           <div className="relative min-h-[520px]">
-            <div className="absolute inset-0 rounded-[32px] bg-brand-soft" />
+            <div className="absolute inset-0 rounded-[34px] bg-gradient-to-br from-brand-soft via-mint to-accent-soft" />
+            <div className="surface-grid absolute inset-0 rounded-[34px] opacity-40" />
             <img
               src="/assets/hero-hogar.webp"
               alt="Especialista verificado resolviendo una mantención en un hogar"
-              className="absolute inset-x-6 bottom-0 h-[500px] w-[calc(100%-3rem)] rounded-[28px] object-cover shadow-card"
+              className="absolute inset-x-6 bottom-0 h-[500px] w-[calc(100%-3rem)] rounded-[28px] object-cover shadow-lift"
             />
-            <FloatingCard className="left-0 top-8" label="Calificación promedio" value="4,9/5" />
-            <FloatingCard className="right-0 top-24" label="Disponible ahora" value="35 min" />
-            <FloatingCard className="bottom-16 left-6" label="Precio desde" value="30 créditos" />
-            <FloatingCard className="right-6 bottom-40" label="Especialista a" value="3,8 km" />
-            <div className="absolute bottom-8 right-6 w-64 rounded-[24px] border border-line bg-white p-4 shadow-card">
+            <FloatingCard className="left-0 top-8 animate-float" label="Calificación promedio" value="4,9★" accent="sun" />
+            <FloatingCard className="right-0 top-24 animate-float [animation-delay:1.5s]" label="Disponible ahora" value="35 min" accent="accent" />
+            <FloatingCard className="bottom-16 left-6 animate-float [animation-delay:0.8s]" label="Precio desde" value="30 créditos" accent="brand" />
+            <FloatingCard className="bottom-40 right-2 animate-float [animation-delay:1.1s]" label="Especialista a" value="3,8 km" accent="accent" />
+            <div className="absolute bottom-8 right-6 w-64 rounded-[24px] border border-line bg-white/95 p-4 shadow-card backdrop-blur">
               <p className="text-xs font-black uppercase text-muted">Técnicos cercanos</p>
               <div className="mt-3 flex -space-x-3">
                 {specialists.slice(0, 5).map((specialist) => (
-                  <span key={specialist.id} className="grid h-10 w-10 place-items-center rounded-full border-2 border-white bg-brand text-xs font-black text-white">
+                  <span key={specialist.id} className="grid h-10 w-10 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-brand to-brand-dark text-xs font-black text-white shadow-sm">
                     {specialist.initials}
                   </span>
                 ))}
@@ -103,6 +114,9 @@ export default function HomePage() {
                 </span>
               ))}
             </div>
+            <ConversionButton type="registro_especialista" sourceButton="Quiero inscribir mi oficio propósito" className="btn-sun mt-6">
+              Quiero inscribir mi oficio
+            </ConversionButton>
           </div>
         </div>
         <SectionHeader
@@ -112,13 +126,13 @@ export default function HomePage() {
         />
         <div className="grid gap-4 md:grid-cols-4">
           {[
-            ["1", "Busca por especialidad y comuna", "Filtra según ubicación, oficio y disponibilidad real."],
-            ["2", "Compara reputación y créditos", "Revisa calificación, trabajos completados y precio en créditos."],
-            ["3", "Reserva con pago protegido", "Los créditos quedan retenidos hasta finalizar el trabajo."],
-            ["4", "Evalúa el resultado", "La reputación crece con comentarios y trabajos reales."],
-          ].map(([step, title, text]) => (
+            ["1", "Busca el servicio", "Filtra por oficio, comuna y disponibilidad real en segundos.", "from-brand to-brand-dark"],
+            ["2", "Elige especialista", "Compara reputación, trabajos completados y precio en créditos.", "from-accent to-accent-dark"],
+            ["3", "Reserva o solicita visita", "Coordina con pago protegido: los créditos quedan retenidos.", "from-sun to-sun-dark"],
+            ["4", "Paga con créditos y evalúa", "Liberas el pago al finalizar y la reputación crece con tu reseña.", "from-brand to-brand-dark"],
+          ].map(([step, title, text, grad]) => (
             <article key={step} className="panel card-hover">
-              <span className="mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-brand text-lg font-black text-white">{step}</span>
+              <span className={`mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-lg font-black text-white shadow-card`}>{step}</span>
               <h3 className="text-xl font-black">{title}</h3>
               <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
             </article>
@@ -155,15 +169,15 @@ export default function HomePage() {
         />
         <div className="grid gap-4 md:grid-cols-3">
           {[
-            ["Contratistas agrícolas", "Cuadrillas de poda, cosecha, raleo, amarra, desbrote y packing temporal."],
-            ["Riego agrícola", "Riego tecnificado, bombas, fertirriego, telemetría, filtros y tableros de riego."],
-            ["Maquinaria agrícola", "Mecánicos, operadores, calibración, GPS agrícola e implementos."],
-            ["Packing y frío", "Líneas de fruta, cámaras frigoríficas, túneles de frío y frío alimentario."],
-            ["Mantención industrial", "PLC, soldadura, hidráulica, neumática, bombas, motores y predictivo."],
-            ["Comunidades y empresas", "Salas de bombas, portones, cámaras, calderas, piscinas y espacios comunes."],
-          ].map(([title, text]) => (
+            ["Contratistas agrícolas", "Cuadrillas de poda, cosecha, raleo, amarra, desbrote y packing temporal.", "chip-brand"],
+            ["Riego tecnificado", "Riego por goteo, bombas, fertirriego, telemetría, filtros y tableros.", "chip-accent"],
+            ["Maquinaria agrícola", "Mecánicos, operadores, calibración, GPS agrícola e implementos.", "chip-sun"],
+            ["Packing y frío", "Líneas de fruta, cámaras frigoríficas, túneles de frío y frío alimentario.", "chip-accent"],
+            ["Mantención industrial", "PLC, soldadura, hidráulica, neumática, bombas, motores y predictivo.", "chip-brand"],
+            ["Comunidades y edificios", "Salas de bombas, portones, cámaras, calderas, piscinas y espacios comunes.", "chip-emerald"],
+          ].map(([title, text, chip]) => (
             <article key={title} className="panel card-hover">
-              <span className="chip bg-brand-soft text-brand-dark">Disponible por comuna</span>
+              <span className={chip}>Disponible por comuna</span>
               <h3 className="mt-4 text-2xl font-black">{title}</h3>
               <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
             </article>
@@ -319,11 +333,25 @@ function SectionHeader({ eyebrow, title, text }: { eyebrow: string; title: strin
   );
 }
 
-function FloatingCard({ label, value, className }: { label: string; value: string; className: string }) {
+function FloatingCard({
+  label,
+  value,
+  className,
+  accent = "brand",
+}: {
+  label: string;
+  value: string;
+  className: string;
+  accent?: "brand" | "accent" | "sun";
+}) {
+  const dot = accent === "sun" ? "bg-sun" : accent === "accent" ? "bg-accent" : "bg-brand";
   return (
-    <div className={`absolute rounded-[22px] border border-line bg-white p-4 shadow-card ${className}`}>
-      <span className="block text-xs font-black uppercase text-muted">{label}</span>
-      <strong className="text-2xl font-black text-ink">{value}</strong>
+    <div className={`absolute rounded-[22px] border border-line bg-white/95 p-4 shadow-card backdrop-blur ${className}`}>
+      <span className="flex items-center gap-2 text-xs font-black uppercase text-muted">
+        <span className={`h-2 w-2 rounded-full ${dot}`} />
+        {label}
+      </span>
+      <strong className="mt-1 block text-2xl font-black text-ink">{value}</strong>
     </div>
   );
 }

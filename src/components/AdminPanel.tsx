@@ -15,6 +15,7 @@ import { communeOptions } from "@/lib/catalog";
 import {
   addPaymentCredits,
   approveAndPublishSpecialist,
+  clearMockSession,
   getCommercialConfig,
   getEnterpriseLeads,
   getHomeLeads,
@@ -54,6 +55,7 @@ import {
   type ServiceRequestLead,
   type SpecialistPayout,
   type SpecialistLead,
+  type MockSession,
 } from "@/lib/storage";
 
 type AdminSection =
@@ -210,10 +212,13 @@ export function AdminPanel() {
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequestLead | null>(null);
   const [notice, setNotice] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [adminSession, setAdminSession] = useState<MockSession | null>(null);
 
   useEffect(() => {
     seedMockState();
-    setIsAdmin(getMockSession()?.role === "admin");
+    const session = getMockSession();
+    setAdminSession(session);
+    setIsAdmin(session?.role === "admin");
     refresh();
     setPlans(readLocal(adminKeys.plans, defaultPlans()));
     setCatalog(readLocal(adminKeys.catalog, defaultCatalog()));
@@ -327,6 +332,13 @@ export function AdminPanel() {
     updateConversionLeadStatus(kind, id, status);
     refresh();
     setNotice(`Estado actualizado a ${status}.`);
+  }
+
+  function closeAdminSession() {
+    clearMockSession();
+    setAdminSession(null);
+    setIsAdmin(false);
+    window.location.href = "/";
   }
 
   function updateEnterprisePipeline(id: string, status: ConversionLeadStatus) {
@@ -517,7 +529,8 @@ export function AdminPanel() {
           <div className="rounded-3xl bg-ink p-5 text-white">
             <span className="rounded-full bg-teal-300 px-3 py-1 text-xs font-black uppercase text-teal-950">Administrador</span>
             <h2 className="mt-4 text-2xl font-black">Backoffice OficiosPro</h2>
-            <p className="mt-2 text-sm font-bold text-white/70">Operación, especialistas, créditos y cobertura.</p>
+            <p className="mt-2 text-sm font-bold text-white/70">Panel admin</p>
+            <p className="mt-1 text-sm font-black text-white">{adminSession?.email ?? "admin@oficiospro.cl"}</p>
           </div>
           <nav className="mt-4 grid gap-1">
             {adminSections.map((section) => (
@@ -553,6 +566,9 @@ export function AdminPanel() {
               <Link className="btn-primary" href="/especialistas">
                 Ver marketplace
               </Link>
+              <button className="btn-dark" type="button" onClick={closeAdminSession}>
+                Cerrar sesión
+              </button>
             </div>
           </div>
         </div>
