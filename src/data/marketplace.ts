@@ -1,4 +1,5 @@
 import { chileCommunes } from "@/data/chileCommunes";
+import { nationalServiceTypes, type NationalSpecialty, type ServiceAudience } from "@/data/serviceCatalog";
 
 export type GeoPoint = {
   lat: number;
@@ -15,9 +16,13 @@ export type MarketplaceCategory = {
 export type ServiceType = {
   id: string;
   name: string;
+  slug?: string;
   description: string;
+  icon?: string;
+  appliesTo?: ServiceAudience[];
   marginType: "home" | "company";
   specialties: string[];
+  specialtyDetails?: NationalSpecialty[];
 };
 
 export type SubscriptionPlan = {
@@ -73,7 +78,7 @@ export const defaultCommercialConfig: CommercialConfig = {
   specialistReferralBonus: "Badge Fundador o créditos de reputación",
 };
 
-export const serviceTypes: ServiceType[] = [
+const legacyServiceTypes: ServiceType[] = [
   {
     id: "hogar",
     name: "Hogar",
@@ -306,16 +311,32 @@ export const serviceTypes: ServiceType[] = [
   },
 ];
 
+export const serviceTypes: ServiceType[] = nationalServiceTypes;
+
 export const serviceTypeOptions = serviceTypes.map((type) => ({ id: type.id, name: type.name }));
 
 export const allServiceSpecialties = serviceTypes.flatMap((type) =>
-  type.specialties.map((specialty) => ({
+  type.specialties.map((specialty) => {
+    const detail = type.specialtyDetails?.find((item) => item.name === specialty);
+    return {
     serviceTypeId: type.id,
     serviceTypeName: type.name,
     marginType: type.marginType,
     name: specialty,
-    slug: toSlug(specialty),
-  })),
+      slug: detail?.slug ?? toSlug(specialty),
+      subcategory: detail?.subcategory,
+      suggestedCredits: detail?.suggestedCredits,
+      certificationRequired: detail?.certificationRequired,
+      appliesTo: detail?.appliesTo,
+      emergency: detail?.emergency,
+      expectedTicketCLP: detail?.expectedTicketCLP,
+      suggestedMinMarginCLP: detail?.suggestedMinMarginCLP,
+      seoTitle: detail?.seoTitle,
+      seoDescription: detail?.seoDescription,
+      keywords: detail?.keywords,
+      suggestedCities: detail?.suggestedCities,
+    };
+  }),
 );
 
 export const subscriptionPlans: SubscriptionPlan[] = [
@@ -427,7 +448,7 @@ export function calculateServiceEconomics({
   };
 }
 
-export const marketplaceCategories: MarketplaceCategory[] = [
+const legacyMarketplaceCategories: MarketplaceCategory[] = [
   {
     id: "climatizacion-refrigeracion",
     name: "Climatización y Refrigeración",
@@ -700,13 +721,28 @@ export const marketplaceCategories: MarketplaceCategory[] = [
   },
 ];
 
+export const marketplaceCategories: MarketplaceCategory[] = serviceTypes.map((category) => ({
+  id: category.id,
+  name: category.name,
+  description: category.description,
+  specialties: category.specialties,
+}));
+
 export const allSpecialties = marketplaceCategories.flatMap((category) =>
-  category.specialties.map((specialty) => ({
-    categoryId: category.id,
-    categoryName: category.name,
-    name: specialty,
-    slug: toSlug(specialty),
-  })),
+  category.specialties.map((specialty) => {
+    const detail = serviceTypes.find((type) => type.id === category.id)?.specialtyDetails?.find((item) => item.name === specialty);
+    return {
+      categoryId: category.id,
+      categoryName: category.name,
+      name: specialty,
+      slug: detail?.slug ?? toSlug(specialty),
+      seoTitle: detail?.seoTitle ?? `${specialty} en Chile | OficiosPro`,
+      seoDescription: detail?.seoDescription ?? `Encuentra ${specialty.toLowerCase()} por comuna y reputación en OficiosPro.`,
+      keywords: detail?.keywords ?? [specialty.toLowerCase(), category.name.toLowerCase()],
+      appliesTo: detail?.appliesTo ?? [],
+      suggestedCities: detail?.suggestedCities ?? ["Santiago", "Las Condes", "Curicó", "Talca"],
+    };
+  }),
 );
 
 export const nationalCoverageStats = {

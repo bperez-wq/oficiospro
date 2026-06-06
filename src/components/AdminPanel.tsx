@@ -25,6 +25,7 @@ import {
   getPaymentSubscriptions,
   getPendingSpecialists,
   getPublishedSpecialists,
+  getQuickSearchLeads,
   getServiceRequestLeads,
   getSpecialistPayouts,
   getSpecialistLeads,
@@ -49,6 +50,7 @@ import {
   type PaymentSubscriptionStatus,
   type PendingSpecialistProfile,
   type PendingSpecialistService,
+  type QuickSearchLead,
   type ServiceRequestLead,
   type SpecialistPayout,
   type SpecialistLead,
@@ -90,7 +92,15 @@ type CompanyRequest = {
 };
 
 type AdminPlan = SubscriptionPlan & { active: boolean };
-type EditableSpecialty = { id: string; name: string; active: boolean };
+type EditableSpecialty = {
+  id: string;
+  name: string;
+  active: boolean;
+  requiresCertification: boolean;
+  suggestedCredits: number;
+  suggestedMinMarginCLP: number;
+  appliesTo: string;
+};
 type EditableServiceType = { id: string; name: string; description: string; active: boolean; specialties: EditableSpecialty[] };
 type CoverageCommune = { name: string; region: string; active: boolean; priority: boolean };
 type LeadNoteMap = Record<string, string>;
@@ -147,9 +157,21 @@ function defaultCatalog(): EditableServiceType[] {
     description: type.description,
     active: true,
     specialties: type.specialties.map((specialty) => ({
+      ...(type.specialtyDetails?.find((detail) => detail.name === specialty)
+        ? {
+            suggestedCredits: type.specialtyDetails.find((detail) => detail.name === specialty)?.suggestedCredits.min ?? 20,
+            suggestedMinMarginCLP: type.specialtyDetails.find((detail) => detail.name === specialty)?.suggestedMinMarginCLP ?? 5000,
+            requiresCertification: type.specialtyDetails.find((detail) => detail.name === specialty)?.certificationRequired !== "No obligatoria",
+            appliesTo: type.specialtyDetails.find((detail) => detail.name === specialty)?.appliesTo.join(", ") ?? "hogar",
+          }
+        : {}),
       id: `${type.id}-${specialty.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
       name: specialty,
       active: true,
+      suggestedCredits: type.specialtyDetails?.find((detail) => detail.name === specialty)?.suggestedCredits.min ?? 20,
+      suggestedMinMarginCLP: type.specialtyDetails?.find((detail) => detail.name === specialty)?.suggestedMinMarginCLP ?? 5000,
+      requiresCertification: type.specialtyDetails?.find((detail) => detail.name === specialty)?.certificationRequired !== "No obligatoria",
+      appliesTo: type.specialtyDetails?.find((detail) => detail.name === specialty)?.appliesTo.join(", ") ?? "hogar",
     })),
   }));
 }
@@ -178,6 +200,7 @@ export function AdminPanel() {
   const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet>(getPaymentCreditWallet());
   const [payouts, setPayouts] = useState<SpecialistPayout[]>([]);
   const [creditAdjustment, setCreditAdjustment] = useState(10);
+  const [otherServiceRequests, setOtherServiceRequests] = useState<QuickSearchLead[]>([]);
   const [config, setConfig] = useState<CommercialConfig>(getCommercialConfig());
   const [plans, setPlans] = useState<AdminPlan[]>(defaultPlans());
   const [catalog, setCatalog] = useState<EditableServiceType[]>(defaultCatalog());
@@ -225,6 +248,7 @@ export function AdminPanel() {
     setPaymentTransactions(getPaymentCreditTransactions());
     setPaymentWallet(getPaymentCreditWallet());
     setPayouts(getSpecialistPayouts());
+    setOtherServiceRequests(getQuickSearchLeads().filter((request) => request.isOtherService));
     setConfig(getCommercialConfig());
   }
 
@@ -389,7 +413,18 @@ export function AdminPanel() {
       type.id === typeId
         ? {
             ...type,
-            specialties: [{ id: `especialidad-${Date.now()}`, name: "Nueva especialidad", active: true }, ...type.specialties],
+            specialties: [
+              {
+                id: `especialidad-${Date.now()}`,
+                name: "Nueva especialidad",
+                active: true,
+                requiresCertification: false,
+                suggestedCredits: 20,
+                suggestedMinMarginCLP: 5000,
+                appliesTo: "hogar",
+              },
+              ...type.specialties,
+            ],
           }
         : type,
     );
@@ -406,6 +441,31 @@ export function AdminPanel() {
     );
     setCatalog(next);
     writeLocal(adminKeys.catalog, next);
+  }
+
+  function convertOtherServiceToSpecialty(request: QuickSearchLead) {
+    const next = catalog.map((type) =>
+      type.id === request.serviceTypeId
+        ? {
+            ...type,
+            specialties: [
+              {
+                id: `convertida-${Date.now()}`,
+                name: request.otherServiceDescription || request.need,
+                active: true,
+                requiresCertification: false,
+                suggestedCredits: 30,
+                suggestedMinMarginCLP: 5000,
+                appliesTo: type.name,
+              },
+              ...type.specialties,
+            ],
+          }
+        : type,
+    );
+    setCatalog(next);
+    writeLocal(adminKeys.catalog, next);
+    setNotice("Solicitud convertida en especialidad oficial del catálogo administrable.");
   }
 
   function updateCommune(name: string, patch: Partial<CoverageCommune>) {
@@ -683,19 +743,64 @@ export function AdminPanel() {
                     </label>
                     <button className="btn-secondary" type="button" onClick={() => addSpecialty(type.id)}>Crear especialidad</button>
                   </div>
-                  <div className="mt-4 grid gap-2 md:grid-cols-2">
+                  <div className="mt-4 grid gap-2">
                     {type.specialties.map((specialty) => (
-                      <div key={specialty.id} className="grid gap-2 rounded-2xl bg-white p-3 md:grid-cols-[1fr_auto]">
-                        <input className="rounded-xl border border-line px-3 py-2 text-sm font-bold" value={specialty.name} onChange={(event) => updateSpecialty(type.id, specialty.id, { name: event.target.value })} />
+                      <div key={specialty.id} className="grid gap-3 rounded-2xl bg-white p-3 xl:grid-cols-[1.2fr_0.65fr_0.65fr_0.75fr_auto]">
+                        <label className="field">
+                          Especialidad
+                          <input value={specialty.name} onChange={(event) => updateSpecialty(type.id, specialty.id, { name: event.target.value })} />
+                        </label>
+                        <label className="field">
+                          Créditos sugeridos
+                          <input type="number" value={specialty.suggestedCredits} onChange={(event) => updateSpecialty(type.id, specialty.id, { suggestedCredits: Number(event.target.value) })} />
+                        </label>
+                        <label className="field">
+                          Margen mínimo
+                          <input type="number" value={specialty.suggestedMinMarginCLP} onChange={(event) => updateSpecialty(type.id, specialty.id, { suggestedMinMarginCLP: Number(event.target.value) })} />
+                        </label>
+                        <label className="field">
+                          Aplica a
+                          <input value={specialty.appliesTo} onChange={(event) => updateSpecialty(type.id, specialty.id, { appliesTo: event.target.value })} />
+                        </label>
                         <label className="flex items-center gap-2 text-xs font-black text-muted">
                           <input checked={specialty.active} type="checkbox" onChange={(event) => updateSpecialty(type.id, specialty.id, { active: event.target.checked })} />
                           Activa
+                        </label>
+                        <label className="flex items-center gap-2 text-xs font-black text-muted xl:col-span-5">
+                          <input checked={specialty.requiresCertification} type="checkbox" onChange={(event) => updateSpecialty(type.id, specialty.id, { requiresCertification: event.target.checked })} />
+                          Requiere certificación o validación documental
                         </label>
                       </div>
                     ))}
                   </div>
                 </article>
               ))}
+            </div>
+            <div className="mt-6 rounded-[24px] border border-line bg-slate-50 p-5">
+              <div className="mb-4">
+                <p className="eyebrow">Servicios no encontrados</p>
+                <h3 className="text-2xl font-black">Solicitudes para convertir en especialidad oficial</h3>
+              </div>
+              <div className="grid gap-3">
+                {otherServiceRequests.length ? (
+                  otherServiceRequests.map((request) => (
+                    <article key={request.id} className="grid gap-3 rounded-2xl border border-line bg-white p-4 lg:grid-cols-[1fr_auto]">
+                      <div>
+                        <strong>{request.otherServiceDescription || request.need}</strong>
+                        <p className="mt-2 text-sm font-bold text-muted">
+                          {request.createdAt.slice(0, 10)} · {request.commune} · {serviceTypes.find((type) => type.id === request.serviceTypeId)?.name ?? request.serviceTypeId}
+                        </p>
+                        {request.additionalComments ? <p className="mt-2 text-sm font-semibold text-muted">{request.additionalComments}</p> : null}
+                      </div>
+                      <button className="btn-secondary" type="button" onClick={() => convertOtherServiceToSpecialty(request)}>
+                        Convertir en especialidad
+                      </button>
+                    </article>
+                  ))
+                ) : (
+                  <EmptyState text="No hay solicitudes de servicios no encontrados." />
+                )}
+              </div>
             </div>
           </Panel>
         ) : null}

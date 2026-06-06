@@ -125,6 +125,30 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="section">
+        <SectionHeader
+          eyebrow="Cobertura especializada"
+          title="OficiosPro también para agricultura, campos e industria."
+          text="Además del hogar, la red está preparada para contratistas agrícolas, riego, maquinaria, packing, frío alimentario, comunidades y mantención industrial."
+        />
+        <div className="grid gap-4 md:grid-cols-3">
+          {[
+            ["Contratistas agrícolas", "Cuadrillas de poda, cosecha, raleo, amarra, desbrote y packing temporal."],
+            ["Riego agrícola", "Riego tecnificado, bombas, fertirriego, telemetría, filtros y tableros de riego."],
+            ["Maquinaria agrícola", "Mecánicos, operadores, calibración, GPS agrícola e implementos."],
+            ["Packing y frío", "Líneas de fruta, cámaras frigoríficas, túneles de frío y frío alimentario."],
+            ["Mantención industrial", "PLC, soldadura, hidráulica, neumática, bombas, motores y predictivo."],
+            ["Comunidades y empresas", "Salas de bombas, portones, cámaras, calderas, piscinas y espacios comunes."],
+          ].map(([title, text]) => (
+            <article key={title} className="panel card-hover">
+              <span className="chip bg-brand-soft text-brand-dark">Disponible por comuna</span>
+              <h3 className="mt-4 text-2xl font-black">{title}</h3>
+              <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="section" id="especialistas">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Foto protagonista, certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />

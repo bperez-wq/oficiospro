@@ -211,6 +211,7 @@ export type PendingSpecialistProfile = {
   lat: number;
   lng: number;
   coverageRadiusKm: number;
+  coverageCommunes?: string[];
   typeServicio: string;
   specialty: string;
   services: PendingSpecialistService[];
@@ -381,6 +382,8 @@ export function seedMockState() {
   if (!window.localStorage.getItem(keys.bookings)) write(keys.bookings, defaultBookings);
   if (!window.localStorage.getItem(keys.transactions)) write(keys.transactions, defaultTransactions);
   if (!window.localStorage.getItem(keys.commercialConfig)) write(keys.commercialConfig, defaultCommercialConfig);
+  seedSpecialistIntakeState();
+  seedOtherServiceRequests();
   seedPaymentState();
   if (!window.localStorage.getItem(keys.referrals)) {
     write<ReferralState>(keys.referrals, {
@@ -392,6 +395,109 @@ export function seedMockState() {
       specialistBenefit: "Badge Fundador disponible al aprobar referidos",
     });
   }
+}
+
+function seedSpecialistIntakeState() {
+  if (typeof window === "undefined") return;
+  if (window.localStorage.getItem(keys.pendingSpecialists)) return;
+  const now = new Date().toISOString();
+  const seeds = [
+    ["Claudio Rivera", "Riego Agrícola", "Técnico riego tecnificado", "Talca", "Maule", "riego-agricola", "Técnico riego tecnificado"],
+    ["María Paz Araya", "Agroindustria", "Frigorista agrícola", "Curicó", "Maule", "agroindustria", "Frigorista agrícola"],
+    ["Hernán Soto", "Maquinaria Agrícola", "Mecánico tractores", "Los Ángeles", "Biobío", "maquinaria-agricola", "Mecánico tractores"],
+    ["Camila Pizarro", "Contratistas Agrícolas", "Contratista de cosecha", "Chillán", "Ñuble", "contratistas-agricolas", "Contratista de cosecha"],
+    ["Rodrigo Velásquez", "Industria y Mantención", "Técnico PLC", "Concepción", "Biobío", "industria", "Técnico PLC"],
+    ["Valentina Mora", "Comunidades y Edificios", "Mantención sala de bombas", "Providencia", "Metropolitana de Santiago", "comunidades-edificios", "Mantención sala de bombas"],
+    ["Jorge Molina", "Climatización y Refrigeración", "Técnico cámaras frigoríficas", "Puerto Montt", "Los Lagos", "climatizacion-refrigeracion", "Técnico cámaras frigoríficas"],
+    ["Fernanda Lagos", "Seguridad y Tecnología", "Técnico BMS", "Las Condes", "Metropolitana de Santiago", "seguridad-tecnologia", "Técnico BMS"],
+    ["Mauricio Peña", "Servicios para Campos", "Instalador cercos agrícolas", "Osorno", "Los Lagos", "servicios-campos", "Instalador cercos agrícolas"],
+    ["Paula Cortés", "Energía y Sustentabilidad", "Técnico bombas solares", "Rancagua", "O'Higgins", "energia-sustentabilidad", "Técnico bombas solares"],
+    ["Iván Figueroa", "Hogar", "Otro servicio técnico", "Ñuñoa", "Metropolitana de Santiago", "hogar", "Otro servicio de hogar"],
+    ["Natalia Seguel", "Agricultura y Campos", "Otro servicio agrícola", "Curicó", "Maule", "agricultura-campos", "Otro servicio agrícola"],
+    ["Pedro Ulloa", "Industria y Mantención", "Soldador TIG", "Antofagasta", "Antofagasta", "industria", "Soldador TIG"],
+    ["Daniela Bravo", "Limpieza y Sanitización", "Limpieza altura", "Santiago", "Metropolitana de Santiago", "limpieza-sanitizacion", "Limpieza altura"],
+    ["Tomás Rivas", "Transporte y Logística", "Servicio camión pluma", "Valparaíso", "Valparaíso", "transporte-logistica", "Servicio camión pluma"],
+  ] as const;
+  const pending: PendingSpecialistProfile[] = seeds.map(([name, typeServicio, specialty, commune, region, serviceTypeId, serviceName], index) => ({
+    id: `seed-specialist-${index + 1}`,
+    status: index < 10 ? "pendiente" : "rechazado",
+    name,
+    firstNames: name.split(" ")[0],
+    lastNames: name.split(" ").slice(1).join(" "),
+    rut: `12.345.${String(670 + index).padStart(3, "0")}-${index % 10}`,
+    phone: `+56 9 7000 ${String(1000 + index)}`,
+    email: `${name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, ".")}@oficiospro.cl`,
+    profilePhoto: `perfil-${index + 1}.jpg`,
+    address: `Base operativa ${commune}`,
+    commune,
+    region,
+    lat: -33.45 - index * 0.08,
+    lng: -70.66 - index * 0.04,
+    coverageRadiusKm: index < 8 ? 45 : 25,
+    coverageCommunes: [commune, "Comuna vecina", "Zona rural cercana"],
+    typeServicio,
+    specialty,
+    services: [
+      {
+        serviceTypeId,
+        specialty,
+        isOtherService: specialty.startsWith("Otro"),
+        otherServiceDescription: specialty.startsWith("Otro") ? `Servicio no encontrado declarado por ${name}` : "",
+        name: serviceName,
+        description: `Servicio declarado para ${typeServicio} con cobertura en ${commune}.`,
+        specialistComments: "Cuenta con herramientas propias y referencias verificables.",
+        clientCredits: index < 5 ? 80 : 40,
+        specialistPayoutCLP: index < 5 ? 60000 : 28000,
+        initialVisitFree: index % 2 === 0,
+        visitCredits: index % 2 === 0 ? 0 : 20,
+        duration: index < 5 ? "Jornada técnica" : "3 horas",
+        emergency: index % 3 === 0,
+      },
+    ],
+    references: [0, 1, 2].map((referenceIndex) => ({
+      name: `Referencia ${referenceIndex + 1}`,
+      company: referenceIndex === 0 ? "Cliente empresa" : "Cliente particular",
+      phone: `+56 9 8000 ${String(index * 10 + referenceIndex).padStart(4, "0")}`,
+      email: `referencia${referenceIndex + 1}@cliente.cl`,
+      work: `${serviceName} realizado`,
+    })),
+    portfolioPhotos: [`trabajo-${index + 1}-1.jpg`, `trabajo-${index + 1}-2.jpg`, `trabajo-${index + 1}-3.jpg`],
+    certifications: index % 2 === 0 ? ["Certificación oficio", "Seguridad en terreno"] : ["Experiencia verificable"],
+    submittedAt: now,
+    reviewedAt: index >= 10 ? now : undefined,
+  }));
+  write(keys.pendingSpecialists, pending);
+}
+
+function seedOtherServiceRequests() {
+  if (typeof window === "undefined") return;
+  if (window.localStorage.getItem(keys.quickSearches)) return;
+  const now = new Date().toISOString();
+  const requests: QuickSearchLead[] = [
+    ["Curicó", "agroindustria", "Necesito técnico para calibradora de cerezas marca específica"],
+    ["Talca", "riego-agricola", "Busco reparación de tablero de riego con telemetría antigua"],
+    ["Osorno", "agricultura-campos", "Servicio rural para mangas ganaderas y bebederos"],
+    ["Puerto Varas", "climatizacion-refrigeracion", "Frío alimentario para cámara pequeña de lácteos"],
+    ["Los Ángeles", "maquinaria-agricola", "Mecánico para implemento agrícola importado"],
+    ["Chillán", "contratistas-agricolas", "Cuadrilla para cosecha de arándanos con supervisor"],
+    ["Providencia", "comunidades-edificios", "Mantención especial de sala presurizada"],
+    ["Antofagasta", "industria", "Revisión de compresor industrial de alta presión"],
+    ["Las Condes", "seguridad-tecnologia", "Integrar cámaras existentes con control de acceso"],
+    ["Rancagua", "energia-sustentabilidad", "Diagnóstico de bombas solares de pozo"],
+  ].map(([commune, serviceTypeId, description], index) => ({
+    id: `other-service-${index + 1}`,
+    createdAt: now,
+    sourceButton: "Solicitud de servicio no encontrado",
+    need: description,
+    serviceTypeId,
+    specialty: description,
+    isOtherService: true,
+    otherServiceDescription: description,
+    additionalComments: "Solicitud pendiente de evaluación para convertir en especialidad oficial.",
+    commune,
+    urgency: index % 2 === 0 ? "Esta semana" : "Sin urgencia",
+  }));
+  write(keys.quickSearches, requests);
 }
 
 function currentPage() {

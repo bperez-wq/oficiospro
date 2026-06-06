@@ -5,7 +5,6 @@ import { SearchableSelect } from "@/components/SearchableSelect";
 import type { Specialist } from "@/data/mock";
 import { formatCLP, getPlanById, getServiceTypeById, serviceTypes, subscriptionPlans } from "@/data/marketplace";
 import {
-  allSpecialtyOptions,
   communeOptions,
   OTHER_SERVICE_VALUE,
   regionOptions,
@@ -58,7 +57,7 @@ const defaultEnterprise = {
   region: "Metropolitana de Santiago",
   commune: "Las Condes",
   need: "Mantención recurrente",
-  serviceType: "Mantención recurrente",
+  serviceType: "empresas",
   otherServiceDescription: "",
   additionalComments: "",
 };
@@ -80,6 +79,7 @@ const defaultReservation = {
   rut: "",
   email: "",
   whatsapp: "",
+  serviceTypeId: "hogar",
   commune: "Las Condes",
   address: "",
   service: "",
@@ -171,6 +171,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     setSpecialistLead(defaultSpecialist);
     setReservation({
       ...defaultReservation,
+      serviceTypeId: options.specialist?.serviceTypeId ?? "hogar",
       service: options.specialist?.specialty ?? "",
       commune: options.specialist?.commune ?? options.specialist?.zone ?? "Las Condes",
     });
@@ -226,19 +227,24 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
 
   function submitEnterpriseLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const enterpriseServiceLabel =
+      enterprise.serviceType === OTHER_SERVICE_VALUE
+        ? enterprise.otherServiceDescription
+        : serviceTypeOptions.find((item) => item.value === enterprise.serviceType)?.label ?? enterprise.serviceType;
     const saved = appendEnterpriseLead({
       ...enterprise,
+      serviceType: enterpriseServiceLabel,
       name: `${enterprise.firstNames} ${enterprise.lastNames}`.trim(),
       company: enterprise.businessName,
       branches: Number(enterprise.branches),
       planId: options?.planId ? selectedPlan.id : undefined,
       sourceButton: options?.sourceButton ?? "Empresas",
-      interest: options?.planId ? `Plan empresa ${selectedPlan.name}` : enterprise.serviceType,
+      interest: options?.planId ? `Plan empresa ${selectedPlan.name}` : enterpriseServiceLabel,
     });
     appendConversionEvent({
       type: "company_lead_created",
       sourceButton: options?.sourceButton ?? "Empresas",
-      data: { leadId: saved.id, company: enterprise.businessName, commune: enterprise.commune, need: enterprise.serviceType },
+      data: { leadId: saved.id, company: enterprise.businessName, commune: enterprise.commune, need: enterpriseServiceLabel },
     });
     setSuccess("Recibimos tu solicitud. Un ejecutivo revisará tu caso.");
   }
@@ -615,13 +621,7 @@ function EnterpriseFields({
   enterprise: typeof defaultEnterprise;
   onChange: (enterprise: typeof defaultEnterprise) => void;
 }) {
-  const enterpriseServiceOptions = [
-    { value: "Mantención recurrente", label: "Mantención recurrente" },
-    { value: "Emergencias", label: "Emergencias" },
-    { value: "Bolsa de créditos", label: "Bolsa de créditos" },
-    { value: "Proveedores técnicos", label: "Proveedores técnicos" },
-    { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" },
-  ];
+  const enterpriseServiceOptions = [...serviceTypeOptions, { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" }];
 
   return (
     <>
@@ -769,11 +769,22 @@ function ReservationFields({
         <input value={reservation.address} onChange={(event) => onChange({ ...reservation, address: event.target.value })} placeholder="Sector o referencia" required />
       </label>
       <SearchableSelect
+        label="Tipo de servicio"
+        value={reservation.serviceTypeId}
+        options={serviceTypeOptions}
+        onChange={(serviceTypeId) => {
+          const nextService = specialtyOptionsForType(serviceTypeId)[0]?.value ?? "";
+          onChange({ ...reservation, serviceTypeId, service: nextService, otherServiceDescription: "" });
+        }}
+        placeholder="Selecciona una categoría"
+        required
+      />
+      <SearchableSelect
         label="Servicio requerido"
         value={reservation.service}
-        options={allSpecialtyOptions}
+        options={specialtyOptionsForType(reservation.serviceTypeId)}
         onChange={(service) => onChange({ ...reservation, service, otherServiceDescription: "" })}
-        placeholder="Busca gasfitería, electricidad, aire..."
+        placeholder="Busca dentro de la categoría seleccionada"
         required
       />
       {reservation.service === OTHER_SERVICE_VALUE ? (

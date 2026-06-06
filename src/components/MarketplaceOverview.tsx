@@ -62,7 +62,7 @@ export function SpecialtyCatalogPreview() {
     <section className="grid gap-5">
       <div className="max-w-4xl">
         <p className="eyebrow">Catálogo nacional</p>
-        <h2 className="section-title">Más de 100 especialidades agrupadas para crecer por categoría.</h2>
+        <h2 className="section-title">Más de 300 especialidades agrupadas para crecer por categoría.</h2>
         <p className="section-lead">
           El catálogo está listo para indexación, filtros, márgenes por categoría y rutas locales futuras de la plataforma.
         </p>

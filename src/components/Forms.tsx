@@ -326,6 +326,7 @@ export function SpecialistRegisterForm() {
   const [geoStatus, setGeoStatus] = useState("");
   const [baseCommune, setBaseCommune] = useState("Santiago");
   const [baseRegion, setBaseRegion] = useState("Metropolitana de Santiago");
+  const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
 
   useEffect(() => {
     setConfig(getCommercialConfig());
@@ -431,6 +432,7 @@ export function SpecialistRegisterForm() {
       lat: geo.lat,
       lng: geo.lng,
       coverageRadiusKm: Number(data.get("coverageRadiusKm")),
+      coverageCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
       typeServicio: mainType?.name ?? "Hogar",
       specialty: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
       services: services.map((service) => ({
@@ -512,6 +514,11 @@ export function SpecialistRegisterForm() {
           <label className="field">
             Radio de cobertura en km
             <input name="coverageRadiusKm" type="number" min="1" max="120" defaultValue="18" required />
+          </label>
+          <label className="field">
+            Comunas de cobertura
+            <input value={coverageCommunes} onChange={(event) => setCoverageCommunes(event.target.value)} placeholder="Ej: Curicó, Molina, Romeral" required />
+            <span className="text-xs font-bold text-muted">Sepáralas por coma. Admin podrá revisarlas antes de publicar.</span>
           </label>
           <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
             <div className="flex flex-wrap items-center justify-between gap-3">
@@ -726,16 +733,10 @@ export function CompanyRequestForm() {
   const [status, setStatus] = useState("");
   const [region, setRegion] = useState("Metropolitana de Santiago");
   const [commune, setCommune] = useState("Santiago");
-  const [serviceType, setServiceType] = useState("Mantención recurrente");
+  const [serviceType, setServiceType] = useState("empresas");
   const [otherServiceDescription, setOtherServiceDescription] = useState("");
   const [additionalComments, setAdditionalComments] = useState("");
-  const enterpriseServiceOptions = [
-    { value: "Mantención recurrente", label: "Mantención recurrente" },
-    { value: "Emergencias", label: "Emergencias" },
-    { value: "Bolsa de créditos", label: "Bolsa de créditos" },
-    { value: "Proveedores técnicos", label: "Proveedores técnicos" },
-    { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" },
-  ];
+  const enterpriseServiceOptions = [...serviceTypeOptions, { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" }];
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -743,6 +744,10 @@ export function CompanyRequestForm() {
     const businessName = String(data.get("businessName") ?? "");
     const firstNames = String(data.get("firstNames") ?? "");
     const lastNames = String(data.get("lastNames") ?? "");
+    const serviceTypeLabel =
+      serviceType === OTHER_SERVICE_VALUE
+        ? otherServiceDescription
+        : serviceTypeOptions.find((item) => item.value === serviceType)?.label ?? serviceType;
     appendStoredItem("companies", {
       company: businessName,
       businessName,
@@ -757,7 +762,8 @@ export function CompanyRequestForm() {
       commune,
       branches: Number(data.get("branches") ?? 1),
       plan: data.get("plan"),
-      serviceType,
+      serviceType: serviceTypeLabel,
+      serviceTypeId: serviceType,
       isOtherService: serviceType === OTHER_SERVICE_VALUE,
       otherServiceDescription,
       additionalComments,

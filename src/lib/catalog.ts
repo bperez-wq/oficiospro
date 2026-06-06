@@ -1,5 +1,6 @@
 import { chileCommunes } from "@/data/chileCommunes";
 import { allServiceSpecialties, serviceTypes } from "@/data/marketplace";
+import { otherServiceLabels } from "@/data/serviceCatalog";
 
 export const OTHER_SERVICE_VALUE = "__otro_servicio__";
 export const OTHER_SERVICE_LABEL = "Otro / No encontré mi servicio";
@@ -55,12 +56,20 @@ export const serviceTypeOptions: SelectOption[] = sortByLabel(
 export function specialtyOptionsForType(serviceTypeId: string, includeOther = true) {
   const type = serviceTypes.find((item) => item.id === serviceTypeId);
   const specialties = type?.specialties ?? allServiceSpecialties.map((item) => item.name);
-  const unique = Array.from(new Set(specialties));
+  const unique = Array.from(new Set(specialties.filter((specialty) => !normalizeSearch(specialty).startsWith("otro servicio"))));
   const options = sortByLabel(unique.map((specialty) => ({ value: specialty, label: specialty })));
-  return includeOther ? [...options, { value: OTHER_SERVICE_VALUE, label: OTHER_SERVICE_LABEL }] : options;
+  return includeOther ? [...options, { value: OTHER_SERVICE_VALUE, label: otherLabelForType(type?.appliesTo ?? []) }] : options;
 }
 
 export const allSpecialtyOptions: SelectOption[] = [
   ...sortByLabel(Array.from(new Set(allServiceSpecialties.map((item) => item.name))).map((specialty) => ({ value: specialty, label: specialty }))),
   { value: OTHER_SERVICE_VALUE, label: OTHER_SERVICE_LABEL },
 ];
+
+function otherLabelForType(appliesTo: string[]) {
+  if (appliesTo.includes("agricola")) return "Otro servicio agrícola";
+  if (appliesTo.includes("industrial")) return "Otro servicio industrial";
+  if (appliesTo.includes("empresa")) return "Otro servicio de empresa";
+  if (appliesTo.includes("hogar")) return "Otro servicio de hogar";
+  return otherServiceLabels[4] ?? OTHER_SERVICE_LABEL;
+}

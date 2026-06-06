@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
-import { allServiceSpecialties, distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
+import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
 import { useConversionModal } from "@/components/ConversionModal";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { SpecialistCard } from "@/components/SpecialistCard";
@@ -56,7 +56,7 @@ export function SpecialistsExplorer() {
 
   const specialties =
     category === "all"
-      ? [...new Set(allServiceSpecialties.map((item) => item.name))].sort()
+      ? []
       : getSpecialtiesByServiceType(category);
   const typeFilterOptions = [{ value: "all", label: "Todos los tipos" }, ...serviceTypeOptions];
   const specialtyFilterOptions = [
