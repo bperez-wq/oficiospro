@@ -203,6 +203,13 @@ export function SpecialistDashboard() {
           Tu perfil fue enviado para revisión.
         </div>
       ) : null}
+      <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-6">
+        <p className="eyebrow">Propósito del especialista</p>
+        <h2 className="text-3xl font-black">Tu oficio merece visibilidad, confianza y mejores oportunidades.</h2>
+        <p className="mt-3 max-w-3xl font-semibold leading-7 text-brand-dark">
+          Cada trabajo bien hecho construye tu reputación. Mantén tu perfil actualizado, suma referencias y muestra evidencia real para destacar como especialista verificado.
+        </p>
+      </section>
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
           <img src={specialist.image} alt={specialist.name} className="h-80 w-full object-cover" />

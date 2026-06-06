@@ -100,12 +100,12 @@ export function Header() {
               Ingresar
             </Link>
           )}
-          <ConversionButton type="consulta_general" sourceButton="Ver técnicos" className="btn-primary">
+          <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos" className="btn-primary">
             Ver técnicos
           </ConversionButton>
         </div>
 
-        <ConversionButton type="consulta_general" sourceButton="Ver técnicos mobile" className="btn-primary px-4 md:hidden">
+        <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos mobile" className="btn-primary px-4 md:hidden">
           Técnicos
         </ConversionButton>
       </div>

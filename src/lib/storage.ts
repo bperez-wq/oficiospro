@@ -178,6 +178,7 @@ export type PendingSpecialistService = {
   visitCredits: number;
   duration: string;
   emergency: boolean;
+  certificationRequired?: boolean;
   economics?: {
     incomeCLP: number;
     specialistPayoutCLP: number;
@@ -193,6 +194,7 @@ export type PendingSpecialistReference = {
   phone: string;
   email: string;
   work: string;
+  year?: string;
 };
 
 export type PendingSpecialistProfile = {
@@ -230,6 +232,7 @@ export type ConversionModalType =
   | "registro_especialista"
   | "contacto_empresa"
   | "referido"
+  | "busqueda_rapida"
   | "consulta_general";
 
 export type ConversionLeadStatus = "Nuevo" | "Contactado" | "En proceso" | "Cerrado" | "Convertido" | "Perdido";

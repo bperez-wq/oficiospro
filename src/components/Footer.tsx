@@ -39,6 +39,12 @@ export function Footer() {
           <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-white/70">
             Técnicos verificados, créditos acumulables y dashboards para convertir mantenciones del hogar y operación empresarial en una experiencia confiable.
           </p>
+          <p className="mt-4 max-w-xl text-lg font-black leading-7 text-white">
+            Empoderamos el oficio. Empoderamos al trabajador.
+          </p>
+          <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-white/70">
+            El lugar donde los buenos trabajadores brillan, construyen reputación y acceden a mejores oportunidades.
+          </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Pago seguro", "Garantía OficiosPro", "Técnicos verificados", "Cobertura nacional"].map((item) => (
               <span key={item} className="chip bg-white/10 text-white">

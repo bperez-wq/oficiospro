@@ -116,6 +116,9 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
             <ConversionButton type="reserva_especialista" sourceButton="Reservar especialista perfil lateral" specialist={specialist} className="btn-primary mt-5 w-full">
               Reservar especialista
             </ConversionButton>
+            <ConversionButton type="reserva_especialista" sourceButton="Consultar disponibilidad especialista" specialist={specialist} className="btn-secondary mt-3 w-full">
+              Consultar disponibilidad
+            </ConversionButton>
           </article>
           <article className="panel">
             <h3 className="text-xl font-black">Confianza y garantía</h3>
@@ -130,9 +133,9 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
           <article className="panel">
             <h3 className="text-xl font-black">Geo y cobertura</h3>
             <div className="mt-4 grid gap-2 text-sm font-bold text-muted">
-              <span className="rounded-2xl bg-slate-50 p-3">Latitud: {specialist.geo?.lat.toFixed(4) ?? "pendiente"}</span>
-              <span className="rounded-2xl bg-slate-50 p-3">Longitud: {specialist.geo?.lng.toFixed(4) ?? "pendiente"}</span>
-              <span className="rounded-2xl bg-slate-50 p-3">Radio: {specialist.coverageRadiusKm ?? 0} km</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Comuna base: {specialist.commune ?? specialist.zone}</span>
+              <span className="rounded-2xl bg-slate-50 p-3">Radio aproximado: {specialist.coverageRadiusKm ?? 0} km</span>
+              <span className="rounded-2xl bg-slate-50 p-3">La dirección exacta y datos privados no se muestran públicamente.</span>
             </div>
           </article>
           <article className="panel">

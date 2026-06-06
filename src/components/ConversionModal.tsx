@@ -339,11 +339,11 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     );
   }
 
-  const isPlanModal = options.type === "plan_hogar" || options.type === "lead_cliente";
+  const isPlanModal = options.type === "plan_hogar" || options.type === "lead_cliente" || options.type === "referido";
   const isEnterpriseModal = options.type === "plan_empresa" || options.type === "contacto_empresa";
   const isSpecialistModal = options.type === "registro_especialista";
   const isReservationModal = options.type === "reserva_especialista";
-  const isSearchModal = options.type === "consulta_general";
+  const isSearchModal = options.type === "consulta_general" || options.type === "busqueda_rapida";
 
   return (
     <div className="fixed inset-0 z-[100] grid place-items-center bg-ink/65 p-4 backdrop-blur-sm" role="dialog" aria-modal="true">
@@ -522,6 +522,7 @@ function modalTitle(type: ConversionModalType) {
     registro_especialista: "Postula como especialista verificado",
     contacto_empresa: "Centraliza tus mantenciones con OficiosPro Empresas",
     referido: "Invita y gana créditos",
+    busqueda_rapida: "Busca especialistas disponibles",
     consulta_general: "Busca especialistas disponibles",
   };
   return titles[type];
@@ -536,6 +537,7 @@ function modalSubtitle(type: ConversionModalType) {
     registro_especialista: "Captura rápida antes del formulario completo de validación, referencias y precios.",
     contacto_empresa: "Un ejecutivo revisará tu caso y la necesidad operacional de tu empresa.",
     referido: "Registra un referido y acumula beneficios en la plataforma.",
+    busqueda_rapida: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
     consulta_general: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
   };
   return subtitles[type];

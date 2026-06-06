@@ -14,6 +14,12 @@ export function SpecialistCard({
     specialist.top ? "Top especialista" : null,
     specialist.certifications.length ? "Certificado" : null,
   ].filter(Boolean) as string[];
+  const coverageStatus =
+    specialist.coverageRadiusKm && specialist.distance <= specialist.coverageRadiusKm
+      ? "Dentro de tu zona"
+      : specialist.coverageRadiusKm
+        ? "Fuera de cobertura"
+        : "Cobertura por confirmar";
 
   return (
     <article className="group overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-brand/25 hover:shadow-card">
@@ -64,7 +70,11 @@ export function SpecialistCard({
           <span className="text-sm font-black uppercase text-muted">Precio desde</span>
           <strong className="block text-2xl font-black text-ink">{specialist.credits} créditos</strong>
           <p className="text-sm font-bold text-muted">Tarifa dinámica por demanda y disponibilidad.</p>
-          {specialist.coverageRadiusKm ? <p className="mt-2 text-sm font-bold text-muted">Radio de cobertura: {specialist.coverageRadiusKm} km</p> : null}
+          {specialist.coverageRadiusKm ? (
+            <p className="mt-2 text-sm font-bold text-muted">
+              A {specialist.distance} km · {coverageStatus} · radio {specialist.coverageRadiusKm} km
+            </p>
+          ) : null}
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">

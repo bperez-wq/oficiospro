@@ -1,4 +1,5 @@
 import { ConversionButton } from "@/components/ConversionModal";
+import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { companyDashboard, companyUseCases, homeBenefits, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -14,16 +15,17 @@ export default function HomePage() {
       <section className="overflow-hidden border-b border-line bg-white">
         <div className="section grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
           <div>
-            <p className="eyebrow">Servicios técnicos verificados</p>
+            <p className="eyebrow">Empoderamos el oficio. Empoderamos al trabajador.</p>
             <h1 className="max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">
-              Encuentra especialistas verificados para tu hogar o empresa en minutos.
+              Encuentra especialistas verificados para tu hogar, empresa o campo en minutos.
             </h1>
             <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-muted">
-              Reserva especialistas confiables en gasfitería, electricidad, climatización, jardinería y mantención. Paga con créditos,
-              revisa calificaciones y recibe atención rápida desde una sola plataforma.
+              Reserva especialistas confiables en gasfitería, electricidad, climatización, jardinería, mantención, agricultura e industria. Paga con créditos,
+              revisa reputación real y recibe atención rápida desde una sola plataforma.
             </p>
+            <HeroSearchPanel />
             <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <ConversionButton type="consulta_general" sourceButton="Ver técnicos disponibles" className="btn-primary">
+              <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos disponibles" className="btn-primary">
                 Ver técnicos disponibles
               </ConversionButton>
               <ConversionButton type="lead_cliente" sourceButton="Conocer Club Hogar" className="btn-secondary">
@@ -52,6 +54,7 @@ export default function HomePage() {
             <FloatingCard className="left-0 top-8" label="Calificación promedio" value="4,9/5" />
             <FloatingCard className="right-0 top-24" label="Disponible ahora" value="35 min" />
             <FloatingCard className="bottom-16 left-6" label="Precio desde" value="30 créditos" />
+            <FloatingCard className="right-6 bottom-40" label="Especialista a" value="3,8 km" />
             <div className="absolute bottom-8 right-6 w-64 rounded-[24px] border border-line bg-white p-4 shadow-card">
               <p className="text-xs font-black uppercase text-muted">Técnicos cercanos</p>
               <div className="mt-3 flex -space-x-3">
@@ -83,6 +86,25 @@ export default function HomePage() {
       </section>
 
       <section className="section">
+        <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
+          <div>
+            <p className="eyebrow">Propósito OficiosPro</p>
+            <h2 className="section-title">Empoderamos el oficio. Empoderamos al trabajador.</h2>
+          </div>
+          <div className="grid gap-4">
+            <p className="text-lg font-semibold leading-8 text-ink">
+              OficiosPro ayuda a que los especialistas confiables sean encontrados, evaluados y recomendados. Cada trabajo bien hecho construye reputación,
+              visibilidad y mejores oportunidades.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {["El lugar donde los buenos trabajadores brillan", "Reputación con cada trabajo", "Oficios profesionales y visibles"].map((item) => (
+                <span key={item} className="chip bg-white text-brand-dark">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
         <SectionHeader
           eyebrow="Cómo funciona"
           title="De buscar un especialista a cerrar el trabajo, sin perseguir presupuestos."
@@ -239,6 +261,21 @@ export default function HomePage() {
               </div>
             </article>
           ))}
+        </div>
+      </section>
+
+      <section className="section-compact">
+        <div className="grid gap-6 rounded-[32px] border border-line bg-white p-6 shadow-soft md:grid-cols-[1fr_auto] md:items-center md:p-10">
+          <div>
+            <p className="eyebrow">Referidos OficiosPro</p>
+            <h2 className="section-title">Invita clientes o especialistas y gana beneficios.</h2>
+            <p className="section-lead">
+              Clientes pueden ganar créditos y especialistas pueden sumar reputación o badge Fundador cuando sus referidos se activan.
+            </p>
+          </div>
+          <ConversionButton type="referido" sourceButton="Referidos home" className="btn-primary">
+            Invitar referido
+          </ConversionButton>
         </div>
       </section>
 

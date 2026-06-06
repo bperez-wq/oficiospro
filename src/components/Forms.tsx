@@ -40,6 +40,7 @@ type ServiceDraft = {
   visitCredits: number;
   duration: string;
   emergency: boolean;
+  certificationRequired: boolean;
   specialistComments: string;
 };
 
@@ -49,9 +50,10 @@ type ReferenceDraft = {
   phone: string;
   email: string;
   work: string;
+  year: string;
 };
 
-const emptyReference: ReferenceDraft = { name: "", company: "", phone: "", email: "", work: "" };
+const emptyReference: ReferenceDraft = { name: "", company: "", phone: "", email: "", work: "", year: "" };
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -68,6 +70,7 @@ function createEmptyService(): ServiceDraft {
     visitCredits: 0,
     duration: "2 horas",
     emergency: false,
+    certificationRequired: false,
     specialistComments: "",
   };
 }
@@ -317,13 +320,24 @@ export function ClientRegisterForm() {
 
 export function SpecialistRegisterForm() {
   const [status, setStatus] = useState("");
+  const [step, setStep] = useState(1);
+  const [identity, setIdentity] = useState({
+    firstNames: "",
+    lastNames: "",
+    rut: "",
+    whatsapp: "",
+    email: "",
+  });
   const [config, setConfig] = useState<CommercialConfig | null>(null);
   const [services, setServices] = useState<ServiceDraft[]>([createEmptyService()]);
   const [references, setReferences] = useState<ReferenceDraft[]>([{ ...emptyReference }, { ...emptyReference }, { ...emptyReference }]);
   const [profilePhoto, setProfilePhoto] = useState("");
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
+  const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [geo, setGeo] = useState({ lat: -33.4489, lng: -70.6693 });
   const [geoStatus, setGeoStatus] = useState("");
+  const [baseAddress, setBaseAddress] = useState("");
+  const [coverageRadiusKm, setCoverageRadiusKm] = useState(18);
   const [baseCommune, setBaseCommune] = useState("Santiago");
   const [baseRegion, setBaseRegion] = useState("Metropolitana de Santiago");
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
@@ -392,9 +406,70 @@ export function SpecialistRegisterForm() {
     );
   }
 
+  function validateStep(currentStep = step) {
+    if (currentStep === 1) {
+      if (!identity.firstNames || !identity.lastNames || !identity.rut || !identity.whatsapp || !identity.email || !profilePhoto) {
+        setStatus("Completa identidad, contacto y foto de perfil para continuar.");
+        return false;
+      }
+    }
+    if (currentStep === 2) {
+      if (!baseAddress || !baseRegion || !baseCommune || coverageRadiusKm < 1 || !coverageCommunes.trim()) {
+        setStatus("Completa dirección base, comuna y cobertura para continuar.");
+        return false;
+      }
+    }
+    if (currentStep === 3) {
+      if (!services.length || !hasEvenCredits) {
+        setStatus("Agrega al menos un servicio y usa créditos en números pares.");
+        return false;
+      }
+      if (services.some((service) => !service.name.trim() || !service.description.trim() || !service.duration.trim() || Number(service.specialistPayoutCLP) < 0)) {
+        setStatus("Completa nombre, descripción, duración y pago especialista de cada servicio.");
+        return false;
+      }
+      if (services.some((service) => service.specialty === OTHER_SERVICE_VALUE && !service.otherServiceDescription.trim())) {
+        setStatus("Describe el servicio cuando selecciones Otro servicio.");
+        return false;
+      }
+    }
+    if (currentStep === 4 && completedReferences.length < 3) {
+      setStatus("Debes completar al menos 3 referencias laborales verificables.");
+      return false;
+    }
+    if (currentStep === 5 && portfolioPhotos.length < 1) {
+      setStatus("Debes cargar al menos una foto de portafolio. Recomendamos 3 o más.");
+      return false;
+    }
+    setStatus("");
+    return true;
+  }
+
+  function nextStep() {
+    if (!validateStep(step)) return;
+    setStep((current) => Math.min(5, current + 1));
+  }
+
+  function previousStep() {
+    setStatus("");
+    setStep((current) => Math.max(1, current - 1));
+  }
+
+  function toggleCertification(certification: string) {
+    setSelectedCertifications((current) =>
+      current.includes(certification) ? current.filter((item) => item !== certification) : [...current, certification],
+    );
+  }
+
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!config) return;
+    for (const currentStep of [1, 2, 3, 4, 5]) {
+      if (!validateStep(currentStep)) {
+        setStep(currentStep);
+        return;
+      }
+    }
     if (!hasEvenCredits) {
       setStatus("Revisa tus servicios: los créditos del cliente deben ser números pares.");
       return;
@@ -412,9 +487,8 @@ export function SpecialistRegisterForm() {
       return;
     }
 
-    const data = new FormData(event.currentTarget);
-    const firstNames = String(data.get("firstNames") ?? "");
-    const lastNames = String(data.get("lastNames") ?? "");
+    const firstNames = identity.firstNames;
+    const lastNames = identity.lastNames;
     const fullName = `${firstNames} ${lastNames}`.trim();
     const mainType = getServiceTypeById(services[0].serviceTypeId);
     const request = appendPendingSpecialist({
@@ -422,16 +496,16 @@ export function SpecialistRegisterForm() {
       firstNames,
       lastNames,
       name: fullName,
-      rut: String(data.get("rut") ?? ""),
-      phone: String(data.get("whatsapp") ?? ""),
-      email: String(data.get("email") ?? ""),
+      rut: identity.rut,
+      phone: identity.whatsapp,
+      email: identity.email,
       profilePhoto,
-      address: String(data.get("address") ?? ""),
+      address: baseAddress,
       commune: baseCommune,
       region: baseRegion,
       lat: geo.lat,
       lng: geo.lng,
-      coverageRadiusKm: Number(data.get("coverageRadiusKm")),
+      coverageRadiusKm,
       coverageCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
       typeServicio: mainType?.name ?? "Hogar",
       specialty: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
@@ -447,13 +521,13 @@ export function SpecialistRegisterForm() {
       })),
       references: completedReferences,
       portfolioPhotos,
-      certifications: data.getAll("certifications").map(String),
+      certifications: selectedCertifications,
       submittedAt: new Date().toISOString(),
     } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
       role: "specialist",
       name: fullName || "Especialista OficiosPro",
-      email: String(data.get("email") ?? ""),
+      email: identity.email,
       createdAt: new Date().toISOString(),
     });
     setStatus(`Tu perfil fue enviado para revisión. Solicitud ${request.id} creada.`);
@@ -463,36 +537,66 @@ export function SpecialistRegisterForm() {
   }
 
   return (
-    <FormShell title="Postulación especialista" text="Crea tu perfil profesional, declara servicios en créditos y espera aprobación antes de aparecer en el marketplace.">
+    <FormShell title="Postulación especialista" text="Tu oficio merece visibilidad, confianza y mejores oportunidades. Completa este onboarding para construir reputación desde el primer trabajo.">
       <form className="grid gap-6" onSubmit={submit}>
-        <section className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-5">
+          {[
+            ["Identidad", "Datos y foto"],
+            ["Cobertura", "Comuna y radio"],
+            ["Servicios", "Créditos y margen"],
+            ["Referencias", "3 trabajos"],
+            ["Portafolio", "Fotos y envío"],
+          ].map(([title, text], index) => (
+            <button
+              key={title}
+              className={`rounded-2xl border p-4 text-left transition ${
+                step === index + 1 ? "border-brand bg-brand text-white shadow-lg shadow-brand/20" : "border-line bg-slate-50 text-ink hover:border-brand/40"
+              }`}
+              type="button"
+              onClick={() => setStep(index + 1)}
+            >
+              <span className="text-xs font-black uppercase">Paso {index + 1}</span>
+              <strong className="mt-1 block">{title}</strong>
+              <span className={`mt-1 block text-xs font-bold ${step === index + 1 ? "text-white/75" : "text-muted"}`}>{text}</span>
+            </button>
+          ))}
+        </div>
+        <div className="rounded-3xl border border-brand/15 bg-brand-soft p-5">
+          <p className="text-sm font-black uppercase text-brand">Empoderamos el oficio. Empoderamos al trabajador.</p>
+          <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark">
+            Cada trabajo bien hecho construye tu reputación. OficiosPro muestra tu experiencia, certificaciones y portafolio para que buenos especialistas sean encontrados y recomendados.
+          </p>
+        </div>
+        <section className={step <= 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <label className="field">
             Nombres
-            <input name="firstNames" placeholder="Ej: Juan" required />
+            <input value={identity.firstNames} onChange={(event) => setIdentity({ ...identity, firstNames: event.target.value })} placeholder="Ej: Juan" />
           </label>
           <label className="field">
             Apellidos
-            <input name="lastNames" placeholder="Ej: Pérez" required />
+            <input value={identity.lastNames} onChange={(event) => setIdentity({ ...identity, lastNames: event.target.value })} placeholder="Ej: Pérez" />
           </label>
           <label className="field">
             RUT
-            <input name="rut" placeholder="12.345.678-9" required />
+            <input value={identity.rut} onChange={(event) => setIdentity({ ...identity, rut: event.target.value })} placeholder="12.345.678-9" />
           </label>
           <label className="field">
             WhatsApp
-            <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
+            <input value={identity.whatsapp} onChange={(event) => setIdentity({ ...identity, whatsapp: event.target.value })} type="tel" placeholder="+56 9 1234 5678" />
           </label>
           <label className="field">
             Email
-            <input name="email" type="email" placeholder="especialista@email.cl" required />
+            <input value={identity.email} onChange={(event) => setIdentity({ ...identity, email: event.target.value })} type="email" placeholder="especialista@email.cl" />
           </label>
           <label className="field">
             Foto de perfil
-            <input type="file" accept="image/*" required onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
+            <input type="file" accept="image/*" onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
+            <span className="text-xs font-bold text-muted">{profilePhoto ? `Archivo seleccionado: ${profilePhoto}` : "La foto es obligatoria para publicar tu perfil."}</span>
           </label>
           <label className="field">
             Dirección base
-            <input name="address" placeholder="Dirección de referencia" required />
+            <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
+            <span className="text-xs font-bold text-muted">No mostraremos tu dirección exacta públicamente.</span>
           </label>
           <SearchableSelect
             label="Región base"
@@ -513,11 +617,11 @@ export function SpecialistRegisterForm() {
           />
           <label className="field">
             Radio de cobertura en km
-            <input name="coverageRadiusKm" type="number" min="1" max="120" defaultValue="18" required />
+            <input type="number" min="1" max="120" value={coverageRadiusKm} onChange={(event) => setCoverageRadiusKm(Number(event.target.value))} />
           </label>
           <label className="field">
             Comunas de cobertura
-            <input value={coverageCommunes} onChange={(event) => setCoverageCommunes(event.target.value)} placeholder="Ej: Curicó, Molina, Romeral" required />
+            <input value={coverageCommunes} onChange={(event) => setCoverageCommunes(event.target.value)} placeholder="Ej: Curicó, Molina, Romeral" />
             <span className="text-xs font-bold text-muted">Sepáralas por coma. Admin podrá revisarlas antes de publicar.</span>
           </label>
           <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
@@ -533,7 +637,7 @@ export function SpecialistRegisterForm() {
           </div>
         </section>
 
-        <section className="grid gap-4">
+        <section className={step === 3 ? "grid gap-4" : "hidden"}>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="eyebrow">Servicios ofrecidos</p>
@@ -552,25 +656,25 @@ export function SpecialistRegisterForm() {
           {hasLowMargin ? <Warning>Hay servicios con margen menor al mínimo configurado. Admin podrá revisarlos antes de aprobar.</Warning> : null}
         </section>
 
-        <section className="grid gap-4">
+        <section className={step === 4 ? "grid gap-4" : "hidden"}>
           <div>
             <p className="eyebrow">Referencias laborales</p>
             <h3 className="text-2xl font-black">Mínimo 3 referencias verificables</h3>
           </div>
           <div className="grid gap-4">
             {references.map((reference, index) => (
-              <article key={index} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-5">
+              <article key={index} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-6">
                 <label className="field">
                   Nombre
-                  <input value={reference.name} onChange={(event) => updateReference(index, { name: event.target.value })} required />
+                  <input value={reference.name} onChange={(event) => updateReference(index, { name: event.target.value })} />
                 </label>
                 <label className="field">
                   Empresa/persona
-                  <input value={reference.company} onChange={(event) => updateReference(index, { company: event.target.value })} required />
+                  <input value={reference.company} onChange={(event) => updateReference(index, { company: event.target.value })} />
                 </label>
                 <label className="field">
                   Teléfono
-                  <input value={reference.phone} onChange={(event) => updateReference(index, { phone: event.target.value })} required />
+                  <input value={reference.phone} onChange={(event) => updateReference(index, { phone: event.target.value })} />
                 </label>
                 <label className="field">
                   Email
@@ -578,21 +682,24 @@ export function SpecialistRegisterForm() {
                 </label>
                 <label className="field">
                   Trabajo realizado
-                  <input value={reference.work} onChange={(event) => updateReference(index, { work: event.target.value })} required />
+                  <input value={reference.work} onChange={(event) => updateReference(index, { work: event.target.value })} />
+                </label>
+                <label className="field">
+                  Año aproximado
+                  <input value={reference.year} onChange={(event) => updateReference(index, { year: event.target.value })} placeholder="2025" />
                 </label>
               </article>
             ))}
           </div>
         </section>
 
-        <section className="grid gap-4 md:grid-cols-2">
+        <section className={step === 5 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <label className="field">
             Portafolio fotográfico
             <input
               type="file"
               accept="image/*"
               multiple
-              required
               onChange={(event) => setPortfolioPhotos(Array.from(event.currentTarget.files ?? []).map((file) => file.name))}
             />
           </label>
@@ -603,11 +710,21 @@ export function SpecialistRegisterForm() {
             <legend className="px-2 text-sm font-black text-ink">Certificaciones</legend>
             {["SEC", "HVAC", "Gas", "Soldadura", "Otro"].map((certification) => (
               <label key={certification} className="flex items-center gap-3 text-sm font-bold text-muted">
-                <input name="certifications" type="checkbox" value={certification} /> {certification}
+                <input type="checkbox" checked={selectedCertifications.includes(certification)} onChange={() => toggleCertification(certification)} /> {certification}
               </label>
             ))}
           </fieldset>
         </section>
+
+        <div className="flex flex-col gap-3 rounded-2xl border border-line bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+          <button className="btn-secondary" type="button" onClick={previousStep} disabled={step === 1}>
+            Volver
+          </button>
+          <span className="text-sm font-black text-muted">Paso {step} de 5 · completa cada bloque antes de enviar.</span>
+          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 5}>
+            Continuar paso
+          </button>
+        </div>
 
         <button className="btn-primary" type="submit">
           Enviar perfil para revisión
@@ -667,29 +784,28 @@ function ServiceEditor({
               value={service.otherServiceDescription}
               onChange={(event) => onChange({ otherServiceDescription: event.target.value })}
               placeholder="Describe la especialidad o servicio que no aparece en el catálogo."
-              required
             />
           </label>
         ) : null}
         <label className="field">
           Nombre del servicio
-          <input value={service.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Ej: Reparación de filtración" required />
+          <input value={service.name} onChange={(event) => onChange({ name: event.target.value })} placeholder="Ej: Reparación de filtración" />
         </label>
         <label className="field">
           Duración estimada
-          <input value={service.duration} onChange={(event) => onChange({ duration: event.target.value })} placeholder="Ej: 2 horas" required />
+          <input value={service.duration} onChange={(event) => onChange({ duration: event.target.value })} placeholder="Ej: 2 horas" />
         </label>
         <label className="field md:col-span-2">
           Descripción
-          <textarea value={service.description} onChange={(event) => onChange({ description: event.target.value })} placeholder="Qué incluye, condiciones y materiales excluidos" required />
+          <textarea value={service.description} onChange={(event) => onChange({ description: event.target.value })} placeholder="Qué incluye, condiciones y materiales excluidos" />
         </label>
         <label className="field">
           Precio cliente en créditos
-          <input type="number" min="2" step="2" value={service.clientCredits} onChange={(event) => onChange({ clientCredits: Number(event.target.value) })} required />
+          <input type="number" min="2" step="2" value={service.clientCredits} onChange={(event) => onChange({ clientCredits: Number(event.target.value) })} />
         </label>
         <label className="field">
           Monto que cobra especialista CLP
-          <input type="number" min="0" step="1000" value={service.specialistPayoutCLP} onChange={(event) => onChange({ specialistPayoutCLP: Number(event.target.value) })} required />
+          <input type="number" min="0" step="1000" value={service.specialistPayoutCLP} onChange={(event) => onChange({ specialistPayoutCLP: Number(event.target.value) })} />
         </label>
         <label className="field">
           Visita inicial gratis
@@ -705,6 +821,13 @@ function ServiceEditor({
         <label className="field">
           Disponible emergencia
           <select value={service.emergency ? "yes" : "no"} onChange={(event) => onChange({ emergency: event.target.value === "yes" })}>
+            <option value="no">No</option>
+            <option value="yes">Sí</option>
+          </select>
+        </label>
+        <label className="field">
+          Certificación requerida
+          <select value={service.certificationRequired ? "yes" : "no"} onChange={(event) => onChange({ certificationRequired: event.target.value === "yes" })}>
             <option value="no">No</option>
             <option value="yes">Sí</option>
           </select>
