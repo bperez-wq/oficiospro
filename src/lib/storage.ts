@@ -310,6 +310,7 @@ export type SpecialistLead = {
   email: string;
   serviceTypeId: string;
   serviceTypeName: string;
+  region?: string;
   commune: string;
   years: number;
   interest: string;
@@ -326,6 +327,7 @@ export type ServiceRequestLead = {
   rut?: string;
   email: string;
   whatsapp: string;
+  region?: string;
   commune: string;
   address: string;
   service: string;
@@ -350,6 +352,7 @@ export type QuickSearchLead = {
   isOtherService?: boolean;
   otherServiceDescription?: string;
   additionalComments?: string;
+  region?: string;
   commune: string;
   urgency: string;
   lat?: number | null;

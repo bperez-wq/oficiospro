@@ -14,6 +14,7 @@ export function SearchableSelect({
   className = "",
   dropdownClassName = "",
   emptyText = "No encontramos coincidencias",
+  disabled = false,
 }: {
   label: string;
   value: string;
@@ -25,6 +26,7 @@ export function SearchableSelect({
   className?: string;
   dropdownClassName?: string;
   emptyText?: string;
+  disabled?: boolean;
 }) {
   const id = useId();
   const selected = options.find((option) => option.value === value);
@@ -51,6 +53,13 @@ export function SearchableSelect({
     });
     return nextRows;
   }, [filtered]);
+
+  useEffect(() => {
+    if (disabled) {
+      setOpen(false);
+      setQuery("");
+    }
+  }, [disabled]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,22 +91,25 @@ export function SearchableSelect({
   }, [query, options, open]);
 
   function select(option: SelectOption) {
+    if (disabled) return;
     onChange(option.value);
     setQuery("");
     setOpen(false);
   }
 
   return (
-    <label ref={containerRef} className={`field relative min-w-0 ${className}`}>
+    <label ref={containerRef} className={`field relative min-w-0 ${disabled ? "opacity-70" : ""} ${className}`}>
       {label}
       {name ? <input type="hidden" name={name} value={value} /> : null}
       <input
         value={open ? query : selected?.label ?? ""}
         onChange={(event) => {
+          if (disabled) return;
           setQuery(event.target.value);
           setOpen(true);
         }}
         onKeyDown={(event) => {
+          if (disabled) return;
           if (event.key === "ArrowDown") {
             event.preventDefault();
             setOpen(true);
@@ -113,11 +125,13 @@ export function SearchableSelect({
           }
         }}
         onFocus={() => {
+          if (disabled) return;
           setQuery("");
           setOpen(true);
         }}
         placeholder={selected?.label ?? placeholder}
         required={required && !value}
+        disabled={disabled}
         autoComplete="off"
         role="combobox"
         aria-controls={`${id}-listbox`}
@@ -138,7 +152,7 @@ export function SearchableSelect({
                 </div>
               ) : (
                 <button
-                  key={`${row.option.value}-${row.option.label}`}
+                  key={`${row.option.value}-${row.option.label}-${row.option.group ?? ""}-${row.optionIndex}`}
                   id={`${id}-option-${row.optionIndex}`}
                   className={`block w-full rounded-xl px-3 py-2.5 text-left text-sm font-bold transition hover:bg-brand-soft hover:text-brand-dark ${
                     row.option.value === value || row.optionIndex === activeIndex ? "bg-brand-soft text-brand-dark" : "text-ink"

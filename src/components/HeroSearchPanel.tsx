@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { communeOptions, heroServiceTypeOptions, OTHER_SERVICE_VALUE } from "@/lib/catalog";
+import { heroServiceTypeOptions, OTHER_SERVICE_VALUE } from "@/lib/catalog";
 
 const suggestedTags = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego"];
 const heroTypeOptions = [
@@ -17,14 +18,21 @@ const heroTypeOptions = [
 export function HeroSearchPanel() {
   const [query, setQuery] = useState("");
   const [serviceTypeId, setServiceTypeId] = useState("");
+  const [region, setRegion] = useState("");
   const [commune, setCommune] = useState("");
   const [otherServiceDescription, setOtherServiceDescription] = useState("");
+  const [locationStatus, setLocationStatus] = useState("");
 
   function submit() {
+    if (region && !commune) {
+      setLocationStatus("Elige una comuna para buscar disponibilidad real en esa región.");
+      return;
+    }
     const params = new URLSearchParams();
     const finalQuery = serviceTypeId === OTHER_SERVICE_VALUE && otherServiceDescription.trim() ? otherServiceDescription.trim() : query.trim();
     if (finalQuery) params.set("q", finalQuery);
     if (serviceTypeId && serviceTypeId !== OTHER_SERVICE_VALUE) params.set("tipo", serviceTypeId);
+    if (region) params.set("region", region);
     if (commune) params.set("comuna", commune);
     const queryString = params.toString();
     window.location.href = queryString ? `/especialistas?${queryString}` : "/especialistas";
@@ -33,7 +41,7 @@ export function HeroSearchPanel() {
   return (
     <div className="relative z-20 mt-8 rounded-[28px] border border-line bg-white/95 p-5 shadow-card backdrop-blur md:p-6">
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-[28px] bg-gradient-to-r from-brand via-accent to-sun" />
-      <div className="grid gap-4 lg:grid-cols-[1.7fr_1fr_0.9fr_auto] lg:items-end lg:gap-5">
+      <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr_0.9fr_0.9fr_auto] lg:items-end lg:gap-5">
         <label className="field">
           ¿Qué necesitas resolver?
           <span className="relative block">
@@ -69,12 +77,20 @@ export function HeroSearchPanel() {
           placeholder="Hogar, empresas, riego..."
           dropdownClassName="sm:min-w-[380px]"
         />
-        <SearchableSelect
-          label="Comuna"
-          value={commune}
-          options={communeOptions}
-          onChange={setCommune}
-          placeholder="Vitacura, Curicó, Talca..."
+        <RegionCommuneSelect
+          region={region}
+          commune={commune}
+          onRegionChange={(nextRegion) => {
+            setRegion(nextRegion);
+            setCommune("");
+            setLocationStatus("");
+          }}
+          onCommuneChange={(nextCommune) => {
+            setCommune(nextCommune);
+            setLocationStatus("");
+          }}
+          regionPlaceholder="RM, Valparaíso, Biobío..."
+          communePlaceholder="Vitacura, Talca, Concepción..."
         />
         <button className="btn-primary h-12 w-full px-6 lg:w-auto" type="button" onClick={submit}>
           Buscar especialista
@@ -91,6 +107,7 @@ export function HeroSearchPanel() {
           />
         </label>
       ) : null}
+      {locationStatus ? <p className="mt-4 rounded-2xl bg-brand-soft p-3 text-sm font-black text-brand-dark">{locationStatus}</p> : null}
       <div className="mt-5 flex flex-wrap items-center gap-2">
         <span className="text-xs font-black uppercase tracking-wide text-muted">Sugerencias:</span>
         {suggestedTags.map((tag, index) => (

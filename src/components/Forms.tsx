@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
   calculateServiceEconomics,
@@ -21,9 +22,9 @@ import {
   type PendingSpecialistProfile,
 } from "@/lib/storage";
 import {
-  communesForRegion,
+  DEFAULT_REGION_CODE,
   OTHER_SERVICE_VALUE,
-  regionOptions,
+  regionNameForCode,
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
@@ -164,7 +165,7 @@ export function ClientRegisterForm() {
   const [status, setStatus] = useState("");
   const [planId, setPlanId] = useState("plus");
   const [commune, setCommune] = useState("Las Condes");
-  const [region, setRegion] = useState("Metropolitana de Santiago");
+  const [region, setRegion] = useState(DEFAULT_REGION_CODE);
   const [geo, setGeo] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [geoStatus, setGeoStatus] = useState("");
   const [reserveId, setReserveId] = useState("");
@@ -214,7 +215,7 @@ export function ClientRegisterForm() {
       email: data.get("email"),
       phone: data.get("whatsapp"),
       whatsapp: data.get("whatsapp"),
-      region,
+      region: regionNameForCode(region),
       commune,
       address: data.get("address"),
       plan: planId,
@@ -230,7 +231,7 @@ export function ClientRegisterForm() {
       name: fullName,
       email: String(data.get("email") ?? ""),
       phone: String(data.get("whatsapp") ?? ""),
-      region,
+      region: regionNameForCode(region),
       commune,
       address: String(data.get("address") ?? ""),
       lat: geo.lat,
@@ -276,22 +277,15 @@ export function ClientRegisterForm() {
           WhatsApp
           <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
         </label>
-        <SearchableSelect
-          label="Región"
-          value={region}
-          options={regionOptions}
-          onChange={(nextRegion) => {
+        <RegionCommuneSelect
+          region={region}
+          commune={commune}
+          onRegionChange={(nextRegion) => {
             setRegion(nextRegion);
-            setCommune(communesForRegion(nextRegion)[0]?.value ?? commune);
+            setCommune("");
           }}
-          required
-        />
-        <SearchableSelect
-          label="Comuna"
-          value={commune}
-          options={communesForRegion(region)}
-          onChange={setCommune}
-          placeholder="Busca Vitacura, Ñuñoa, Puerto Varas..."
+          onCommuneChange={setCommune}
+          communePlaceholder="Busca Vitacura, Ñuñoa, Puerto Varas..."
           required
         />
         <label className="field md:col-span-2">
@@ -360,7 +354,7 @@ export function SpecialistRegisterForm() {
   const [baseAddress, setBaseAddress] = useState("");
   const [coverageRadiusKm, setCoverageRadiusKm] = useState(18);
   const [baseCommune, setBaseCommune] = useState("Santiago");
-  const [baseRegion, setBaseRegion] = useState("Metropolitana de Santiago");
+  const [baseRegion, setBaseRegion] = useState(DEFAULT_REGION_CODE);
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
 
   useEffect(() => {
@@ -407,7 +401,7 @@ export function SpecialistRegisterForm() {
     if (!("geolocation" in navigator)) {
       setGeo({ lat: -33.4088, lng: -70.5673 });
       setBaseCommune("Las Condes");
-      setBaseRegion("Metropolitana de Santiago");
+      setBaseRegion(DEFAULT_REGION_CODE);
       setGeoStatus("Tu navegador no entregó ubicación. Usamos una referencia en Las Condes.");
       return;
     }
@@ -420,7 +414,7 @@ export function SpecialistRegisterForm() {
       () => {
         setGeo({ lat: -33.4088, lng: -70.5673 });
         setBaseCommune("Las Condes");
-        setBaseRegion("Metropolitana de Santiago");
+        setBaseRegion(DEFAULT_REGION_CODE);
         setGeoStatus("No se pudo obtener permiso. Usamos una ubicación referencial.");
       },
       { enableHighAccuracy: true, timeout: 8000 },
@@ -523,7 +517,7 @@ export function SpecialistRegisterForm() {
       profilePhoto,
       address: baseAddress,
       commune: baseCommune,
-      region: baseRegion,
+      region: regionNameForCode(baseRegion),
       lat: geo.lat,
       lng: geo.lng,
       coverageRadiusKm,
@@ -619,21 +613,17 @@ export function SpecialistRegisterForm() {
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
             <span className="text-xs font-bold text-muted">No mostraremos tu dirección exacta públicamente.</span>
           </label>
-          <SearchableSelect
-            label="Región base"
-            value={baseRegion}
-            options={regionOptions}
-            onChange={(nextRegion) => {
+          <RegionCommuneSelect
+            region={baseRegion}
+            commune={baseCommune}
+            onRegionChange={(nextRegion) => {
               setBaseRegion(nextRegion);
-              setBaseCommune(communesForRegion(nextRegion)[0]?.value ?? baseCommune);
+              setBaseCommune("");
             }}
-            required
-          />
-          <SearchableSelect
-            label="Comuna base"
-            value={baseCommune}
-            options={communesForRegion(baseRegion)}
-            onChange={setBaseCommune}
+            onCommuneChange={setBaseCommune}
+            regionLabel="Región base"
+            communeLabel="Comuna base"
+            communePlaceholder="Busca Santiago, Providencia, Ñuñoa..."
             required
           />
           <label className="field">
@@ -875,7 +865,7 @@ function ServiceEditor({
 
 export function CompanyRequestForm() {
   const [status, setStatus] = useState("");
-  const [region, setRegion] = useState("Metropolitana de Santiago");
+  const [region, setRegion] = useState(DEFAULT_REGION_CODE);
   const [commune, setCommune] = useState("Santiago");
   const [serviceType, setServiceType] = useState("empresas");
   const [otherServiceDescription, setOtherServiceDescription] = useState("");
@@ -902,7 +892,7 @@ export function CompanyRequestForm() {
       contact: `${firstNames} ${lastNames}`.trim(),
       email: data.get("email"),
       whatsapp: data.get("whatsapp"),
-      region,
+      region: regionNameForCode(region),
       commune,
       branches: Number(data.get("branches") ?? 1),
       plan: data.get("plan"),
@@ -954,17 +944,18 @@ export function CompanyRequestForm() {
           WhatsApp
           <input name="whatsapp" type="tel" placeholder="+56 9 1234 5678" required />
         </label>
-        <SearchableSelect
-          label="Región"
-          value={region}
-          options={regionOptions}
-          onChange={(nextRegion) => {
+        <RegionCommuneSelect
+          region={region}
+          commune={commune}
+          onRegionChange={(nextRegion) => {
             setRegion(nextRegion);
-            setCommune(communesForRegion(nextRegion)[0]?.value ?? commune);
+            setCommune("");
           }}
+          onCommuneChange={setCommune}
+          communeLabel="Comuna principal"
+          communePlaceholder="Busca comuna de la operación"
           required
         />
-        <SearchableSelect label="Comuna principal" value={commune} options={communesForRegion(region)} onChange={setCommune} required />
         <label className="field">
           Sucursales
           <input name="branches" type="number" min="1" defaultValue="1" />
