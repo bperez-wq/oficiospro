@@ -89,25 +89,25 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
         <ToggleCard
           title="Disponible ahora"
           text="Muestra una señal visible para solicitudes cercanas."
-          checked={profile.instantAvailable}
+          checked={activeProfile.instantAvailable}
           onChange={(instantAvailable) => updateProfile({ instantAvailable })}
         />
         <ToggleCard
           title="Atiendo urgencias"
           text="Permite contacto inmediato cuando no hay bloque reservado."
-          checked={profile.emergencyAvailable}
+          checked={activeProfile.emergencyAvailable}
           onChange={(emergencyAvailable) => updateProfile({ emergencyAvailable })}
         />
         <article className="panel">
           <p className="eyebrow">Aviso mínimo</p>
-          <h3 className="text-2xl font-black">{profile.minNoticeMinutes} min</h3>
+          <h3 className="text-2xl font-black">{activeProfile.minNoticeMinutes} min</h3>
           <input
             className="mt-4"
             type="range"
             min="30"
             max="360"
             step="30"
-            value={profile.minNoticeMinutes}
+            value={activeProfile.minNoticeMinutes}
             onChange={(event) => updateProfile({ minNoticeMinutes: Number(event.target.value) })}
           />
           <p className="mt-2 text-sm font-bold text-muted">Tiempo mínimo antes de recibir una solicitud.</p>
@@ -122,7 +122,7 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
           </div>
           <label className="field max-w-xs">
             Duración base
-            <select value={profile.slotDurationMinutes} onChange={(event) => updateProfile({ slotDurationMinutes: Number(event.target.value) })}>
+            <select value={activeProfile.slotDurationMinutes} onChange={(event) => updateProfile({ slotDurationMinutes: Number(event.target.value) })}>
               <option value={60}>60 minutos</option>
               <option value={75}>75 minutos</option>
               <option value={90}>90 minutos</option>
@@ -136,8 +136,8 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
               <div className="grid gap-3 lg:grid-cols-[160px_1fr_auto] lg:items-center">
                 <strong>{weekdayLabels[day]}</strong>
                 <div className="flex flex-wrap gap-2">
-                  {(profile.workingHoursByWeekday[day] ?? []).length ? (
-                    profile.workingHoursByWeekday[day].map((block, index) => (
+                  {(activeProfile.workingHoursByWeekday[day] ?? []).length ? (
+                    activeProfile.workingHoursByWeekday[day].map((block, index) => (
                       <span key={`${block.startTime}-${block.endTime}-${index}`} className="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-sm font-black text-ink">
                         {block.startTime} - {block.endTime}
                         <button className="text-muted hover:text-ink" type="button" onClick={() => removeWorkingBlock(day, index)} aria-label={`Eliminar bloque ${weekdayLabels[day]}`}>
@@ -205,10 +205,10 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
 
         <article className="panel">
           <p className="eyebrow">Bloqueos activos</p>
-          <h2 className="text-3xl font-black">{profile.blockedSlots.length} horarios bloqueados</h2>
+          <h2 className="text-3xl font-black">{activeProfile.blockedSlots.length} horarios bloqueados</h2>
           <div className="mt-5 grid gap-3">
-            {profile.blockedSlots.length ? (
-              profile.blockedSlots.map((block) => (
+            {activeProfile.blockedSlots.length ? (
+              activeProfile.blockedSlots.map((block) => (
                 <div key={block.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-4">
                   <div>
                     <strong>{formatDisplayDate(block.date)} · {block.startTime} - {block.endTime}</strong>
@@ -262,7 +262,7 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
               </div>
               <AvailabilityBadge specialist={specialist} />
             </div>
-            <AvailabilityCalendar profile={profile} bookings={bookings} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
+            <AvailabilityCalendar profile={activeProfile} bookings={bookings} selectedDate={selectedDate} onSelectDate={setSelectedDate} />
             <TimeSlotPicker slots={selectedSlots} selectedSlot={null} onSelectSlot={() => undefined} />
           </div>
         </article>
