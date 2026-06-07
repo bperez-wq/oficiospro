@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "build": "echo No build required",
-    "deploy": "wrangler deploy"
+    "deploy": "wrangler deploy",
+    "validate": "node scripts/validate-project.mjs"
   },
   "devDependencies": {
     "wrangler": "^4.0.0"
