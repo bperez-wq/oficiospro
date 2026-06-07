@@ -3101,3 +3101,372 @@ textarea:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* Specialists organic capture page */
+.specialists-page {
+  background: linear-gradient(180deg, #f8fbfc 0%, #ffffff 36%, #f1f8f7 100%);
+}
+
+.specialists-page .topbar {
+  position: sticky;
+}
+
+.specialists-hero,
+.specialists-benefits,
+.specialist-steps-section,
+.verification-section,
+.profile-examples-section,
+.specialist-faq-section,
+.create-profile-section {
+  padding-right: 18px;
+  padding-left: 18px;
+}
+
+.specialists-hero {
+  display: grid;
+  gap: 28px;
+  max-width: 1320px;
+  margin: 0 auto;
+  padding-top: 48px;
+  padding-bottom: 58px;
+}
+
+.specialists-hero-copy {
+  display: grid;
+  gap: 18px;
+}
+
+.specialists-hero h1 {
+  max-width: 850px;
+  margin-bottom: 0;
+  color: var(--navy);
+  font-size: 2.35rem;
+  line-height: 1.06;
+}
+
+.specialists-hero p {
+  max-width: 720px;
+  margin-bottom: 0;
+  color: var(--muted);
+  font-size: 1.03rem;
+  line-height: 1.65;
+}
+
+.specialists-hero-actions,
+.specialists-proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.specialists-hero-actions .button,
+.specialist-lead-form .button,
+.specialist-final-cta .button {
+  width: 100%;
+}
+
+.specialists-proof span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  width: 100%;
+  padding: 0 11px;
+  border: 1px solid rgba(15, 118, 110, 0.16);
+  border-radius: 999px;
+  color: var(--navy);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.84rem;
+  font-weight: 900;
+}
+
+.specialists-proof span::before {
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-radius: 999px;
+  background: var(--teal-2);
+  content: "";
+}
+
+.specialist-profile-preview {
+  display: grid;
+  gap: 16px;
+  align-self: start;
+}
+
+.profile-preview-media,
+.profile-preview-card,
+.benefit-card-grid article,
+.specialist-steps article,
+.verification-grid article,
+.profile-example-card,
+.faq-list details,
+.specialist-lead-form {
+  border: 1px solid rgba(8, 47, 63, 0.12);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: 0 14px 34px rgba(8, 47, 63, 0.07);
+}
+
+.profile-preview-media {
+  display: grid;
+  min-height: 260px;
+  place-items: center;
+  overflow: hidden;
+  background: linear-gradient(180deg, #eaf7f4 0%, #ffffff 100%);
+}
+
+.profile-preview-media img {
+  width: min(82%, 340px);
+}
+
+.profile-preview-card {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.profile-preview-card h2 {
+  margin-bottom: 0;
+  color: var(--navy);
+  font-size: 1.45rem;
+}
+
+.profile-preview-card p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.profile-preview-metrics {
+  display: grid;
+  gap: 8px;
+}
+
+.profile-preview-metrics span {
+  min-height: 58px;
+  padding: 10px;
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: #f6fafb;
+  font-weight: 800;
+}
+
+.profile-preview-metrics strong {
+  display: block;
+  color: var(--navy);
+}
+
+.benefit-card-grid,
+.specialist-steps,
+.verification-grid,
+.profile-example-grid,
+.faq-list {
+  display: grid;
+  gap: 14px;
+}
+
+.benefit-card-grid article,
+.specialist-steps article,
+.verification-grid article {
+  display: grid;
+  gap: 12px;
+  padding: 22px;
+}
+
+.benefit-card-grid span,
+.specialist-steps span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  place-items: center;
+  border-radius: var(--radius);
+  color: #fff;
+  background: linear-gradient(135deg, var(--navy), var(--teal));
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.benefit-card-grid h3,
+.specialist-steps h3,
+.verification-grid strong,
+.profile-example-card h3 {
+  margin-bottom: 0;
+  color: var(--navy);
+}
+
+.benefit-card-grid p,
+.specialist-steps p,
+.verification-grid span,
+.profile-example-card p,
+.profile-example-card li,
+.faq-list p,
+.form-note {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+
+.specialist-steps-section {
+  max-width: none;
+  background: linear-gradient(180deg, #ffffff 0%, #eff8f6 100%);
+}
+
+.specialist-steps-section > * {
+  max-width: 1320px;
+  margin-right: auto;
+  margin-left: auto;
+}
+
+.verification-section,
+.create-profile-section {
+  display: grid;
+  gap: 26px;
+  max-width: 1320px;
+  margin: 0 auto;
+}
+
+.verification-copy h2,
+.create-profile-copy h2 {
+  color: var(--navy);
+  font-size: 2rem;
+  line-height: 1.1;
+}
+
+.verification-copy p,
+.create-profile-copy p {
+  color: var(--muted);
+}
+
+.verification-grid article {
+  min-height: 128px;
+}
+
+.profile-example-card {
+  overflow: hidden;
+}
+
+.profile-example-card img {
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  object-fit: cover;
+  background: #eaf7f4;
+}
+
+.profile-example-card > div {
+  display: grid;
+  gap: 12px;
+  padding: 20px;
+}
+
+.profile-example-card ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.faq-list {
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.faq-list details {
+  padding: 18px 20px;
+}
+
+.faq-list summary {
+  color: var(--navy);
+  cursor: pointer;
+  font-weight: 900;
+}
+
+.faq-list p {
+  margin-top: 12px;
+}
+
+.create-profile-section {
+  align-items: start;
+}
+
+.specialist-lead-form {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.specialist-lead-form label {
+  color: var(--navy);
+}
+
+.specialist-lead-form textarea {
+  min-height: 130px;
+}
+
+.form-note {
+  font-size: 0.9rem;
+}
+
+.specialist-final-cta {
+  margin-top: 24px;
+}
+
+@media (min-width: 620px) {
+  .specialists-hero-actions .button,
+  .specialist-final-cta .button {
+    width: auto;
+  }
+
+  .specialists-proof span {
+    width: auto;
+  }
+
+  .profile-preview-metrics,
+  .verification-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .benefit-card-grid,
+  .profile-example-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 920px) {
+  .specialists-hero,
+  .verification-section,
+  .create-profile-section {
+    grid-template-columns: minmax(0, 1fr) minmax(380px, 0.78fr);
+  }
+
+  .specialists-hero {
+    gap: 48px;
+    align-items: center;
+    padding-top: 72px;
+    padding-bottom: 82px;
+  }
+
+  .specialists-hero h1 {
+    font-size: 4.15rem;
+  }
+
+  .specialists-hero p {
+    font-size: 1.18rem;
+  }
+
+  .benefit-card-grid,
+  .specialist-steps,
+  .profile-example-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .verification-copy,
+  .create-profile-copy {
+    position: sticky;
+    top: 108px;
+    align-self: start;
+  }
+
+  .verification-copy h2,
+  .create-profile-copy h2 {
+    font-size: 2.65rem;
+  }
+}
