@@ -1,33 +1,12 @@
 {
-  "name": "oficiospro",
-  "version": "0.1.0",
+  "name": "oficiospro-web",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
-    "prebuild": "node scripts/clean-static-export.js",
-    "build": "next build",
-    "pages:build": "next build",
-    "deploy": "wrangler deploy --assets ./out",
-    "start": "next start"
-  },
-  "engines": {
-    "node": ">=20"
-  },
-  "dependencies": {
-    "next": "latest",
-    "react": "latest",
-    "react-dom": "latest"
+    "build": "echo No build required",
+    "deploy": "wrangler deploy"
   },
   "devDependencies": {
-    "@types/node": "^20.14.0",
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "autoprefixer": "^10.4.20",
-    "eslint": "^9.0.0",
-    "eslint-config-next": "latest",
-    "postcss": "^8.4.47",
-    "tailwindcss": "^3.4.17",
-    "typescript": "^5.6.0",
-    "wrangler": "latest"
+    "wrangler": "^4.0.0"
   }
 }
