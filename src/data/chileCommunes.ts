@@ -3131,6 +3131,18 @@ export const chileRegions = Array.from(new Map(chileCommunes.map((commune) => [c
 export const chileProvinces = Array.from(new Map(chileCommunes.map((commune) => [commune.provinceId, { id: commune.provinceId, name: commune.provinceName, regionId: commune.regionId }])).values());
 
 export const communesByRegion = chileCommunes.reduce<Record<string, ChileCommune[]>>((acc, commune) => {
-  acc[commune.regionName] = [...(acc[commune.regionName] ?? []), commune];
+  acc[commune.regionId] = [...(acc[commune.regionId] ?? []), commune];
   return acc;
 }, {});
+
+export function getRegions() {
+  return chileRegions.map((region) => ({ code: region.id, name: region.name }));
+}
+
+export function getCommunesByRegion(regionCode: string) {
+  return communesByRegion[regionCode] ?? [];
+}
+
+export function getCommuneByCode(communeCode: string) {
+  return chileCommunes.find((commune) => commune.code === communeCode) ?? null;
+}

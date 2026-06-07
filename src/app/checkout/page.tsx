@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { PlatformNav } from "@/components/PlatformNav";
+import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { formatCLP, getPlanById } from "@/data/marketplace";
+import { DEFAULT_REGION_CODE, regionCodeForName, regionNameForCode } from "@/lib/catalog";
 import {
   addPaymentCredits,
   appendPaymentRecord,
@@ -47,6 +49,7 @@ export default function CheckoutPage() {
     email: "",
     rut: "",
     whatsapp: "",
+    region: DEFAULT_REGION_CODE,
     commune: "Las Condes",
   });
   const plan = useMemo(() => getPlanById(planId), [planId]);
@@ -63,11 +66,16 @@ export default function CheckoutPage() {
       email: profile?.email ?? session?.email ?? "",
       rut: profile?.rut ?? "",
       whatsapp: profile?.phone ?? "",
+      region: regionCodeForName(profile?.region ?? "") || DEFAULT_REGION_CODE,
       commune: profile?.commune ?? "Las Condes",
     });
   }, []);
 
   async function startPayment(mode: "subscription" | "credits_purchase" = "subscription") {
+    if (!customer.region || !customer.commune) {
+      setStatus("Selecciona región y comuna para continuar con la activación.");
+      return;
+    }
     setIsSubmitting(true);
     setStatus("");
     const endpoint = mode === "subscription" ? "/api/payments/create-subscription" : "/api/payments/create-checkout";
@@ -83,6 +91,7 @@ export default function CheckoutPage() {
           email: customer.email,
           rut: customer.rut,
           whatsapp: customer.whatsapp,
+          region: regionNameForCode(customer.region),
           commune: customer.commune,
           creditsPack: mode === "credits_purchase" ? selectedPack : undefined,
         }),
@@ -186,10 +195,14 @@ export default function CheckoutPage() {
                 WhatsApp
                 <input value={customer.whatsapp} onChange={(event) => setCustomer({ ...customer, whatsapp: event.target.value })} required />
               </label>
-              <label className="field md:col-span-2">
-                Comuna
-                <input value={customer.commune} onChange={(event) => setCustomer({ ...customer, commune: event.target.value })} required />
-              </label>
+              <RegionCommuneSelect
+                region={customer.region}
+                commune={customer.commune}
+                onRegionChange={(region) => setCustomer({ ...customer, region, commune: "" })}
+                onCommuneChange={(commune) => setCustomer({ ...customer, commune })}
+                communePlaceholder="Busca comuna para comprobante"
+                required
+              />
             </div>
 
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">

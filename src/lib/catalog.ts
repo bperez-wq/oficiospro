@@ -1,9 +1,13 @@
-import { chileCommunes } from "@/data/chileCommunes";
+import { chileCommunes, getCommunesByRegion, getRegions } from "@/data/chileCommunes";
 import { allServiceSpecialties, serviceTypes } from "@/data/marketplace";
 import { otherServiceLabels } from "@/data/serviceCatalog";
 
 export const OTHER_SERVICE_VALUE = "__otro_servicio__";
 export const OTHER_SERVICE_LABEL = "Otro / No encontré mi servicio";
+export const ALL_REGIONS_VALUE = "all";
+export const ALL_COMMUNES_VALUE = "all";
+export const DEFAULT_REGION_CODE = "13";
+export const DEFAULT_COMMUNE = "Las Condes";
 
 export type SelectOption = {
   value: string;
@@ -73,30 +77,56 @@ export function sortByLabel<T extends { label: string }>(items: T[]) {
   return [...items].sort((a, b) => collator.compare(a.label, b.label));
 }
 
-export const communeOptions: SelectOption[] = sortByLabel(
-  Array.from(
-    chileCommunes
-      .map((commune) => ({
-        value: normalizePlaceName(commune.name),
-        label: normalizePlaceName(commune.name),
-        meta: normalizePlaceName(commune.regionName),
-        group: normalizePlaceName(commune.regionName),
-      }))
-      .reduce((map, commune) => map.set(normalizeSearch(commune.label), commune), new Map<string, SelectOption>())
+function communeToOption(commune: (typeof chileCommunes)[number]): SelectOption {
+  const regionName = normalizePlaceName(commune.regionName);
+  return {
+    value: normalizePlaceName(commune.name),
+    label: normalizePlaceName(commune.name),
+    meta: regionName,
+    group: regionName,
+  };
+}
+
+function uniqueOptionsByNormalizedLabel(options: SelectOption[]) {
+  return Array.from(
+    options
+      .reduce((map, option) => map.set(normalizeSearch(`${option.group ?? ""}-${option.label}`), option), new Map<string, SelectOption>())
       .values(),
-  ),
-);
+  );
+}
+
+export const communeOptions: SelectOption[] = sortByLabel(uniqueOptionsByNormalizedLabel(chileCommunes.map(communeToOption)));
 
 export const regionOptions: SelectOption[] = sortByLabel(
-  Array.from(new Set(chileCommunes.map((commune) => normalizePlaceName(commune.regionName)))).map((region) => ({
-    value: region,
-    label: region,
+  getRegions().map((region) => ({
+    value: region.code,
+    label: normalizePlaceName(region.name),
   })),
 );
 
-export function communesForRegion(region: string) {
-  const filtered = region ? communeOptions.filter((commune) => normalizeSearch(commune.meta ?? "") === normalizeSearch(region)) : communeOptions;
-  return filtered.length ? filtered : communeOptions;
+export const allRegionOptions: SelectOption[] = [{ value: ALL_REGIONS_VALUE, label: "Todas las regiones" }, ...regionOptions];
+
+export function regionNameForCode(regionCode: string) {
+  if (regionCode === ALL_REGIONS_VALUE) return "Todas las regiones";
+  return regionOptions.find((region) => region.value === regionCode)?.label ?? normalizePlaceName(regionCode);
+}
+
+export function regionCodeForName(regionNameOrCode: string) {
+  if (!regionNameOrCode || regionNameOrCode === ALL_REGIONS_VALUE) return "";
+  if (regionOptions.some((region) => region.value === regionNameOrCode)) return regionNameOrCode;
+  const normalized = normalizeSearch(regionNameOrCode);
+  return regionOptions.find((region) => normalizeSearch(region.label) === normalized)?.value ?? "";
+}
+
+export function communesForRegion(regionNameOrCode: string) {
+  const regionCode = regionCodeForName(regionNameOrCode);
+  if (!regionCode) return [];
+  return sortByLabel(uniqueOptionsByNormalizedLabel(getCommunesByRegion(regionCode).map(communeToOption)));
+}
+
+export function communeRegionCode(communeName: string) {
+  const normalized = normalizeSearch(communeName);
+  return chileCommunes.find((commune) => normalizeSearch(normalizePlaceName(commune.name)) === normalized)?.regionId ?? "";
 }
 
 export const serviceTypeOptions: SelectOption[] = sortByLabel(

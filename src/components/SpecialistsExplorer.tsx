@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
 import { useConversionModal } from "@/components/ConversionModal";
+import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import {
@@ -12,7 +13,16 @@ import {
   getPublishedSpecialists,
   seedMockState,
 } from "@/lib/storage";
-import { communeOptions, normalizePlaceName, normalizeSearch, serviceTypeOptions } from "@/lib/catalog";
+import {
+  ALL_COMMUNES_VALUE,
+  ALL_REGIONS_VALUE,
+  communeRegionCode,
+  normalizePlaceName,
+  normalizeSearch,
+  regionCodeForName,
+  regionNameForCode,
+  serviceTypeOptions,
+} from "@/lib/catalog";
 
 const availabilityOptions = [
   { value: "all", label: "Cualquier horario" },
@@ -33,7 +43,8 @@ export function SpecialistsExplorer() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [specialty, setSpecialty] = useState("all");
-  const [zone, setZone] = useState("all");
+  const [region, setRegion] = useState(ALL_REGIONS_VALUE);
+  const [zone, setZone] = useState(ALL_COMMUNES_VALUE);
   const [availability, setAvailability] = useState("all");
   const [rating, setRating] = useState(0);
   const [maxCredits, setMaxCredits] = useState(999);
@@ -49,11 +60,17 @@ export function SpecialistsExplorer() {
     setApprovedSpecialists(getPublishedSpecialists());
     const params = new URLSearchParams(window.location.search);
     const requestedType = params.get("tipo");
+    const requestedRegion = params.get("region");
     const requestedCommune = params.get("comuna");
     const requestedSpecialty = params.get("especialidad");
     const requestedQuery = params.get("q");
     if (requestedType) setCategory(requestedType);
-    if (requestedCommune) setZone(normalizePlaceName(requestedCommune));
+    if (requestedRegion) setRegion(regionCodeForName(requestedRegion) || requestedRegion);
+    if (requestedCommune) {
+      const normalizedCommune = normalizePlaceName(requestedCommune);
+      setZone(normalizedCommune);
+      if (!requestedRegion) setRegion(communeRegionCode(normalizedCommune) || ALL_REGIONS_VALUE);
+    }
     if (requestedSpecialty) window.setTimeout(() => setSpecialty(requestedSpecialty), 0);
     if (requestedQuery) setQuery(requestedQuery);
     const clientProfile = getClientProfile();
@@ -78,21 +95,12 @@ export function SpecialistsExplorer() {
     ...specialties.map((item) => ({ value: item, label: item })),
   ];
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
-  const zones = Array.from(
-    [...communeOptions.map((commune) => commune.value), ...marketplaceSpecialists.map((specialist) => specialist.commune ?? specialist.zone)]
-      .filter(Boolean)
-      .reduce((map, item) => {
-        const name = normalizePlaceName(String(item));
-        return map.set(normalizeSearch(name), name);
-      }, new Map<string, string>())
-      .values(),
-  ).sort((a, b) => a.localeCompare(b, "es-CL", { sensitivity: "base" }));
-  const zoneFilterOptions = [{ value: "all", label: "Todas las comunas" }, ...zones.map((item) => ({ value: item, label: item }))];
   const activeFilters = [
     query ? `Búsqueda: ${query}` : "",
     category !== "all" ? `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}` : "",
     specialty !== "all" ? `Especialidad: ${specialty}` : "",
-    zone !== "all" ? `Comuna: ${zone}` : "",
+    region !== ALL_REGIONS_VALUE ? `Región: ${regionNameForCode(region)}` : "",
+    zone && zone !== ALL_COMMUNES_VALUE ? `Comuna: ${zone}` : "",
     availability !== "all" ? `Disponibilidad: ${availability}` : "",
     rating > 0 ? `Calificación desde ${rating.toFixed(1)}` : "",
     maxCredits < 999 ? `Hasta ${maxCredits} créditos` : "",
@@ -135,7 +143,8 @@ export function SpecialistsExplorer() {
       })
       .filter((item) => category === "all" || item.serviceTypeId === category)
       .filter((item) => specialty === "all" || item.specialty === specialty || item.specialties?.includes(specialty))
-      .filter((item) => zone === "all" || item.zone === zone || item.commune === zone)
+      .filter((item) => region === ALL_REGIONS_VALUE || normalizeSearch(item.region ?? "") === normalizeSearch(regionNameForCode(region)))
+      .filter((item) => !zone || zone === ALL_COMMUNES_VALUE || item.zone === zone || item.commune === zone)
       .filter((item) => availability === "all" || item.availability === availability)
       .filter((item) => item.rating >= rating)
       .filter((item) => item.credits <= maxCredits)
@@ -146,13 +155,14 @@ export function SpecialistsExplorer() {
         if (sort === "distance") return a.distance - b.distance;
         return b.rating - a.rating;
       });
-  }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, query, rating, sort, specialty, withinCoverage, zone]);
+  }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, query, rating, region, sort, specialty, withinCoverage, zone]);
 
   function clearFilters() {
     setQuery("");
     setCategory("all");
     setSpecialty("all");
-    setZone("all");
+    setRegion(ALL_REGIONS_VALUE);
+    setZone(ALL_COMMUNES_VALUE);
     setAvailability("all");
     setRating(0);
     setMaxCredits(999);
@@ -220,12 +230,18 @@ export function SpecialistsExplorer() {
             onChange={setSpecialty}
             placeholder="Busca gasfitería, aire, SEC..."
           />
-          <SearchableSelect
-            label="Comuna"
-            value={zone}
-            options={zoneFilterOptions}
-            onChange={setZone}
-            placeholder="Busca Vitacura, Curicó, Puerto Varas..."
+          <RegionCommuneSelect
+            region={region}
+            commune={zone}
+            onRegionChange={(nextRegion) => {
+              setRegion(nextRegion);
+              setZone(nextRegion === ALL_REGIONS_VALUE ? ALL_COMMUNES_VALUE : "");
+            }}
+            onCommuneChange={setZone}
+            allowAllRegions
+            allRegionLabel="Todas las regiones"
+            allCommuneLabel="Todas las comunas"
+            communePlaceholder="Busca comuna"
           />
           <SearchableSelect label="Disponibilidad" value={availability} options={availabilityOptions} onChange={setAvailability} />
           <SearchableSelect label="Ordenar por" value={sort} options={sortOptions} onChange={setSort} />

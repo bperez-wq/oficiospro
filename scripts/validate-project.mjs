@@ -104,6 +104,7 @@ if (assetDirectory === "./out") {
   assertExists("src/app/page.tsx");
   assertExists("src/app/globals.css");
   assertExists("src/components/HeroSearchPanel.tsx");
+  assertExists("src/components/RegionCommuneSelect.tsx");
   assertExists("src/data/chileCommunes.ts");
   assertExists("src/data/serviceCatalog.ts");
   assertExists("src/data/marketplace.ts");
@@ -131,7 +132,15 @@ if (assetDirectory === "./out") {
   }
 
   assertRegex("src/data/chileCommunes.ts", /export\s+const\s+chileCommunes\s*:/, "chileCommunes dataset");
-  if (countMatches("src/data/chileCommunes.ts", /"code"\s*:/g) < 300) fail("src/data/chileCommunes.ts must keep the national communes dataset");
+  assertRegex("src/data/chileCommunes.ts", /export\s+function\s+getRegions\s*\(/, "getRegions helper");
+  assertRegex("src/data/chileCommunes.ts", /export\s+function\s+getCommunesByRegion\s*\(/, "getCommunesByRegion helper");
+  assertRegex("src/data/chileCommunes.ts", /export\s+function\s+getCommuneByCode\s*\(/, "getCommuneByCode helper");
+  if (countMatches("src/data/chileCommunes.ts", /"code"\s*:/g) <= 300) fail("src/data/chileCommunes.ts must keep more than 300 communes available");
+  for (const commune of ["Las Condes", "Providencia", "Ñuñoa", "Vitacura", "Santiago", "La Florida", "Maipú", "Valparaíso", "Concepción"]) {
+    assertContains("src/data/chileCommunes.ts", commune);
+  }
+  assertRegex("src/components/RegionCommuneSelect.tsx", /disabled=\{!hasSpecificRegion\}/, "disabled commune select until a specific region is selected");
+  assertRegex("src/lib/catalog.ts", /communesForRegion[\s\S]*getCommunesByRegion/, "communesForRegion helper using getCommunesByRegion");
 
   assertRegex("src/data/serviceCatalog.ts", /export\s+const\s+nationalServiceTypes\s*:/, "national service type catalog");
   assertRegex("src/data/marketplace.ts", /export\s+const\s+serviceTypes\s*:/, "serviceTypes export");

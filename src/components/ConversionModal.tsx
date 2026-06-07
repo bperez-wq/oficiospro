@@ -1,13 +1,15 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import type { Specialist } from "@/data/mock";
 import { formatCLP, getPlanById, getServiceTypeById, serviceTypes, subscriptionPlans } from "@/data/marketplace";
 import {
-  communeOptions,
+  communeRegionCode,
+  DEFAULT_REGION_CODE,
   OTHER_SERVICE_VALUE,
-  regionOptions,
+  regionNameForCode,
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
@@ -41,7 +43,7 @@ const defaultLead = {
   rut: "",
   email: "",
   whatsapp: "",
-  region: "Metropolitana de Santiago",
+  region: DEFAULT_REGION_CODE,
   commune: "Las Condes",
 };
 
@@ -54,7 +56,7 @@ const defaultEnterprise = {
   email: "",
   whatsapp: "",
   branches: "1",
-  region: "Metropolitana de Santiago",
+  region: DEFAULT_REGION_CODE,
   commune: "Las Condes",
   need: "Mantención recurrente",
   serviceType: "empresas",
@@ -69,6 +71,7 @@ const defaultSpecialist = {
   phone: "",
   email: "",
   serviceTypeId: "hogar",
+  region: DEFAULT_REGION_CODE,
   commune: "Santiago",
   years: "3",
 };
@@ -80,6 +83,7 @@ const defaultReservation = {
   email: "",
   whatsapp: "",
   serviceTypeId: "hogar",
+  region: DEFAULT_REGION_CODE,
   commune: "Las Condes",
   address: "",
   service: "",
@@ -94,6 +98,7 @@ const defaultSearch = {
   specialty: "Gasfitería domiciliaria",
   otherServiceDescription: "",
   additionalComments: "",
+  region: DEFAULT_REGION_CODE,
   commune: "Las Condes",
   urgency: "Hoy",
 };
@@ -173,6 +178,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       ...defaultReservation,
       serviceTypeId: options.specialist?.serviceTypeId ?? "hogar",
       service: options.specialist?.specialty ?? "",
+      region: options.specialist?.region ? communeRegionCode(options.specialist?.commune ?? options.specialist?.zone ?? "") || DEFAULT_REGION_CODE : DEFAULT_REGION_CODE,
       commune: options.specialist?.commune ?? options.specialist?.zone ?? "Las Condes",
     });
     setSearch(defaultSearch);
@@ -201,6 +207,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
 
     const saved = appendHomeLead({
       ...lead,
+      region: regionNameForCode(lead.region),
       name: `${lead.firstNames} ${lead.lastNames}`.trim(),
       planId: options?.planId ? selectedPlan.id : undefined,
       planName: options?.planId ? selectedPlan.name : undefined,
@@ -233,6 +240,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
         : serviceTypeOptions.find((item) => item.value === enterprise.serviceType)?.label ?? enterprise.serviceType;
     const saved = appendEnterpriseLead({
       ...enterprise,
+      region: regionNameForCode(enterprise.region),
       serviceType: enterpriseServiceLabel,
       name: `${enterprise.firstNames} ${enterprise.lastNames}`.trim(),
       company: enterprise.businessName,
@@ -254,6 +262,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     const serviceType = getServiceTypeById(specialistLead.serviceTypeId) ?? serviceTypes[0];
     const saved = appendSpecialistLead({
       ...specialistLead,
+      region: regionNameForCode(specialistLead.region),
       name: `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim(),
       years: Number(specialistLead.years),
       serviceTypeName: serviceType.name,
@@ -281,6 +290,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     const specialist = options?.specialist;
     const saved = appendServiceRequestLead({
       ...reservation,
+      region: regionNameForCode(reservation.region),
       name: `${reservation.firstNames} ${reservation.lastNames}`.trim(),
       service: reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service,
       isOtherService: reservation.service === OTHER_SERVICE_VALUE,
@@ -301,8 +311,13 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!search.region || !search.commune) {
+      setLocationStatus("Selecciona región y comuna para revisar disponibilidad real.");
+      return;
+    }
     const saved = appendQuickSearchLead({
       ...search,
+      region: regionNameForCode(search.region),
       specialty: search.specialty === OTHER_SERVICE_VALUE ? search.otherServiceDescription : search.specialty,
       isOtherService: search.specialty === OTHER_SERVICE_VALUE,
       sourceButton: options?.sourceButton ?? "Buscar especialista",
@@ -316,6 +331,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     });
     const params = new URLSearchParams({
       tipo: search.serviceTypeId,
+      region: search.region,
       comuna: search.commune,
       especialidad: search.specialty === OTHER_SERVICE_VALUE ? search.otherServiceDescription : search.specialty,
     });
@@ -487,7 +503,20 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                     placeholder="Cuéntanos horarios, condiciones del lugar o datos importantes para coordinar."
                   />
                 </label>
-                <CommuneSelect value={search.commune} onChange={(commune) => setSearch({ ...search, commune })} />
+                <RegionCommuneSelect
+                  region={search.region}
+                  commune={search.commune}
+                  onRegionChange={(region) => {
+                    setSearch({ ...search, region, commune: "" });
+                    setLocationStatus("");
+                  }}
+                  onCommuneChange={(commune) => {
+                    setSearch({ ...search, commune });
+                    setLocationStatus("");
+                  }}
+                  communePlaceholder="Busca comuna para disponibilidad"
+                  required
+                />
                 <label className="field">
                   Urgencia
                   <select value={search.urgency} onChange={(event) => setSearch({ ...search, urgency: event.target.value })}>
@@ -573,8 +602,14 @@ function LeadFields({
         WhatsApp
         <input value={lead.whatsapp} onChange={(event) => onChange({ ...lead, whatsapp: event.target.value })} type="tel" placeholder="+56 9 1234 5678" required />
       </label>
-      <SearchableSelect label="Región" value={lead.region} options={regionOptions} onChange={(region) => onChange({ ...lead, region })} required />
-      <CommuneSelect value={lead.commune} onChange={(commune) => onChange({ ...lead, commune })} />
+      <RegionCommuneSelect
+        region={lead.region}
+        commune={lead.commune}
+        onRegionChange={(region) => onChange({ ...lead, region, commune: "" })}
+        onCommuneChange={(commune) => onChange({ ...lead, commune })}
+        communePlaceholder="Busca Las Condes, Ñuñoa, Valparaíso..."
+        required
+      />
     </>
   );
 }
@@ -659,8 +694,15 @@ function EnterpriseFields({
         Número de sucursales
         <input value={enterprise.branches} onChange={(event) => onChange({ ...enterprise, branches: event.target.value })} type="number" min="1" required />
       </label>
-      <SearchableSelect label="Región" value={enterprise.region} options={regionOptions} onChange={(region) => onChange({ ...enterprise, region })} required />
-      <CommuneSelect value={enterprise.commune} onChange={(commune) => onChange({ ...enterprise, commune })} label="Comuna principal" />
+      <RegionCommuneSelect
+        region={enterprise.region}
+        commune={enterprise.commune}
+        onRegionChange={(region) => onChange({ ...enterprise, region, commune: "" })}
+        onCommuneChange={(commune) => onChange({ ...enterprise, commune })}
+        communeLabel="Comuna principal"
+        communePlaceholder="Busca comuna de operación"
+        required
+      />
       <SearchableSelect
         label="Tipo de servicios requeridos"
         value={enterprise.serviceType}
@@ -727,7 +769,15 @@ function SpecialistLeadFields({
         onChange={(serviceTypeId) => onChange({ ...specialistLead, serviceTypeId })}
         required
       />
-      <CommuneSelect value={specialistLead.commune} onChange={(commune) => onChange({ ...specialistLead, commune })} label="Comuna base" />
+      <RegionCommuneSelect
+        region={specialistLead.region}
+        commune={specialistLead.commune}
+        onRegionChange={(region) => onChange({ ...specialistLead, region, commune: "" })}
+        onCommuneChange={(commune) => onChange({ ...specialistLead, commune })}
+        communeLabel="Comuna base"
+        communePlaceholder="Busca tu comuna base"
+        required
+      />
       <label className="field">
         Años de experiencia
         <input value={specialistLead.years} onChange={(event) => onChange({ ...specialistLead, years: event.target.value })} type="number" min="0" required />
@@ -765,7 +815,14 @@ function ReservationFields({
         WhatsApp
         <input value={reservation.whatsapp} onChange={(event) => onChange({ ...reservation, whatsapp: event.target.value })} type="tel" required />
       </label>
-      <CommuneSelect value={reservation.commune} onChange={(commune) => onChange({ ...reservation, commune })} />
+      <RegionCommuneSelect
+        region={reservation.region}
+        commune={reservation.commune}
+        onRegionChange={(region) => onChange({ ...reservation, region, commune: "" })}
+        onCommuneChange={(commune) => onChange({ ...reservation, commune })}
+        communePlaceholder="Busca comuna del servicio"
+        required
+      />
       <label className="field">
         Dirección aproximada
         <input value={reservation.address} onChange={(event) => onChange({ ...reservation, address: event.target.value })} placeholder="Sector o referencia" required />
@@ -886,10 +943,6 @@ function SuccessState({
       </div>
     </div>
   );
-}
-
-function CommuneSelect({ value, onChange, label = "Comuna" }: { value: string; onChange: (commune: string) => void; label?: string }) {
-  return <SearchableSelect label={label} value={value} options={communeOptions} onChange={onChange} required />;
 }
 
 function Progress({ step, total }: { step: number; total: number }) {
