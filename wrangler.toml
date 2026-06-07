@@ -1,6 +1,9 @@
 name = "oficiospro-web"
+main = "worker/index.ts"
 compatibility_date = "2026-06-06"
 
 [assets]
-directory = "./public"
+directory = "./out"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
 not_found_handling = "single-page-application"
