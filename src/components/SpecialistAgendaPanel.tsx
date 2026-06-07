@@ -38,26 +38,26 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
   const upcomingBookings = bookings.filter((booking) => booking.status !== "Cancelada").slice(0, 6);
 
   if (!profile) return null;
+  const activeProfile = profile;
 
   function updateProfile(patch: Partial<AvailabilityProfile>) {
-    if (!profile) return;
-    const next = { ...profile, ...patch };
+    const next = { ...activeProfile, ...patch };
     setProfile(saveAvailabilityProfile(next));
     setNotice("Agenda actualizada. La disponibilidad pública se recalcula al instante.");
   }
 
   function updateWeekday(day: Weekday, blocks: TimeBlock[]) {
-    updateProfile({ workingHoursByWeekday: { ...profile.workingHoursByWeekday, [day]: blocks } });
+    updateProfile({ workingHoursByWeekday: { ...activeProfile.workingHoursByWeekday, [day]: blocks } });
   }
 
   function addWorkingBlock(day: Weekday) {
     const draft = newBlocks[day] ?? { startTime: "09:00", endTime: "13:00" };
-    updateWeekday(day, [...(profile.workingHoursByWeekday[day] ?? []), draft]);
+    updateWeekday(day, [...(activeProfile.workingHoursByWeekday[day] ?? []), draft]);
     setNewBlocks({ ...newBlocks, [day]: { startTime: "15:00", endTime: "18:00" } });
   }
 
   function removeWorkingBlock(day: Weekday, index: number) {
-    updateWeekday(day, profile.workingHoursByWeekday[day].filter((_, blockIndex) => blockIndex !== index));
+    updateWeekday(day, activeProfile.workingHoursByWeekday[day].filter((_, blockIndex) => blockIndex !== index));
   }
 
   function saveBlock() {
@@ -65,7 +65,7 @@ export function SpecialistAgendaPanel({ specialist }: { specialist: Specialist }
       setNotice("La hora de término debe ser posterior a la hora de inicio.");
       return;
     }
-    if (hasBlockingConflict(profile.blockedSlots, blockForm)) {
+    if (hasBlockingConflict(activeProfile.blockedSlots, blockForm)) {
       setNotice("Ese bloqueo se cruza con otro horario bloqueado.");
       return;
     }
