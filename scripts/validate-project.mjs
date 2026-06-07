@@ -105,11 +105,21 @@ if (assetDirectory === "./out") {
   assertExists("src/app/globals.css");
   assertExists("src/components/HeroSearchPanel.tsx");
   assertExists("src/components/RegionCommuneSelect.tsx");
+  assertExists("src/components/AvailabilityBadge.tsx");
+  assertExists("src/components/AvailabilityCalendar.tsx");
+  assertExists("src/components/BookingDrawer.tsx");
+  assertExists("src/components/InstantContactPanel.tsx");
+  assertExists("src/components/SpecialistAgendaPanel.tsx");
+  assertExists("src/components/TimeSlotPicker.tsx");
   assertExists("src/data/chileCommunes.ts");
+  assertExists("src/data/availability.ts");
   assertExists("src/data/serviceCatalog.ts");
   assertExists("src/data/marketplace.ts");
   assertExists("src/data/mock.ts");
+  assertExists("src/lib/availability.ts");
+  assertExists("src/lib/bookingStorage.ts");
   assertExists("src/lib/storage.ts");
+  assertExists("src/app/agenda-especialista/page.tsx");
   assertExists("worker/index.ts");
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
@@ -141,6 +151,18 @@ if (assetDirectory === "./out") {
   }
   assertRegex("src/components/RegionCommuneSelect.tsx", /disabled=\{!hasSpecificRegion\}/, "disabled commune select until a specific region is selected");
   assertRegex("src/lib/catalog.ts", /communesForRegion[\s\S]*getCommunesByRegion/, "communesForRegion helper using getCommunesByRegion");
+
+  assertRegex("src/data/availability.ts", /export\s+const\s+availabilityProfiles\s*:/, "availabilityProfiles export");
+  assertRegex("src/data/availability.ts", /blockedSlots\s*:/, "blocked slots data");
+  assertRegex("src/lib/availability.ts", /export\s+function\s+getSlotsForDate\s*\(/, "getSlotsForDate helper");
+  assertRegex("src/lib/availability.ts", /export\s+function\s+getAvailabilitySummary\s*\(/, "getAvailabilitySummary helper");
+  assertRegex("src/lib/bookingStorage.ts", /oficiospro\.bookingRequests/, "local booking request storage");
+  assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+addBlockedSlot\s*\(/, "addBlockedSlot helper");
+  assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+createBookingRequest\s*\(/, "createBookingRequest helper");
+  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. El especialista recibirá tu solicitud y podrás confirmar los detalles.");
+  assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
+  assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
+  assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
 
   assertRegex("src/data/serviceCatalog.ts", /export\s+const\s+nationalServiceTypes\s*:/, "national service type catalog");
   assertRegex("src/data/marketplace.ts", /export\s+const\s+serviceTypes\s*:/, "serviceTypes export");

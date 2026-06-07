@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ConversionButton } from "@/components/ConversionModal";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
@@ -297,7 +298,14 @@ export default function HomePage() {
         <div className="grid gap-5 md:grid-cols-3">
           <CTA title="Soy cliente" text="Busca técnicos, compara reputación y reserva con créditos." type="lead_cliente" label="Crear cuenta" />
           <CTA title="Soy empresa" text="Centraliza mantenciones, sucursales, reportes y facturación." type="contacto_empresa" label="Solicitar cuenta" />
-          <CTA title="Soy especialista" text="Crea tu perfil, muestra trabajos y construye reputación real." type="registro_especialista" label="Postular como especialista" />
+          <CTA
+            title="Soy especialista"
+            text="Crea tu perfil, muestra trabajos y construye reputación real."
+            type="registro_especialista"
+            label="Postular como especialista"
+            secondaryHref="/agenda-especialista"
+            secondaryLabel="Ver cómo funcionará mi agenda"
+          />
         </div>
       </section>
 
@@ -398,7 +406,21 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
-function CTA({ title, text, type, label }: { title: string; text: string; type: "lead_cliente" | "contacto_empresa" | "registro_especialista"; label: string }) {
+function CTA({
+  title,
+  text,
+  type,
+  label,
+  secondaryHref,
+  secondaryLabel,
+}: {
+  title: string;
+  text: string;
+  type: "lead_cliente" | "contacto_empresa" | "registro_especialista";
+  label: string;
+  secondaryHref?: string;
+  secondaryLabel?: string;
+}) {
   return (
     <article className="panel card-hover">
       <h3 className="text-2xl font-black">{title}</h3>
@@ -406,6 +428,11 @@ function CTA({ title, text, type, label }: { title: string; text: string; type: 
       <ConversionButton className="btn-primary mt-5 w-full" type={type} sourceButton={label}>
         {label}
       </ConversionButton>
+      {secondaryHref && secondaryLabel ? (
+        <Link className="btn-secondary mt-3 w-full" href={secondaryHref} data-event="home_specialist_agenda_preview">
+          {secondaryLabel}
+        </Link>
+      ) : null}
     </article>
   );
 }

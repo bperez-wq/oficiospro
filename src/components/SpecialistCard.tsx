@@ -1,6 +1,14 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useMemo, useState } from "react";
+import { AvailabilityBadge } from "@/components/AvailabilityBadge";
+import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { availabilityLabels, type Specialist } from "@/data/mock";
+import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
+import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 
 export function SpecialistCard({
   specialist,
@@ -9,6 +17,10 @@ export function SpecialistCard({
   specialist: Specialist;
   onReserve?: (id: string) => void;
 }) {
+  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
+  const [summary, setSummary] = useState<AvailabilitySummary | null>(null);
+  const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
   const badges = [
     specialist.verified ? "Verificado" : null,
     specialist.top ? "Top especialista" : null,
@@ -20,6 +32,14 @@ export function SpecialistCard({
       : specialist.coverageRadiusKm
         ? "Fuera de cobertura"
         : "Cobertura por confirmar";
+
+  useEffect(() => {
+    setSummary(getAvailabilitySummary(profile, getBookingRequests()));
+  }, [profile]);
+
+  const nextSlotLabel = summary?.nextSlot
+    ? `${formatDisplayDate(summary.nextSlot.date)} ${summary.nextSlot.label}`
+    : "Solicita contacto y revisaremos disponibilidad.";
 
   return (
     <article className="group overflow-hidden rounded-card border border-line bg-white shadow-sm transition duration-200 hover:-translate-y-1.5 hover:border-brand/30 hover:shadow-lift">
@@ -48,6 +68,8 @@ export function SpecialistCard({
       </div>
 
       <div className="grid gap-4 p-5">
+        <AvailabilityBadge specialist={specialist} />
+
         <div>
           <p className="font-black text-ink">{specialist.specialty}</p>
           <p className="mt-1 line-clamp-2 text-sm font-semibold leading-6 text-muted">{specialist.description}</p>
@@ -80,6 +102,12 @@ export function SpecialistCard({
           ) : null}
         </div>
 
+        <div className="rounded-2xl border border-line bg-slate-50 p-4">
+          <span className="text-xs font-black uppercase text-muted">Próximo horario</span>
+          <strong className="mt-1 block text-base text-ink">{summary?.detail ?? "Disponibilidad referencial"}</strong>
+          <p className="mt-1 text-sm font-bold leading-5 text-muted">{nextSlotLabel}</p>
+        </div>
+
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
           {specialist.publishedFromAdmin ? (
             <button className="btn-secondary flex-1" type="button" onClick={() => onReserve?.(specialist.id)}>
@@ -90,17 +118,30 @@ export function SpecialistCard({
               Ver perfil
             </Link>
           )}
+          <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={() => setAgendaOpen(true)}>
+            Ver agenda
+          </button>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-2">
+          <button className="btn-secondary" type="button" data-event="open_instant_contact" onClick={() => setContactOpen((current) => !current)}>
+            Contacto inmediato
+          </button>
           {onReserve ? (
-            <button className="btn-primary flex-1" type="button" onClick={() => onReserve(specialist.id)}>
-              Reservar
+            <button className="btn-secondary" type="button" onClick={() => onReserve(specialist.id)}>
+              Solicitar servicio
             </button>
           ) : (
-            <ConversionButton type="reserva_especialista" sourceButton="Reservar especialista" specialist={specialist} className="btn-primary flex-1">
-              Reservar
+            <ConversionButton type="reserva_especialista" sourceButton="Solicitar especialista desde card" specialist={specialist} className="btn-secondary">
+              Solicitar servicio
             </ConversionButton>
           )}
         </div>
+
+        {contactOpen ? <InstantContactPanel specialist={specialist} onOpenAgenda={() => setAgendaOpen(true)} /> : null}
       </div>
+
+      <BookingDrawer specialist={specialist} open={agendaOpen} onClose={() => setAgendaOpen(false)} />
     </article>
   );
 }
