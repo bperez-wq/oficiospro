@@ -36,6 +36,18 @@ export function AdminPricingPanel() {
     save({ ...config, [key]: value });
   }
 
+  function updateCategoryMultiplier(categoryId: string, value: number) {
+    save({ ...config, categoryMultipliers: { ...config.categoryMultipliers, [categoryId]: value } });
+  }
+
+  function updateCommuneMultiplier(communeName: string, value: number) {
+    save({ ...config, communeMultipliers: { ...config.communeMultipliers, [communeName]: value } });
+  }
+
+  function updateCertificationRequirement(categoryId: string, required: boolean) {
+    save({ ...config, certificationRequiredByCategory: { ...config.certificationRequiredByCategory, [categoryId]: required } });
+  }
+
   const sample = {
     specialistExpectedPayoutCLP: samplePayout,
     categoryId: "hogar",
@@ -85,10 +97,94 @@ export function AdminPricingPanel() {
         <Metric label="Margen estimado" value={formatCLP(estimatedMargin)} />
       </div>
 
+      <div className="grid gap-4 lg:grid-cols-3">
+        <InternalRuleEditor
+          title="Multiplicadores por categoria"
+          description="Ajusta recargos internos por tipo de servicio antes de publicar creditos cliente."
+          entries={config.categoryMultipliers}
+          valueLabel="Multiplicador"
+          onNumberChange={updateCategoryMultiplier}
+        />
+        <InternalRuleEditor
+          title="Multiplicadores por comuna"
+          description="Ajusta reglas comerciales por cobertura, desplazamiento o densidad operacional."
+          entries={config.communeMultipliers}
+          valueLabel="Multiplicador"
+          onNumberChange={updateCommuneMultiplier}
+        />
+        <CertificationRuleEditor
+          title="Certificacion requerida por categoria"
+          description="Define que categorias requieren respaldo antes de activar servicios."
+          entries={config.certificationRequiredByCategory}
+          onToggle={updateCertificationRequirement}
+        />
+      </div>
+
       <p className="text-xs font-bold text-muted">
         Nota: esta configuracion es una base local para administracion. En produccion, los margenes sensibles deben resolverse en Worker/env antes de publicar precios.
       </p>
     </section>
+  );
+}
+
+function InternalRuleEditor({
+  title,
+  description,
+  entries,
+  valueLabel,
+  onNumberChange,
+}: {
+  title: string;
+  description: string;
+  entries: Record<string, number>;
+  valueLabel: string;
+  onNumberChange: (key: string, value: number) => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4">
+      <div>
+        <h4 className="text-lg font-black text-ink">{title}</h4>
+        <p className="mt-1 text-xs font-bold text-muted">{description}</p>
+      </div>
+      <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
+        {Object.entries(entries).map(([key, value]) => (
+          <label key={key} className="grid gap-2 rounded-xl bg-white p-3 text-sm font-black text-muted">
+            <span>{key}</span>
+            <span className="sr-only">{valueLabel}</span>
+            <input type="number" min="0" step="0.01" value={value} onChange={(event) => onNumberChange(key, Number(event.target.value))} />
+          </label>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function CertificationRuleEditor({
+  title,
+  description,
+  entries,
+  onToggle,
+}: {
+  title: string;
+  description: string;
+  entries: Record<string, boolean>;
+  onToggle: (key: string, required: boolean) => void;
+}) {
+  return (
+    <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4">
+      <div>
+        <h4 className="text-lg font-black text-ink">{title}</h4>
+        <p className="mt-1 text-xs font-bold text-muted">{description}</p>
+      </div>
+      <div className="grid max-h-72 gap-2 overflow-y-auto pr-1">
+        {Object.entries(entries).map(([key, required]) => (
+          <label key={key} className="flex items-center justify-between gap-3 rounded-xl bg-white p-3 text-sm font-black text-muted">
+            <span>{key}</span>
+            <input type="checkbox" checked={required} onChange={(event) => onToggle(key, event.target.checked)} />
+          </label>
+        ))}
+      </div>
+    </div>
   );
 }
 
