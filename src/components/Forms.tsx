@@ -5,18 +5,15 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
-  calculateServiceEconomics,
   formatCLP,
   getPlanById,
   getServiceTypeById,
   serviceTypes,
   subscriptionPlans,
-  type CommercialConfig,
 } from "@/data/marketplace";
 import {
   appendPendingSpecialist,
   appendStoredItem,
-  getCommercialConfig,
   saveClientProfile,
   setMockSession,
   type PendingSpecialistProfile,
@@ -37,11 +34,16 @@ type ServiceDraft = {
   otherServiceDescription: string;
   name: string;
   description: string;
+  specialistExpectedPayoutCLP: number;
   clientCredits: number;
   specialistPayoutCLP: number;
   initialVisitFree: boolean;
   visitCredits: number;
   duration: string;
+  estimatedDurationMinutes: number;
+  materialsIncluded: string;
+  conditions: string;
+  serviceCommunes: string;
   emergency: boolean;
   certificationRequired: boolean;
   specialistComments: string;
@@ -57,6 +59,12 @@ type ReferenceDraft = {
 };
 
 const emptyReference: ReferenceDraft = { name: "", company: "", phone: "", email: "", work: "", year: "" };
+const noFormalCertificationLabel = "No tengo certificaciones formales";
+const certificationOptions = ["SEC", "HVAC", "Gas", "Soldadura", "Otro"];
+const specialistSuccessMessage =
+  "Recibimos tu postulación. El equipo OficiosPro revisará tus datos y te contactará para avanzar con la verificación.";
+const specialistDbFallbackMessage =
+  "Recibimos tu intención de postular. Si no recibes contacto pronto, escríbenos a bperez@oficiospro.cl.";
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -67,15 +75,26 @@ function createEmptyService(): ServiceDraft {
     otherServiceDescription: "",
     name: "",
     description: "",
-    clientCredits: 12,
-    specialistPayoutCLP: 7000,
+    specialistExpectedPayoutCLP: 25000,
+    clientCredits: 0,
+    specialistPayoutCLP: 25000,
     initialVisitFree: true,
     visitCredits: 0,
     duration: "2 horas",
+    estimatedDurationMinutes: 120,
+    materialsIncluded: "",
+    conditions: "",
+    serviceCommunes: "",
     emergency: false,
     certificationRequired: false,
     specialistComments: "",
   };
+}
+
+function normalizeSpecialistCLPInput(value: string | number) {
+  const numeric = typeof value === "number" ? value : Number(String(value).replace(/[^\d]/g, ""));
+  if (!Number.isFinite(numeric) || numeric < 0) return 0;
+  return Math.round(numeric);
 }
 
 export function LoginForm() {
@@ -358,12 +377,17 @@ export function SpecialistRegisterForm() {
     whatsapp: "",
     email: "",
   });
-  const [config, setConfig] = useState<CommercialConfig | null>(null);
   const [services, setServices] = useState<ServiceDraft[]>([createEmptyService()]);
   const [references, setReferences] = useState<ReferenceDraft[]>([{ ...emptyReference }, { ...emptyReference }, { ...emptyReference }]);
   const [profilePhoto, setProfilePhoto] = useState("");
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
+  const [hasNoFormalCertifications, setHasNoFormalCertifications] = useState(false);
+  const [otherCertificationText, setOtherCertificationText] = useState("");
+  const [consentContact, setConsentContact] = useState(false);
+  const [consentVerification, setConsentVerification] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [geo, setGeo] = useState({ lat: -33.4489, lng: -70.6693 });
   const [geoStatus, setGeoStatus] = useState("");
   const [baseAddress, setBaseAddress] = useState("");
@@ -372,21 +396,7 @@ export function SpecialistRegisterForm() {
   const [baseRegion, setBaseRegion] = useState(DEFAULT_REGION_CODE);
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
 
-  useEffect(() => {
-    setConfig(getCommercialConfig());
-  }, []);
-
   const completedReferences = references.filter((reference) => reference.name && reference.phone && reference.work);
-  const hasEvenCredits = services.every((service) => Number(service.clientCredits) % 2 === 0);
-  const hasLowMargin = services.some((service) => {
-    if (!config) return false;
-    return calculateServiceEconomics({
-      clientCredits: Number(service.clientCredits),
-      specialistPayoutCLP: Number(service.specialistPayoutCLP),
-      serviceTypeId: service.serviceTypeId,
-      config,
-    }).status === "Revisar";
-  });
 
   function updateService(index: number, patch: Partial<ServiceDraft>) {
     setServices((current) =>
@@ -438,24 +448,25 @@ export function SpecialistRegisterForm() {
 
   function validateStep(currentStep = step) {
     if (currentStep === 1) {
-      if (!identity.firstNames || !identity.lastNames || !identity.rut || !identity.whatsapp || !identity.email || !profilePhoto) {
-        setStatus("Completa identidad, contacto y foto de perfil para continuar.");
+      const hasName = `${identity.firstNames} ${identity.lastNames}`.trim().length > 1;
+      if (!hasName || !identity.whatsapp || !identity.email) {
+        setStatus("Completa nombre completo o nombre comercial, WhatsApp o telefono y email para continuar.");
         return false;
       }
     }
     if (currentStep === 2) {
-      if (!baseAddress || !baseRegion || !baseCommune || coverageRadiusKm < 1 || !coverageCommunes.trim()) {
-        setStatus("Completa dirección base, comuna y cobertura para continuar.");
+      if (!baseRegion || !baseCommune) {
+        setStatus("Selecciona region y comuna principal para revisar cobertura real.");
         return false;
       }
     }
     if (currentStep === 3) {
-      if (!services.length || !hasEvenCredits) {
-        setStatus("Agrega al menos un servicio y usa créditos en números pares.");
+      if (!services.length) {
+        setStatus("Agrega al menos un servicio principal.");
         return false;
       }
-      if (services.some((service) => !service.name.trim() || !service.description.trim() || !service.duration.trim() || Number(service.specialistPayoutCLP) < 0)) {
-        setStatus("Completa nombre, descripción, duración y pago especialista de cada servicio.");
+      if (services.some((service) => !service.name.trim() || !service.description.trim() || !service.duration.trim() || Number(service.specialistExpectedPayoutCLP) <= 0)) {
+        setStatus("Completa nombre, descripcion breve, duracion estimada y tarifa esperada CLP de cada servicio.");
         return false;
       }
       if (services.some((service) => service.specialty === OTHER_SERVICE_VALUE && !service.otherServiceDescription.trim())) {
@@ -463,12 +474,8 @@ export function SpecialistRegisterForm() {
         return false;
       }
     }
-    if (currentStep === 4 && completedReferences.length < 3) {
-      setStatus("Debes completar al menos 3 referencias laborales verificables.");
-      return false;
-    }
-    if (currentStep === 5 && portfolioPhotos.length < 1) {
-      setStatus("Debes cargar al menos una foto de portafolio. Recomendamos 3 o más.");
+    if (currentStep === 5 && (!consentContact || !consentVerification)) {
+      setStatus("Autoriza el contacto y la revision de antecedentes para enviar tu postulacion.");
       return false;
     }
     setStatus("");
@@ -486,6 +493,16 @@ export function SpecialistRegisterForm() {
   }
 
   function toggleCertification(certification: string) {
+    if (certification === noFormalCertificationLabel) {
+      const nextNoFormal = !hasNoFormalCertifications;
+      setHasNoFormalCertifications(nextNoFormal);
+      if (nextNoFormal) {
+        setSelectedCertifications([]);
+        setOtherCertificationText("");
+      }
+      return;
+    }
+    setHasNoFormalCertifications(false);
     setSelectedCertifications((current) =>
       current.includes(certification) ? current.filter((item) => item !== certification) : [...current, certification],
     );
@@ -493,36 +510,36 @@ export function SpecialistRegisterForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!config) return;
     for (const currentStep of [1, 2, 3, 4, 5]) {
       if (!validateStep(currentStep)) {
         setStep(currentStep);
         return;
       }
     }
-    if (!hasEvenCredits) {
-      setStatus("Revisa tus servicios: los créditos del cliente deben ser números pares.");
-      return;
-    }
-    if (completedReferences.length < 3) {
-      setStatus("Debes completar al menos 3 referencias laborales con nombre, teléfono y trabajo realizado.");
-      return;
-    }
-    if (!profilePhoto) {
-      setStatus("La foto de perfil es obligatoria.");
-      return;
-    }
-    if (portfolioPhotos.length < 1) {
-      setStatus("Debes cargar al menos una foto de portafolio. Recomendamos 3 o más.");
-      return;
-    }
+    setIsSubmitting(true);
+    setStatus("Enviando...");
 
+    try {
     const firstNames = identity.firstNames;
     const lastNames = identity.lastNames;
     const fullName = `${firstNames} ${lastNames}`.trim();
     const mainType = getServiceTypeById(services[0].serviceTypeId);
+    const primaryService = services[0];
+    const now = new Date().toISOString();
+    const normalizedServices = services.map((service) => ({
+      ...service,
+      isOtherService: service.specialty === OTHER_SERVICE_VALUE,
+      specialistExpectedPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
+      specialistPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
+      clientCredits: 0,
+      pricingStatus: "pending_review" as const,
+      pricingNotesInternal: "Tarifa declarada por especialista. OficiosPro debe calcular creditos cliente y aprobar payout.",
+      emergencyAvailable: service.emergency,
+    }));
     const request = appendPendingSpecialist({
       status: "pendiente",
+      reviewStatus: "pendiente_revision",
+      certificationStatus: hasNoFormalCertifications || selectedCertifications.length === 0 ? "sin_certificacion_declarada" : "certificacion_declarada_pendiente_revision",
       firstNames,
       lastNames,
       name: fullName,
@@ -538,46 +555,99 @@ export function SpecialistRegisterForm() {
       coverageRadiusKm,
       coverageCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
       typeServicio: mainType?.name ?? "Hogar",
-      specialty: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
-      services: services.map((service) => ({
-        ...service,
-        isOtherService: service.specialty === OTHER_SERVICE_VALUE,
-        economics: calculateServiceEconomics({
-          clientCredits: Number(service.clientCredits),
-          specialistPayoutCLP: Number(service.specialistPayoutCLP),
-          serviceTypeId: service.serviceTypeId,
-          config,
-        }),
-      })),
+      specialty: primaryService.isOtherService ? primaryService.otherServiceDescription : primaryService.specialty,
+      services: normalizedServices,
       references: completedReferences,
       portfolioPhotos,
       certifications: selectedCertifications,
-      submittedAt: new Date().toISOString(),
+      hasNoFormalCertifications,
+      otherCertificationText,
+      submittedAt: now,
     } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
       role: "specialist",
       name: fullName || "Especialista OficiosPro",
       email: identity.email,
-      createdAt: new Date().toISOString(),
+      createdAt: now,
     });
+    const servicesPayload = normalizedServices.map((service) => ({
+      serviceTypeId: service.serviceTypeId,
+      serviceName: service.name,
+      serviceDescription: service.description,
+      specialty: service.isOtherService ? service.otherServiceDescription : service.specialty,
+      specialistExpectedPayoutCLP: service.specialistExpectedPayoutCLP,
+      estimatedDurationMinutes: service.estimatedDurationMinutes,
+      duration: service.duration,
+      materialsIncluded: service.materialsIncluded,
+      conditions: service.conditions,
+      emergencyAvailable: service.emergency,
+      serviceCommunes: service.serviceCommunes,
+      pricingStatus: "pending_review",
+    }));
     const leadResult = await submitLead({
       leadType: "specialist_application",
       fullName: fullName || "Especialista OficiosPro",
       email: identity.email,
       phone: identity.whatsapp,
+      applicantType: "specialist",
       trade: mainType?.name ?? "Hogar",
-      service: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
+      service: primaryService.isOtherService ? primaryService.otherServiceDescription : primaryService.specialty,
       regionCode: baseRegion,
       regionName: regionNameForCode(baseRegion),
       communeName: baseCommune,
       sourceComponent: "SpecialistRegisterForm",
       sourceButton: "Enviar perfil para revisión",
-      payload: { localRequestId: request.id, rut: identity.rut, coverageRadiusKm, servicesCount: services.length, referencesCount: completedReferences.length },
+      consentContact,
+      consentTerms: consentVerification,
+      payload: {
+        localRequestId: request.id,
+        fullName,
+        email: identity.email,
+        phone: identity.whatsapp,
+        applicantType: "specialist",
+        primaryTrade: mainType?.name ?? "Hogar",
+        services: servicesPayload,
+        yearsExperience: "",
+        availability: "Pendiente de coordinar",
+        regionCode: baseRegion,
+        regionName: regionNameForCode(baseRegion),
+        communeName: baseCommune,
+        additionalCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
+        handlesEmergencies: services.some((service) => service.emergency),
+        servesBusinesses: mainType?.marginType === "company",
+        certifications: selectedCertifications,
+        otherCertificationText,
+        hasNoFormalCertifications,
+        referencesText: completedReferences.map((reference) => `${reference.name} - ${reference.phone} - ${reference.work}`).join("\n"),
+        portfolioUrl: portfolioPhotos.join(", "),
+        notes: services.map((service) => service.specialistComments).filter(Boolean).join("\n"),
+        consentContact,
+        consentVerification,
+        sourcePage: "/registro-especialista",
+        sourceComponent: "SpecialistRegisterForm",
+        sourceButton: "Enviar perfil para revisión",
+        createdAt: now,
+        userAgent: window.navigator.userAgent,
+        status: "postulado",
+        reviewStatus: "pendiente_revision",
+        certificationStatus: hasNoFormalCertifications || selectedCertifications.length === 0 ? "sin_certificacion_declarada" : "certificacion_declarada_pendiente_revision",
+      },
     });
-    setStatus(leadResult.ok ? `Tu perfil fue enviado para revisión. Solicitud ${request.id} creada.` : leadResult.message);
+    if (!leadResult.ok && leadResult.error !== "database_not_configured") {
+      setStatus(leadResult.message);
+      return;
+    }
+    setSubmitted(true);
+    setStatus(leadResult.error === "database_not_configured" ? specialistDbFallbackMessage : specialistSuccessMessage);
     window.setTimeout(() => {
-      window.location.href = "/dashboard-especialista?submitted=1";
-    }, 900);
+      window.location.href = "/?postulacion=recibida";
+    }, 2500);
+    } catch (error) {
+      if (process.env.NODE_ENV === "development") console.error(error);
+      setStatus("No pudimos completar el envio ahora. Escribenos a bperez@oficiospro.cl y revisaremos tu postulacion.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -585,11 +655,11 @@ export function SpecialistRegisterForm() {
       <form className="grid gap-6" onSubmit={submit}>
         <div className="grid gap-3 md:grid-cols-5">
           {[
-            ["Identidad", "Datos y foto"],
+            ["Identidad", "Datos y contacto"],
             ["Cobertura", "Comuna y radio"],
-            ["Servicios", "Créditos y margen"],
-            ["Referencias", "3 trabajos"],
-            ["Portafolio", "Fotos y envío"],
+            ["Servicios", "Tarifa esperada"],
+            ["Referencias", "Opcional"],
+            ["Revision", "Envio final"],
           ].map(([title, text], index) => (
             <button
               key={title}
@@ -635,7 +705,7 @@ export function SpecialistRegisterForm() {
           <label className="field">
             Foto de perfil
             <input type="file" accept="image/*" onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
-            <span className="text-xs font-bold text-muted">{profilePhoto ? `Archivo seleccionado: ${profilePhoto}` : "La foto es obligatoria para publicar tu perfil."}</span>
+            <span className="text-xs font-bold text-muted">{profilePhoto ? `Archivo seleccionado: ${profilePhoto}` : "Opcional ahora. OficiosPro puede solicitarla antes de activar el perfil."}</span>
           </label>
           <label className="field">
             Dirección base
@@ -681,7 +751,8 @@ export function SpecialistRegisterForm() {
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <p className="eyebrow">Servicios ofrecidos</p>
-              <h3 className="text-2xl font-black">Precio en créditos y pago especialista</h3>
+              <h3 className="text-2xl font-black">Servicios y tarifa esperada</h3>
+              <p className="mt-2 text-sm font-bold text-muted">Indica lo que esperas recibir en CLP. OficiosPro revisara la tarifa y definira los creditos finales para el cliente.</p>
             </div>
             <button className="btn-secondary" type="button" onClick={() => setServices((current) => [...current, createEmptyService()])}>
               Agregar servicio
@@ -689,17 +760,15 @@ export function SpecialistRegisterForm() {
           </div>
 
           {services.map((service, index) => (
-            <ServiceEditor key={index} service={service} index={index} config={config ?? getCommercialConfig()} onChange={(patch) => updateService(index, patch)} />
+            <ServiceEditor key={index} service={service} index={index} onChange={(patch) => updateService(index, patch)} />
           ))}
-
-          {!hasEvenCredits ? <Warning>Los créditos del servicio deben ser números pares.</Warning> : null}
-          {hasLowMargin ? <Warning>Hay servicios con margen menor al mínimo configurado. Admin podrá revisarlos antes de aprobar.</Warning> : null}
         </section>
 
         <section className={step === 4 ? "grid gap-4" : "hidden"}>
           <div>
             <p className="eyebrow">Referencias laborales</p>
-            <h3 className="text-2xl font-black">Mínimo 3 referencias verificables</h3>
+            <h3 className="text-2xl font-black">Referencias opcionales para acelerar la revisión</h3>
+            <p className="mt-2 text-sm font-bold text-muted">Completa lo que tengas disponible. OficiosPro revisara tu informacion y podra solicitar antecedentes adicionales.</p>
           </div>
           <div className="grid gap-4">
             {references.map((reference, index) => (
@@ -744,31 +813,59 @@ export function SpecialistRegisterForm() {
             />
           </label>
           <div className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-            Sugerencia: carga al menos 3 imágenes de antes/después, instalaciones o mantenciones realizadas. Archivos seleccionados: {portfolioPhotos.length}.
+            Portafolio opcional. Puedes enviarlo ahora o agregarlo cuando OficiosPro revise tu perfil. Archivos seleccionados: {portfolioPhotos.length}.
           </div>
           <fieldset className="grid gap-3 rounded-2xl border border-line bg-white p-4 md:col-span-2">
             <legend className="px-2 text-sm font-black text-ink">Certificaciones</legend>
-            {["SEC", "HVAC", "Gas", "Soldadura", "Otro"].map((certification) => (
+            <p className="text-sm font-bold text-muted">
+              Si tu oficio requiere certificacion, OficiosPro podra solicitar respaldo antes de activar el perfil.
+            </p>
+            <label className="flex items-center gap-3 text-sm font-bold text-muted">
+              <input type="checkbox" checked={hasNoFormalCertifications} onChange={() => toggleCertification(noFormalCertificationLabel)} /> {noFormalCertificationLabel}
+            </label>
+            {certificationOptions.map((certification) => (
               <label key={certification} className="flex items-center gap-3 text-sm font-bold text-muted">
-                <input type="checkbox" checked={selectedCertifications.includes(certification)} onChange={() => toggleCertification(certification)} /> {certification}
+                <input type="checkbox" checked={selectedCertifications.includes(certification)} disabled={hasNoFormalCertifications} onChange={() => toggleCertification(certification)} /> {certification}
               </label>
             ))}
+            {selectedCertifications.includes("Otro") ? (
+              <label className="field">
+                Indica cuál certificación o respaldo tienes
+                <input value={otherCertificationText} onChange={(event) => setOtherCertificationText(event.target.value)} placeholder="Ej: curso, credencial, respaldo laboral o experiencia verificable" />
+              </label>
+            ) : null}
+          </fieldset>
+          <fieldset className="grid gap-3 rounded-2xl border border-brand/20 bg-brand-soft p-4 md:col-span-2">
+            <legend className="px-2 text-sm font-black text-brand-dark">Consentimiento</legend>
+            <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
+              <input type="checkbox" checked={consentContact} onChange={(event) => setConsentContact(event.target.checked)} required />
+              Acepto que OficiosPro me contacte para revisar mi postulacion.
+            </label>
+            <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
+              <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} required />
+              Acepto que OficiosPro revise la informacion enviada y pueda solicitar antecedentes adicionales.
+            </label>
           </fieldset>
         </section>
 
         <div className="flex flex-col gap-3 rounded-2xl border border-line bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
-          <button className="btn-secondary" type="button" onClick={previousStep} disabled={step === 1}>
+          <button className="btn-secondary" type="button" onClick={previousStep} disabled={step === 1 || isSubmitting}>
             Volver
           </button>
-          <span className="text-sm font-black text-muted">Paso {step} de 5 · completa cada bloque antes de enviar.</span>
-          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 5}>
+          <span className="text-sm font-black text-muted">Paso {step} de 5 · completa lo que tengas disponible.</span>
+          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 5 || isSubmitting}>
             Continuar paso
           </button>
         </div>
 
-        <button className="btn-primary" type="submit">
-          Enviar perfil para revisión
+        <button className="btn-primary" type="submit" disabled={isSubmitting || submitted} data-event="specialist_application_submit">
+          {isSubmitting ? "Enviando..." : "Enviar perfil para revisión"}
         </button>
+        {submitted ? (
+          <Link className="btn-secondary text-center" href="/?postulacion=recibida">
+            Volver al inicio
+          </Link>
+        ) : null}
         {status ? <SuccessMessage>{status}</SuccessMessage> : null}
       </form>
     </FormShell>
@@ -778,28 +875,17 @@ export function SpecialistRegisterForm() {
 function ServiceEditor({
   service,
   index,
-  config,
   onChange,
 }: {
   service: ServiceDraft;
   index: number;
-  config: CommercialConfig;
   onChange: (patch: Partial<ServiceDraft>) => void;
 }) {
-  const economics = calculateServiceEconomics({
-    clientCredits: Number(service.clientCredits),
-    specialistPayoutCLP: Number(service.specialistPayoutCLP),
-    serviceTypeId: service.serviceTypeId,
-    config,
-  });
-
   return (
     <article className="grid gap-4 rounded-[24px] border border-line bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <strong>Servicio {index + 1}</strong>
-        <span className={`chip ${economics.status === "OK" ? "bg-brand-soft text-brand-dark" : "bg-amber-50 text-amber-800"}`}>
-          Margen {economics.status}
-        </span>
+        <span className="chip bg-brand-soft text-brand-dark">Tarifa sujeta a revisión</span>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
         <SearchableSelect
@@ -840,12 +926,18 @@ function ServiceEditor({
           <textarea value={service.description} onChange={(event) => onChange({ description: event.target.value })} placeholder="Qué incluye, condiciones y materiales excluidos" />
         </label>
         <label className="field">
-          Precio cliente en créditos
-          <input type="number" min="2" step="2" value={service.clientCredits} onChange={(event) => onChange({ clientCredits: Number(event.target.value) })} />
-        </label>
-        <label className="field">
-          Monto que cobra especialista CLP
-          <input type="number" min="0" step="1000" value={service.specialistPayoutCLP} onChange={(event) => onChange({ specialistPayoutCLP: Number(event.target.value) })} />
+          Tarifa esperada por servicio
+          <input
+            type="number"
+            min="0"
+            step="1000"
+            value={service.specialistExpectedPayoutCLP}
+            onChange={(event) => onChange({ specialistExpectedPayoutCLP: normalizeSpecialistCLPInput(event.target.value), specialistPayoutCLP: normalizeSpecialistCLPInput(event.target.value) })}
+            placeholder="Ej: 25000"
+          />
+          <span className="text-xs font-bold text-muted">
+            Indica el monto que esperas recibir por este servicio. OficiosPro revisara la tarifa y definira el precio final en creditos para el cliente. Ejemplo: {formatCLP(25000)}.
+          </span>
         </label>
         <label className="field">
           Visita inicial gratis
@@ -855,10 +947,6 @@ function ServiceEditor({
           </select>
         </label>
         <label className="field">
-          Precio visita en créditos
-          <input type="number" min="0" step="2" value={service.visitCredits} disabled={service.initialVisitFree} onChange={(event) => onChange({ visitCredits: Number(event.target.value) })} />
-        </label>
-        <label className="field">
           Disponible emergencia
           <select value={service.emergency ? "yes" : "no"} onChange={(event) => onChange({ emergency: event.target.value === "yes" })}>
             <option value="no">No</option>
@@ -866,11 +954,16 @@ function ServiceEditor({
           </select>
         </label>
         <label className="field">
-          Certificación requerida
-          <select value={service.certificationRequired ? "yes" : "no"} onChange={(event) => onChange({ certificationRequired: event.target.value === "yes" })}>
-            <option value="no">No</option>
-            <option value="yes">Sí</option>
-          </select>
+          Comunas donde aplica
+          <input value={service.serviceCommunes} onChange={(event) => onChange({ serviceCommunes: event.target.value })} placeholder="Ej: Santiago, Providencia, Ñuñoa" />
+        </label>
+        <label className="field md:col-span-2">
+          Materiales incluidos o excluidos
+          <textarea value={service.materialsIncluded} onChange={(event) => onChange({ materialsIncluded: event.target.value })} placeholder="Ej: mano de obra incluida, materiales se cotizan aparte." />
+        </label>
+        <label className="field md:col-span-2">
+          Condiciones del servicio
+          <textarea value={service.conditions} onChange={(event) => onChange({ conditions: event.target.value })} placeholder="Horarios, requisitos previos o condiciones para tomar el trabajo." />
         </label>
         <label className="field md:col-span-2">
           Comentarios del especialista
@@ -881,12 +974,8 @@ function ServiceEditor({
           />
         </label>
       </div>
-      <div className="grid gap-3 rounded-2xl bg-slate-50 p-4 text-sm font-bold text-muted md:grid-cols-5">
-        <span>Ingreso cliente: {formatCLP(economics.incomeCLP)}</span>
-        <span>Pago especialista: {formatCLP(economics.specialistPayoutCLP)}</span>
-        <span>Margen plataforma: {formatCLP(economics.marginCLP)}</span>
-        <span>Mínimo: {formatCLP(economics.minMarginCLP)}</span>
-        <span>Estado margen: {economics.status}</span>
+      <div className="rounded-2xl bg-slate-50 p-4 text-sm font-bold text-muted">
+        OficiosPro convertira esta tarifa a creditos para el cliente. El precio final publicado queda pendiente de revision.
       </div>
     </article>
   );

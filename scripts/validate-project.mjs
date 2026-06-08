@@ -128,6 +128,10 @@ if (assetDirectory === "./out") {
   assertExists("migrations/0001_leads.sql");
   assertExists("src/lib/leads.ts");
   assertExists("src/lib/leadClient.ts");
+  assertExists("src/data/commercialConfig.ts");
+  assertExists("src/lib/pricing.ts");
+  assertExists("src/components/AdminPricingPanel.tsx");
+  assertExists("src/components/PostulationToast.tsx");
   assertExists("docs/leads-and-email.md");
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
@@ -185,6 +189,36 @@ if (assetDirectory === "./out") {
   assertContains("src/app/contacto/page.tsx", "bperez@oficiospro.cl");
   assertContains("src/components/Footer.tsx", "bperez@oficiospro.cl");
   assertContains("docs/leads-and-email.md", "LEADS_TO_EMAIL=bperez@oficiospro.cl");
+  assertContains("src/components/Forms.tsx", "Tarifa esperada por servicio");
+  assertContains("src/components/Forms.tsx", "No tengo certificaciones formales");
+  assertContains("src/components/Forms.tsx", "Enviando...");
+  assertContains("src/components/Forms.tsx", "specialist_application_submit");
+  assertContains("src/components/Forms.tsx", "/?postulacion=recibida");
+  assertContains("src/components/PostulationToast.tsx", "Postulación recibida");
+  assertContains("src/data/commercialConfig.ts", "customerCreditValueCLP");
+  assertContains("src/data/commercialConfig.ts", "certificationRequiredByCategory");
+  for (const fn of [
+    "formatCLP",
+    "normalizeCLPInput",
+    "calculateClientCreditsFromSpecialistPayout",
+    "estimateClientPriceCLP",
+    "estimatePlatformMarginCLP",
+    "applyEmergencyMultiplier",
+    "roundCredits",
+    "getCertificationRequirement",
+  ]) {
+    assertRegex("src/lib/pricing.ts", new RegExp(`export\\s+function\\s+${fn}\\s*\\(`), `${fn} pricing helper`);
+  }
+  assertContains("src/components/AdminPricingPanel.tsx", "Configuracion comercial interna");
+  assertContains("src/components/AdminPanel.tsx", "Créditos cliente calculados");
+  assertContains("worker/index.ts", "Nueva postulación de especialista en OficiosPro");
+  assertContains("worker/index.ts", "calculatedClientCredits");
+  if (readText("src/components/Forms.tsx").includes("Precio cliente en créditos")) {
+    fail("Specialist form must not let specialists choose client credits");
+  }
+  if (readText("src/components/Forms.tsx").includes("Monto que cobra especialista CLP")) {
+    fail("Specialist form must use 'Tarifa esperada por servicio' instead of old CLP label");
+  }
   if (readText("src/components/ConversionModal.tsx").includes("Ej: Benjam") || readText("src/components/Forms.tsx").includes("Ej: Benjam")) {
     fail("Founder name must not be used as a default example placeholder");
   }

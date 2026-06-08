@@ -21,7 +21,7 @@ database_name = "oficiospro-leads"
 database_id = "ID_REAL_DE_CLOUDFLARE"
 ```
 
-No uses un `database_id` inventado. Si `DB` no está configurado, los endpoints responden `database_not_configured` y la UI muestra contacto directo a `bperez@oficiospro.cl`.
+No uses un `database_id` inventado. Si `DB` no está configurado, los endpoints pueden responder `database_not_configured` como estado operacional sin bloquear la UI; el frontend guarda respaldo local y muestra contacto directo a `bperez@oficiospro.cl`.
 
 ## 3. Correr migraciones
 
@@ -50,11 +50,21 @@ LEADS_REPLY_TO_EMAIL=bperez@oficiospro.cl
 
 `RESEND_API_KEY` es opcional. Si no existe, el lead se guarda igual y la respuesta indica `emailSent: false`.
 
-## 5. DNS para Resend
+## 5. Postulaciones de especialistas
+
+- Las certificaciones son declarativas y opcionales.
+- El especialista puede marcar `No tengo certificaciones formales`.
+- OficiosPro guarda la postulacion con `status = postulado`, `reviewStatus = pendiente_revision` y `certificationStatus` segun lo declarado.
+- El especialista declara `specialistExpectedPayoutCLP`; no controla creditos cliente, margen ni valor del credito.
+- El Worker calcula `calculatedClientCredits` internamente desde la tarifa CLP declarada antes de guardar/enviar el payload.
+- Si `DB` no esta configurada, el Worker responde sin romper la UI, intenta email si `RESEND_API_KEY` existe y el frontend conserva respaldo en localStorage.
+- Si `RESEND_API_KEY` no esta configurada, el lead puede quedar guardado y la UI informa recepcion sin prometer correo.
+
+## 6. DNS para Resend
 
 En Resend, agrega el dominio `oficiospro.cl`, configura SPF/DKIM según las instrucciones del proveedor y valida el dominio antes de usar `notificaciones@oficiospro.cl` como remitente.
 
-## 6. Probar un lead
+## 7. Probar un lead
 
 Desde la web:
 
@@ -71,7 +81,7 @@ curl -X POST https://TU_DOMINIO/api/leads \
   -d '{"leadType":"contact_message","fullName":"Juan Pérez","email":"juan@example.com","phone":"+56 9 1234 5678","problemDescription":"Consulta desde prueba"}'
 ```
 
-## 7. Revisar leads por admin
+## 8. Revisar leads por admin
 
 Los endpoints admin requieren Bearer token:
 
@@ -91,6 +101,6 @@ curl -X PATCH https://TU_DOMINIO/api/admin/leads/lead_id/status \
 
 Si `ADMIN_TOKEN` no está configurado, los endpoints admin responden `admin_token_not_configured`.
 
-## 8. Si email no está configurado
+## 9. Si email no está configurado
 
 El lead queda guardado en D1 con `email_sent = 0`. Revisa los registros desde `/api/admin/leads` y configura Resend cuando esté listo el DNS transaccional.

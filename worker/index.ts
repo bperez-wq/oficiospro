@@ -89,6 +89,28 @@ type LeadPayload = {
   payload?: Record<string, unknown>;
 };
 
+type WorkerPricingConfig = {
+  customerCreditValueCLP: number;
+  platformFeePercent: number;
+  paymentFeePercent: number;
+  riskBufferPercent: number;
+  fixedServiceFeeCLP: number;
+  emergencyMultiplier: number;
+  minimumClientCredits: number;
+  creditRoundingStep: number;
+};
+
+const workerPricingConfig: WorkerPricingConfig = {
+  customerCreditValueCLP: 1000,
+  platformFeePercent: 0.18,
+  paymentFeePercent: 0.035,
+  riskBufferPercent: 0.04,
+  fixedServiceFeeCLP: 2500,
+  emergencyMultiplier: 1.35,
+  minimumClientCredits: 12,
+  creditRoundingStep: 2,
+};
+
 type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
     leadType: LeadType;
     id: string;
@@ -190,8 +212,6 @@ export default {
 };
 
 async function createLead(request: Request, env: Env, forcedType?: LeadType) {
-  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
-
   const body = await readLeadPayload(request);
   if (body.honeypot) return json({ ok: false, error: "spam_rejected" }, 400);
 
@@ -199,16 +219,17 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
   if (!leadType || !isLeadType(leadType)) return json({ ok: false, error: "invalid_lead_type" }, 400);
 
   const lead = normalizeLead(body, leadType, request.headers.get("user-agent") ?? "");
-  await insertLead(env.DB, lead);
+  const stored = Boolean(env.DB);
+  if (env.DB) await insertLead(env.DB, lead);
 
   const emailResult = await notifyLead(env, lead);
-  if (emailResult.sent || emailResult.error) {
+  if (env.DB && (emailResult.sent || emailResult.error)) {
     await env.DB.prepare("UPDATE lead_submissions SET email_sent = ?, email_error = ? WHERE id = ?")
       .bind(emailResult.sent ? 1 : 0, emailResult.error ?? null, lead.id)
       .run();
   }
 
-  return json({ ok: true, id: lead.id, emailSent: emailResult.sent });
+  return json({ ok: true, id: lead.id, stored, emailSent: emailResult.sent, error: stored ? undefined : "database_not_configured" });
 }
 
 async function listAdminLeads(request: Request, env: Env) {
@@ -295,11 +316,12 @@ function isLeadType(value: string): value is LeadType {
 }
 
 function normalizeLead(body: LeadPayload, leadType: LeadType, userAgent: string): LeadRecord {
+  const payload = normalizeNestedPayload(body.payload ?? {}, leadType);
   return {
     id: `lead_${crypto.randomUUID()}`,
     createdAt: new Date().toISOString(),
     leadType,
-    status: "nuevo",
+    status: leadType === "specialist_application" ? "postulado" : "nuevo",
     priority: priorityFor(body.urgency),
     fullName: sanitizeText(body.fullName, 160),
     email: sanitizeEmail(body.email),
@@ -328,11 +350,68 @@ function normalizeLead(body: LeadPayload, leadType: LeadType, userAgent: string)
     referralCode: sanitizeText(body.referralCode, 120),
     consentContact: Boolean(body.consentContact),
     consentTerms: Boolean(body.consentTerms),
-    payloadJson: JSON.stringify(body.payload ?? {}),
+    payloadJson: JSON.stringify(payload),
     userAgent: sanitizeText(userAgent, 500) ?? "",
     emailSent: 0,
     emailError: "",
   };
+}
+
+function normalizeNestedPayload(payload: Record<string, unknown>, leadType: LeadType) {
+  if (leadType !== "specialist_application") return payload;
+
+  const services = Array.isArray(payload.services) ? payload.services.map(normalizeSpecialistServicePayload) : [];
+  const hasNoFormalCertifications = Boolean(payload.hasNoFormalCertifications);
+  const certifications = Array.isArray(payload.certifications) ? payload.certifications.filter((item) => typeof item === "string") : [];
+  return {
+    ...payload,
+    services,
+    hasNoFormalCertifications,
+    certifications,
+    status: "postulado",
+    reviewStatus: "pendiente_revision",
+    certificationStatus: hasNoFormalCertifications || certifications.length === 0 ? "sin_certificacion_declarada" : "certificacion_declarada_pendiente_revision",
+  };
+}
+
+function normalizeSpecialistServicePayload(service: unknown) {
+  const item = service && typeof service === "object" ? (service as Record<string, unknown>) : {};
+  const specialistExpectedPayoutCLP = normalizeMoney(item.specialistExpectedPayoutCLP);
+  const emergencyAvailable = Boolean(item.emergencyAvailable);
+  const calculatedClientCredits = calculateWorkerClientCredits(specialistExpectedPayoutCLP, emergencyAvailable);
+  return {
+    serviceTypeId: sanitizeText(item.serviceTypeId, 120),
+    serviceName: sanitizeText(item.serviceName, 180),
+    serviceDescription: sanitizeText(item.serviceDescription, 1200),
+    specialty: sanitizeText(item.specialty, 180),
+    specialistExpectedPayoutCLP,
+    estimatedDurationMinutes: Number.isFinite(Number(item.estimatedDurationMinutes)) ? Number(item.estimatedDurationMinutes) : undefined,
+    duration: sanitizeText(item.duration, 120),
+    materialsIncluded: sanitizeText(item.materialsIncluded, 1000),
+    conditions: sanitizeText(item.conditions, 1000),
+    emergencyAvailable,
+    serviceCommunes: sanitizeText(item.serviceCommunes, 1000),
+    pricingStatus: "pending_review",
+    calculatedClientCredits,
+    estimatedClientPriceCLP: calculatedClientCredits * workerPricingConfig.customerCreditValueCLP,
+  };
+}
+
+function normalizeMoney(value: unknown) {
+  const amount = Number(value);
+  if (!Number.isFinite(amount) || amount < 0) return 0;
+  return Math.round(amount);
+}
+
+function calculateWorkerClientCredits(specialistExpectedPayoutCLP: number, emergencyAvailable: boolean) {
+  const basePrice =
+    specialistExpectedPayoutCLP +
+    specialistExpectedPayoutCLP * (workerPricingConfig.platformFeePercent + workerPricingConfig.paymentFeePercent + workerPricingConfig.riskBufferPercent) +
+    workerPricingConfig.fixedServiceFeeCLP;
+  const adjustedPrice = emergencyAvailable ? basePrice * workerPricingConfig.emergencyMultiplier : basePrice;
+  const rawCredits = adjustedPrice / workerPricingConfig.customerCreditValueCLP;
+  const roundedCredits = Math.ceil(rawCredits / workerPricingConfig.creditRoundingStep) * workerPricingConfig.creditRoundingStep;
+  return Math.max(workerPricingConfig.minimumClientCredits, roundedCredits);
 }
 
 async function insertLead(db: D1Database, lead: LeadRecord) {
@@ -401,7 +480,7 @@ async function notifyLead(env: Env, lead: LeadRecord) {
         from: env.LEADS_FROM_EMAIL ?? "OficiosPro <notificaciones@oficiospro.cl>",
         to: [env.LEADS_TO_EMAIL ?? "bperez@oficiospro.cl"],
         reply_to: lead.email || env.LEADS_REPLY_TO_EMAIL || undefined,
-        subject: `Nuevo lead OficiosPro: ${lead.leadType}`,
+        subject: lead.leadType === "specialist_application" ? "Nueva postulación de especialista en OficiosPro" : `Nuevo lead OficiosPro: ${lead.leadType}`,
         html: leadEmailHtml(lead),
       }),
     });
@@ -416,6 +495,18 @@ async function notifyLead(env: Env, lead: LeadRecord) {
 }
 
 function leadEmailHtml(lead: LeadRecord) {
+  const payload = safeJson(lead.payloadJson) as Record<string, any> | null;
+  const firstService = Array.isArray(payload?.services) ? payload?.services[0] : null;
+  const declaredCertifications = Array.isArray(payload?.certifications) ? payload.certifications.join(", ") : "";
+  const serviceSummary = Array.isArray(payload?.services)
+    ? payload.services
+        .map((service: Record<string, unknown>) =>
+          [service.serviceName, service.specialistExpectedPayoutCLP ? `$${service.specialistExpectedPayoutCLP}` : "", service.duration, service.calculatedClientCredits ? `${service.calculatedClientCredits} creditos internos` : ""]
+            .filter(Boolean)
+            .join(" · "),
+        )
+        .join(" | ")
+    : "";
   const rows: Array<[string, string | number | undefined]> = [
     ["ID", lead.id],
     ["Tipo", lead.leadType],
@@ -431,13 +522,22 @@ function leadEmailHtml(lead: LeadRecord) {
     ["Especialista", lead.specialistName || lead.specialistId],
     ["Fecha/hora", [lead.requestedDate, lead.requestedTime].filter(Boolean).join(" ")],
     ["Créditos", String(lead.creditsEstimate ?? "")],
+    ["Tarifa esperada CLP", firstService?.specialistExpectedPayoutCLP ? `$${firstService.specialistExpectedPayoutCLP}` : ""],
+    ["Creditos calculados internos", firstService?.calculatedClientCredits],
+    ["Certificaciones declaradas", declaredCertifications || (payload?.hasNoFormalCertifications ? "No tiene certificaciones formales" : "")],
+    ["Sin certificaciones formales", payload?.hasNoFormalCertifications ? "Si" : ""],
+    ["Servicios postulados", serviceSummary],
+    ["Disponibilidad", payload?.availability],
+    ["Comentarios", payload?.notes],
+    ["Estado revision", payload?.reviewStatus ?? lead.status],
     ["Fuente", [lead.sourcePage, lead.sourceComponent, lead.sourceButton].filter(Boolean).join(" · ")],
   ];
   const table = rows
     .filter(([, value]) => value)
     .map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(label ?? ""))}</th><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(value ?? ""))}</td></tr>`)
     .join("");
-  return `<div style="font-family:Arial,sans-serif;color:#0f172a"><h1>Nuevo lead OficiosPro</h1><p>Revisar en admin futuro con ID <strong>${escapeHtml(lead.id)}</strong>.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
+  const title = lead.leadType === "specialist_application" ? "Nueva postulacion de especialista OficiosPro" : "Nuevo lead OficiosPro";
+  return `<div style="font-family:Arial,sans-serif;color:#0f172a"><h1>${escapeHtml(title)}</h1><p>Revisar en admin futuro con ID <strong>${escapeHtml(lead.id)}</strong>.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
 }
 
 function priorityFor(urgency?: string) {

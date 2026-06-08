@@ -4,6 +4,7 @@ import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
+import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import { serviceTypes, subscriptionPlans } from "@/data/marketplace";
 
@@ -13,6 +14,7 @@ export default function HomePage() {
 
   return (
     <main>
+      <PostulationToast />
       <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
         <div className="section grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
