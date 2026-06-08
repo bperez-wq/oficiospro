@@ -1,4 +1,5 @@
 import { getServiceTypeById, serviceTypes, type GeoPoint, type SpecialistRank } from "@/data/marketplace";
+import { defaultFlexibleServices, type FlexibleService, type PricingMode } from "@/data/flexiblePricing";
 
 export type Availability = "now" | "today" | "tomorrow";
 
@@ -42,6 +43,7 @@ export type Specialist = {
   photos: boolean;
   certifications: string[];
   servicesOffered: string[];
+  servicePricing?: FlexibleService[];
   workHistory: WorkHistory[];
   reviews: Review[];
   description: string;
@@ -789,6 +791,171 @@ function rankFor(jobs: number, rating: number): SpecialistRank {
   return "Bronce";
 }
 
+function makeFlexibleService({
+  id,
+  serviceTypeId,
+  specialty,
+  name,
+  description,
+  pricingMode,
+  credits,
+  index = 0,
+}: {
+  id: string;
+  serviceTypeId: string;
+  specialty: string;
+  name: string;
+  description: string;
+  pricingMode: PricingMode;
+  credits: number;
+  index?: number;
+}): FlexibleService {
+  const evenBase = credits % 2 === 0 ? credits : credits + 1;
+  const minHours = 2 + (index % 2);
+  const maxHours = minHours + 2 + (index % 2);
+  const hourlyCredits = Math.max(6, Math.round(evenBase / Math.max(2, minHours)));
+  return {
+    id,
+    serviceTypeId,
+    specialty,
+    name,
+    description,
+    pricingMode,
+    fixedCredits: pricingMode === "fixed" ? evenBase : undefined,
+    hourlyCredits: pricingMode === "hourly" ? hourlyCredits : undefined,
+    minHours: pricingMode === "hourly" ? minHours : undefined,
+    maxHours: pricingMode === "hourly" ? maxHours : undefined,
+    minCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "visit_then_quote" ? Math.max(12, evenBase - 8) : undefined,
+    maxCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "visit_then_quote" ? evenBase + 28 + index * 2 : undefined,
+    visitCredits: pricingMode === "visit_then_quote" || pricingMode === "range" || pricingMode === "quote_required" ? Math.max(6, Math.min(20, Math.round(evenBase / 4) * 2)) : undefined,
+    clubDiscountCredits: 2,
+    estimatedDurationMinMinutes: 60 + (index % 3) * 30,
+    estimatedDurationMaxMinutes: 120 + (index % 4) * 60,
+    specialistPayoutCLP: Math.max(7000, evenBase * 1000 - (serviceTypeId === "empresas" || serviceTypeId === "industria" ? 10000 : 5000)),
+    materialsIncluded: pricingMode === "fixed" && index % 3 === 0,
+    materialsChargedSeparately: pricingMode !== "fixed" || index % 3 !== 0,
+    initialVisitFree: pricingMode === "fixed" && index % 2 === 0,
+    requiresPriorEvaluation: ["quote_required", "visit_then_quote", "range", "custom"].includes(pricingMode),
+    conditions:
+      pricingMode === "quote_required"
+        ? "Se solicita descripcion, comuna y fotos antes de enviar propuesta."
+        : pricingMode === "visit_then_quote"
+          ? "La visita tecnica permite cerrar alcance y puede descontarse segun condiciones."
+          : "Materiales o alcance adicional se aprueban antes de cualquier cobro extra.",
+    adminReviewStatus: pricingMode === "custom" ? "pending_review" : "approved",
+  };
+}
+
+function flexibleServicesForSpecialist(specialist: Specialist, serviceTypeId: string, specialties: string[]): FlexibleService[] {
+  const baseName = specialties[0] ?? specialist.specialty;
+  const secondName = specialties[1] ?? `Visita diagnostico ${baseName}`;
+  const credits = specialist.credits || specialist.precioDesdeCreditos || 20;
+  const specific = specificFlexibleServices[specialist.id];
+  if (specific) return specific;
+  const modes: PricingMode[] = ["fixed", "hourly", "quote_required", "visit_then_quote", "range"];
+  const primaryMode = modes[specialist.id.length % modes.length];
+  const secondaryMode = primaryMode === "fixed" ? "quote_required" : "fixed";
+
+  return [
+    makeFlexibleService({
+      id: `${specialist.id}-primary`,
+      serviceTypeId,
+      specialty: baseName,
+      name: baseName,
+      description: `${baseName} con cobertura en ${specialist.commune ?? specialist.zone}.`,
+      pricingMode: primaryMode,
+      credits,
+    }),
+    makeFlexibleService({
+      id: `${specialist.id}-secondary`,
+      serviceTypeId,
+      specialty: secondName,
+      name: secondName,
+      description: `Servicio complementario sujeto a disponibilidad y revision de alcance.`,
+      pricingMode: secondaryMode,
+      credits: Math.max(12, credits - 6),
+      index: 1,
+    }),
+  ];
+}
+
+const specificFlexibleServices: Record<string, FlexibleService[]> = {
+  "miguel-soto": [
+    defaultFlexibleServices.find((service) => service.id === "fixed-calefont")!,
+    makeFlexibleService({
+      id: "miguel-filtracion-visita",
+      serviceTypeId: "gasfiteria",
+      specialty: "Reparacion de filtraciones",
+      name: "Visita por filtracion",
+      description: "Diagnostico en terreno y propuesta si requiere romper, secar o cambiar piezas.",
+      pricingMode: "visit_then_quote",
+      credits: 18,
+      index: 1,
+    }),
+  ],
+  "sofia-vergara": [
+    defaultFlexibleServices.find((service) => service.id === "hourly-garden")!,
+    makeFlexibleService({
+      id: "sofia-riego-range",
+      serviceTypeId: "jardineria",
+      specialty: "Riego automatico",
+      name: "Ajuste de riego automatico",
+      description: "Revision de programador, sectores y aspersores.",
+      pricingMode: "range",
+      credits: 34,
+      index: 2,
+    }),
+  ],
+  "carolina-mendez": [
+    defaultFlexibleServices.find((service) => service.id === "quote-electrical-home")!,
+    makeFlexibleService({
+      id: "carolina-tablero-fixed",
+      serviceTypeId: "electricidad",
+      specialty: "Tableros electricos",
+      name: "Revision de tablero",
+      description: "Revision visual, pruebas basicas y recomendaciones de seguridad.",
+      pricingMode: "fixed",
+      credits: 24,
+      index: 3,
+    }),
+  ],
+  "patricio-herrera": [defaultFlexibleServices.find((service) => service.id === "range-gate")!],
+  "victor-araya": [
+    makeFlexibleService({
+      id: "victor-hvac-hourly",
+      serviceTypeId: "climatizacion-refrigeracion",
+      specialty: "Mantencion HVAC",
+      name: "Tecnico HVAC por hora",
+      description: "Diagnostico, limpieza y mantencion preventiva segun equipo.",
+      pricingMode: "hourly",
+      credits: 16,
+      index: 4,
+    }),
+    makeFlexibleService({
+      id: "victor-hvac-fixed",
+      serviceTypeId: "climatizacion-refrigeracion",
+      specialty: "Limpieza de filtros HVAC",
+      name: "Limpieza de filtros HVAC",
+      description: "Servicio puntual con alcance cerrado para equipos residenciales.",
+      pricingMode: "fixed",
+      credits: 12,
+      index: 5,
+    }),
+  ],
+  "daniela-fuentes": [
+    makeFlexibleService({
+      id: "daniela-frio-quote",
+      serviceTypeId: "climatizacion-refrigeracion",
+      specialty: "Camara frigorifica",
+      name: "Revision camara frigorifica comercial",
+      description: "Evaluacion de falla, temperatura, compresor y continuidad operativa.",
+      pricingMode: "visit_then_quote",
+      credits: 50,
+      index: 6,
+    }),
+  ],
+};
+
 const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
   const serviceType = serviceTypes[index % serviceTypes.length];
   const location = generatedLocations[index % generatedLocations.length];
@@ -833,6 +1000,28 @@ const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
     photos: true,
     certifications: [serviceType.marginType === "company" ? "Certificación empresa" : "Certificación oficio", mainSpecialty],
     servicesOffered: [mainSpecialty, extraSpecialty, `Visita diagnóstico ${serviceType.marginType === "company" ? "empresa" : "hogar"}`],
+    servicePricing: [
+      makeFlexibleService({
+        id: `${slugFromName(name)}-flex-primary`,
+        serviceTypeId: serviceType.id,
+        specialty: mainSpecialty,
+        name: mainSpecialty,
+        description: `${mainSpecialty} con condiciones claras antes de reservar.`,
+        pricingMode: (["fixed", "hourly", "quote_required", "visit_then_quote", "range"] as PricingMode[])[index % 5],
+        credits,
+        index,
+      }),
+      makeFlexibleService({
+        id: `${slugFromName(name)}-flex-secondary`,
+        serviceTypeId: serviceType.id,
+        specialty: extraSpecialty,
+        name: extraSpecialty,
+        description: `${extraSpecialty} para hogares, empresas o comunidades segun cobertura.`,
+        pricingMode: index % 3 === 0 ? "quote_required" : "fixed",
+        credits: Math.max(12, credits - 6),
+        index: index + 1,
+      }),
+    ],
     workHistory: [
       { title: `${mainSpecialty} completado`, commune: location.commune, credits, rating, image },
       { title: `Mantención preventiva`, commune: location.commune, credits: credits + 8, rating: Math.min(5, rating + 0.1), image: [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5] },
@@ -883,6 +1072,7 @@ function normalizeBaseSpecialist(specialist: Specialist): Specialist {
     trabajosCompletados: specialist.jobs,
     precioDesdeCreditos: specialist.credits,
     foto: specialist.image,
+    servicePricing: flexibleServicesForSpecialist(specialist, serviceType.id, serviceMeta.specialties),
   };
 }
 

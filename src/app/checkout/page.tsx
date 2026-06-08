@@ -40,11 +40,21 @@ const creditPacks = [
   { credits: 100, label: "100 créditos", detail: "Bolsa familiar o empresa pequeña." },
 ];
 
+const paymentContexts = [
+  { id: "service_fixed_hold", label: "Servicio fijo", detail: "Reserva con creditos exactos.", credits: 12 },
+  { id: "visit_hold", label: "Visita tecnica", detail: "Diagnostico antes de propuesta.", credits: 6 },
+  { id: "quote_acceptance_hold", label: "Cotizacion aceptada", detail: "Retencion del total acordado.", credits: 48 },
+  { id: "additional_work_hold", label: "Adicional aprobado", detail: "Trabajo adicional autorizado.", credits: 10 },
+  { id: "materials_hold", label: "Materiales", detail: "Materiales aprobados por cliente.", credits: 8 },
+  { id: "service_hourly_hold", label: "Horas adicionales", detail: "Bloque inicial o extra por hora.", credits: 16 },
+];
+
 export default function CheckoutPage() {
   const [planId, setPlanId] = useState("plus");
   const [status, setStatus] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [selectedPack, setSelectedPack] = useState<number | null>(null);
+  const [selectedPack, setSelectedPack] = useState<number | null>(paymentContexts[0].credits);
+  const [paymentContext, setPaymentContext] = useState(paymentContexts[0]);
   const [customer, setCustomer] = useState({
     name: "",
     email: "",
@@ -59,7 +69,11 @@ export default function CheckoutPage() {
     seedMockState();
     const params = new URLSearchParams(window.location.search);
     const nextPlanId = params.get("plan") ?? "plus";
+    const requestedMode = params.get("mode");
     setPlanId(nextPlanId);
+    const context = paymentContexts.find((item) => item.id === requestedMode) ?? paymentContexts[0];
+    setPaymentContext(context);
+    if (requestedMode) setSelectedPack(context.credits);
     const profile = getClientProfile();
     const session = getMockSession();
     setCustomer({
@@ -85,13 +99,13 @@ export default function CheckoutPage() {
       fullName: customer.name || (plan.audience === "empresa" ? "Empresa OficiosPro" : "Cliente OficiosPro"),
       email: customer.email,
       phone: customer.whatsapp,
-      service: mode === "subscription" ? plan.name : `${selectedPack ?? 0} créditos adicionales`,
+      service: mode === "subscription" ? plan.name : `${selectedPack ?? paymentContext.credits} créditos · ${paymentContext.label}`,
       regionCode: customer.region,
       regionName: regionNameForCode(customer.region),
       communeName: customer.commune,
       sourceComponent: "CheckoutPage",
       sourceButton: mode === "subscription" ? "Pagar con Mercado Pago" : "Comprar créditos",
-      payload: { planId: plan.id, rut: customer.rut, mode, selectedPack },
+      payload: { planId: plan.id, rut: customer.rut, mode, selectedPack, paymentContext: paymentContext.id },
     });
 
     try {
@@ -107,7 +121,8 @@ export default function CheckoutPage() {
           whatsapp: customer.whatsapp,
           region: regionNameForCode(customer.region),
           commune: customer.commune,
-          creditsPack: mode === "credits_purchase" ? selectedPack : undefined,
+          creditsPack: mode === "credits_purchase" ? selectedPack ?? paymentContext.credits : undefined,
+          paymentContext: paymentContext.id,
         }),
       });
       const data = (await response.json()) as PaymentApiResponse;
@@ -117,11 +132,11 @@ export default function CheckoutPage() {
         provider: "mercadopago",
         type: mode === "subscription" ? "subscription" : "credits_purchase",
         planId: plan.id,
-        planName: mode === "subscription" ? plan.name : `${selectedPack ?? 0} créditos adicionales`,
+        planName: mode === "subscription" ? plan.name : `${selectedPack ?? paymentContext.credits} créditos · ${paymentContext.label}`,
         userId: customer.email || "cliente-oficiospro",
         payerEmail: customer.email,
-        amountCLP: mode === "subscription" ? plan.priceCLP : (selectedPack ?? 0) * 1000,
-        credits: mode === "subscription" ? plan.monthlyCredits : selectedPack ?? 0,
+        amountCLP: mode === "subscription" ? plan.priceCLP : (selectedPack ?? paymentContext.credits) * 1000,
+        credits: mode === "subscription" ? plan.monthlyCredits : selectedPack ?? paymentContext.credits,
         status: data.ok ? "pending" : "preparing",
         mercadoPagoPreferenceId: data.preferenceId,
         mercadoPagoPreapprovalId: data.preapprovalId,
@@ -155,12 +170,12 @@ export default function CheckoutPage() {
         return;
       }
 
-      if (mode === "credits_purchase" && selectedPack) {
+      if (mode === "credits_purchase" && (selectedPack || paymentContext.credits)) {
         addPaymentCredits({
           userId: customer.email || "cliente-oficiospro",
-          amount: selectedPack,
+          amount: selectedPack ?? paymentContext.credits,
           type: "purchase_credit",
-          detail: "Compra de créditos en preparación",
+          detail: `${paymentContext.label} en preparación`,
           relatedPaymentId: paymentId,
         });
       }
@@ -240,6 +255,31 @@ export default function CheckoutPage() {
                 <span key={benefit} className="rounded-2xl bg-white/10 p-3 text-sm font-black">
                   {benefit}
                 </span>
+              ))}
+            </div>
+          </article>
+
+          <article className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+            <p className="eyebrow">Tipo de checkout</p>
+            <h2 className="text-2xl font-black">Elige qué estás pagando.</h2>
+            <p className="mt-2 text-sm font-bold text-muted">El checkout soporta servicio fijo, visita técnica, cotización aceptada, adicionales, materiales y horas.</p>
+            <div className="mt-4 grid gap-3">
+              {paymentContexts.map((context) => (
+                <button
+                  key={context.id}
+                  className={`rounded-2xl border p-4 text-left transition hover:border-brand hover:bg-brand-soft ${
+                    paymentContext.id === context.id ? "border-brand bg-brand-soft" : "border-line bg-slate-50"
+                  }`}
+                  type="button"
+                  onClick={() => {
+                    setPaymentContext(context);
+                    setSelectedPack(context.credits);
+                  }}
+                >
+                  <strong className="block text-lg font-black text-ink">{context.label}</strong>
+                  <span className="text-sm font-bold text-muted">{context.detail}</span>
+                  <span className="mt-2 block text-sm font-black text-brand">{context.credits} créditos · {formatCLP(context.credits * 1000)}</span>
+                </button>
               ))}
             </div>
           </article>

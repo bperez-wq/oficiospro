@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { AdminPricingPanel } from "@/components/AdminPricingPanel";
 import { defaultBookings, specialists } from "@/data/mock";
+import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import {
   calculateServiceEconomics,
   formatCLP,
@@ -13,6 +14,7 @@ import {
   type SubscriptionPlan,
 } from "@/data/marketplace";
 import { calculateClientCreditsFromSpecialistPayout, estimateClientPriceCLP, estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
+import { quoteTotalCredits } from "@/lib/flexiblePricing";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
 import {
@@ -20,6 +22,7 @@ import {
   approveAndPublishSpecialist,
   clearMockSession,
   getCommercialConfig,
+  getAdditionalRequests,
   getEnterpriseLeads,
   getHomeLeads,
   getMockSession,
@@ -30,6 +33,7 @@ import {
   getPendingSpecialists,
   getPublishedSpecialists,
   getQuickSearchLeads,
+  getQuoteAgreements,
   getServiceRequestLeads,
   getSpecialistPayouts,
   getSpecialistLeads,
@@ -40,6 +44,9 @@ import {
   savePendingSpecialists,
   saveStoredItems,
   seedMockState,
+  updateAdditionalRequestStatus,
+  updateQuoteAgreement,
+  updateQuoteAgreementStatus,
   updatePaymentSubscriptionStatus,
   usePaymentCredits,
   updateConversionLeadStatus,
@@ -69,6 +76,7 @@ type AdminSection =
   | "leads-hogar"
   | "leads-empresas"
   | "pagos"
+  | "negociacion"
   | "catalogo"
   | "comunas"
   | "creditos"
@@ -119,6 +127,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "leads-hogar", label: "Leads Club Hogar" },
   { id: "leads-empresas", label: "Leads Empresas" },
   { id: "pagos", label: "Pagos y créditos" },
+  { id: "negociacion", label: "Tarifas y negociación" },
   { id: "catalogo", label: "Catálogo de servicios" },
   { id: "comunas", label: "Comunas y cobertura" },
   { id: "creditos", label: "Créditos y márgenes" },
@@ -204,6 +213,8 @@ export function AdminPanel() {
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentCreditTransaction[]>([]);
   const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet>(getPaymentCreditWallet());
   const [payouts, setPayouts] = useState<SpecialistPayout[]>([]);
+  const [quoteAgreements, setQuoteAgreements] = useState<QuoteAgreement[]>([]);
+  const [additionalRequests, setAdditionalRequests] = useState<AdditionalRequest[]>([]);
   const [creditAdjustment, setCreditAdjustment] = useState(10);
   const [otherServiceRequests, setOtherServiceRequests] = useState<QuickSearchLead[]>([]);
   const [config, setConfig] = useState<CommercialConfig>(getCommercialConfig());
@@ -256,6 +267,8 @@ export function AdminPanel() {
     setPaymentTransactions(getPaymentCreditTransactions());
     setPaymentWallet(getPaymentCreditWallet());
     setPayouts(getSpecialistPayouts());
+    setQuoteAgreements(getQuoteAgreements());
+    setAdditionalRequests(getAdditionalRequests());
     setOtherServiceRequests(getQuickSearchLeads().filter((request) => request.isOtherService));
     setConfig(getCommercialConfig());
   }
@@ -272,6 +285,8 @@ export function AdminPanel() {
     { label: "Leads hogar", value: homeLeads.length.toString() },
     { label: "Leads empresa", value: (enterpriseLeads.length + companyRequests.length).toString() },
     { label: "Pagos recientes", value: payments.length.toString() },
+    { label: "Propuestas pendientes", value: quoteAgreements.filter((item) => ["quote_requested", "proposal_sent", "platform_review", "customer_counteroffer"].includes(item.status)).length.toString() },
+    { label: "Adicionales pendientes", value: additionalRequests.filter((item) => item.status === "pending_customer_approval" || item.status === "clarification_requested").length.toString() },
     { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
     { label: "Créditos vendidos", value: String(defaultBookings.reduce((sum, booking) => sum + booking.credits, 0)) },
     { label: "Margen estimado", value: formatCLP(Math.round(estimatedMargin)) },
@@ -393,6 +408,24 @@ export function AdminPanel() {
     markSpecialistPayoutPaid(id);
     refreshPaymentState();
     setNotice("Liquidación marcada como pagada.");
+  }
+
+  function updateQuoteStatus(id: string, status: QuoteAgreement["status"], message: string) {
+    updateQuoteAgreementStatus(id, status, message);
+    refresh();
+    setNotice(message);
+  }
+
+  function editQuoteMargin(id: string, platformNote: string) {
+    updateQuoteAgreement(id, { platformNote, status: "platform_review" }, "OficiosPro esta revisando esta propuesta.");
+    refresh();
+    setNotice("Nota de margen guardada y propuesta marcada para revision.");
+  }
+
+  function updateAdditionalStatus(id: string, status: AdditionalRequest["status"], message: string) {
+    updateAdditionalRequestStatus(id, status, message);
+    refresh();
+    setNotice(message);
   }
 
   function saveNote(id: string, note: string) {
@@ -686,6 +719,16 @@ export function AdminPanel() {
             onRefundCredits={refundCredits}
             onSubscriptionStatus={changeSubscriptionStatus}
             onMarkPayoutPaid={paySpecialistPayout}
+          />
+        ) : null}
+
+        {activeSection === "negociacion" ? (
+          <NegotiationAdminPanel
+            quotes={quoteAgreements}
+            additionals={additionalRequests}
+            onQuoteStatus={updateQuoteStatus}
+            onQuoteNote={editQuoteMargin}
+            onAdditionalStatus={updateAdditionalStatus}
           />
         ) : null}
 
@@ -1086,6 +1129,100 @@ function toLeadRow(lead: HomeLead | EnterpriseLead | SpecialistLead): LeadRow {
     commune: lead.commune,
     interest: lead.interest,
   };
+}
+
+function NegotiationAdminPanel({
+  quotes,
+  additionals,
+  onQuoteStatus,
+  onQuoteNote,
+  onAdditionalStatus,
+}: {
+  quotes: QuoteAgreement[];
+  additionals: AdditionalRequest[];
+  onQuoteStatus: (id: string, status: QuoteAgreement["status"], message: string) => void;
+  onQuoteNote: (id: string, note: string) => void;
+  onAdditionalStatus: (id: string, status: AdditionalRequest["status"], message: string) => void;
+}) {
+  const lowMarginQuotes = quotes.filter((quote) => (quote.proposal?.platformMarginCredits ?? 0) > 0 && (quote.proposal?.platformMarginCredits ?? 0) < 10);
+  return (
+    <Panel title="Tarifas, cotizaciones y negociación" eyebrow="Propuesta y acuerdo">
+      <div className="grid gap-4 md:grid-cols-4">
+        <MiniMetric label="Servicios precio fijo" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "fixed").length.toString()} />
+        <MiniMetric label="Servicios por hora" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "hourly").length.toString()} />
+        <MiniMetric label="Requieren cotización" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "quote_required" || service.pricingMode === "visit_then_quote").length.toString()} />
+        <MiniMetric label="Márgenes bajos" value={lowMarginQuotes.length.toString()} />
+      </div>
+
+      <div className="mt-5 grid gap-5 xl:grid-cols-2">
+        <article className="rounded-[24px] border border-line bg-slate-50 p-5">
+          <h3 className="text-xl font-black">Propuestas pendientes</h3>
+          <div className="mt-4 grid gap-3">
+            {quotes.map((quote) => (
+              <div key={quote.id} className="rounded-2xl border border-line bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{quote.serviceName}</strong>
+                  <span className="chip bg-brand-soft text-brand-dark">{quoteStatusLabels[quote.status]}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">{quote.customerName} · {quote.specialistName} · {quote.commune}</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{quote.proposal?.description ?? quote.originalRequest}</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <InfoBox label="Total créditos" value={`${quoteTotalCredits(quote) || "por definir"}`} />
+                  <InfoBox label="Pago especialista" value={`${quote.proposal?.specialistPayoutCredits ?? "pendiente"} cr`} />
+                  <InfoBox label="Margen plataforma" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
+                </div>
+                <label className="field mt-3">
+                  Nota interna o ajuste recomendado
+                  <input defaultValue={quote.platformNote ?? ""} onBlur={(event) => onQuoteNote(quote.id, event.target.value)} />
+                </label>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "accepted", "Propuesta aprobada por OficiosPro.")}>
+                    Aprobar propuesta
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "rejected", "Propuesta marcada como abusiva o rechazada.")}>
+                    Rechazar propuesta
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "specialist_reviewing", "OficiosPro solicito ajuste al especialista.")}>
+                    Solicitar ajuste
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "converted_to_service", "Cotizacion aceptada convertida en servicio activo.")}>
+                    Convertir en servicio
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <h3 className="text-xl font-black">Adicionales pendientes</h3>
+          <div className="mt-4 grid gap-3">
+            {additionals.map((additional) => (
+              <div key={additional.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{additionalTypeLabels[additional.type]}</strong>
+                  <span className="chip bg-white text-brand-dark">{additional.status}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">{additional.customerName} · {additional.specialistName} · {additional.requestedCredits} créditos</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="btn-secondary" type="button" onClick={() => onAdditionalStatus(additional.id, "approved", "Adicional aprobado por administracion.")}>
+                    Aprobar
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onAdditionalStatus(additional.id, "rejected", "Adicional rechazado por administracion.")}>
+                    Rechazar
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onAdditionalStatus(additional.id, "clarification_requested", "OficiosPro pidio aclaracion del adicional.")}>
+                    Pedir aclaración
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </Panel>
+  );
 }
 
 function PaymentsAdminPanel({

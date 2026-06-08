@@ -4,12 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import { BookingList, TransactionList } from "@/components/Lists";
 import {
+  getAdditionalRequests,
   getBookings,
   getClientProfile,
   getPaymentCreditTransactions,
   getPaymentCreditWallet,
+  getQuoteAgreements,
   getReferralState,
   getSubscription,
   getTransactions,
@@ -18,11 +21,15 @@ import {
   seedMockState,
   simulateAcceptedClientReferral,
   simulateAcceptedSpecialistReferral,
+  updateAdditionalRequestStatus,
+  updateQuoteAgreementStatus,
   type ClientProfile,
+  type PaymentCreditWallet,
   type MockSubscription,
   type ReferralState,
 } from "@/lib/storage";
 import { distanceInKm } from "@/data/marketplace";
+import { additionalNeedsPayment, quoteTotalCredits } from "@/lib/flexiblePricing";
 
 export function ClientDashboard() {
   const [balance, setBalance] = useState(135);
@@ -32,12 +39,16 @@ export function ClientDashboard() {
   const [referrals, setReferrals] = useState<ReferralState | null>(null);
   const [clientProfile, setClientProfile] = useState<ClientProfile | null>(null);
   const [publishedSpecialists, setPublishedSpecialists] = useState<Specialist[]>([]);
+  const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet | null>(null);
+  const [quoteAgreements, setQuoteAgreements] = useState<QuoteAgreement[]>([]);
+  const [additionalRequests, setAdditionalRequests] = useState<AdditionalRequest[]>([]);
 
   useEffect(() => {
     seedMockState();
     const paymentWallet = getPaymentCreditWallet();
     const paymentTransactions = getPaymentCreditTransactions();
     setBalance(paymentWallet.currentBalance || getWallet().balance);
+    setPaymentWallet(paymentWallet);
     setBookings(getBookings());
     setTransactions(
       paymentTransactions.length
@@ -54,6 +65,8 @@ export function ClientDashboard() {
     setReferrals(getReferralState());
     setClientProfile(getClientProfile());
     setPublishedSpecialists(getPublishedSpecialists());
+    setQuoteAgreements(getQuoteAgreements());
+    setAdditionalRequests(getAdditionalRequests());
   }, []);
 
   const upcoming = bookings.filter((booking) => booking.status !== "Finalizada");
@@ -73,6 +86,16 @@ export function ClientDashboard() {
     }))
     .sort((a, b) => a.distance - b.distance)
     .slice(0, 3);
+
+  function changeQuote(id: string, status: QuoteAgreement["status"], message: string) {
+    updateQuoteAgreementStatus(id, status, message);
+    setQuoteAgreements(getQuoteAgreements());
+  }
+
+  function changeAdditional(id: string, status: AdditionalRequest["status"], message: string) {
+    updateAdditionalRequestStatus(id, status, message);
+    setAdditionalRequests(getAdditionalRequests());
+  }
 
   return (
     <div className="grid gap-6">
@@ -101,6 +124,77 @@ export function ClientDashboard() {
             </Link>
           </div>
         </article>
+      </section>
+
+      <section className="panel">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="eyebrow">Propuesta y acuerdo</p>
+            <h2 className="text-2xl font-black">Cotizaciones y acuerdos</h2>
+          </div>
+          <Link className="btn-secondary" href="/checkout?mode=credits_purchase">
+            Comprar créditos
+          </Link>
+        </div>
+        <div className="mb-5 grid gap-3 sm:grid-cols-4">
+          <StatCard label="Disponibles" value={`${paymentWallet?.currentBalance ?? balance}`} />
+          <StatCard label="Retenidos" value={`${paymentWallet?.heldCredits ?? 0}`} />
+          <StatCard label="Por vencer" value={`${paymentWallet?.expiringCreditsTotal ?? 0}`} />
+          <StatCard label="En cotización/adicional" value={`${(paymentWallet?.quoteHeldCredits ?? 0) + (paymentWallet?.additionalHeldCredits ?? 0)}`} />
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-3">
+            {quoteAgreements.map((quote) => (
+              <article key={quote.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{quote.serviceName}</strong>
+                  <span className="chip bg-white text-brand-dark">{quoteStatusLabels[quote.status]}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">{quote.specialistName} · {quote.commune}</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{quote.proposal?.description ?? quote.originalRequest}</p>
+                {quote.proposal ? <strong className="mt-2 block text-ink">Total propuesta: {quoteTotalCredits(quote)} créditos</strong> : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "accepted", "Propuesta aceptada. Se retendrán los créditos.")}>
+                    Aceptar propuesta
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "rejected", "Propuesta rechazada.")}>
+                    Rechazar
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "customer_counteroffer", "El cliente pidió ajuste.")}>
+                    Pedir ajuste
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="grid gap-3">
+            {additionalRequests.map((additional) => {
+              const needsPayment = additionalNeedsPayment(additional, paymentWallet?.currentBalance ?? balance);
+              return (
+                <article key={additional.id} className="rounded-2xl border border-line bg-white p-4 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <strong>{additionalTypeLabels[additional.type]}</strong>
+                    <span className="chip bg-brand-soft text-brand-dark">{additional.status}</span>
+                  </div>
+                  <p className="mt-2 text-sm font-bold text-muted">{additional.specialistName} · {additional.requestedCredits} créditos</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}. El cobro adicional requiere tu aprobación.</p>
+                  {needsPayment ? <p className="mt-2 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-900">Saldo insuficiente: compra créditos, activa Club Hogar o paga la diferencia.</p> : null}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "approved", "Adicional aprobado por cliente.")}>
+                      Aprobar adicional
+                    </button>
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "rejected", "Adicional rechazado por cliente.")}>
+                      Rechazar
+                    </button>
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "clarification_requested", "Cliente pidió aclaración.")}>
+                      Pedir aclaración
+                    </button>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
       </section>
 
       <section className="grid gap-5 lg:grid-cols-2">
@@ -186,15 +280,34 @@ export function SpecialistDashboard() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [referrals, setReferrals] = useState<ReferralState | null>(null);
   const [submittedNotice, setSubmittedNotice] = useState(false);
+  const [quotes, setQuotes] = useState<QuoteAgreement[]>([]);
+  const [additionals, setAdditionals] = useState<AdditionalRequest[]>([]);
 
   useEffect(() => {
     seedMockState();
     setBookings(getBookings().filter((booking) => booking.specialistId === specialist.id));
     setReferrals(getReferralState());
+    setQuotes(getQuoteAgreements());
+    setAdditionals(getAdditionalRequests());
     setSubmittedNotice(new URLSearchParams(window.location.search).get("submitted") === "1");
   }, [specialist.id]);
 
   const earnedCredits = bookings.reduce((sum, booking) => sum + booking.credits, 0);
+
+  function sendProposal(id: string) {
+    updateQuoteAgreementStatus(id, "proposal_sent", "El especialista envió una propuesta.");
+    setQuotes(getQuoteAgreements());
+  }
+
+  function requestPlatformReview(id: string) {
+    updateQuoteAgreementStatus(id, "platform_review", "OficiosPro está revisando esta propuesta.");
+    setQuotes(getQuoteAgreements());
+  }
+
+  function sendAdditional(id: string) {
+    updateAdditionalRequestStatus(id, "pending_customer_approval", "El especialista solicitó adicional pendiente de aprobación.");
+    setAdditionals(getAdditionalRequests());
+  }
 
   return (
     <div className="grid gap-6">
@@ -254,6 +367,57 @@ export function SpecialistDashboard() {
             ))}
           </div>
         </article>
+      </section>
+      <section className="panel">
+        <div className="mb-5">
+          <p className="eyebrow">Propuesta y acuerdo</p>
+          <h2 className="text-2xl font-black">Propuestas y adicionales</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+            Usa un flujo estructurado: propuesta, contraoferta, revisión OficiosPro y aprobación del cliente antes de cobrar adicionales.
+          </p>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <div className="grid gap-3">
+            {quotes.map((quote) => (
+              <article key={quote.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{quote.serviceName}</strong>
+                  <span className="chip bg-white text-brand-dark">{quoteStatusLabels[quote.status]}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">{quote.customerName} · {quote.commune}</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{quote.proposal?.description ?? quote.originalRequest}</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <MiniMetric label="Total cliente" value={`${quoteTotalCredits(quote) || "por definir"} cr`} />
+                  <MiniMetric label="Pago estimado" value={`${quote.proposal?.specialistPayoutCredits ?? "pendiente"} cr`} />
+                  <MiniMetric label="Margen" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="btn-secondary" type="button" onClick={() => sendProposal(quote.id)}>
+                    Enviar propuesta
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => requestPlatformReview(quote.id)}>
+                    Pedir revisión OficiosPro
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="grid gap-3">
+            {additionals.map((additional) => (
+              <article key={additional.id} className="rounded-2xl border border-line bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <strong>{additionalTypeLabels[additional.type]}</strong>
+                  <span className="chip bg-brand-soft text-brand-dark">{additional.status}</span>
+                </div>
+                <p className="mt-2 text-sm font-bold text-muted">{additional.customerName} · {additional.requestedCredits} créditos</p>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.reason}</p>
+                <button className="btn-secondary mt-3" type="button" onClick={() => sendAdditional(additional.id)}>
+                  Solicitar adicional
+                </button>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
       <section className="panel">
         <p className="eyebrow">Mis referidos especialista</p>
@@ -345,6 +509,15 @@ function MetricDark({ label, value }: { label: string; value: string }) {
     <article className="rounded-2xl bg-white/10 p-5">
       <span className="font-bold text-white/70">{label}</span>
       <strong className="mt-2 block text-3xl font-black">{value}</strong>
+    </article>
+  );
+}
+
+function MiniMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <article className="rounded-2xl border border-line bg-white p-3">
+      <span className="text-xs font-black uppercase text-muted">{label}</span>
+      <strong className="mt-1 block text-lg font-black text-ink">{value}</strong>
     </article>
   );
 }

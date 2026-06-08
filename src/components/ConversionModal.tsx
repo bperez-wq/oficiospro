@@ -14,6 +14,7 @@ import {
   specialtyOptionsForType,
 } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
+import { getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import {
   appendConversionEvent,
   appendEnterpriseLead,
@@ -21,6 +22,7 @@ import {
   appendQuickSearchLead,
   appendServiceRequestLead,
   appendSpecialistLead,
+  createQuoteAgreement,
   getMockSession,
   type ConversionModalType,
 } from "@/lib/storage";
@@ -341,32 +343,52 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
 
     setSubmitting(true);
     const specialist = options?.specialist;
+    const selectedFlexibleService = specialist ? getPrimaryFlexibleService(specialist) : null;
+    const quoteMode =
+      selectedFlexibleService?.pricingMode === "quote_required" ||
+      selectedFlexibleService?.pricingMode === "range" ||
+      selectedFlexibleService?.pricingMode === "custom";
+    const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;
+    const quote = quoteMode && specialist && selectedFlexibleService
+      ? createQuoteAgreement({
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          customerName: `${reservation.firstNames} ${reservation.lastNames}`.trim() || "Cliente OficiosPro",
+          serviceName: selectedFlexibleService.name,
+          commune: reservation.commune,
+          status: "quote_requested",
+          originalRequest: reservation.additionalComments || serviceLabel || selectedFlexibleService.description,
+          history: ["El cliente solicito cotizacion desde el perfil publico."],
+        })
+      : null;
     const saved = appendServiceRequestLead({
       ...reservation,
       region: regionNameForCode(reservation.region),
       name: `${reservation.firstNames} ${reservation.lastNames}`.trim(),
-      service: reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service,
+      service: quoteMode && selectedFlexibleService ? selectedFlexibleService.name : serviceLabel,
       isOtherService: reservation.service === OTHER_SERVICE_VALUE,
       sourceButton: options?.sourceButton ?? "Reservar",
       specialistId: specialist?.id,
       specialistName: specialist?.name,
-      estimatedCredits: specialist?.credits,
+      servicePricingId: selectedFlexibleService?.id,
+      pricingMode: selectedFlexibleService?.pricingMode,
+      quoteId: quote?.id,
+      estimatedCredits: selectedFlexibleService?.fixedCredits ?? selectedFlexibleService?.minCredits ?? selectedFlexibleService?.visitCredits ?? specialist?.credits,
       coverageZone: specialist?.commune ?? specialist?.zone,
-      interest: specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
+      interest: quoteMode && specialist ? `Cotizacion con ${specialist.name}` : specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
     });
     appendConversionEvent({
       type: "specialist_reserved",
       sourceButton: options?.sourceButton ?? "Reservar",
       data: { requestId: saved.id, specialistId: specialist?.id, service: reservation.service, commune: reservation.commune },
     });
-    setSuccess("Solicitud creada. La guardamos para coordinar el siguiente paso.");
-    const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;
+    setSuccess(quoteMode ? "Cotizacion creada. La guardamos para propuesta y acuerdo." : "Solicitud creada. La guardamos para coordinar el siguiente paso.");
     const bookingLeadResult = await submitLead({
       leadType: "booking_request",
       fullName: `${reservation.firstNames} ${reservation.lastNames}`.trim(),
       email: reservation.email,
       phone: reservation.whatsapp,
-      service: serviceLabel,
+      service: quoteMode && selectedFlexibleService ? selectedFlexibleService.name : serviceLabel,
       problemDescription: reservation.additionalComments,
       urgency: reservation.urgency,
       regionCode: reservation.region,
@@ -374,12 +396,12 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       communeName: reservation.commune,
       specialistId: specialist?.id,
       specialistName: specialist?.name,
-      creditsEstimate: specialist?.credits,
+      creditsEstimate: selectedFlexibleService?.fixedCredits ?? selectedFlexibleService?.minCredits ?? selectedFlexibleService?.visitCredits ?? specialist?.credits,
       sourceComponent: "ConversionModal",
       sourceButton: options?.sourceButton ?? "Reservar",
-      payload: { localLeadId: saved.id, rut: reservation.rut, address: reservation.address },
+      payload: { localLeadId: saved.id, quoteId: quote?.id, rut: reservation.rut, address: reservation.address, pricingMode: selectedFlexibleService?.pricingMode, servicePricingId: selectedFlexibleService?.id },
     });
-    setSuccess(bookingLeadResult.message);
+    setSuccess(quoteMode && bookingLeadResult.ok ? "Cotizacion solicitada. Podras revisar propuesta, contraofertar o pedir apoyo de OficiosPro." : bookingLeadResult.message);
     setSubmitting(false);
   }
 
@@ -970,6 +992,7 @@ function ReservationFields({
 
 function ReservationSummary({ specialist, reservation }: { specialist?: Specialist; reservation: typeof defaultReservation }) {
   const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;
+  const flexibleService = specialist ? getPrimaryFlexibleService(specialist) : null;
 
   return (
     <div className="grid gap-4">
@@ -978,10 +1001,12 @@ function ReservationSummary({ specialist, reservation }: { specialist?: Speciali
         <strong className="mt-2 block text-3xl font-black text-ink">{specialist?.name ?? "Red OficiosPro"}</strong>
         <div className="mt-4 grid gap-3 text-sm font-black text-muted sm:grid-cols-2">
           <span>Servicio: {serviceLabel || "Por confirmar"}</span>
-          <span>Créditos estimados: {specialist?.credits ?? "por confirmar"}</span>
+          <span>Precio: {flexibleService ? pricingSummary(flexibleService) : specialist?.credits ? `${specialist.credits} creditos` : "por confirmar"}</span>
+          <span>Modalidad: {flexibleService ? pricingModeLabel(flexibleService.pricingMode) : "Por confirmar"}</span>
           <span>Zona de cobertura: {specialist?.commune ?? specialist?.zone ?? reservation.commune}</span>
           <span>Próximo paso: coordinación y validación de disponibilidad</span>
         </div>
+        {flexibleService ? <p className="mt-4 rounded-2xl bg-white/80 p-3 text-sm font-bold text-muted">{pricingDetail(flexibleService)}</p> : null}
         {reservation.additionalComments ? (
           <p className="mt-4 rounded-2xl bg-white/80 p-3 text-sm font-bold text-muted">
             Comentarios: {reservation.additionalComments}

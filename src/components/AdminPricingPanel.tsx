@@ -12,7 +12,10 @@ import {
 
 const storageKey = "oficiospro.internalPricingConfig";
 
-type NumericPricingKey = Exclude<keyof CommercialPricingConfig, "freeInitialVisitEnabled" | "categoryMultipliers" | "communeMultipliers" | "certificationRequiredByCategory">;
+type NumericPricingKey = Exclude<
+  keyof CommercialPricingConfig,
+  "freeInitialVisitEnabled" | "subscriberDiscountAppliesTo" | "categoryMultipliers" | "communeMultipliers" | "certificationRequiredByCategory"
+>;
 
 export function AdminPricingPanel() {
   const [config, setConfig] = useState<CommercialPricingConfig>(defaultCommercialConfig);
@@ -79,11 +82,32 @@ export function AdminPricingPanel() {
         <PricingNumber label="Redondeo creditos" value={config.creditRoundingStep} onChange={(value) => updateNumber("creditRoundingStep", value)} />
         <PricingNumber label="Payout minimo especialista" value={config.minimumSpecialistPayoutCLP} onChange={(value) => updateNumber("minimumSpecialistPayoutCLP", value)} />
         <PricingNumber label="Payout maximo especialista" value={config.maximumSpecialistPayoutCLP} onChange={(value) => updateNumber("maximumSpecialistPayoutCLP", value)} />
+        <PricingNumber label="Margen minimo hogar" value={config.minimumHomeMarginCLP} onChange={(value) => updateNumber("minimumHomeMarginCLP", value)} />
+        <PricingNumber label="Margen minimo empresa" value={config.minimumCompanyMarginCLP} onChange={(value) => updateNumber("minimumCompanyMarginCLP", value)} />
+        <PricingNumber label="Margen minimo agricola" value={config.minimumAgriculturalMarginCLP} onChange={(value) => updateNumber("minimumAgriculturalMarginCLP", value)} />
+        <PricingNumber label="Margen minimo industrial" value={config.minimumIndustrialMarginCLP} onChange={(value) => updateNumber("minimumIndustrialMarginCLP", value)} />
+        <PricingNumber label="Descuento suscriptor por solicitud" value={config.subscriberDiscountCredits} onChange={(value) => updateNumber("subscriberDiscountCredits", value)} />
         <PricingNumber label="Creditos visita inicial" value={config.initialVisitCredits} onChange={(value) => updateNumber("initialVisitCredits", value)} />
+        <PricingNumber label="Fee visita inicial creditos" value={config.initialVisitFeeCredits} onChange={(value) => updateNumber("initialVisitFeeCredits", value)} />
+        <PricingNumber label="Comision materiales %" value={config.materialCommissionPercent * 100} onChange={(value) => updateNumber("materialCommissionPercent", value / 100)} />
+        <PricingNumber label="Comision adicional mano de obra %" value={config.additionalLaborCommissionPercent * 100} onChange={(value) => updateNumber("additionalLaborCommissionPercent", value / 100)} />
+        <PricingNumber label="Vencimiento cotizacion dias" value={config.quoteExpirationDays} onChange={(value) => updateNumber("quoteExpirationDays", value)} />
+        <PricingNumber label="Maximo adicionales por solicitud" value={config.maxAdditionalsPerRequest} onChange={(value) => updateNumber("maxAdditionalsPerRequest", value)} />
+        <PricingNumber label="Revision admin si total > creditos" value={config.adminApprovalCreditThreshold} onChange={(value) => updateNumber("adminApprovalCreditThreshold", value)} />
         <label className="flex items-center gap-3 rounded-2xl border border-line bg-slate-50 p-4 text-sm font-black text-muted">
           <input checked={config.freeInitialVisitEnabled} type="checkbox" onChange={(event) => save({ ...config, freeInitialVisitEnabled: event.target.checked })} />
           Visita inicial gratis habilitada
         </label>
+        {(["fixed", "visit", "baseRequest", "additionals"] as const).map((key) => (
+          <label key={key} className="flex items-center gap-3 rounded-2xl border border-line bg-slate-50 p-4 text-sm font-black text-muted">
+            <input
+              checked={config.subscriberDiscountAppliesTo[key]}
+              type="checkbox"
+              onChange={(event) => save({ ...config, subscriberDiscountAppliesTo: { ...config.subscriberDiscountAppliesTo, [key]: event.target.checked } })}
+            />
+            Descuento aplica a {key}
+          </label>
+        ))}
       </div>
 
       <div className="grid gap-4 rounded-2xl bg-slate-50 p-4 md:grid-cols-4">
