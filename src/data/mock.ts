@@ -734,7 +734,7 @@ generatedNames.push(
   "Andrea Bustos",
   "Pablo Carrillo",
   "Lorena Cisternas",
-  "Benjamin Moya",
+  "Juan Moya",
   "Gabriela Toledo",
   "Sergio Tapia",
   "Claudia Donoso",

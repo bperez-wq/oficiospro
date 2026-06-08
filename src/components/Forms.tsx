@@ -28,6 +28,7 @@ import {
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
+import { submitLead } from "@/lib/leadClient";
 
 type ServiceDraft = {
   serviceTypeId: string;
@@ -85,7 +86,7 @@ export function LoginForm() {
     setIsLocal(["localhost", "127.0.0.1"].includes(window.location.hostname));
   }, []);
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim().toLowerCase();
@@ -200,7 +201,7 @@ export function ClientRegisterForm() {
     );
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const firstNames = String(data.get("firstNames") ?? "");
@@ -247,6 +248,20 @@ export function ClientRegisterForm() {
       planId,
       createdAt: new Date().toISOString(),
     });
+    await submitLead({
+      leadType: "club_hogar_interest",
+      fullName: fullName || "Cliente OficiosPro",
+      email: String(data.get("email") ?? ""),
+      phone: String(data.get("whatsapp") ?? ""),
+      service: selectedPlan.name,
+      regionCode: region,
+      regionName: regionNameForCode(region),
+      communeName: commune,
+      sourceComponent: "ClientRegisterForm",
+      sourceButton: "Crear cuenta y continuar",
+      referralCode: String(data.get("referralCode") ?? ""),
+      payload: { planId, rut: data.get("rut"), address: data.get("address"), reserveId },
+    });
     setStatus(reserveId ? "Cuenta creada. Te llevaremos a confirmar tu reserva." : "Cuenta creada. Te llevaremos al checkout para activar tu plan.");
     window.setTimeout(() => {
       window.location.href = reserveId ? `/especialistas?reserve=${reserveId}` : `/checkout?plan=${planId}`;
@@ -258,11 +273,11 @@ export function ClientRegisterForm() {
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
         <label className="field">
           Nombres
-          <input name="firstNames" placeholder="Ej: Benjamín" required />
+          <input name="firstNames" placeholder="Ej: Juan" required />
         </label>
         <label className="field">
           Apellidos
-          <input name="lastNames" placeholder="Ej: Pérez Peric" required />
+          <input name="lastNames" placeholder="Ej: Pérez" required />
         </label>
         <label className="field">
           RUT
@@ -476,7 +491,7 @@ export function SpecialistRegisterForm() {
     );
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!config) return;
     for (const currentStep of [1, 2, 3, 4, 5]) {
@@ -545,7 +560,21 @@ export function SpecialistRegisterForm() {
       email: identity.email,
       createdAt: new Date().toISOString(),
     });
-    setStatus(`Tu perfil fue enviado para revisión. Solicitud ${request.id} creada.`);
+    const leadResult = await submitLead({
+      leadType: "specialist_application",
+      fullName: fullName || "Especialista OficiosPro",
+      email: identity.email,
+      phone: identity.whatsapp,
+      trade: mainType?.name ?? "Hogar",
+      service: services[0].isOtherService ? services[0].otherServiceDescription : services[0].specialty,
+      regionCode: baseRegion,
+      regionName: regionNameForCode(baseRegion),
+      communeName: baseCommune,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Enviar perfil para revisión",
+      payload: { localRequestId: request.id, rut: identity.rut, coverageRadiusKm, servicesCount: services.length, referencesCount: completedReferences.length },
+    });
+    setStatus(leadResult.ok ? `Tu perfil fue enviado para revisión. Solicitud ${request.id} creada.` : leadResult.message);
     window.setTimeout(() => {
       window.location.href = "/dashboard-especialista?submitted=1";
     }, 900);
@@ -872,7 +901,7 @@ export function CompanyRequestForm() {
   const [additionalComments, setAdditionalComments] = useState("");
   const enterpriseServiceOptions = [...serviceTypeOptions, { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" }];
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const businessName = String(data.get("businessName") ?? "");
@@ -910,7 +939,22 @@ export function CompanyRequestForm() {
       email: String(data.get("email") ?? ""),
       createdAt: new Date().toISOString(),
     });
-    setStatus("Solicitud empresa enviada. Quedó visible para revisión comercial.");
+    const leadResult = await submitLead({
+      leadType: "company_request",
+      fullName: `${firstNames} ${lastNames}`.trim(),
+      email: String(data.get("email") ?? ""),
+      phone: String(data.get("whatsapp") ?? ""),
+      companyName: businessName,
+      service: serviceTypeLabel,
+      problemDescription: additionalComments,
+      regionCode: region,
+      regionName: regionNameForCode(region),
+      communeName: commune,
+      sourceComponent: "CompanyRequestForm",
+      sourceButton: "Enviar solicitud",
+      payload: { companyRut: data.get("companyRut"), companyLine: data.get("companyLine"), branches: data.get("branches"), plan: data.get("plan") },
+    });
+    setStatus(leadResult.ok ? "Solicitud empresa enviada. Quedó visible para revisión comercial." : leadResult.message);
   }
 
   return (

@@ -2,12 +2,29 @@ type AssetsBinding = {
   fetch(request: Request): Promise<Response>;
 };
 
+type D1PreparedStatement = {
+  bind(...values: unknown[]): D1PreparedStatement;
+  first<T = Record<string, unknown>>(): Promise<T | null>;
+  all<T = Record<string, unknown>>(): Promise<{ results?: T[] }>;
+  run(): Promise<unknown>;
+};
+
+type D1Database = {
+  prepare(query: string): D1PreparedStatement;
+};
+
 type Env = {
   ASSETS: AssetsBinding;
+  DB?: D1Database;
   MERCADOPAGO_ACCESS_TOKEN?: string;
   MERCADOPAGO_PUBLIC_KEY?: string;
   MERCADOPAGO_WEBHOOK_SECRET?: string;
   APP_BASE_URL?: string;
+  ADMIN_TOKEN?: string;
+  RESEND_API_KEY?: string;
+  LEADS_TO_EMAIL?: string;
+  LEADS_FROM_EMAIL?: string;
+  LEADS_REPLY_TO_EMAIL?: string;
 };
 
 type Plan = {
@@ -30,6 +47,60 @@ type CheckoutRequest = {
   userId?: string;
 };
 
+type LeadType =
+  | "customer_request"
+  | "specialist_application"
+  | "company_request"
+  | "booking_request"
+  | "contact_message"
+  | "club_hogar_interest"
+  | "payment_interest";
+
+type LeadPayload = {
+  leadType?: LeadType;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  companyName?: string;
+  applicantType?: string;
+  service?: string;
+  trade?: string;
+  problemDescription?: string;
+  urgency?: string;
+  regionCode?: string;
+  regionName?: string;
+  communeCode?: string;
+  communeName?: string;
+  specialistId?: string;
+  specialistName?: string;
+  requestedDate?: string;
+  requestedTime?: string;
+  creditsEstimate?: number;
+  sourcePage?: string;
+  sourceComponent?: string;
+  sourceButton?: string;
+  utmSource?: string;
+  utmCampaign?: string;
+  utmMedium?: string;
+  referralCode?: string;
+  consentContact?: boolean;
+  consentTerms?: boolean;
+  honeypot?: string;
+  payload?: Record<string, unknown>;
+};
+
+type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
+    leadType: LeadType;
+    id: string;
+    createdAt: string;
+    status: string;
+    priority: string;
+    payloadJson: string;
+    userAgent: string;
+    emailSent: number;
+    emailError: string;
+  };
+
 const mercadoPagoApi = "https://api.mercadopago.com";
 
 const plans: Plan[] = [
@@ -49,6 +120,31 @@ export default {
       if (request.method === "OPTIONS") return withCors(new Response(null, { status: 204 }));
 
       try {
+        if (url.pathname === "/api/leads" && request.method === "POST") {
+          return withCors(await createLead(request, env));
+        }
+        if (url.pathname === "/api/jobs/request" && request.method === "POST") {
+          return withCors(await createLead(request, env, "customer_request"));
+        }
+        if (url.pathname === "/api/specialists/apply" && request.method === "POST") {
+          return withCors(await createLead(request, env, "specialist_application"));
+        }
+        if (url.pathname === "/api/companies/request" && request.method === "POST") {
+          return withCors(await createLead(request, env, "company_request"));
+        }
+        if (url.pathname === "/api/bookings/request" && request.method === "POST") {
+          return withCors(await createLead(request, env, "booking_request"));
+        }
+        if (url.pathname === "/api/contact" && request.method === "POST") {
+          return withCors(await createLead(request, env, "contact_message"));
+        }
+        if (url.pathname === "/api/admin/leads" && request.method === "GET") {
+          return withCors(await listAdminLeads(request, env));
+        }
+        const statusMatch = url.pathname.match(/^\/api\/admin\/leads\/([^/]+)\/status$/);
+        if (statusMatch && request.method === "PATCH") {
+          return withCors(await updateAdminLeadStatus(request, env, statusMatch[1]));
+        }
         if (url.pathname === "/api/payments/create-checkout" && request.method === "POST") {
           return withCors(await createCheckout(request, env));
         }
@@ -92,6 +188,282 @@ export default {
     return env.ASSETS.fetch(request);
   },
 };
+
+async function createLead(request: Request, env: Env, forcedType?: LeadType) {
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const body = await readLeadPayload(request);
+  if (body.honeypot) return json({ ok: false, error: "spam_rejected" }, 400);
+
+  const leadType = forcedType ?? body.leadType;
+  if (!leadType || !isLeadType(leadType)) return json({ ok: false, error: "invalid_lead_type" }, 400);
+
+  const lead = normalizeLead(body, leadType, request.headers.get("user-agent") ?? "");
+  await insertLead(env.DB, lead);
+
+  const emailResult = await notifyLead(env, lead);
+  if (emailResult.sent || emailResult.error) {
+    await env.DB.prepare("UPDATE lead_submissions SET email_sent = ?, email_error = ? WHERE id = ?")
+      .bind(emailResult.sent ? 1 : 0, emailResult.error ?? null, lead.id)
+      .run();
+  }
+
+  return json({ ok: true, id: lead.id, emailSent: emailResult.sent });
+}
+
+async function listAdminLeads(request: Request, env: Env) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const status = sanitizeText(url.searchParams.get("status") ?? "", 40);
+  const leadType = sanitizeText(url.searchParams.get("leadType") ?? "", 40);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+
+  let query = "SELECT * FROM lead_submissions";
+  const conditions: string[] = [];
+  const values: unknown[] = [];
+  if (status) {
+    conditions.push("status = ?");
+    values.push(status);
+  }
+  if (leadType) {
+    conditions.push("lead_type = ?");
+    values.push(leadType);
+  }
+  if (conditions.length) query += ` WHERE ${conditions.join(" AND ")}`;
+  query += " ORDER BY created_at DESC LIMIT ?";
+  values.push(limit);
+
+  const result = await env.DB.prepare(query).bind(...values).all();
+  return json({ ok: true, leads: result.results ?? [] });
+}
+
+async function updateAdminLeadStatus(request: Request, env: Env, leadId: string) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const body = (await request.json().catch(() => ({}))) as { status?: string; priority?: string };
+  const status = sanitizeText(body.status ?? "", 40);
+  const priority = sanitizeText(body.priority ?? "", 30);
+  if (!status && !priority) return json({ ok: false, error: "missing_status_or_priority" }, 400);
+
+  const current = await env.DB.prepare("SELECT id FROM lead_submissions WHERE id = ?").bind(leadId).first();
+  if (!current) return json({ ok: false, error: "lead_not_found" }, 404);
+
+  if (status && priority) {
+    await env.DB.prepare("UPDATE lead_submissions SET status = ?, priority = ? WHERE id = ?").bind(status, priority, leadId).run();
+  } else if (status) {
+    await env.DB.prepare("UPDATE lead_submissions SET status = ? WHERE id = ?").bind(status, leadId).run();
+  } else {
+    await env.DB.prepare("UPDATE lead_submissions SET priority = ? WHERE id = ?").bind(priority, leadId).run();
+  }
+
+  return json({ ok: true, id: leadId, status: status || undefined, priority: priority || undefined });
+}
+
+function authorizeAdmin(request: Request, env: Env) {
+  if (!env.ADMIN_TOKEN) return json({ ok: false, error: "admin_token_not_configured" }, 503);
+  const header = request.headers.get("authorization") ?? "";
+  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  if (!token || token !== env.ADMIN_TOKEN) return json({ ok: false, error: "unauthorized" }, 401);
+  return null;
+}
+
+async function readLeadPayload(request: Request) {
+  const contentLength = Number(request.headers.get("content-length") ?? 0);
+  if (contentLength > 32_000) throw new Error("payload_too_large");
+  const text = await request.text();
+  if (text.length > 32_000) throw new Error("payload_too_large");
+  const payload = safeJson(text);
+  if (!payload || typeof payload !== "object") throw new Error("invalid_json");
+  return payload as LeadPayload;
+}
+
+function isLeadType(value: string): value is LeadType {
+  return [
+    "customer_request",
+    "specialist_application",
+    "company_request",
+    "booking_request",
+    "contact_message",
+    "club_hogar_interest",
+    "payment_interest",
+  ].includes(value);
+}
+
+function normalizeLead(body: LeadPayload, leadType: LeadType, userAgent: string): LeadRecord {
+  return {
+    id: `lead_${crypto.randomUUID()}`,
+    createdAt: new Date().toISOString(),
+    leadType,
+    status: "nuevo",
+    priority: priorityFor(body.urgency),
+    fullName: sanitizeText(body.fullName, 160),
+    email: sanitizeEmail(body.email),
+    phone: sanitizeText(body.phone, 60),
+    companyName: sanitizeText(body.companyName, 180),
+    applicantType: sanitizeText(body.applicantType, 80),
+    service: sanitizeText(body.service, 180),
+    trade: sanitizeText(body.trade, 180),
+    problemDescription: sanitizeText(body.problemDescription, 4000),
+    urgency: sanitizeText(body.urgency, 80),
+    regionCode: sanitizeText(body.regionCode, 40),
+    regionName: sanitizeText(body.regionName, 120),
+    communeCode: sanitizeText(body.communeCode, 40),
+    communeName: sanitizeText(body.communeName, 120),
+    specialistId: sanitizeText(body.specialistId, 120),
+    specialistName: sanitizeText(body.specialistName, 180),
+    requestedDate: sanitizeText(body.requestedDate, 40),
+    requestedTime: sanitizeText(body.requestedTime, 40),
+    creditsEstimate: Number.isFinite(Number(body.creditsEstimate)) ? Number(body.creditsEstimate) : undefined,
+    sourcePage: sanitizeText(body.sourcePage, 240),
+    sourceComponent: sanitizeText(body.sourceComponent, 160),
+    sourceButton: sanitizeText(body.sourceButton, 160),
+    utmSource: sanitizeText(body.utmSource, 120),
+    utmCampaign: sanitizeText(body.utmCampaign, 160),
+    utmMedium: sanitizeText(body.utmMedium, 120),
+    referralCode: sanitizeText(body.referralCode, 120),
+    consentContact: Boolean(body.consentContact),
+    consentTerms: Boolean(body.consentTerms),
+    payloadJson: JSON.stringify(body.payload ?? {}),
+    userAgent: sanitizeText(userAgent, 500) ?? "",
+    emailSent: 0,
+    emailError: "",
+  };
+}
+
+async function insertLead(db: D1Database, lead: LeadRecord) {
+  await db
+    .prepare(
+      `INSERT INTO lead_submissions (
+        id, created_at, lead_type, status, priority, full_name, email, phone, company_name, applicant_type,
+        service, trade, problem_description, urgency, region_code, region_name, commune_code, commune_name,
+        specialist_id, specialist_name, requested_date, requested_time, credits_estimate, source_page,
+        source_component, source_button, utm_source, utm_campaign, utm_medium, referral_code,
+        consent_contact, consent_terms, payload_json, user_agent, email_sent, email_error
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      lead.id,
+      lead.createdAt,
+      lead.leadType,
+      lead.status,
+      lead.priority,
+      lead.fullName ?? null,
+      lead.email ?? null,
+      lead.phone ?? null,
+      lead.companyName ?? null,
+      lead.applicantType ?? null,
+      lead.service ?? null,
+      lead.trade ?? null,
+      lead.problemDescription ?? null,
+      lead.urgency ?? null,
+      lead.regionCode ?? null,
+      lead.regionName ?? null,
+      lead.communeCode ?? null,
+      lead.communeName ?? null,
+      lead.specialistId ?? null,
+      lead.specialistName ?? null,
+      lead.requestedDate ?? null,
+      lead.requestedTime ?? null,
+      lead.creditsEstimate ?? null,
+      lead.sourcePage ?? null,
+      lead.sourceComponent ?? null,
+      lead.sourceButton ?? null,
+      lead.utmSource ?? null,
+      lead.utmCampaign ?? null,
+      lead.utmMedium ?? null,
+      lead.referralCode ?? null,
+      lead.consentContact ? 1 : 0,
+      lead.consentTerms ? 1 : 0,
+      lead.payloadJson,
+      lead.userAgent,
+      lead.emailSent,
+      lead.emailError || null,
+    )
+    .run();
+}
+
+async function notifyLead(env: Env, lead: LeadRecord) {
+  if (!env.RESEND_API_KEY) return { sent: false };
+
+  try {
+    const response = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        from: env.LEADS_FROM_EMAIL ?? "OficiosPro <notificaciones@oficiospro.cl>",
+        to: [env.LEADS_TO_EMAIL ?? "bperez@oficiospro.cl"],
+        reply_to: lead.email || env.LEADS_REPLY_TO_EMAIL || undefined,
+        subject: `Nuevo lead OficiosPro: ${lead.leadType}`,
+        html: leadEmailHtml(lead),
+      }),
+    });
+    if (!response.ok) {
+      const detail = await response.text().catch(() => "");
+      return { sent: false, error: `resend_${response.status}:${detail.slice(0, 300)}` };
+    }
+    return { sent: true };
+  } catch (error) {
+    return { sent: false, error: error instanceof Error ? error.message : "email_error" };
+  }
+}
+
+function leadEmailHtml(lead: LeadRecord) {
+  const rows = [
+    ["ID", lead.id],
+    ["Tipo", lead.leadType],
+    ["Nombre", lead.fullName],
+    ["Teléfono", lead.phone],
+    ["Email", lead.email],
+    ["Empresa", lead.companyName],
+    ["Servicio/oficio", lead.service || lead.trade],
+    ["Región", lead.regionName || lead.regionCode],
+    ["Comuna", lead.communeName || lead.communeCode],
+    ["Descripción", lead.problemDescription],
+    ["Urgencia", lead.urgency],
+    ["Especialista", lead.specialistName || lead.specialistId],
+    ["Fecha/hora", [lead.requestedDate, lead.requestedTime].filter(Boolean).join(" ")],
+    ["Créditos", String(lead.creditsEstimate ?? "")],
+    ["Fuente", [lead.sourcePage, lead.sourceComponent, lead.sourceButton].filter(Boolean).join(" · ")],
+  ];
+  const table = rows
+    .filter(([, value]) => value)
+    .map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(label)}</th><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(value ?? "")}</td></tr>`)
+    .join("");
+  return `<div style="font-family:Arial,sans-serif;color:#0f172a"><h1>Nuevo lead OficiosPro</h1><p>Revisar en admin futuro con ID <strong>${escapeHtml(lead.id)}</strong>.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
+}
+
+function priorityFor(urgency?: string) {
+  const value = (urgency ?? "").toLowerCase();
+  if (value.includes("hoy") || value.includes("urg")) return "alta";
+  return "normal";
+}
+
+function sanitizeText(value: unknown, maxLength: number) {
+  if (typeof value !== "string") return undefined;
+  return value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, maxLength) || undefined;
+}
+
+function sanitizeEmail(value: unknown) {
+  const text = sanitizeText(value, 180);
+  if (!text) return undefined;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? text.toLowerCase() : undefined;
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 async function createCheckout(request: Request, env: Env) {
   const body = (await request.json()) as CheckoutRequest;
@@ -473,7 +845,7 @@ function json(payload: unknown, status = 200) {
 function withCors(response: Response) {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
-  headers.set("Access-Control-Allow-Methods", "GET,POST,OPTIONS");
+  headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-signature,x-request-id");
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }

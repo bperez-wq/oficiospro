@@ -3,13 +3,27 @@
 import { useState } from "react";
 import type { Specialist } from "@/data/mock";
 import { createInstantContactRequest } from "@/lib/bookingStorage";
+import { submitLead } from "@/lib/leadClient";
 
 export function InstantContactPanel({ specialist, onOpenAgenda }: { specialist: Specialist; onOpenAgenda?: () => void }) {
   const [status, setStatus] = useState("");
 
-  function requestContact() {
+  async function requestContact() {
     createInstantContactRequest(specialist);
-    setStatus("Contacto solicitado. Revisaremos disponibilidad y próximo paso con el especialista.");
+    const result = await submitLead({
+      leadType: "contact_message",
+      fullName: "Cliente OficiosPro",
+      service: `Contacto inmediato por ${specialist.specialty}`,
+      regionName: specialist.region,
+      communeName: specialist.commune ?? specialist.zone,
+      specialistId: specialist.id,
+      specialistName: specialist.name,
+      creditsEstimate: specialist.credits,
+      sourceComponent: "InstantContactPanel",
+      sourceButton: "Contacto inmediato",
+      consentContact: false,
+    });
+    setStatus(result.ok ? "Contacto solicitado. Revisaremos disponibilidad y próximo paso con el especialista." : result.message);
   }
 
   return (

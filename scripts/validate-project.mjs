@@ -120,7 +120,15 @@ if (assetDirectory === "./out") {
   assertExists("src/lib/bookingStorage.ts");
   assertExists("src/lib/storage.ts");
   assertExists("src/app/agenda-especialista/page.tsx");
+  assertExists("src/app/contacto/page.tsx");
+  assertExists("src/app/terminos/page.tsx");
+  assertExists("src/app/privacidad/page.tsx");
+  assertExists("src/app/faq/page.tsx");
   assertExists("worker/index.ts");
+  assertExists("migrations/0001_leads.sql");
+  assertExists("src/lib/leads.ts");
+  assertExists("src/lib/leadClient.ts");
+  assertExists("docs/leads-and-email.md");
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
@@ -163,6 +171,26 @@ if (assetDirectory === "./out") {
   assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
   assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
   assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
+  assertContains("migrations/0001_leads.sql", "CREATE TABLE IF NOT EXISTS lead_submissions");
+  for (const endpoint of ["/api/leads", "/api/jobs/request", "/api/specialists/apply", "/api/companies/request", "/api/bookings/request", "/api/contact", "/api/admin/leads"]) {
+    assertContains("worker/index.ts", endpoint);
+  }
+  assertContains("worker/index.ts", "database_not_configured");
+  assertContains("worker/index.ts", "RESEND_API_KEY");
+  assertContains("src/lib/leadClient.ts", "fetch(endpoint");
+  assertContains("src/components/ConversionModal.tsx", "submitLead");
+  assertContains("src/components/HeroSearchPanel.tsx", "submitLead");
+  assertContains("src/components/BookingDrawer.tsx", "submitLead");
+  assertContains("src/app/checkout/page.tsx", "payment_interest");
+  assertContains("src/app/contacto/page.tsx", "bperez@oficiospro.cl");
+  assertContains("src/components/Footer.tsx", "bperez@oficiospro.cl");
+  assertContains("docs/leads-and-email.md", "LEADS_TO_EMAIL=bperez@oficiospro.cl");
+  if (readText("src/components/ConversionModal.tsx").includes("Ej: Benjam") || readText("src/components/Forms.tsx").includes("Ej: Benjam")) {
+    fail("Founder name must not be used as a default example placeholder");
+  }
+  if (readText("src/components/ConversionModal.tsx").includes("Pérez Peric") || readText("src/components/Forms.tsx").includes("Pérez Peric")) {
+    fail("Founder surname must not be used as a default example placeholder");
+  }
 
   assertRegex("src/data/serviceCatalog.ts", /export\s+const\s+nationalServiceTypes\s*:/, "national service type catalog");
   assertRegex("src/data/marketplace.ts", /export\s+const\s+serviceTypes\s*:/, "serviceTypes export");

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { heroServiceTypeOptions, OTHER_SERVICE_VALUE } from "@/lib/catalog";
+import { submitLead } from "@/lib/leadClient";
 
 const suggestedTags = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego"];
 const heroTypeOptions = [
@@ -23,7 +24,7 @@ export function HeroSearchPanel() {
   const [otherServiceDescription, setOtherServiceDescription] = useState("");
   const [locationStatus, setLocationStatus] = useState("");
 
-  function submit() {
+  async function submit() {
     if (region && !commune) {
       setLocationStatus("Elige una comuna para buscar disponibilidad real en esa región.");
       return;
@@ -34,6 +35,19 @@ export function HeroSearchPanel() {
     if (serviceTypeId && serviceTypeId !== OTHER_SERVICE_VALUE) params.set("tipo", serviceTypeId);
     if (region) params.set("region", region);
     if (commune) params.set("comuna", commune);
+    await submitLead({
+      leadType: "customer_request",
+      fullName: "Cliente OficiosPro",
+      service: finalQuery || serviceTypeId,
+      trade: heroTypeOptions.find((item) => item.value === serviceTypeId)?.label ?? serviceTypeId,
+      problemDescription: otherServiceDescription || query,
+      regionCode: region,
+      communeName: commune,
+      sourceComponent: "HeroSearchPanel",
+      sourceButton: "Buscar especialista hero",
+      consentContact: false,
+      payload: { serviceTypeId },
+    });
     const queryString = params.toString();
     window.location.href = queryString ? `/especialistas?${queryString}` : "/especialistas";
   }

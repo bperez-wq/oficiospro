@@ -6,6 +6,7 @@ import { PlatformNav } from "@/components/PlatformNav";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { formatCLP, getPlanById } from "@/data/marketplace";
 import { DEFAULT_REGION_CODE, regionCodeForName, regionNameForCode } from "@/lib/catalog";
+import { submitLead } from "@/lib/leadClient";
 import {
   addPaymentCredits,
   appendPaymentRecord,
@@ -79,6 +80,19 @@ export default function CheckoutPage() {
     setIsSubmitting(true);
     setStatus("");
     const endpoint = mode === "subscription" ? "/api/payments/create-subscription" : "/api/payments/create-checkout";
+    await submitLead({
+      leadType: "payment_interest",
+      fullName: customer.name || (plan.audience === "empresa" ? "Empresa OficiosPro" : "Cliente OficiosPro"),
+      email: customer.email,
+      phone: customer.whatsapp,
+      service: mode === "subscription" ? plan.name : `${selectedPack ?? 0} créditos adicionales`,
+      regionCode: customer.region,
+      regionName: regionNameForCode(customer.region),
+      communeName: customer.commune,
+      sourceComponent: "CheckoutPage",
+      sourceButton: mode === "subscription" ? "Pagar con Mercado Pago" : "Comprar créditos",
+      payload: { planId: plan.id, rut: customer.rut, mode, selectedPack },
+    });
 
     try {
       const response = await fetch(endpoint, {

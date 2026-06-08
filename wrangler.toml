@@ -7,3 +7,9 @@ directory = "./out"
 binding = "ASSETS"
 html_handling = "auto-trailing-slash"
 not_found_handling = "single-page-application"
+
+# Configure D1 after creating the database in Cloudflare:
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "oficiospro-leads"
+# database_id = "<real-cloudflare-d1-database-id>"
