@@ -43,13 +43,15 @@ export type LeadSubmissionPayload = {
 export type LeadSubmitResult = {
   ok: boolean;
   id?: string;
+  stored?: boolean;
   emailSent?: boolean;
+  emailError?: string;
   error?: string;
   message: string;
 };
 
-export const leadSuccessMessage = "Recibimos tu solicitud. El equipo OficiosPro revisará los datos y te contactará pronto.";
-export const leadSavedNoEmailMessage = "Recibimos tu solicitud. Nuestro equipo la revisará pronto.";
+export const leadSuccessMessage = "Recibimos tu solicitud. El equipo OficiosPro la revisará pronto.";
+export const leadSavedNoEmailMessage = "Recibimos tu solicitud. El equipo OficiosPro la revisará pronto.";
 export const leadDatabaseNotConfiguredMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl y revisaremos tu caso.";
 export const leadErrorMessage = "No pudimos enviar la solicitud en este momento. Escríbenos a bperez@oficiospro.cl y revisaremos tu caso.";

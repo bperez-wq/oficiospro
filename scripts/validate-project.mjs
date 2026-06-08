@@ -170,6 +170,7 @@ if (existsSync(fullPath("package.json"))) {
     for (const scriptName of ["build", "deploy", "validate"]) {
       if (!scripts[scriptName]) fail(`package.json missing scripts.${scriptName}`);
     }
+    if (!scripts["test:leads"]) fail("package.json missing scripts.test:leads");
   } catch (error) {
     fail(`package.json is not valid JSON: ${error.message}`);
   }
@@ -238,6 +239,8 @@ if (assetDirectory === "./out") {
   assertExists("migrations/0001_leads.sql");
   assertExists("src/lib/leads.ts");
   assertExists("src/lib/leadClient.ts");
+  assertExists("scripts/test-lead-endpoints.mjs");
+  assertExists("src/app/admin/leads/page.tsx");
   assertExists("src/data/commercialConfig.ts");
   assertExists("src/data/flexiblePricing.ts");
   assertExists("src/lib/pricing.ts");
@@ -245,6 +248,7 @@ if (assetDirectory === "./out") {
   assertExists("src/components/AdminPricingPanel.tsx");
   assertExists("src/components/PostulationToast.tsx");
   assertExists("docs/leads-and-email.md");
+  assertExists("docs/lead-capture-operational-checklist.md");
   assertExists("docs/business-model-impact.md");
   assertExists("docs/platform-worker-compliance-notes.md");
   assertExists("docs/credit-finance-ledger.md");
@@ -309,7 +313,21 @@ if (assetDirectory === "./out") {
   }
   assertContains("worker/index.ts", "database_not_configured");
   assertContains("worker/index.ts", "RESEND_API_KEY");
+  assertContains("worker/index.ts", "emailError");
+  assertContains("worker/index.ts", "regionCode");
+  assertContains("worker/index.ts", "communeName");
   assertContains("src/lib/leadClient.ts", "fetch(endpoint");
+  assertContains("src/lib/leadClient.ts", "oficiospro.leadSubmissions.localBackup");
+  assertContains("src/lib/leads.ts", "Estamos activando la recepci");
+  assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
+  for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {
+    assertContains("scripts/test-lead-endpoints.mjs", endpoint);
+  }
+  assertContains("src/app/admin/leads/page.tsx", "Panel interno OficiosPro");
+  assertContains("src/app/admin/leads/page.tsx", "sessionStorage");
+  assertContains("src/app/admin/leads/page.tsx", "/api/admin/leads");
+  assertContains("src/app/admin/leads/page.tsx", "PATCH");
+  assertContains("src/app/admin/leads/page.tsx", "Exportar CSV");
   assertContains("src/components/ConversionModal.tsx", "submitLead");
   assertContains("src/components/HeroSearchPanel.tsx", "submitLead");
   assertContains("src/components/BookingDrawer.tsx", "submitLead");
@@ -329,6 +347,9 @@ if (assetDirectory === "./out") {
   assertContains("src/app/impacto/page.tsx", "sujeto a revisión contable y tributaria");
   assertContains("src/app/impacto/page.tsx", "bperez@oficiospro.cl");
   assertContains("docs/leads-and-email.md", "LEADS_TO_EMAIL=bperez@oficiospro.cl");
+  assertContains("docs/leads-and-email.md", "wrangler d1 migrations apply oficiospro-leads --remote");
+  assertContains("docs/lead-capture-operational-checklist.md", "POST /api/leads");
+  assertContains("docs/lead-capture-operational-checklist.md", "/admin/leads");
   assertContains("src/components/Forms.tsx", "Tarifa esperada por servicio");
   assertContains("src/components/Forms.tsx", "No tengo certificaciones formales");
   assertContains("src/components/Forms.tsx", "Enviando...");
@@ -399,6 +420,11 @@ if (assetDirectory === "./out") {
   for (const forbiddenCreditInput of ["Creditos fijos", "Creditos por hora", "Precio minimo en creditos", "Precio maximo en creditos", "Precio visita en creditos"]) {
     if (readText("src/components/Forms.tsx").includes(forbiddenCreditInput)) {
       fail(`Specialist form must not expose editable credit input: ${forbiddenCreditInput}`);
+    }
+  }
+  for (const forbiddenPublicFinanceText of ["Margen estimado", "margen estimado", "Payout especialista", "Pago especialista"]) {
+    if (readText("src/components/Forms.tsx").includes(forbiddenPublicFinanceText)) {
+      fail(`Specialist public form must not expose internal finance text: ${forbiddenPublicFinanceText}`);
     }
   }
   assertContains("src/components/Forms.tsx", "Cálculo interno OficiosPro");

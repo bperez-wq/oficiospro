@@ -104,3 +104,68 @@ Si `ADMIN_TOKEN` no está configurado, los endpoints admin responden `admin_toke
 ## 9. Si email no está configurado
 
 El lead queda guardado en D1 con `email_sent = 0`. Revisa los registros desde `/api/admin/leads` y configura Resend cuando esté listo el DNS transaccional.
+
+## 10. Checklist Cloudflare obligatorio
+
+Antes de considerar operativo el flujo de leads en producción:
+
+1. Crear D1:
+
+```bash
+npx wrangler d1 create oficiospro-leads
+```
+
+2. Agregar binding `DB` en `wrangler.toml` con el `database_id` real:
+
+```toml
+[[d1_databases]]
+binding = "DB"
+database_name = "oficiospro-leads"
+database_id = "ID_REAL_DE_CLOUDFLARE"
+```
+
+3. Correr migración remota:
+
+```bash
+npx wrangler d1 migrations apply oficiospro-leads --remote
+```
+
+4. Configurar token admin:
+
+```bash
+npx wrangler secret put ADMIN_TOKEN
+```
+
+5. Configurar email operacional:
+
+```text
+LEADS_TO_EMAIL=bperez@oficiospro.cl
+LEADS_FROM_EMAIL=OficiosPro <notificaciones@oficiospro.cl>
+LEADS_REPLY_TO_EMAIL=bperez@oficiospro.cl
+```
+
+6. Configurar Resend solo si se usará email transaccional:
+
+```bash
+npx wrangler secret put RESEND_API_KEY
+```
+
+7. Probar endpoints:
+
+```bash
+TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
+```
+
+8. Probar admin:
+
+- Abrir `/admin/leads`.
+- Ingresar `ADMIN_TOKEN`.
+- Confirmar que `GET /api/admin/leads` cargue leads desde D1.
+- Cambiar estado con `PATCH /api/admin/leads/:id/status`.
+
+## 11. Comportamiento esperado por configuración
+
+- Si `DB` no está configurada, el Worker responde `database_not_configured`, la UI guarda respaldo local y muestra contacto directo a `bperez@oficiospro.cl`.
+- Si `DB` está configurada pero `RESEND_API_KEY` no existe, el lead queda guardado, `emailSent=false` y la UI muestra confirmación normal sin prometer correo.
+- Si `DB` y `RESEND_API_KEY` están configurados correctamente, el lead queda guardado y se envía email a `LEADS_TO_EMAIL`.
+- Si `ADMIN_TOKEN` no existe, el admin responde `admin_token_not_configured` para evitar un panel silenciosamente inseguro.

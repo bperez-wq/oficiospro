@@ -61,12 +61,15 @@ export async function submitLead(payload: LeadSubmissionPayload, endpoint = endp
       body: JSON.stringify(body),
     });
     const data = (await response.json().catch(() => ({}))) as Partial<LeadSubmitResult>;
+    const normalizedError = data.error ?? (!response.ok ? `http_${response.status}` : undefined);
     const result: LeadSubmitResult = {
-      ok: Boolean(data.ok),
+      ok: Boolean(data.ok) && response.ok,
       id: data.id,
+      stored: Boolean(data.stored),
       emailSent: Boolean(data.emailSent),
-      error: data.error,
-      message: leadMessageForResult({ ok: Boolean(data.ok), emailSent: Boolean(data.emailSent), error: data.error }),
+      emailError: data.emailError,
+      error: normalizedError,
+      message: leadMessageForResult({ ok: Boolean(data.ok) && response.ok, emailSent: Boolean(data.emailSent), error: normalizedError }),
     };
     backupLead(body, result);
     return result;
