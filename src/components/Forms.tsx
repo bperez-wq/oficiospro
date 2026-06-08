@@ -79,7 +79,7 @@ const certificationOptions = ["SEC", "HVAC", "Gas", "Soldadura", "Otro"];
 const specialistSuccessMessage =
   "Recibimos tu postulación. El equipo OficiosPro revisará tus datos y te contactará para avanzar con la verificación.";
 const specialistDbFallbackMessage =
-  "Recibimos tu intención de postular. Si no recibes contacto pronto, escríbenos a bperez@oficiospro.cl.";
+  "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];

@@ -21,7 +21,7 @@ database_name = "oficiospro-leads"
 database_id = "ID_REAL_DE_CLOUDFLARE"
 ```
 
-No uses un `database_id` inventado. Si `DB` no está configurado, los endpoints pueden responder `database_not_configured` como estado operacional sin bloquear la UI; el frontend guarda respaldo local y muestra contacto directo a `bperez@oficiospro.cl`.
+No uses un `database_id` inventado. Si `DB` no está configurado, los endpoints pueden responder `database_not_configured` como estado operacional sin bloquear la UI; el frontend guarda respaldo local y muestra: “Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.”
 
 ## 3. Correr migraciones
 
@@ -165,7 +165,8 @@ TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
 
 ## 11. Comportamiento esperado por configuración
 
-- Si `DB` no está configurada, el Worker responde `database_not_configured`, la UI guarda respaldo local y muestra contacto directo a `bperez@oficiospro.cl`.
+- Si `DB` no está configurada, el Worker responde `database_not_configured`, la UI guarda respaldo local y muestra: “Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.”
 - Si `DB` está configurada pero `RESEND_API_KEY` no existe, el lead queda guardado, `emailSent=false` y la UI muestra confirmación normal sin prometer correo.
 - Si `DB` y `RESEND_API_KEY` están configurados correctamente, el lead queda guardado y se envía email a `LEADS_TO_EMAIL`.
 - Si `ADMIN_TOKEN` no existe, el admin responde `admin_token_not_configured` para evitar un panel silenciosamente inseguro.
+- `/admin/leads` es un panel interno no enlazado desde la navegación pública; solicita `ADMIN_TOKEN` en pantalla y lo guarda solo en `sessionStorage`.

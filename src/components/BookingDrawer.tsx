@@ -27,6 +27,7 @@ export function BookingDrawer({
   const [selectedDate, setSelectedDate] = useState(getWeekDates()[0]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const services = useMemo(() => (specialist.servicePricing?.length ? specialist.servicePricing : [getPrimaryFlexibleService(specialist)]), [specialist]);
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id ?? "");
@@ -95,29 +96,74 @@ export function BookingDrawer({
     setEstimatedHours(services[0]?.minHours ?? 2);
     setRequestDescription("");
     setIsSubscriber(false);
+    setSubmitting(false);
   }, [open, profile, services]);
 
   if (!open || !mounted) return null;
 
   async function reserve() {
+    if (submitting) return;
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
       setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");
       return;
     }
     if (!needsQuoteOnly && !selectedSlot) return;
-    const heldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
-    if (needsQuoteOnly) {
-      const quote = createQuoteAgreement({
-        specialistId: specialist.id,
-        specialistName: specialist.name,
-        customerName: "Cliente OficiosPro",
-        serviceName: selectedService.name,
-        commune: specialist.commune ?? specialist.zone,
-        status: "quote_requested",
-        originalRequest: requestDescription,
-        history: ["El cliente solicito cotizacion desde la agenda del especialista."],
+    setSubmitting(true);
+    try {
+      const heldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
+      if (needsQuoteOnly) {
+        const quote = createQuoteAgreement({
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          customerName: "Cliente OficiosPro",
+          serviceName: selectedService.name,
+          commune: specialist.commune ?? specialist.zone,
+          status: "quote_requested",
+          originalRequest: requestDescription,
+          history: ["El cliente solicito cotizacion desde la agenda del especialista."],
+        });
+        const leadResult = await submitLead({
+          leadType: "booking_request",
+          fullName: "Cliente OficiosPro",
+          service: selectedService.name,
+          problemDescription: requestDescription,
+          regionName: specialist.region,
+          communeName: specialist.commune ?? specialist.zone,
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          creditsEstimate: selectedService.minCredits,
+          sourceComponent: "BookingDrawer",
+          sourceButton: "Solicitar cotizacion",
+          consentContact: false,
+          payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id },
+        });
+        setSuccess(leadResult.ok ? "Cotizacion solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
+        setRequestDescription("");
+        return;
+      }
+      createBookingRequest({
+        specialist,
+        date: selectedSlot!.date,
+        startTime: selectedSlot!.startTime,
+        endTime: selectedSlot!.endTime,
+        service: selectedService.name,
+        servicePricingId: selectedService.id,
+        pricingMode: selectedService.pricingMode,
+        creditsEstimate: heldCredits,
+        heldCredits,
+        estimatedHours: selectedService.pricingMode === "hourly" ? estimatedHours : undefined,
+        requestDescription,
+        communeName: specialist.commune ?? specialist.zone,
       });
+      if (heldCredits > 0) {
+        usePaymentCredits({
+          amount: heldCredits,
+          type: selectedService.pricingMode === "hourly" ? "service_hourly_hold" : selectedService.pricingMode === "visit_then_quote" ? "visit_hold" : "service_fixed_hold",
+          detail: `Retencion inicial ${selectedService.name}`,
+          relatedServiceRequestId: selectedService.id,
+        });
+      }
       const leadResult = await submitLead({
         leadType: "booking_request",
         fullName: "Cliente OficiosPro",
@@ -127,58 +173,20 @@ export function BookingDrawer({
         communeName: specialist.commune ?? specialist.zone,
         specialistId: specialist.id,
         specialistName: specialist.name,
-        creditsEstimate: selectedService.minCredits,
+        requestedDate: selectedSlot!.date,
+        requestedTime: selectedSlot!.startTime,
+        creditsEstimate: heldCredits,
         sourceComponent: "BookingDrawer",
-        sourceButton: "Solicitar cotizacion",
+        sourceButton: bookingPrimaryAction(selectedService),
+        payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits },
         consentContact: false,
-        payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id },
       });
-      setSuccess(leadResult.ok ? "Cotizacion solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
-      setRequestDescription("");
-      return;
+      setBookings(getBookingRequests());
+      setSuccess(leadResult.ok ? "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio." : leadResult.message);
+      setSelectedSlot(null);
+    } finally {
+      setSubmitting(false);
     }
-    createBookingRequest({
-      specialist,
-      date: selectedSlot!.date,
-      startTime: selectedSlot!.startTime,
-      endTime: selectedSlot!.endTime,
-      service: selectedService.name,
-      servicePricingId: selectedService.id,
-      pricingMode: selectedService.pricingMode,
-      creditsEstimate: heldCredits,
-      heldCredits,
-      estimatedHours: selectedService.pricingMode === "hourly" ? estimatedHours : undefined,
-      requestDescription,
-      communeName: specialist.commune ?? specialist.zone,
-    });
-    if (heldCredits > 0) {
-      usePaymentCredits({
-        amount: heldCredits,
-        type: selectedService.pricingMode === "hourly" ? "service_hourly_hold" : selectedService.pricingMode === "visit_then_quote" ? "visit_hold" : "service_fixed_hold",
-        detail: `Retencion inicial ${selectedService.name}`,
-        relatedServiceRequestId: selectedService.id,
-      });
-    }
-    const leadResult = await submitLead({
-      leadType: "booking_request",
-      fullName: "Cliente OficiosPro",
-      service: selectedService.name,
-      problemDescription: requestDescription,
-      regionName: specialist.region,
-      communeName: specialist.commune ?? specialist.zone,
-      specialistId: specialist.id,
-      specialistName: specialist.name,
-      requestedDate: selectedSlot!.date,
-      requestedTime: selectedSlot!.startTime,
-      creditsEstimate: heldCredits,
-      sourceComponent: "BookingDrawer",
-      sourceButton: bookingPrimaryAction(selectedService),
-      payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits },
-      consentContact: false,
-    });
-    setBookings(getBookingRequests());
-    setSuccess(leadResult.ok ? "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio." : leadResult.message);
-    setSelectedSlot(null);
   }
 
   const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
@@ -309,8 +317,8 @@ export function BookingDrawer({
                   ? `Seleccionado: ${formatDisplayDate(selectedSlot.date)} ${selectedSlot.label}`
                   : "Selecciona un horario disponible para continuar."}
             </p>
-            <button className="btn-primary" type="button" data-event={needsQuoteOnly ? "quote_request_submit" : "reserve_time_slot"} disabled={!needsQuoteOnly && !selectedSlot} onClick={reserve}>
-              {bookingPrimaryAction(selectedService)}
+            <button className="btn-primary" type="button" data-event={needsQuoteOnly ? "quote_request_submit" : "reserve_time_slot"} disabled={submitting || (!needsQuoteOnly && !selectedSlot)} onClick={reserve}>
+              {submitting ? "Enviando..." : bookingPrimaryAction(selectedService)}
             </button>
           </div>
         </div>

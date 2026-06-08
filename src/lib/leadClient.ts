@@ -32,7 +32,11 @@ function backupLead(payload: LeadSubmissionPayload, result?: Partial<LeadSubmitR
     remoteOk: Boolean(result?.ok),
     remoteError: result?.error ?? null,
   };
-  window.localStorage.setItem(localLeadBackupKey, JSON.stringify([backup, ...readLocalBackups()].slice(0, 50)));
+  try {
+    window.localStorage.setItem(localLeadBackupKey, JSON.stringify([backup, ...readLocalBackups()].slice(0, 50)));
+  } catch {
+    // Lead submission must not fail just because the browser cannot persist the local backup.
+  }
 }
 
 function pageSource() {

@@ -27,6 +27,7 @@ Este checklist deja trazable el estado operativo de captura de leads en OficiosP
 Estos flujos conservan copia local para UX, demos o respaldo:
 
 - `src/lib/leadClient.ts` guarda respaldo de cada lead en `oficiospro.leadSubmissions.localBackup`.
+- El respaldo local es defensivo: si el navegador no permite `localStorage`, el envío no queda bloqueado.
 - `src/lib/storage.ts` mantiene leads comerciales locales para dashboards mock y backoffice visual.
 - `src/lib/bookingStorage.ts` mantiene reservas, bloqueos y contactos instantáneos locales.
 - El panel histórico `/admin` sigue mostrando datos locales/mock; el panel operativo D1 es `/admin/leads`.
@@ -68,6 +69,7 @@ TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
 6. Abrir `/admin/leads`, ingresar `ADMIN_TOKEN`, filtrar leads y cambiar un estado.
 7. Si `DB` falta, la UI debe mostrar: “Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.”
 8. Si `RESEND_API_KEY` falta pero `DB` existe, la UI debe confirmar recepción sin prometer correo.
+9. La página `/admin/leads` no está enlazada desde navegación pública; es un panel interno con token.
 
 ## QA de producto
 
@@ -76,4 +78,4 @@ TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
 - Una postulación exitosa redirige a `/?postulacion=recibida`.
 - El especialista declara tarifa esperada en CLP; no elige créditos.
 - El cliente ve créditos, no margen ni payout.
-- El admin puede revisar CLP, créditos, margen y ledger desde vistas internas.
+- El admin puede revisar CLP, créditos, margen y ledger desde vistas internas; `/admin/leads` muestra un bloque de pricing interno cuando el payload trae servicios postulados.

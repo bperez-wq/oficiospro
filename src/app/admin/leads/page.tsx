@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { ALL_COMMUNES_VALUE, ALL_REGIONS_VALUE, regionNameForCode } from "@/lib/catalog";
+import { estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
 
 type AdminLead = {
   id: string;
@@ -295,6 +296,7 @@ export default function AdminLeadsPage() {
 
 function LeadDetail({ lead, onStatus }: { lead: AdminLead | null; onStatus: (id: string, status: string) => void }) {
   const payload = parsePayload(getLeadValue(lead, "payload_json", "payloadJson"));
+  const pricingRows = internalPricingRows(payload);
 
   if (!lead) {
     return <section className="rounded-[28px] border border-line bg-white p-6 shadow-soft">Selecciona un lead para ver detalle.</section>;
@@ -337,6 +339,26 @@ function LeadDetail({ lead, onStatus }: { lead: AdminLead | null; onStatus: (id:
         <Info label="Descripción" value={getLeadValue(lead, "problem_description", "problemDescription")} large />
         <Info label="Fuente" value={[getLeadValue(lead, "source_component", "sourceComponent"), getLeadValue(lead, "source_button", "sourceButton")].filter(Boolean).join(" / ")} large />
         {getLeadValue(lead, "email_error", "emailError") ? <Info label="Error email" value={getLeadValue(lead, "email_error", "emailError")} large /> : null}
+        {pricingRows.length ? (
+          <div className="rounded-2xl border border-line bg-slate-50 p-4">
+            <p className="eyebrow">Pricing interno</p>
+            <div className="mt-3 grid gap-3">
+              {pricingRows.map((row, index) => (
+                <div key={`${row.serviceName}-${index}`} className="rounded-2xl border border-line bg-white p-4">
+                  <strong className="block text-ink">{row.serviceName || `Servicio ${index + 1}`}</strong>
+                  <div className="mt-3 grid gap-2 text-sm font-bold text-muted sm:grid-cols-2">
+                    <span>Tarifa especialista: {formatPricingCLP(row.specialistExpectedPayoutCLP)}</span>
+                    <span>Créditos cliente: {row.clientCredits || "por revisar"}</span>
+                    <span>Precio cliente estimado: {row.estimatedClientPriceCLP ? formatPricingCLP(row.estimatedClientPriceCLP) : "por revisar"}</span>
+                    <span>Margen estimado interno: {row.estimatedMarginCLP ? formatPricingCLP(row.estimatedMarginCLP) : "por revisar"}</span>
+                    <span>Estado pricing: {row.pricingStatus || "pending_review"}</span>
+                    <span>Emergencia: {row.emergencyAvailable ? "sí" : "no"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         <details className="rounded-2xl border border-line bg-slate-50 p-4">
           <summary className="cursor-pointer font-black text-ink">Payload</summary>
           <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap text-xs font-semibold text-muted">{JSON.stringify(payload, null, 2)}</pre>
@@ -372,6 +394,70 @@ function parsePayload(value: string) {
   } catch {
     return { raw: value };
   }
+}
+
+type InternalPricingRow = {
+  serviceName: string;
+  specialistExpectedPayoutCLP: number;
+  clientCredits: number;
+  estimatedClientPriceCLP: number;
+  estimatedMarginCLP: number;
+  pricingStatus: string;
+  emergencyAvailable: boolean;
+};
+
+function internalPricingRows(payload: Record<string, unknown>): InternalPricingRow[] {
+  const services = Array.isArray(payload.services) ? payload.services : [];
+  return services
+    .map((item) => {
+      const service = asRecord(item);
+      const specialistExpectedPayoutCLP = numberValue(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP);
+      const clientCredits =
+        [
+          numberValue(service.calculatedClientCredits),
+          numberValue(service.clientCredits),
+          numberValue(service.fixedCredits),
+          numberValue(service.hourlyCredits),
+          numberValue(service.minCredits),
+          numberValue(service.visitCredits),
+        ].find((value) => value > 0) ?? 0;
+      const estimatedClientPriceCLP = numberValue(service.estimatedClientPriceCLP) || (clientCredits ? clientCredits * 1000 : 0);
+      const estimatedMarginCLP =
+        estimatedClientPriceCLP && specialistExpectedPayoutCLP
+          ? estimatedClientPriceCLP - specialistExpectedPayoutCLP
+          : specialistExpectedPayoutCLP
+            ? estimatePlatformMarginCLP({
+                specialistExpectedPayoutCLP,
+                categoryId: textValue(service.serviceTypeId),
+                serviceId: textValue(service.serviceTypeId),
+                emergency: Boolean(service.emergencyAvailable),
+              })
+            : 0;
+
+      return {
+        serviceName: textValue(service.serviceName) || textValue(service.name),
+        specialistExpectedPayoutCLP,
+        clientCredits,
+        estimatedClientPriceCLP,
+        estimatedMarginCLP,
+        pricingStatus: textValue(service.pricingStatus),
+        emergencyAvailable: Boolean(service.emergencyAvailable),
+      };
+    })
+    .filter((row) => row.specialistExpectedPayoutCLP || row.clientCredits || row.estimatedClientPriceCLP);
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function numberValue(value: unknown) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value : "";
 }
 
 function adminErrorMessage(error: string) {
