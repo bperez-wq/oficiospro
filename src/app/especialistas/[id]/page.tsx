@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConversionButton } from "@/components/ConversionModal";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
 import { availabilityLabels, specialists } from "@/data/mock";
 
 export const dynamicParams = false;
@@ -148,14 +149,7 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
               <span className="rounded-2xl bg-slate-50 p-3">Fotos portafolio: {specialist.validation?.portfolioPhotos ?? 0}</span>
             </div>
           </article>
-          <article className="panel">
-            <h3 className="text-xl font-black">Disponibilidad</h3>
-            <div className="mt-4 grid gap-2 text-sm font-bold text-muted">
-              <span className="rounded-2xl bg-slate-50 p-3">Hoy · 16:30</span>
-              <span className="rounded-2xl bg-slate-50 p-3">Mañana · 10:00</span>
-              <span className="rounded-2xl bg-slate-50 p-3">Mañana · 15:00</span>
-            </div>
-          </article>
+          <SpecialistProfileAvailability specialist={specialist} />
         </aside>
       </section>
     </main>

@@ -14,6 +14,9 @@ export default function DashboardEspecialistaPage() {
         title={`Panel de ${specialist.name}`}
         subtitle="Vista inicial para revisar perfil, reservas recibidas, calificación, trabajos completados, créditos ganados y estado de verificación."
       >
+        <Link className="btn-secondary" href="/agenda-especialista">
+          Gestionar agenda
+        </Link>
         <Link className="btn-primary" href={`/especialistas/${specialist.id}`}>
           Ver perfil público
         </Link>

@@ -8,6 +8,7 @@ const items = [
   { href: "/empresas", label: "Empresas" },
   { href: "/dashboard-empresa", label: "Dashboard Empresa" },
   { href: "/dashboard-especialista", label: "Especialista" },
+  { href: "/agenda-especialista", label: "Agenda especialista" },
   { href: "/admin", label: "Admin" },
 ];
 
