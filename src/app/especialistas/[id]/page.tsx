@@ -4,6 +4,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
 import { availabilityLabels, specialists } from "@/data/mock";
+import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 
 export const dynamicParams = false;
 
@@ -15,13 +16,15 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
   const { id } = await params;
   const specialist = specialists.find((item) => item.id === id);
   if (!specialist) notFound();
+  const primaryService = getPrimaryFlexibleService(specialist);
+  const services = specialist.servicePricing?.length ? specialist.servicePricing : [primaryService];
 
   return (
     <main className="section grid gap-8">
       <PlatformNav />
       <AppHero eyebrow={specialist.category} title={specialist.name} subtitle={`${specialist.specialty} en ${specialist.zone}. ${specialist.description}`}>
         <ConversionButton type="reserva_especialista" sourceButton="Reservar desde perfil" specialist={specialist} className="btn-primary">
-          Reservar por {specialist.credits} créditos
+          {bookingPrimaryAction(primaryService)}
         </ConversionButton>
         <Link className="btn-secondary" href="/especialistas">
           Volver al listado
@@ -67,10 +70,22 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
             <section>
               <h2 className="text-2xl font-black">Servicios ofrecidos</h2>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                {specialist.servicesOffered.map((service) => (
-                  <span key={service} className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-black text-ink">
-                    {service}
-                  </span>
+                {services.map((service) => (
+                  <article key={service.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <strong className="text-ink">{service.name}</strong>
+                      <span className="chip bg-white text-brand-dark">{pricingModeLabel(service.pricingMode)}</span>
+                    </div>
+                    <p className="mt-2 text-sm font-bold text-muted">{service.description}</p>
+                    <strong className="mt-3 block text-lg font-black text-ink">{pricingSummary(service)}</strong>
+                    <p className="mt-1 text-sm font-bold text-muted">{formatDurationRange(service)}</p>
+                    <p className="mt-2 text-sm font-semibold leading-6 text-muted">{pricingDetail(service)}</p>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {service.materialsIncluded ? <span className="chip bg-brand-soft text-brand-dark">Materiales incluidos</span> : null}
+                      {service.materialsChargedSeparately ? <span className="chip bg-white text-brand-dark">Materiales aparte</span> : null}
+                      {service.requiresPriorEvaluation ? <span className="chip bg-white text-brand-dark">Evaluacion previa</span> : null}
+                    </div>
+                  </article>
                 ))}
               </div>
             </section>
@@ -112,10 +127,10 @@ export default async function SpecialistProfilePage({ params }: { params: Promis
         <aside className="grid gap-5 self-start lg:sticky lg:top-28">
           <article className="panel">
             <span className="font-bold text-muted">Precio desde</span>
-            <strong className="block text-4xl font-black">{specialist.credits} créditos</strong>
-            <p className="mt-2 text-sm font-semibold leading-6 text-muted">La cantidad puede cambiar por demanda, horario y zona. El pago se libera al finalizar el trabajo.</p>
+            <strong className="block text-4xl font-black">{pricingSummary(primaryService)}</strong>
+            <p className="mt-2 text-sm font-semibold leading-6 text-muted">{pricingDetail(primaryService)} El pago se protege hasta finalizar o aceptar propuesta.</p>
             <ConversionButton type="reserva_especialista" sourceButton="Reservar especialista perfil lateral" specialist={specialist} className="btn-primary mt-5 w-full">
-              Reservar especialista
+              {bookingPrimaryAction(primaryService)}
             </ConversionButton>
             <ConversionButton type="reserva_especialista" sourceButton="Consultar disponibilidad especialista" specialist={specialist} className="btn-secondary mt-3 w-full">
               Consultar disponibilidad

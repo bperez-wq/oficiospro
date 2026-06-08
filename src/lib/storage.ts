@@ -1,6 +1,16 @@
 "use client";
 
 import { defaultBookings, defaultTransactions, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import {
+  defaultAdditionalRequests,
+  defaultQuoteAgreements,
+  type AdditionalRequest,
+  type AdditionalStatus,
+  type FlexibleService,
+  type PricingMode,
+  type QuoteAgreement,
+  type QuoteStatus,
+} from "@/data/flexiblePricing";
 import { defaultCommercialConfig, getServiceTypeById, serviceTypes, type CommercialConfig, type SubscriptionPlan } from "@/data/marketplace";
 
 const keys = {
@@ -28,6 +38,8 @@ const keys = {
   paymentWallet: "oficiospro.paymentWallet",
   paymentCreditTransactions: "oficiospro.paymentCreditTransactions",
   specialistPayouts: "oficiospro.specialistPayouts",
+  quoteAgreements: "oficiospro.quoteAgreements",
+  additionalRequests: "oficiospro.additionalRequests",
 };
 
 export type Wallet = {
@@ -96,6 +108,10 @@ export type PaymentSubscriptionRecord = {
 export type PaymentCreditWallet = {
   userId: string;
   currentBalance: number;
+  heldCredits?: number;
+  expiringCreditsTotal?: number;
+  quoteHeldCredits?: number;
+  additionalHeldCredits?: number;
   expiringCredits: { amount: number; expiresAt: string }[];
   updatedAt: string;
 };
@@ -106,6 +122,16 @@ export type PaymentCreditTransactionType =
   | "referral_bonus"
   | "service_hold"
   | "service_capture"
+  | "service_fixed_hold"
+  | "service_hourly_hold"
+  | "quote_acceptance_hold"
+  | "quote_acceptance_capture"
+  | "visit_hold"
+  | "visit_capture"
+  | "additional_work_hold"
+  | "additional_work_capture"
+  | "materials_hold"
+  | "materials_capture"
   | "refund"
   | "expiration"
   | "admin_adjustment";
@@ -171,6 +197,13 @@ export type PendingSpecialistService = {
   otherServiceDescription?: string;
   name: string;
   description: string;
+  pricingMode?: PricingMode;
+  fixedCredits?: number;
+  hourlyCredits?: number;
+  minHours?: number;
+  maxHours?: number;
+  minCredits?: number;
+  maxCredits?: number;
   specialistComments?: string;
   specialistExpectedPayoutCLP?: number;
   specialistApprovedPayoutCLP?: number;
@@ -181,10 +214,15 @@ export type PendingSpecialistService = {
   initialVisitFree: boolean;
   visitCredits: number;
   duration: string;
+  estimatedDurationMinMinutes?: number;
+  estimatedDurationMaxMinutes?: number;
   estimatedDurationMinutes?: number;
   materialsIncluded?: string;
+  materialsIncludedBoolean?: boolean;
+  materialsChargedSeparately?: boolean;
   conditions?: string;
   serviceCommunes?: string;
+  requiresPriorEvaluation?: boolean;
   emergencyAvailable?: boolean;
   emergency: boolean;
   certificationRequired?: boolean;
@@ -350,6 +388,10 @@ export type ServiceRequestLead = {
   urgency: string;
   specialistId?: string;
   specialistName?: string;
+  servicePricingId?: string;
+  pricingMode?: PricingMode;
+  quoteId?: string;
+  heldCredits?: number;
   estimatedCredits?: number;
   coverageZone?: string;
   interest: string;
@@ -404,6 +446,7 @@ export function seedMockState() {
   seedSpecialistIntakeState();
   seedOtherServiceRequests();
   seedPaymentState();
+  seedNegotiationState();
   if (!window.localStorage.getItem(keys.referrals)) {
     write<ReferralState>(keys.referrals, {
       clientCode: "OP-CLIENTE-10",
@@ -414,6 +457,12 @@ export function seedMockState() {
       specialistBenefit: "Badge Fundador disponible al aprobar referidos",
     });
   }
+}
+
+function seedNegotiationState() {
+  if (typeof window === "undefined") return;
+  if (!window.localStorage.getItem(keys.quoteAgreements)) write(keys.quoteAgreements, defaultQuoteAgreements);
+  if (!window.localStorage.getItem(keys.additionalRequests)) write(keys.additionalRequests, defaultAdditionalRequests);
 }
 
 function seedSpecialistIntakeState() {
@@ -809,6 +858,10 @@ export function seedPaymentState() {
     write<PaymentCreditWallet>(keys.paymentWallet, {
       userId: "cliente@oficiospro.cl",
       currentBalance: 135,
+      heldCredits: 30,
+      expiringCreditsTotal: 65,
+      quoteHeldCredits: 20,
+      additionalHeldCredits: 10,
       expiringCredits: [{ amount: 135, expiresAt: addMonthsLocal(new Date(), 24).toISOString() }],
       updatedAt: now,
     });
@@ -828,10 +881,28 @@ export function seedPaymentState() {
       {
         id: "ctx-hold-001",
         userId: "cliente@oficiospro.cl",
-        type: "service_hold",
+        type: "service_fixed_hold",
         amount: -30,
         relatedServiceRequestId: "service-op-001",
         detail: "Reserva gasfitería domiciliaria",
+        createdAt: now,
+      },
+      {
+        id: "ctx-quote-hold-001",
+        userId: "cliente@oficiospro.cl",
+        type: "quote_acceptance_hold",
+        amount: -20,
+        relatedServiceRequestId: "quote-irrigation-visit",
+        detail: "Creditos retenidos por visita tecnica",
+        createdAt: now,
+      },
+      {
+        id: "ctx-additional-hold-001",
+        userId: "cliente@oficiospro.cl",
+        type: "additional_work_hold",
+        amount: -10,
+        relatedServiceRequestId: "additional-hours-001",
+        detail: "Creditos retenidos por adicional aprobado",
         createdAt: now,
       },
     ]);
@@ -985,7 +1056,23 @@ export function usePaymentCredits({
 }: {
   userId?: string;
   amount: number;
-  type?: Extract<PaymentCreditTransactionType, "service_hold" | "service_capture" | "refund" | "expiration">;
+  type?: Extract<
+    PaymentCreditTransactionType,
+    | "service_hold"
+    | "service_capture"
+    | "service_fixed_hold"
+    | "service_hourly_hold"
+    | "quote_acceptance_hold"
+    | "quote_acceptance_capture"
+    | "visit_hold"
+    | "visit_capture"
+    | "additional_work_hold"
+    | "additional_work_capture"
+    | "materials_hold"
+    | "materials_capture"
+    | "refund"
+    | "expiration"
+  >;
   detail: string;
   relatedServiceRequestId?: string;
 }) {
@@ -1015,6 +1102,79 @@ export function getSpecialistPayouts() {
 
 export function saveSpecialistPayouts(items: SpecialistPayout[]) {
   write(keys.specialistPayouts, items);
+}
+
+export function getQuoteAgreements() {
+  return read<QuoteAgreement[]>(keys.quoteAgreements, defaultQuoteAgreements);
+}
+
+export function saveQuoteAgreements(items: QuoteAgreement[]) {
+  write(keys.quoteAgreements, items);
+}
+
+export function createQuoteAgreement(input: Omit<QuoteAgreement, "id" | "createdAt" | "updatedAt" | "history"> & { history?: string[] }) {
+  const now = new Date().toISOString();
+  const quote: QuoteAgreement = {
+    ...input,
+    id: `quote-op-${Date.now()}`,
+    history: input.history?.length ? input.history : ["El cliente solicito una cotizacion."],
+    createdAt: now,
+    updatedAt: now,
+  };
+  saveQuoteAgreements([quote, ...getQuoteAgreements()]);
+  return quote;
+}
+
+export function updateQuoteAgreement(id: string, patch: Partial<QuoteAgreement>, historyEntry?: string) {
+  const now = new Date().toISOString();
+  const next = getQuoteAgreements().map((quote) =>
+    quote.id === id
+      ? {
+          ...quote,
+          ...patch,
+          history: historyEntry ? [historyEntry, ...quote.history] : quote.history,
+          updatedAt: now,
+        }
+      : quote,
+  );
+  saveQuoteAgreements(next);
+  return next.find((quote) => quote.id === id) ?? null;
+}
+
+export function updateQuoteAgreementStatus(id: string, status: QuoteStatus, historyEntry?: string) {
+  return updateQuoteAgreement(id, { status }, historyEntry ?? `Estado actualizado a ${status}.`);
+}
+
+export function getAdditionalRequests() {
+  return read<AdditionalRequest[]>(keys.additionalRequests, defaultAdditionalRequests);
+}
+
+export function saveAdditionalRequests(items: AdditionalRequest[]) {
+  write(keys.additionalRequests, items);
+}
+
+export function createAdditionalRequest(input: Omit<AdditionalRequest, "id" | "createdAt">) {
+  const additional: AdditionalRequest = {
+    ...input,
+    id: `additional-op-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  saveAdditionalRequests([additional, ...getAdditionalRequests()]);
+  return additional;
+}
+
+export function updateAdditionalRequestStatus(id: string, status: AdditionalStatus, comment?: string) {
+  const next = getAdditionalRequests().map((additional) =>
+    additional.id === id
+      ? {
+          ...additional,
+          status,
+          comment: comment ?? additional.comment,
+        }
+      : additional,
+  );
+  saveAdditionalRequests(next);
+  return next.find((additional) => additional.id === id) ?? null;
 }
 
 export function markSpecialistPayoutPaid(id: string) {
@@ -1148,6 +1308,7 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     photos: portfolioPhotos.length > 0,
     certifications,
     servicesOffered: requestServices.map((service) => service.name || displaySpecialty(service)),
+    servicePricing: requestServices.map((service, index) => pendingServiceToFlexibleService(service, request, index)),
     workHistory: [],
     reviews: [],
     description: `${displaySpecialty(primaryService)} con cobertura en ${request.commune ?? "Santiago"} y radio de ${request.coverageRadiusKm ?? 18} km.`,
@@ -1166,5 +1327,35 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
       portfolioPhotos: portfolioPhotos.length,
     },
     publishedFromAdmin: true,
+  };
+}
+
+function pendingServiceToFlexibleService(service: PendingSpecialistService, request: PendingSpecialistProfile, index: number): FlexibleService {
+  const pricingMode = service.pricingMode ?? "fixed";
+  const clientCredits = Number(service.clientCredits || service.fixedCredits || service.visitCredits || service.minCredits || 20);
+  return {
+    id: `${request.id ?? request.name}-service-${index + 1}`,
+    serviceTypeId: service.serviceTypeId,
+    specialty: service.specialty,
+    name: service.name || service.specialty,
+    description: service.description || service.conditions || "Servicio revisado por OficiosPro.",
+    pricingMode,
+    fixedCredits: service.fixedCredits ?? (pricingMode === "fixed" ? clientCredits : undefined),
+    hourlyCredits: service.hourlyCredits,
+    minHours: service.minHours,
+    maxHours: service.maxHours,
+    minCredits: service.minCredits,
+    maxCredits: service.maxCredits,
+    visitCredits: service.visitCredits,
+    clubDiscountCredits: 2,
+    estimatedDurationMinMinutes: service.estimatedDurationMinMinutes ?? service.estimatedDurationMinutes,
+    estimatedDurationMaxMinutes: service.estimatedDurationMaxMinutes ?? service.estimatedDurationMinutes,
+    specialistPayoutCLP: Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0),
+    materialsIncluded: service.materialsIncludedBoolean ?? String(service.materialsIncluded ?? "").toLowerCase().includes("incl"),
+    materialsChargedSeparately: service.materialsChargedSeparately ?? String(service.materialsIncluded ?? "").toLowerCase().includes("aparte"),
+    initialVisitFree: Boolean(service.initialVisitFree),
+    requiresPriorEvaluation: Boolean(service.requiresPriorEvaluation),
+    conditions: service.conditions || service.specialistComments || "Condiciones sujetas a revision de alcance.",
+    adminReviewStatus: service.pricingStatus === "approved" ? "approved" : "pending_review",
   };
 }

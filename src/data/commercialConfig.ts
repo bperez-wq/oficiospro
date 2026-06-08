@@ -9,8 +9,25 @@ export type CommercialPricingConfig = {
   creditRoundingStep: number;
   minimumSpecialistPayoutCLP: number;
   maximumSpecialistPayoutCLP: number;
+  minimumHomeMarginCLP: number;
+  minimumCompanyMarginCLP: number;
+  minimumAgriculturalMarginCLP: number;
+  minimumIndustrialMarginCLP: number;
+  subscriberDiscountCredits: number;
+  subscriberDiscountAppliesTo: {
+    fixed: boolean;
+    visit: boolean;
+    baseRequest: boolean;
+    additionals: boolean;
+  };
   freeInitialVisitEnabled: boolean;
   initialVisitCredits: number;
+  initialVisitFeeCredits: number;
+  materialCommissionPercent: number;
+  additionalLaborCommissionPercent: number;
+  quoteExpirationDays: number;
+  maxAdditionalsPerRequest: number;
+  adminApprovalCreditThreshold: number;
   categoryMultipliers: Record<string, number>;
   communeMultipliers: Record<string, number>;
   certificationRequiredByCategory: Record<string, boolean>;
@@ -28,8 +45,25 @@ export const defaultCommercialConfig: CommercialPricingConfig = {
   creditRoundingStep: 2,
   minimumSpecialistPayoutCLP: 5000,
   maximumSpecialistPayoutCLP: 500000,
+  minimumHomeMarginCLP: 5000,
+  minimumCompanyMarginCLP: 10000,
+  minimumAgriculturalMarginCLP: 12000,
+  minimumIndustrialMarginCLP: 15000,
+  subscriberDiscountCredits: 2,
+  subscriberDiscountAppliesTo: {
+    fixed: true,
+    visit: true,
+    baseRequest: true,
+    additionals: false,
+  },
   freeInitialVisitEnabled: true,
   initialVisitCredits: 0,
+  initialVisitFeeCredits: 6,
+  materialCommissionPercent: 0.08,
+  additionalLaborCommissionPercent: 0.12,
+  quoteExpirationDays: 7,
+  maxAdditionalsPerRequest: 3,
+  adminApprovalCreditThreshold: 80,
   categoryMultipliers: {
     hogar: 1,
     gasfiteria: 1.05,

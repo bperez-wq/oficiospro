@@ -1,6 +1,7 @@
 "use client";
 
 import { availabilityProfiles, createDefaultAvailabilityProfile, type AvailabilityProfile, type BlockedSlot } from "@/data/availability";
+import type { PricingMode } from "@/data/flexiblePricing";
 import type { Specialist } from "@/data/mock";
 import { addMinutesToTime, toDateKey } from "@/lib/availability";
 
@@ -11,6 +12,8 @@ export type BookingRequest = {
   specialistId: string;
   specialistName: string;
   service: string;
+  servicePricingId?: string;
+  pricingMode?: PricingMode;
   regionCode?: string;
   regionName?: string;
   communeCode?: string;
@@ -19,6 +22,9 @@ export type BookingRequest = {
   startTime: string;
   endTime: string;
   creditsEstimate: number;
+  heldCredits?: number;
+  estimatedHours?: number;
+  requestDescription?: string;
   status: BookingRequestStatus;
   customerName?: string;
   customerPhone?: string;
@@ -116,7 +122,12 @@ export function createBookingRequest({
   startTime,
   endTime,
   service,
+  servicePricingId,
+  pricingMode,
   creditsEstimate,
+  heldCredits,
+  estimatedHours,
+  requestDescription,
   communeName,
   regionName,
   regionCode,
@@ -126,7 +137,12 @@ export function createBookingRequest({
   startTime: string;
   endTime: string;
   service?: string;
+  servicePricingId?: string;
+  pricingMode?: PricingMode;
   creditsEstimate?: number;
+  heldCredits?: number;
+  estimatedHours?: number;
+  requestDescription?: string;
   communeName?: string;
   regionName?: string;
   regionCode?: string;
@@ -135,6 +151,8 @@ export function createBookingRequest({
     specialistId: specialist.id,
     specialistName: specialist.name,
     service: service ?? specialist.specialty,
+    servicePricingId,
+    pricingMode,
     regionCode,
     regionName,
     communeName: communeName ?? specialist.commune ?? specialist.zone,
@@ -142,6 +160,9 @@ export function createBookingRequest({
     startTime,
     endTime,
     creditsEstimate: creditsEstimate ?? specialist.credits,
+    heldCredits,
+    estimatedHours,
+    requestDescription,
   });
 }
 

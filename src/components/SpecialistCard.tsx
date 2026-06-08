@@ -9,6 +9,7 @@ import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
+import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 
 export function SpecialistCard({
   specialist,
@@ -21,6 +22,7 @@ export function SpecialistCard({
   const [contactOpen, setContactOpen] = useState(false);
   const [summary, setSummary] = useState<AvailabilitySummary | null>(null);
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
+  const primaryService = useMemo(() => getPrimaryFlexibleService(specialist), [specialist]);
   const badges = [
     specialist.verified ? "Verificado" : null,
     specialist.top ? "Top especialista" : null,
@@ -93,8 +95,8 @@ export function SpecialistCard({
 
         <div className="rounded-2xl border border-brand/10 bg-gradient-to-br from-brand-soft to-white p-4">
           <span className="text-sm font-black uppercase text-muted">Precio desde</span>
-          <strong className="block text-2xl font-black text-ink">{specialist.credits} créditos</strong>
-          <p className="text-sm font-bold text-muted">Tarifa dinámica por demanda y disponibilidad.</p>
+          <strong className="block text-2xl font-black text-ink">{pricingSummary(primaryService)}</strong>
+          <p className="text-sm font-bold text-muted">{pricingModeLabel(primaryService.pricingMode)} · {pricingDetail(primaryService)}</p>
           {specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
               A {specialist.distance} km · {coverageStatus} · radio {specialist.coverageRadiusKm} km
@@ -119,7 +121,7 @@ export function SpecialistCard({
             </Link>
           )}
           <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={() => setAgendaOpen(true)}>
-            Ver agenda
+            {bookingPrimaryAction(primaryService)}
           </button>
         </div>
 

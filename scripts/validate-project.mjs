@@ -44,7 +44,65 @@ function countMatches(path, regex) {
   return [...content.matchAll(regex)].length;
 }
 
+function assertPricingMath() {
+  const config = {
+    customerCreditValueCLP: 1000,
+    platformFeePercent: 0.18,
+    paymentFeePercent: 0.035,
+    riskBufferPercent: 0.04,
+    fixedServiceFeeCLP: 2500,
+    emergencyMultiplier: 1.35,
+    minimumClientCredits: 12,
+    creditRoundingStep: 2,
+  };
+  const roundCredits = (credits, step) => Math.ceil(credits / step) * step;
+  const calculateCredits = (payout, emergency = false) => {
+    const estimated =
+      payout +
+      payout * (config.platformFeePercent + config.paymentFeePercent + config.riskBufferPercent) +
+      config.fixedServiceFeeCLP;
+    const adjusted = emergency ? estimated * config.emergencyMultiplier : estimated;
+    return Math.max(config.minimumClientCredits, roundCredits(adjusted / config.customerCreditValueCLP, config.creditRoundingStep));
+  };
+  const baseCredits = calculateCredits(10000);
+  const emergencyCredits = calculateCredits(10000, true);
+  const margin = baseCredits * config.customerCreditValueCLP - 10000;
+
+  if (baseCredits <= 0) fail("Pricing validation: $10.000 CLP must produce credits greater than 0");
+  if (baseCredits < config.minimumClientCredits) fail("Pricing validation: credits must respect minimumClientCredits");
+  if (baseCredits % config.creditRoundingStep !== 0) fail("Pricing validation: credits must round by creditRoundingStep");
+  if (emergencyCredits <= baseCredits) fail("Pricing validation: emergency must increase credits");
+  if (!Number.isFinite(margin)) fail("Pricing validation: estimated margin must be calculable");
+}
+
+function assertNoPublicInternalPricingLeak() {
+  const publicPaths = [
+    "src/app/page.tsx",
+    "src/components/SpecialistCard.tsx",
+    "src/components/SpecialistsExplorer.tsx",
+    "src/app/especialistas/[id]/page.tsx",
+  ];
+  const forbidden = [
+    "specialistExpectedPayoutCLP",
+    "specialistApprovedPayoutCLP",
+    "Payout especialista",
+    "Tarifa esperada especialista CLP",
+    "platformFeePercent",
+    "paymentFeePercent",
+    "riskBufferPercent",
+    "customerCreditValueCLP",
+  ];
+  for (const path of publicPaths) {
+    if (!existsSync(fullPath(path))) continue;
+    const content = readText(path);
+    for (const text of forbidden) {
+      if (content.includes(text)) fail(`Public pricing leak: ${path} must not expose ${text}`);
+    }
+  }
+}
+
 assertNotExists("public/_redirects");
+assertPricingMath();
 
 assertExists("wrangler.toml");
 assertExists("package.json");
@@ -129,7 +187,9 @@ if (assetDirectory === "./out") {
   assertExists("src/lib/leads.ts");
   assertExists("src/lib/leadClient.ts");
   assertExists("src/data/commercialConfig.ts");
+  assertExists("src/data/flexiblePricing.ts");
   assertExists("src/lib/pricing.ts");
+  assertExists("src/lib/flexiblePricing.ts");
   assertExists("src/components/AdminPricingPanel.tsx");
   assertExists("src/components/PostulationToast.tsx");
   assertExists("docs/leads-and-email.md");
@@ -171,7 +231,7 @@ if (assetDirectory === "./out") {
   assertRegex("src/lib/bookingStorage.ts", /oficiospro\.bookingRequests/, "local booking request storage");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+addBlockedSlot\s*\(/, "addBlockedSlot helper");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+createBookingRequest\s*\(/, "createBookingRequest helper");
-  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. El especialista recibirá tu solicitud y podrás confirmar los detalles.");
+  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio.");
   assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
   assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
   assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
@@ -197,6 +257,24 @@ if (assetDirectory === "./out") {
   assertContains("src/components/PostulationToast.tsx", "Postulación recibida");
   assertContains("src/data/commercialConfig.ts", "customerCreditValueCLP");
   assertContains("src/data/commercialConfig.ts", "certificationRequiredByCategory");
+  assertContains("src/data/commercialConfig.ts", "subscriberDiscountCredits");
+  assertContains("src/data/flexiblePricing.ts", "quote_required");
+  assertContains("src/data/flexiblePricing.ts", "visit_then_quote");
+  assertContains("src/data/flexiblePricing.ts", "defaultQuoteAgreements");
+  assertContains("src/data/flexiblePricing.ts", "defaultAdditionalRequests");
+  assertContains("src/lib/flexiblePricing.ts", "pricingSummary");
+  assertContains("src/lib/flexiblePricing.ts", "creditsForInitialHold");
+  assertContains("src/components/BookingDrawer.tsx", "quote_request_submit");
+  assertContains("src/components/BookingDrawer.tsx", "Cotizacion solicitada");
+  assertContains("src/components/Dashboards.tsx", "Cotizaciones y acuerdos");
+  assertContains("src/components/Dashboards.tsx", "Propuestas y adicionales");
+  assertContains("src/components/AdminPanel.tsx", "Tarifas, cotizaciones y negociación");
+  assertContains("src/app/checkout/page.tsx", "quote_acceptance_hold");
+  assertContains("src/app/checkout/page.tsx", "additional_work_hold");
+  assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por categoria");
+  assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por comuna");
+  assertContains("src/components/AdminPricingPanel.tsx", "Certificacion requerida por categoria");
+  assertNoPublicInternalPricingLeak();
   for (const fn of [
     "formatCLP",
     "normalizeCLPInput",
