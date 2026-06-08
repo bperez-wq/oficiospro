@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -18,7 +18,19 @@ export function SpecialistCard({
   specialist: Specialist;
   onReserve?: (id: string) => void;
 }) {
-  const [agendaOpen, setAgendaOpen] = useState(false);
+  const [bookingModal, setBookingModal] = useState<{
+    isOpen: boolean;
+    specialistId: string | null;
+    specialistSnapshot: Specialist | null;
+    selectedServiceId: string | null;
+    selectedSlot: null;
+  }>({
+    isOpen: false,
+    specialistId: null,
+    specialistSnapshot: null,
+    selectedServiceId: null,
+    selectedSlot: null,
+  });
   const [contactOpen, setContactOpen] = useState(false);
   const [summary, setSummary] = useState<AvailabilitySummary | null>(null);
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
@@ -42,6 +54,24 @@ export function SpecialistCard({
   const nextSlotLabel = summary?.nextSlot
     ? `${formatDisplayDate(summary.nextSlot.date)} ${summary.nextSlot.label}`
     : "Solicita contacto y revisaremos disponibilidad.";
+
+  const openBookingModal = useCallback(() => {
+    setBookingModal({
+      isOpen: true,
+      specialistId: specialist.id,
+      specialistSnapshot: snapshotSpecialist(specialist),
+      selectedServiceId: primaryService.id,
+      selectedSlot: null,
+    });
+  }, [primaryService.id, specialist]);
+
+  const closeBookingModal = useCallback(() => {
+    setBookingModal((current) => ({
+      ...current,
+      isOpen: false,
+      selectedSlot: null,
+    }));
+  }, []);
 
   return (
     <article className="group overflow-hidden rounded-card border border-line bg-white shadow-sm transition duration-200 hover:-translate-y-1.5 hover:border-brand/30 hover:shadow-lift">
@@ -120,7 +150,7 @@ export function SpecialistCard({
               Ver perfil
             </Link>
           )}
-          <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={() => setAgendaOpen(true)}>
+          <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={openBookingModal}>
             {bookingPrimaryAction(primaryService)}
           </button>
         </div>
@@ -140,12 +170,35 @@ export function SpecialistCard({
           )}
         </div>
 
-        {contactOpen ? <InstantContactPanel specialist={specialist} onOpenAgenda={() => setAgendaOpen(true)} /> : null}
+        {contactOpen ? <InstantContactPanel specialist={specialist} onOpenAgenda={openBookingModal} /> : null}
       </div>
 
-      <BookingDrawer specialist={specialist} open={agendaOpen} onClose={() => setAgendaOpen(false)} />
+      {bookingModal.specialistSnapshot ? (
+        <BookingDrawer
+          key={bookingModal.specialistId ?? "booking-drawer"}
+          specialist={bookingModal.specialistSnapshot}
+          open={bookingModal.isOpen}
+          onClose={closeBookingModal}
+        />
+      ) : null}
     </article>
   );
+}
+
+function snapshotSpecialist(specialist: Specialist): Specialist {
+  return {
+    ...specialist,
+    badges: [...(specialist.badges ?? [])],
+    gallery: [...(specialist.gallery ?? [])],
+    galleryImages: [...(specialist.galleryImages ?? [])],
+    certifications: [...(specialist.certifications ?? [])],
+    servicesOffered: [...(specialist.servicesOffered ?? [])],
+    servicePricing: specialist.servicePricing?.map((service) => ({ ...service })),
+    workHistory: (specialist.workHistory ?? []).map((work) => ({ ...work })),
+    reviews: (specialist.reviews ?? []).map((review) => ({ ...review })),
+    specialties: specialist.specialties ? [...specialist.specialties] : undefined,
+    validation: specialist.validation ? { ...specialist.validation } : undefined,
+  };
 }
 
 function badgeClass(badge: string) {

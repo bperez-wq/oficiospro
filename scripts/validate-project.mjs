@@ -274,6 +274,16 @@ if (assetDirectory === "./out") {
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+addBlockedSlot\s*\(/, "addBlockedSlot helper");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+createBookingRequest\s*\(/, "createBookingRequest helper");
   assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio.");
+  assertContains("src/components/BookingDrawer.tsx", "createPortal");
+  assertContains("src/components/BookingDrawer.tsx", "document.body");
+  assertContains("src/components/BookingDrawer.tsx", "document.body.style.overflow");
+  assertContains("src/components/BookingDrawer.tsx", 'event.key === "Escape"');
+  assertContains("src/components/BookingDrawer.tsx", "event.target === event.currentTarget");
+  assertContains("src/components/SpecialistCard.tsx", "snapshotSpecialist");
+  assertContains("src/components/SpecialistCard.tsx", "specialistSnapshot");
+  if (readText("src/components/SpecialistCard.tsx").includes("setAgendaOpen")) {
+    fail("Booking drawer must not be driven by transient agendaOpen state inside hovered cards");
+  }
   assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
   assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
   assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
