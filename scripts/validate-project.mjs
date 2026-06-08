@@ -208,6 +208,15 @@ if (assetDirectory === "./out") {
   assertExists("src/components/AvailabilityBadge.tsx");
   assertExists("src/components/AvailabilityCalendar.tsx");
   assertExists("src/components/BookingDrawer.tsx");
+  assertExists("src/components/PageShell.tsx");
+  assertExists("src/components/PageHero.tsx");
+  assertExists("src/components/PremiumCard.tsx");
+  assertExists("src/components/TrustBadge.tsx");
+  assertExists("src/components/SectionHeader.tsx");
+  assertExists("src/components/StickyMobileCTA.tsx");
+  assertExists("src/components/ContactTrustStrip.tsx");
+  assertExists("src/components/OperationalDashboardMock.tsx");
+  assertExists("src/components/AdminCreditLedgerPreview.tsx");
   assertExists("src/components/InstantContactPanel.tsx");
   assertExists("src/components/SpecialistAgendaPanel.tsx");
   assertExists("src/components/TimeSlotPicker.tsx");
@@ -221,6 +230,7 @@ if (assetDirectory === "./out") {
   assertExists("src/lib/storage.ts");
   assertExists("src/app/agenda-especialista/page.tsx");
   assertExists("src/app/contacto/page.tsx");
+  assertExists("src/app/impacto/page.tsx");
   assertExists("src/app/terminos/page.tsx");
   assertExists("src/app/privacidad/page.tsx");
   assertExists("src/app/faq/page.tsx");
@@ -235,6 +245,12 @@ if (assetDirectory === "./out") {
   assertExists("src/components/AdminPricingPanel.tsx");
   assertExists("src/components/PostulationToast.tsx");
   assertExists("docs/leads-and-email.md");
+  assertExists("docs/business-model-impact.md");
+  assertExists("docs/platform-worker-compliance-notes.md");
+  assertExists("docs/credit-finance-ledger.md");
+  assertExists("docs/internal-page-design-audit.md");
+  assertExists("src/data/financeModel.ts");
+  assertExists("src/lib/creditLedger.ts");
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
@@ -289,7 +305,19 @@ if (assetDirectory === "./out") {
   assertContains("src/components/BookingDrawer.tsx", "submitLead");
   assertContains("src/app/checkout/page.tsx", "payment_interest");
   assertContains("src/app/contacto/page.tsx", "bperez@oficiospro.cl");
+  assertContains("src/app/contacto/page.tsx", "Centralizamos el primer contacto");
   assertContains("src/components/Footer.tsx", "bperez@oficiospro.cl");
+  assertContains("src/components/Footer.tsx", "/impacto");
+  assertContains("src/components/PlatformNav.tsx", "/impacto");
+  assertContains("src/app/impacto/page.tsx", "OficiosPro: infraestructura de confianza para el trabajo técnico en Chile");
+  assertContains("src/app/impacto/page.tsx", "Profesionalizar el oficio");
+  assertContains("src/app/impacto/page.tsx", "Formalizar oportunidades");
+  assertContains("src/app/impacto/page.tsx", "Más trabajo técnico con reputación y trazabilidad");
+  assertContains("src/app/impacto/page.tsx", "Contratación flexible para empresas");
+  assertContains("src/app/impacto/page.tsx", "Créditos acumulables para servicios reales");
+  assertContains("src/app/impacto/page.tsx", "Pago protegido y evidencia de trabajo");
+  assertContains("src/app/impacto/page.tsx", "sujeto a revisión contable y tributaria");
+  assertContains("src/app/impacto/page.tsx", "bperez@oficiospro.cl");
   assertContains("docs/leads-and-email.md", "LEADS_TO_EMAIL=bperez@oficiospro.cl");
   assertContains("src/components/Forms.tsx", "Tarifa esperada por servicio");
   assertContains("src/components/Forms.tsx", "No tengo certificaciones formales");
@@ -311,6 +339,28 @@ if (assetDirectory === "./out") {
   assertContains("src/components/Dashboards.tsx", "Cotizaciones y acuerdos");
   assertContains("src/components/Dashboards.tsx", "Propuestas y adicionales");
   assertContains("src/components/AdminPanel.tsx", "Tarifas, cotizaciones y negociación");
+  assertContains("src/components/AdminPanel.tsx", "AdminCreditLedgerPreview");
+  assertContains("src/components/AdminCreditLedgerPreview.tsx", "El cliente ve créditos");
+  assertContains("src/data/financeModel.ts", "credit_purchased");
+  assertContains("src/data/financeModel.ts", "specialist_payout_pending");
+  assertContains("src/data/financeModel.ts", "invoice_pending");
+  assertContains("src/data/financeModel.ts", "boleta_received");
+  for (const fn of [
+    "createCreditPurchaseEvent",
+    "reserveCreditsForBooking",
+    "redeemCreditsForCompletedJob",
+    "releaseReservedCredits",
+    "refundCredits",
+    "expireCredits",
+    "calculateAvailableCredits",
+    "calculateReservedCredits",
+    "calculateRedeemedCredits",
+    "calculateOutstandingLiability",
+    "calculatePlatformFeeEstimate",
+    "calculateSpecialistPayoutEstimate",
+  ]) {
+    assertRegex("src/lib/creditLedger.ts", new RegExp(`export\\s+function\\s+${fn}\\s*\\(`), `${fn} credit ledger helper`);
+  }
   assertContains("src/app/checkout/page.tsx", "quote_acceptance_hold");
   assertContains("src/app/checkout/page.tsx", "additional_work_hold");
   assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por categoria");
@@ -336,6 +386,13 @@ if (assetDirectory === "./out") {
   if (readText("src/components/Forms.tsx").includes("Precio cliente en créditos")) {
     fail("Specialist form must not let specialists choose client credits");
   }
+  for (const forbiddenCreditInput of ["Creditos fijos", "Creditos por hora", "Precio minimo en creditos", "Precio maximo en creditos", "Precio visita en creditos"]) {
+    if (readText("src/components/Forms.tsx").includes(forbiddenCreditInput)) {
+      fail(`Specialist form must not expose editable credit input: ${forbiddenCreditInput}`);
+    }
+  }
+  assertContains("src/components/Forms.tsx", "Cálculo interno OficiosPro");
+  assertContains("src/components/Forms.tsx", "El especialista declara CLP. OficiosPro calcula créditos cliente");
   if (readText("src/components/Forms.tsx").includes("Monto que cobra especialista CLP")) {
     fail("Specialist form must use 'Tarifa esperada por servicio' instead of old CLP label");
   }

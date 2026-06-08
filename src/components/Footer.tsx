@@ -8,6 +8,7 @@ const groups = [
       { href: "/especialistas", label: "Especialistas" },
       { href: "/club-hogar", label: "Club Hogar" },
       { href: "/empresas", label: "Empresas" },
+      { href: "/impacto", label: "Impacto" },
     ],
   },
   {
@@ -33,6 +34,7 @@ const groups = [
       { href: "/faq", label: "FAQ" },
       { href: "/terminos", label: "Términos" },
       { href: "/privacidad", label: "Privacidad" },
+      { href: "/impacto", label: "Impacto" },
     ],
   },
 ];

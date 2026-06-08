@@ -27,6 +27,7 @@ import {
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
+import { calculateClientCreditsFromSpecialistPayout, estimatePlatformMarginCLP } from "@/lib/pricing";
 import { submitLead } from "@/lib/leadClient";
 
 type ServiceDraft = {
@@ -123,31 +124,37 @@ function normalizeSpecialistCLPInput(value: string | number) {
   return Math.round(numeric);
 }
 
-function hasOddCreditValue(service: ServiceDraft) {
-  const values = [service.fixedCredits, service.hourlyCredits, service.minCredits, service.maxCredits, service.visitCredits].filter((value) => Number(value) > 0);
-  return values.some((value) => Number(value) % 2 !== 0);
-}
-
 function serviceHasPricingBasis(service: ServiceDraft) {
-  if (service.pricingMode === "fixed") return Number(service.fixedCredits) > 0;
-  if (service.pricingMode === "hourly") return Number(service.hourlyCredits) > 0 && Number(service.minHours) > 0 && Number(service.maxHours) >= Number(service.minHours);
-  if (service.pricingMode === "range") return Number(service.minCredits) > 0 && Number(service.maxCredits) >= Number(service.minCredits);
-  if (service.pricingMode === "visit_then_quote") return Number(service.visitCredits) > 0;
-  if (service.pricingMode === "quote_required") return Number(service.visitCredits) > 0 || (Number(service.minCredits) > 0 && Number(service.maxCredits) >= Number(service.minCredits));
+  if (service.pricingMode === "hourly") return Number(service.minHours) > 0 && Number(service.maxHours) >= Number(service.minHours);
+  if (service.pricingMode === "quote_required") return true;
   return true;
 }
 
+function estimatedClientCreditsForService(service: ServiceDraft) {
+  const payout = normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP);
+  if (!payout) return 0;
+  return calculateClientCreditsFromSpecialistPayout({
+    specialistExpectedPayoutCLP: payout,
+    categoryId: service.serviceTypeId,
+    serviceId: service.serviceTypeId,
+    emergency: service.emergency,
+  });
+}
+
+function estimatedMarginForService(service: ServiceDraft) {
+  const payout = normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP);
+  if (!payout) return 0;
+  return estimatePlatformMarginCLP({
+    specialistExpectedPayoutCLP: payout,
+    categoryId: service.serviceTypeId,
+    serviceId: service.serviceTypeId,
+    emergency: service.emergency,
+  });
+}
+
 function marginWarningForService(service: ServiceDraft) {
-  const credits =
-    service.pricingMode === "fixed"
-      ? service.fixedCredits
-      : service.pricingMode === "hourly"
-        ? service.hourlyCredits * Math.max(1, service.minHours)
-        : service.pricingMode === "visit_then_quote"
-          ? service.visitCredits
-          : service.minCredits;
-  const marginCLP = Number(credits || 0) * 1000 - Number(service.specialistExpectedPayoutCLP || 0);
-  return service.specialistExpectedPayoutCLP > 0 && credits > 0 && marginCLP < 5000;
+  const marginCLP = estimatedMarginForService(service);
+  return service.specialistExpectedPayoutCLP > 0 && marginCLP < 5000;
 }
 
 export function LoginForm() {
@@ -527,15 +534,11 @@ export function SpecialistRegisterForm() {
         return false;
       }
       if (services.some((service) => !serviceHasPricingBasis(service))) {
-        setStatus("Completa creditos, rango, horas o visita segun la modalidad de precio seleccionada.");
+        setStatus("Completa horas, duracion y tarifa esperada segun la modalidad seleccionada. OficiosPro calculara los creditos cliente.");
         return false;
       }
       if (services.some((service) => service.specialty === OTHER_SERVICE_VALUE && !service.otherServiceDescription.trim())) {
         setStatus("Describe el servicio cuando selecciones Otro servicio.");
-        return false;
-      }
-      if (services.some(hasOddCreditValue)) {
-        setStatus("Usa creditos pares cuando sea posible para mantener precios simples de revisar.");
         return false;
       }
     }
@@ -591,25 +594,29 @@ export function SpecialistRegisterForm() {
     const mainType = getServiceTypeById(services[0].serviceTypeId);
     const primaryService = services[0];
     const now = new Date().toISOString();
-    const normalizedServices = services.map((service) => ({
-      ...service,
-      isOtherService: service.specialty === OTHER_SERVICE_VALUE,
-      specialistExpectedPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
-      specialistPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
-      fixedCredits: Number(service.fixedCredits || 0),
-      hourlyCredits: Number(service.hourlyCredits || 0),
-      minHours: Number(service.minHours || 0),
-      maxHours: Number(service.maxHours || 0),
-      minCredits: Number(service.minCredits || 0),
-      maxCredits: Number(service.maxCredits || 0),
-      visitCredits: Number(service.visitCredits || 0),
-      clientCredits: service.pricingMode === "fixed" ? Number(service.fixedCredits || 0) : 0,
-      pricingStatus: marginWarningForService(service) ? "pending_review" as const : "approved" as const,
-      pricingNotesInternal: marginWarningForService(service)
-        ? "Margen bajo detectado. OficiosPro debe revisar antes de publicar."
-        : "Tarifa declarada por especialista. OficiosPro puede ajustar creditos cliente antes de publicar.",
-      emergencyAvailable: service.emergency,
-    }));
+    const normalizedServices = services.map((service) => {
+      const calculatedClientCredits = estimatedClientCreditsForService(service);
+      const rangeMaxCredits = calculatedClientCredits ? calculatedClientCredits + 10 : 0;
+      return {
+        ...service,
+        isOtherService: service.specialty === OTHER_SERVICE_VALUE,
+        specialistExpectedPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
+        specialistPayoutCLP: normalizeSpecialistCLPInput(service.specialistExpectedPayoutCLP),
+        fixedCredits: service.pricingMode === "fixed" ? calculatedClientCredits : 0,
+        hourlyCredits: service.pricingMode === "hourly" ? calculatedClientCredits : 0,
+        minHours: Number(service.minHours || 0),
+        maxHours: Number(service.maxHours || 0),
+        minCredits: ["range", "custom", "quote_required"].includes(service.pricingMode) ? calculatedClientCredits : 0,
+        maxCredits: ["range", "custom", "quote_required"].includes(service.pricingMode) ? rangeMaxCredits : 0,
+        visitCredits: ["visit_then_quote", "quote_required"].includes(service.pricingMode) ? calculatedClientCredits : 0,
+        clientCredits: service.pricingMode === "fixed" ? calculatedClientCredits : 0,
+        pricingStatus: marginWarningForService(service) ? "pending_review" as const : "approved" as const,
+        pricingNotesInternal: marginWarningForService(service)
+          ? "Margen bajo detectado. OficiosPro debe revisar antes de publicar."
+          : "Tarifa declarada por especialista. OficiosPro calcula creditos cliente antes de publicar.",
+        emergencyAvailable: service.emergency,
+      };
+    });
     const request = appendPendingSpecialist({
       status: "pendiente",
       reviewStatus: "pendiente_revision",
@@ -970,6 +977,9 @@ function ServiceEditor({
 }) {
   const selectedPricing = pricingModeOptions.find((option) => option.value === service.pricingMode);
   const hasLowMargin = marginWarningForService(service);
+  const estimatedClientCredits = estimatedClientCreditsForService(service);
+  const estimatedMarginCLP = estimatedMarginForService(service);
+  const pricingReviewLabel = estimatedClientCredits ? `${estimatedClientCredits} créditos estimados` : "Créditos por revisar";
   return (
     <article className="grid gap-4 rounded-[24px] border border-line bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -1033,18 +1043,8 @@ function ServiceEditor({
           Descripción
           <textarea value={service.description} onChange={(event) => onChange({ description: event.target.value })} placeholder="Qué incluye, condiciones y materiales excluidos" />
         </label>
-        {service.pricingMode === "fixed" ? (
-          <label className="field">
-            Creditos fijos
-            <input type="number" min="2" step="2" value={service.fixedCredits} onChange={(event) => onChange({ fixedCredits: Number(event.target.value), clientCredits: Number(event.target.value) })} />
-          </label>
-        ) : null}
         {service.pricingMode === "hourly" ? (
           <>
-            <label className="field">
-              Creditos por hora
-              <input type="number" min="2" step="2" value={service.hourlyCredits} onChange={(event) => onChange({ hourlyCredits: Number(event.target.value) })} />
-            </label>
             <label className="field">
               Horas minimas
               <input type="number" min="1" step="1" value={service.minHours} onChange={(event) => onChange({ minHours: Number(event.target.value) })} />
@@ -1054,24 +1054,6 @@ function ServiceEditor({
               <input type="number" min="1" step="1" value={service.maxHours} onChange={(event) => onChange({ maxHours: Number(event.target.value) })} />
             </label>
           </>
-        ) : null}
-        {["quote_required", "range", "visit_then_quote", "custom"].includes(service.pricingMode) ? (
-          <>
-            <label className="field">
-              Precio minimo en creditos
-              <input type="number" min="0" step="2" value={service.minCredits} onChange={(event) => onChange({ minCredits: Number(event.target.value) })} />
-            </label>
-            <label className="field">
-              Precio maximo en creditos
-              <input type="number" min="0" step="2" value={service.maxCredits} onChange={(event) => onChange({ maxCredits: Number(event.target.value) })} />
-            </label>
-          </>
-        ) : null}
-        {["quote_required", "visit_then_quote", "range"].includes(service.pricingMode) ? (
-          <label className="field">
-            Precio visita en creditos
-            <input type="number" min="0" step="2" value={service.visitCredits} onChange={(event) => onChange({ visitCredits: Number(event.target.value) })} />
-          </label>
         ) : null}
         <label className="field">
           Tarifa esperada por servicio
@@ -1087,6 +1069,20 @@ function ServiceEditor({
             Indica el monto esperado especialista en CLP. Para cotizaciones puede quedar en 0 hasta que envies propuesta. Ejemplo: {formatCLP(25000)}.
           </span>
         </label>
+        <div className="rounded-2xl border border-brand/15 bg-brand-soft p-4 md:col-span-2">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <span className="text-xs font-black uppercase text-brand-dark">Cálculo interno OficiosPro</span>
+              <strong className="mt-1 block text-xl text-ink">{pricingReviewLabel}</strong>
+              <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
+                El especialista declara CLP. OficiosPro calcula créditos cliente, margen y condiciones antes de publicar el servicio.
+              </p>
+            </div>
+            <span className={`chip ${hasLowMargin ? "bg-amber-50 text-amber-800" : "bg-white text-brand-dark"}`}>
+              Margen estimado {formatCLP(estimatedMarginCLP)}
+            </span>
+          </div>
+        </div>
         <label className="field">
           Visita inicial gratis
           <select value={service.initialVisitFree ? "yes" : "no"} onChange={(event) => onChange({ initialVisitFree: event.target.value === "yes" })}>

@@ -6,6 +6,7 @@ const items = [
   { href: "/especialistas", label: "Especialistas" },
   { href: "/club-hogar", label: "Club Hogar" },
   { href: "/empresas", label: "Empresas" },
+  { href: "/impacto", label: "Impacto" },
   { href: "/dashboard-empresa", label: "Dashboard Empresa" },
   { href: "/dashboard-especialista", label: "Especialista" },
   { href: "/agenda-especialista", label: "Agenda especialista" },
