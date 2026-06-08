@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const groups = [
   {
@@ -41,9 +42,8 @@ export function Footer() {
     <footer className="border-t border-white/10 bg-enterprise px-5 py-12 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_1.4fr]">
         <div>
-          <Link href="/" className="flex items-center gap-3 font-black">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white text-sm text-brand-dark">OP</span>
-            <span className="text-2xl">OficiosPro</span>
+          <Link href="/" className="flex items-center font-black" aria-label="Ir al inicio de OficiosPro">
+            <BrandLogo variant="white" size="lg" />
           </Link>
           <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-white/70">
             Técnicos verificados, créditos acumulables y dashboards para convertir mantenciones del hogar y operación empresarial en una experiencia confiable.

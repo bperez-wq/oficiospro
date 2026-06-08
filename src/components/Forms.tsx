@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import {
@@ -1340,7 +1341,7 @@ function MockMapPin({ title, lat, lng }: { title: string; lat: number | null; ln
   return (
     <div className="relative min-h-44 overflow-hidden rounded-2xl border border-line bg-[linear-gradient(135deg,#e8f4f1_25%,#f8fbfa_25%,#f8fbfa_50%,#e8f4f1_50%,#e8f4f1_75%,#f8fbfa_75%)] bg-[length:32px_32px] p-4">
       <div className="absolute left-1/2 top-1/2 grid h-14 w-14 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-brand text-xl font-black text-white shadow-card">
-        OP
+        <BrandLogo variant="white" size="sm" showWordmark={false} />
       </div>
       <div className="absolute bottom-4 left-4 right-4 rounded-2xl bg-white/95 p-3 shadow-soft">
         <strong className="block text-sm text-ink">{title}</strong>

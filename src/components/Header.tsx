@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { BrandLogo } from "@/components/BrandLogo";
 import { ConversionButton } from "@/components/ConversionModal";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
@@ -72,11 +73,8 @@ export function Header() {
       ) : null}
 
       <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-5">
-        <Link href="/" className="flex shrink-0 items-center gap-3 font-black">
-          <span className="grid h-11 w-11 place-items-center rounded-2xl bg-brand text-sm text-white shadow-lg shadow-brand/25">
-            OP
-          </span>
-          <span className="text-xl tracking-tight">OficiosPro</span>
+        <Link href="/" className="flex shrink-0 items-center font-black" aria-label="Ir al inicio de OficiosPro">
+          <BrandLogo variant="primary" size="md" />
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-black text-muted lg:flex">

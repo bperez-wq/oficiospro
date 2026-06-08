@@ -44,6 +44,14 @@ function countMatches(path, regex) {
   return [...content.matchAll(regex)].length;
 }
 
+function assertNoHardcodedVisualOpMark(path) {
+  if (!existsSync(fullPath(path))) return;
+  const content = readText(path);
+  if (/>[\s\r\n]*OP[\s\r\n]*</.test(content)) {
+    fail(`${path} must use BrandLogo instead of a hardcoded OP visual mark`);
+  }
+}
+
 function assertPricingMath() {
   const config = {
     customerCreditValueCLP: 1000,
@@ -106,6 +114,40 @@ assertPricingMath();
 
 assertExists("wrangler.toml");
 assertExists("package.json");
+assertExists("public/site.webmanifest");
+assertExists("src/components/BrandLogo.tsx");
+
+for (const asset of [
+  "public/brand/favicon-op.svg",
+  "public/brand/logo-worker-primary.svg",
+  "public/brand/logo-worker-white.svg",
+  "public/brand/logo-worker-mono.svg",
+  "public/brand/logo-worker-tile.svg",
+]) {
+  assertExists(asset);
+}
+
+if (existsSync(fullPath("src/components/BrandLogo.tsx"))) {
+  assertContains("src/components/BrandLogo.tsx", 'variant?: BrandLogoVariant');
+  assertContains("src/components/BrandLogo.tsx", 'size?: BrandLogoSize');
+  assertContains("src/components/BrandLogo.tsx", 'showWordmark?: boolean');
+  assertContains("src/components/BrandLogo.tsx", 'className?: string');
+  assertContains("src/components/BrandLogo.tsx", "/brand/logo-worker-primary.svg");
+  assertContains("src/components/BrandLogo.tsx", "/brand/logo-worker-white.svg");
+  assertContains("src/components/BrandLogo.tsx", "/brand/logo-worker-mono.svg");
+  assertContains("src/components/BrandLogo.tsx", "/brand/logo-worker-tile.svg");
+}
+
+if (existsSync(fullPath("src/app/layout.tsx"))) {
+  assertContains("src/app/layout.tsx", "/brand/favicon-op.svg");
+  assertContains("src/app/layout.tsx", "/brand/logo-worker-tile.svg");
+}
+
+assertContains("public/site.webmanifest", "/brand/favicon-op.svg");
+assertContains("public/site.webmanifest", "/brand/logo-worker-tile.svg");
+assertNoHardcodedVisualOpMark("src/components/Header.tsx");
+assertNoHardcodedVisualOpMark("src/components/Footer.tsx");
+assertNoHardcodedVisualOpMark("src/components/Forms.tsx");
 
 let assetDirectory = "";
 
