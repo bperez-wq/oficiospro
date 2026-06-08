@@ -435,7 +435,7 @@ function leadEmailHtml(lead: LeadRecord) {
   ];
   const table = rows
     .filter(([, value]) => value)
-    .map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(label)}</th><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(value ?? ""))}</td></tr>`)
+    .map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(label ?? ""))}</th><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(value ?? ""))}</td></tr>`)
     .join("");
   return `<div style="font-family:Arial,sans-serif;color:#0f172a"><h1>Nuevo lead OficiosPro</h1><p>Revisar en admin futuro con ID <strong>${escapeHtml(lead.id)}</strong>.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
 }
