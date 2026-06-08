@@ -7,23 +7,30 @@ import { submitLead } from "@/lib/leadClient";
 
 export function InstantContactPanel({ specialist, onOpenAgenda }: { specialist: Specialist; onOpenAgenda?: () => void }) {
   const [status, setStatus] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   async function requestContact() {
-    createInstantContactRequest(specialist);
-    const result = await submitLead({
-      leadType: "contact_message",
-      fullName: "Cliente OficiosPro",
-      service: `Contacto inmediato por ${specialist.specialty}`,
-      regionName: specialist.region,
-      communeName: specialist.commune ?? specialist.zone,
-      specialistId: specialist.id,
-      specialistName: specialist.name,
-      creditsEstimate: specialist.credits,
-      sourceComponent: "InstantContactPanel",
-      sourceButton: "Contacto inmediato",
-      consentContact: false,
-    });
-    setStatus(result.ok ? "Contacto solicitado. Revisaremos disponibilidad y próximo paso con el especialista." : result.message);
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      createInstantContactRequest(specialist);
+      const result = await submitLead({
+        leadType: "contact_message",
+        fullName: "Cliente OficiosPro",
+        service: `Contacto inmediato por ${specialist.specialty}`,
+        regionName: specialist.region,
+        communeName: specialist.commune ?? specialist.zone,
+        specialistId: specialist.id,
+        specialistName: specialist.name,
+        creditsEstimate: specialist.credits,
+        sourceComponent: "InstantContactPanel",
+        sourceButton: "Contacto inmediato",
+        consentContact: false,
+      });
+      setStatus(result.ok ? "Contacto solicitado. Revisaremos disponibilidad y próximo paso con el especialista." : result.message);
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   return (
@@ -35,8 +42,8 @@ export function InstantContactPanel({ specialist, onOpenAgenda }: { specialist: 
           <p className="mt-1 text-sm font-bold leading-6 text-brand-dark">La solicitud queda pendiente de confirmación. No bloquea un horario automático.</p>
         </div>
         <div className="flex flex-col gap-2 sm:min-w-52">
-          <button className="btn-primary" type="button" data-event="request_instant_contact" onClick={requestContact}>
-            Contacto inmediato
+          <button className="btn-primary" type="button" data-event="request_instant_contact" disabled={submitting} onClick={requestContact}>
+            {submitting ? "Enviando..." : "Contacto inmediato"}
           </button>
           {onOpenAgenda ? (
             <button className="btn-secondary" type="button" data-event="instant_contact_open_agenda" onClick={onOpenAgenda}>

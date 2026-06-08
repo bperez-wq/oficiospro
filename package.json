@@ -9,7 +9,8 @@
     "pages:build": "next build",
     "deploy": "wrangler deploy",
     "start": "next start",
-    "validate": "node scripts/validate-project.mjs"
+    "validate": "node scripts/validate-project.mjs",
+    "test:leads": "node scripts/test-lead-endpoints.mjs"
   },
   "engines": {
     "node": ">=20"

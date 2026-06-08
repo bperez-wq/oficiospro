@@ -229,7 +229,14 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
       .run();
   }
 
-  return json({ ok: true, id: lead.id, stored, emailSent: emailResult.sent, error: stored ? undefined : "database_not_configured" });
+  return json({
+    ok: true,
+    id: lead.id,
+    stored,
+    emailSent: emailResult.sent,
+    emailError: emailResult.error ?? undefined,
+    error: stored ? undefined : "database_not_configured",
+  });
 }
 
 async function listAdminLeads(request: Request, env: Env) {
@@ -240,6 +247,9 @@ async function listAdminLeads(request: Request, env: Env) {
   const url = new URL(request.url);
   const status = sanitizeText(url.searchParams.get("status") ?? "", 40);
   const leadType = sanitizeText(url.searchParams.get("leadType") ?? "", 40);
+  const regionCode = sanitizeText(url.searchParams.get("regionCode") ?? "", 40);
+  const communeCode = sanitizeText(url.searchParams.get("communeCode") ?? "", 40);
+  const communeName = sanitizeText(url.searchParams.get("communeName") ?? "", 120);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
 
   let query = "SELECT * FROM lead_submissions";
@@ -252,6 +262,18 @@ async function listAdminLeads(request: Request, env: Env) {
   if (leadType) {
     conditions.push("lead_type = ?");
     values.push(leadType);
+  }
+  if (regionCode) {
+    conditions.push("region_code = ?");
+    values.push(regionCode);
+  }
+  if (communeCode) {
+    conditions.push("commune_code = ?");
+    values.push(communeCode);
+  }
+  if (communeName) {
+    conditions.push("commune_name = ?");
+    values.push(communeName);
   }
   if (conditions.length) query += ` WHERE ${conditions.join(" AND ")}`;
   query += " ORDER BY created_at DESC LIMIT ?";

@@ -79,7 +79,7 @@ const certificationOptions = ["SEC", "HVAC", "Gas", "Soldadura", "Otro"];
 const specialistSuccessMessage =
   "Recibimos tu postulación. El equipo OficiosPro revisará tus datos y te contactará para avanzar con la verificación.";
 const specialistDbFallbackMessage =
-  "Recibimos tu intención de postular. Si no recibes contacto pronto, escríbenos a bperez@oficiospro.cl.";
+  "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -978,7 +978,6 @@ function ServiceEditor({
   const selectedPricing = pricingModeOptions.find((option) => option.value === service.pricingMode);
   const hasLowMargin = marginWarningForService(service);
   const estimatedClientCredits = estimatedClientCreditsForService(service);
-  const estimatedMarginCLP = estimatedMarginForService(service);
   const pricingReviewLabel = estimatedClientCredits ? `${estimatedClientCredits} créditos estimados` : "Créditos por revisar";
   return (
     <article className="grid gap-4 rounded-[24px] border border-line bg-white p-5 shadow-sm">
@@ -1075,12 +1074,10 @@ function ServiceEditor({
               <span className="text-xs font-black uppercase text-brand-dark">Cálculo interno OficiosPro</span>
               <strong className="mt-1 block text-xl text-ink">{pricingReviewLabel}</strong>
               <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
-                El especialista declara CLP. OficiosPro calcula créditos cliente, margen y condiciones antes de publicar el servicio.
+                El especialista declara CLP. OficiosPro calcula créditos cliente y revisa las condiciones antes de publicar el servicio.
               </p>
             </div>
-            <span className={`chip ${hasLowMargin ? "bg-amber-50 text-amber-800" : "bg-white text-brand-dark"}`}>
-              Margen estimado {formatCLP(estimatedMarginCLP)}
-            </span>
+            <span className={`chip ${hasLowMargin ? "bg-amber-50 text-amber-800" : "bg-white text-brand-dark"}`}>Revisión OficiosPro</span>
           </div>
         </div>
         <label className="field">
@@ -1141,8 +1138,8 @@ function ServiceEditor({
       </div>
       <div className={`rounded-2xl p-4 text-sm font-bold ${hasLowMargin ? "border border-amber-200 bg-amber-50 text-amber-900" : "bg-slate-50 text-muted"}`}>
         {hasLowMargin
-          ? "Advertencia: el margen estimado queda bajo el minimo hogar. OficiosPro dejara este servicio en revision antes de publicarlo."
-          : "OficiosPro revisara la modalidad, creditos, margen y condiciones antes de publicar el servicio."}
+          ? "OficiosPro dejara este servicio en revision antes de publicarlo."
+          : "OficiosPro revisara la modalidad, creditos y condiciones antes de publicar el servicio."}
       </div>
     </article>
   );
