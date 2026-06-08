@@ -14,6 +14,13 @@ import {
   specialtyOptionsForType,
 } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
+import {
+  clearSpecialistQuickDraft,
+  mergeSpecialistDraft,
+  readSpecialistQuickDraft,
+  saveSpecialistQuickDraft,
+  type SpecialistQuickDraft,
+} from "@/lib/specialistDraft";
 import { getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import {
   appendConversionEvent,
@@ -21,7 +28,6 @@ import {
   appendHomeLead,
   appendQuickSearchLead,
   appendServiceRequestLead,
-  appendSpecialistLead,
   createQuoteAgreement,
   getMockSession,
   type ConversionModalType,
@@ -171,13 +177,17 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   const [searchGeo, setSearchGeo] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [specialistDraft, setSpecialistDraft] = useState<SpecialistQuickDraft | null>(null);
+  const [specialistNotice, setSpecialistNotice] = useState("");
 
   useEffect(() => {
     if (!options) return;
     setStep(1);
     setLead(defaultLead);
     setEnterprise(defaultEnterprise);
-    setSpecialistLead(defaultSpecialist);
+    const quickDraft = readSpecialistQuickDraft();
+    setSpecialistDraft(quickDraft);
+    setSpecialistLead((quickDraft ? mergeSpecialistDraft(defaultSpecialist, quickDraft) : defaultSpecialist) as typeof defaultSpecialist);
     setReservation({
       ...defaultReservation,
       serviceTypeId: options.specialist?.serviceTypeId ?? "hogar",
@@ -190,8 +200,35 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     setSearchGeo({ lat: null, lng: null });
     setSuccess("");
     setSubmitting(false);
+    setSpecialistNotice("");
     setSelectedPlanId(options.planId ?? (options.type === "plan_empresa" ? "empresa" : "plus"));
   }, [options]);
+
+  useEffect(() => {
+    if (!options || options.type !== "registro_especialista") return;
+    const hasMeaningfulDraft =
+      specialistLead.firstNames ||
+      specialistLead.lastNames ||
+      specialistLead.rut ||
+      specialistLead.phone ||
+      specialistLead.email ||
+      specialistLead.serviceTypeId !== defaultSpecialist.serviceTypeId ||
+      specialistLead.region !== defaultSpecialist.region ||
+      specialistLead.commune !== defaultSpecialist.commune;
+    if (!hasMeaningfulDraft) return;
+    const draft = saveSpecialistQuickDraft({
+      firstNames: specialistLead.firstNames,
+      lastNames: specialistLead.lastNames,
+      rut: specialistLead.rut,
+      whatsapp: specialistLead.phone,
+      email: specialistLead.email,
+      serviceTypeId: specialistLead.serviceTypeId,
+      region: specialistLead.region,
+      commune: specialistLead.commune,
+      fromQuickSpecialist: true,
+    });
+    if (draft) setSpecialistDraft(draft);
+  }, [options, specialistLead]);
 
   const selectedPlan = useMemo(() => getPlanById(selectedPlanId), [selectedPlanId]);
   const clientPlans = subscriptionPlans.filter((plan) => plan.audience === "cliente");
@@ -297,41 +334,35 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
 
   async function submitSpecialistLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const fullName = `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim();
+    const hasBasicFields = fullName.length > 1 && specialistLead.phone.trim() && specialistLead.email.trim() && specialistLead.serviceTypeId;
+    if (!hasBasicFields) {
+      setSpecialistNotice("Completa nombres, apellidos, WhatsApp, email y tipo de servicio para continuar.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(specialistLead.email.trim())) {
+      setSpecialistNotice("Ingresa un email valido para que podamos contactarte.");
+      return;
+    }
+
     setSubmitting(true);
     const serviceType = getServiceTypeById(specialistLead.serviceTypeId) ?? serviceTypes[0];
-    const saved = appendSpecialistLead({
+    const draft = saveSpecialistQuickDraft({
       ...specialistLead,
-      region: regionNameForCode(specialistLead.region),
-      name: `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim(),
-      years: Number(specialistLead.years),
-      serviceTypeName: serviceType.name,
-      sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
-      interest: "Postulación especialista verificado",
+      whatsapp: specialistLead.phone,
+      primaryTrade: serviceType.name,
+      fromQuickSpecialist: true,
     });
     appendConversionEvent({
-      type: "specialist_lead_created",
+      type: "specialist_quick_intent",
       sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
-      data: { leadId: saved.id, serviceType: serviceType.name, commune: specialistLead.commune },
+      data: { status: "borrador", serviceType: serviceType.name, commune: specialistLead.commune, hasDraft: Boolean(draft) },
     });
-    setSuccess("Perfecto. Ahora completa referencias, precios y cobertura para validar tu perfil.");
-    const specialistLeadResult = await submitLead({
-      leadType: "specialist_application",
-      fullName: `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim(),
-      email: specialistLead.email,
-      phone: specialistLead.phone,
-      trade: serviceType.name,
-      regionCode: specialistLead.region,
-      regionName: regionNameForCode(specialistLead.region),
-      communeName: specialistLead.commune,
-      sourceComponent: "ConversionModal",
-      sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
-      payload: { localLeadId: saved.id, rut: specialistLead.rut, years: specialistLead.years },
-    });
-    setSuccess(specialistLeadResult.message);
+    setSpecialistNotice("Precargaremos estos datos en el formulario completo.");
     setSubmitting(false);
     window.setTimeout(() => {
-      window.location.href = `/registro-especialista?lead=${saved.id}`;
-    }, 850);
+      window.location.href = "/registro-especialista?from=quick-specialist";
+    }, 450);
   }
 
   async function submitReservation(event: FormEvent<HTMLFormElement>) {
@@ -550,8 +581,23 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
               <form className="mt-5 grid gap-4" onSubmit={submitSpecialistLead}>
                 <SpecialistLeadFields specialistLead={specialistLead} onChange={setSpecialistLead} />
                 <p className="rounded-2xl bg-brand-soft p-4 text-sm font-black text-brand-dark">
-                  Luego te pediremos tus referencias, precios y cobertura para validar tu perfil.
+                  Usaremos estos datos solo para revisar tu postulación y contactarte. Puedes editarlos antes de enviar.
                 </p>
+                {specialistDraft ? (
+                  <button
+                    className="justify-self-start text-sm font-black text-muted underline-offset-4 transition hover:text-brand hover:underline"
+                    type="button"
+                    onClick={() => {
+                      clearSpecialistQuickDraft();
+                      setSpecialistDraft(null);
+                      setSpecialistLead(defaultSpecialist);
+                      setSpecialistNotice("Datos temporales limpiados.");
+                    }}
+                  >
+                    Limpiar datos
+                  </button>
+                ) : null}
+                {specialistNotice ? <p className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-brand-dark">{specialistNotice}</p> : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
                   {submitting ? "Enviando..." : "Comenzar postulación"}

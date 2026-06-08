@@ -29,6 +29,12 @@ import {
 } from "@/lib/catalog";
 import { calculateClientCreditsFromSpecialistPayout, estimatePlatformMarginCLP } from "@/lib/pricing";
 import { submitLead } from "@/lib/leadClient";
+import {
+  clearSpecialistQuickDraft,
+  mergeSpecialistDraft,
+  readSpecialistQuickDraft,
+  saveSpecialistQuickDraft,
+} from "@/lib/specialistDraft";
 
 type ServiceDraft = {
   serviceTypeId: string;
@@ -448,6 +454,7 @@ export function SpecialistRegisterForm() {
   const [consentVerification, setConsentVerification] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [draftNotice, setDraftNotice] = useState("");
   const [geo, setGeo] = useState({ lat: -33.4489, lng: -70.6693 });
   const [geoStatus, setGeoStatus] = useState("");
   const [baseAddress, setBaseAddress] = useState("");
@@ -457,6 +464,53 @@ export function SpecialistRegisterForm() {
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
 
   const completedReferences = references.filter((reference) => reference.name && reference.phone && reference.work);
+
+  useEffect(() => {
+    const draft = readSpecialistQuickDraft();
+    if (!draft) return;
+
+    setIdentity((current) => mergeSpecialistDraft(current, draft) as typeof current);
+    setBaseRegion((current) => (current && current !== DEFAULT_REGION_CODE ? current : draft.baseRegionCode || current || DEFAULT_REGION_CODE));
+    setBaseCommune((current) => (current && current !== "Santiago" ? current : draft.baseCommuneName || current));
+    setServices((current) => {
+      if (!draft.serviceTypeId) return current;
+      return current.map((service, index) => {
+        if (index !== 0 || (service.serviceTypeId && service.serviceTypeId !== createEmptyService().serviceTypeId)) return service;
+        return {
+          ...service,
+          serviceTypeId: draft.serviceTypeId,
+          specialty: specialtyOptionsForType(draft.serviceTypeId)[0]?.value ?? service.specialty,
+        };
+      });
+    });
+    setDraftNotice("Precargamos los datos que ya ingresaste. Puedes editarlos antes de enviar.");
+  }, []);
+
+  useEffect(() => {
+    const primaryService = services[0];
+    const hasMeaningfulDraft =
+      identity.firstNames ||
+      identity.lastNames ||
+      identity.rut ||
+      identity.whatsapp ||
+      identity.email ||
+      baseRegion ||
+      baseCommune ||
+      primaryService?.serviceTypeId;
+    if (!hasMeaningfulDraft) return;
+
+    saveSpecialistQuickDraft({
+      firstNames: identity.firstNames,
+      lastNames: identity.lastNames,
+      rut: identity.rut,
+      whatsapp: identity.whatsapp,
+      email: identity.email,
+      serviceTypeId: primaryService?.serviceTypeId,
+      region: baseRegion,
+      commune: baseCommune,
+      fromQuickSpecialist: true,
+    });
+  }, [identity, baseRegion, baseCommune, services]);
 
   function updateService(index: number, patch: Partial<ServiceDraft>) {
     setServices((current) =>
@@ -731,6 +785,7 @@ export function SpecialistRegisterForm() {
       setStatus(leadResult.message);
       return;
     }
+    clearSpecialistQuickDraft();
     setSubmitted(true);
     setStatus(leadResult.error === "database_not_configured" ? specialistDbFallbackMessage : specialistSuccessMessage);
     window.setTimeout(() => {
@@ -775,6 +830,7 @@ export function SpecialistRegisterForm() {
             Cada trabajo bien hecho construye tu reputación. OficiosPro muestra tu experiencia, certificaciones y portafolio para que buenos especialistas sean encontrados y recomendados.
           </p>
         </div>
+        {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
         <section className={step <= 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <label className="field">
             Nombres
