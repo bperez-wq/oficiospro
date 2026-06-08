@@ -296,7 +296,8 @@ export type ConversionEvent = {
     | "plan_selected"
     | "specialist_reserved"
     | "company_lead_created"
-    | "specialist_lead_created";
+    | "specialist_lead_created"
+    | "specialist_quick_intent";
   sourceButton: string;
   page: string;
   timestamp: string;
