@@ -172,11 +172,20 @@ export type PendingSpecialistService = {
   name: string;
   description: string;
   specialistComments?: string;
+  specialistExpectedPayoutCLP?: number;
+  specialistApprovedPayoutCLP?: number;
   clientCredits: number;
   specialistPayoutCLP: number;
+  pricingStatus?: "pending_review" | "approved" | "adjusted_by_oficiospro";
+  pricingNotesInternal?: string;
   initialVisitFree: boolean;
   visitCredits: number;
   duration: string;
+  estimatedDurationMinutes?: number;
+  materialsIncluded?: string;
+  conditions?: string;
+  serviceCommunes?: string;
+  emergencyAvailable?: boolean;
   emergency: boolean;
   certificationRequired?: boolean;
   economics?: {
@@ -220,6 +229,10 @@ export type PendingSpecialistProfile = {
   references: PendingSpecialistReference[];
   portfolioPhotos: string[];
   certifications: string[];
+  hasNoFormalCertifications?: boolean;
+  otherCertificationText?: string;
+  reviewStatus?: "pendiente_revision" | "info_solicitada" | "aprobado" | "rechazado";
+  certificationStatus?: "sin_certificacion_declarada" | "certificacion_declarada_pendiente_revision";
   submittedAt: string;
   reviewedAt?: string;
 };
@@ -1119,8 +1132,8 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     jobs: 0,
     trabajosCompletados: 0,
     recommendation: 0,
-    credits: Number(primaryService?.clientCredits ?? 20),
-    precioDesdeCreditos: Number(primaryService?.clientCredits ?? 20),
+    credits: Number(primaryService?.clientCredits || 20),
+    precioDesdeCreditos: Number(primaryService?.clientCredits || 20),
     demand: "Nuevo especialista",
     responseTime: "2.0 h",
     years: 1,

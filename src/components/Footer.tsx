@@ -25,6 +25,15 @@ const groups = [
       { href: "/admin", label: "Admin" },
     ],
   },
+  {
+    title: "Confianza",
+    links: [
+      { href: "/contacto", label: "Contacto" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/terminos", label: "Términos" },
+      { href: "/privacidad", label: "Privacidad" },
+    ],
+  },
 ];
 
 export function Footer() {
@@ -45,6 +54,9 @@ export function Footer() {
           <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-white/70">
             El lugar donde los buenos trabajadores brillan, construyen reputación y acceden a mejores oportunidades.
           </p>
+          <p className="mt-4 max-w-xl text-sm font-black leading-6 text-white">
+            Contacto: bperez@oficiospro.cl
+          </p>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Pago seguro", "Garantía OficiosPro", "Técnicos verificados", "Cobertura nacional"].map((item) => (
               <span key={item} className="chip bg-white/10 text-white">
@@ -53,7 +65,7 @@ export function Footer() {
             ))}
           </div>
         </div>
-        <div className="grid gap-8 sm:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
           {groups.map((group) => (
             <div key={group.title}>
               <h3 className="font-black">{group.title}</h3>

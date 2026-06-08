@@ -7,6 +7,7 @@ import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";
 import { formatDisplayDate, getAvailabilitySummary, getSlotsForDate, getWeekDates, type TimeSlot } from "@/lib/availability";
 import { createBookingRequest, getBookingRequests, getSpecialistAvailabilityProfile, type BookingRequest } from "@/lib/bookingStorage";
+import { submitLead } from "@/lib/leadClient";
 
 export function BookingDrawer({
   specialist,
@@ -37,7 +38,7 @@ export function BookingDrawer({
 
   if (!open) return null;
 
-  function reserve() {
+  async function reserve() {
     if (!selectedSlot) return;
     createBookingRequest({
       specialist,
@@ -47,8 +48,23 @@ export function BookingDrawer({
       creditsEstimate: specialist.credits,
       communeName: specialist.commune ?? specialist.zone,
     });
+    const leadResult = await submitLead({
+      leadType: "booking_request",
+      fullName: "Cliente OficiosPro",
+      service: specialist.specialty,
+      regionName: specialist.region,
+      communeName: specialist.commune ?? specialist.zone,
+      specialistId: specialist.id,
+      specialistName: specialist.name,
+      requestedDate: selectedSlot.date,
+      requestedTime: selectedSlot.startTime,
+      creditsEstimate: specialist.credits,
+      sourceComponent: "BookingDrawer",
+      sourceButton: "Reservar horario",
+      consentContact: false,
+    });
     setBookings(getBookingRequests());
-    setSuccess("Horario solicitado. El especialista recibirá tu solicitud y podrás confirmar los detalles.");
+    setSuccess(leadResult.ok ? "Horario solicitado. El especialista recibirá tu solicitud y podrás confirmar los detalles." : leadResult.message);
     setSelectedSlot(null);
   }
 

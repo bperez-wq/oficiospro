@@ -13,6 +13,7 @@ import {
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
+import { submitLead } from "@/lib/leadClient";
 import {
   appendConversionEvent,
   appendEnterpriseLead,
@@ -167,6 +168,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   const [locationStatus, setLocationStatus] = useState("");
   const [searchGeo, setSearchGeo] = useState<{ lat: number | null; lng: number | null }>({ lat: null, lng: null });
   const [success, setSuccess] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!options) return;
@@ -185,6 +187,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     setLocationStatus("");
     setSearchGeo({ lat: null, lng: null });
     setSuccess("");
+    setSubmitting(false);
     setSelectedPlanId(options.planId ?? (options.type === "plan_empresa" ? "empresa" : "plus"));
   }, [options]);
 
@@ -198,13 +201,14 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     onClose();
   }
 
-  function submitHomeLead(event: FormEvent<HTMLFormElement>) {
+  async function submitHomeLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (step === 1) {
       setStep(2);
       return;
     }
 
+    setSubmitting(true);
     const saved = appendHomeLead({
       ...lead,
       region: regionNameForCode(lead.region),
@@ -227,13 +231,29 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       });
     }
     setSuccess("Datos recibidos. Continuaremos con la activación.");
+    const result = await submitLead({
+      leadType: options?.planId ? "payment_interest" : "club_hogar_interest",
+      fullName: `${lead.firstNames} ${lead.lastNames}`.trim(),
+      email: lead.email,
+      phone: lead.whatsapp,
+      service: options?.planId ? selectedPlan.name : "Club Hogar",
+      regionCode: lead.region,
+      regionName: regionNameForCode(lead.region),
+      communeName: lead.commune,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Plan Club Hogar",
+      payload: { localLeadId: saved.id, planId: selectedPlan.id, rut: lead.rut },
+    });
+    setSuccess(result.message);
+    setSubmitting(false);
     window.setTimeout(() => {
       window.location.href = options?.planId ? `/checkout?plan=${selectedPlan.id}` : "/club-hogar";
     }, 700);
   }
 
-  function submitEnterpriseLead(event: FormEvent<HTMLFormElement>) {
+  async function submitEnterpriseLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitting(true);
     const enterpriseServiceLabel =
       enterprise.serviceType === OTHER_SERVICE_VALUE
         ? enterprise.otherServiceDescription
@@ -254,11 +274,28 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       sourceButton: options?.sourceButton ?? "Empresas",
       data: { leadId: saved.id, company: enterprise.businessName, commune: enterprise.commune, need: enterpriseServiceLabel },
     });
-    setSuccess("Recibimos tu solicitud. Un ejecutivo revisará tu caso.");
+    const result = await submitLead({
+      leadType: "company_request",
+      fullName: `${enterprise.firstNames} ${enterprise.lastNames}`.trim(),
+      email: enterprise.email,
+      phone: enterprise.whatsapp,
+      companyName: enterprise.businessName,
+      service: enterpriseServiceLabel,
+      problemDescription: enterprise.additionalComments || enterprise.need,
+      regionCode: enterprise.region,
+      regionName: regionNameForCode(enterprise.region),
+      communeName: enterprise.commune,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Empresas",
+      payload: { localLeadId: saved.id, companyRut: enterprise.companyRut, branches: enterprise.branches, planId: options?.planId ? selectedPlan.id : undefined },
+    });
+    setSuccess(result.message);
+    setSubmitting(false);
   }
 
-  function submitSpecialistLead(event: FormEvent<HTMLFormElement>) {
+  async function submitSpecialistLead(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setSubmitting(true);
     const serviceType = getServiceTypeById(specialistLead.serviceTypeId) ?? serviceTypes[0];
     const saved = appendSpecialistLead({
       ...specialistLead,
@@ -275,18 +312,34 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       data: { leadId: saved.id, serviceType: serviceType.name, commune: specialistLead.commune },
     });
     setSuccess("Perfecto. Ahora completa referencias, precios y cobertura para validar tu perfil.");
+    const specialistLeadResult = await submitLead({
+      leadType: "specialist_application",
+      fullName: `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim(),
+      email: specialistLead.email,
+      phone: specialistLead.phone,
+      trade: serviceType.name,
+      regionCode: specialistLead.region,
+      regionName: regionNameForCode(specialistLead.region),
+      communeName: specialistLead.commune,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
+      payload: { localLeadId: saved.id, rut: specialistLead.rut, years: specialistLead.years },
+    });
+    setSuccess(specialistLeadResult.message);
+    setSubmitting(false);
     window.setTimeout(() => {
       window.location.href = `/registro-especialista?lead=${saved.id}`;
     }, 850);
   }
 
-  function submitReservation(event: FormEvent<HTMLFormElement>) {
+  async function submitReservation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (step === 1) {
       setStep(2);
       return;
     }
 
+    setSubmitting(true);
     const specialist = options?.specialist;
     const saved = appendServiceRequestLead({
       ...reservation,
@@ -307,14 +360,36 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       data: { requestId: saved.id, specialistId: specialist?.id, service: reservation.service, commune: reservation.commune },
     });
     setSuccess("Solicitud creada. La guardamos para coordinar el siguiente paso.");
+    const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;
+    const bookingLeadResult = await submitLead({
+      leadType: "booking_request",
+      fullName: `${reservation.firstNames} ${reservation.lastNames}`.trim(),
+      email: reservation.email,
+      phone: reservation.whatsapp,
+      service: serviceLabel,
+      problemDescription: reservation.additionalComments,
+      urgency: reservation.urgency,
+      regionCode: reservation.region,
+      regionName: regionNameForCode(reservation.region),
+      communeName: reservation.commune,
+      specialistId: specialist?.id,
+      specialistName: specialist?.name,
+      creditsEstimate: specialist?.credits,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Reservar",
+      payload: { localLeadId: saved.id, rut: reservation.rut, address: reservation.address },
+    });
+    setSuccess(bookingLeadResult.message);
+    setSubmitting(false);
   }
 
-  function submitSearch(event: FormEvent<HTMLFormElement>) {
+  async function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!search.region || !search.commune) {
       setLocationStatus("Selecciona región y comuna para revisar disponibilidad real.");
       return;
     }
+    setSubmitting(true);
     const saved = appendQuickSearchLead({
       ...search,
       region: regionNameForCode(search.region),
@@ -329,6 +404,22 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       sourceButton: options?.sourceButton ?? "Buscar especialista",
       data: { searchId: saved.id, serviceTypeId: search.serviceTypeId, specialty: search.specialty, commune: search.commune },
     });
+    await submitLead({
+      leadType: "customer_request",
+      fullName: "Cliente OficiosPro",
+      service: search.specialty === OTHER_SERVICE_VALUE ? search.otherServiceDescription : search.specialty,
+      trade: serviceTypeOptions.find((item) => item.value === search.serviceTypeId)?.label ?? search.serviceTypeId,
+      problemDescription: [search.need, search.additionalComments].filter(Boolean).join(" · "),
+      urgency: search.urgency,
+      regionCode: search.region,
+      regionName: regionNameForCode(search.region),
+      communeName: search.commune,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Buscar especialista",
+      consentContact: false,
+      payload: { localLeadId: saved.id, lat: searchGeo.lat, lng: searchGeo.lng },
+    });
+    setSubmitting(false);
     const params = new URLSearchParams({
       tipo: search.serviceTypeId,
       region: search.region,
@@ -414,8 +505,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                   />
                 )}
                 <PrivacyText />
-                <button className="btn-primary w-full" type="submit">
-                  {step === 1 ? "Continuar" : "Continuar a activación"}
+                <button className="btn-primary w-full" type="submit" disabled={submitting}>
+                  {submitting ? "Enviando..." : step === 1 ? "Continuar" : "Continuar a activación"}
                 </button>
               </form>
             ) : null}
@@ -427,8 +518,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                   <PlanSummary plan={selectedPlan} plans={enterprisePlans} lockPlan={false} onPlanChange={setSelectedPlanId} />
                 ) : null}
                 <PrivacyText />
-                <button className="btn-primary w-full" type="submit">
-                  Solicitar contacto
+                <button className="btn-primary w-full" type="submit" disabled={submitting}>
+                  {submitting ? "Enviando..." : "Solicitar contacto"}
                 </button>
               </form>
             ) : null}
@@ -440,8 +531,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                   Luego te pediremos tus referencias, precios y cobertura para validar tu perfil.
                 </p>
                 <PrivacyText />
-                <button className="btn-primary w-full" type="submit">
-                  Comenzar postulación
+                <button className="btn-primary w-full" type="submit" disabled={submitting}>
+                  {submitting ? "Enviando..." : "Comenzar postulación"}
                 </button>
               </form>
             ) : null}
@@ -454,8 +545,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                   <ReservationSummary specialist={options.specialist} reservation={reservation} />
                 )}
                 <PrivacyText />
-                <button className="btn-primary w-full" type="submit">
-                  {step === 1 ? "Continuar" : "Crear solicitud"}
+                <button className="btn-primary w-full" type="submit" disabled={submitting}>
+                  {submitting ? "Enviando..." : step === 1 ? "Continuar" : "Crear solicitud"}
                 </button>
               </form>
             ) : null}
@@ -530,8 +621,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                 </button>
                 {locationStatus ? <p className="text-sm font-black text-brand-dark">{locationStatus}</p> : null}
                 <PrivacyText />
-                <button className="btn-primary w-full" type="submit">
-                  Ver especialistas disponibles
+                <button className="btn-primary w-full" type="submit" disabled={submitting}>
+                  {submitting ? "Enviando..." : "Ver especialistas disponibles"}
                 </button>
               </form>
             ) : null}
@@ -583,11 +674,11 @@ function LeadFields({
     <>
       <label className="field">
         Nombres
-        <input value={lead.firstNames} onChange={(event) => onChange({ ...lead, firstNames: event.target.value })} placeholder="Ej: Benjamín" required />
+        <input value={lead.firstNames} onChange={(event) => onChange({ ...lead, firstNames: event.target.value })} placeholder="Ej: Juan" required />
       </label>
       <label className="field">
         Apellidos
-        <input value={lead.lastNames} onChange={(event) => onChange({ ...lead, lastNames: event.target.value })} placeholder="Ej: Pérez Peric" required />
+        <input value={lead.lastNames} onChange={(event) => onChange({ ...lead, lastNames: event.target.value })} placeholder="Ej: Pérez" required />
       </label>
       <label className="field">
         RUT
@@ -958,8 +1049,14 @@ function Progress({ step, total }: { step: number; total: number }) {
 
 function PrivacyText() {
   return (
-    <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-      Tus datos se usan solo para coordinar servicios OficiosPro.
-    </p>
+    <>
+      <label className="hidden" aria-hidden="true">
+        Sitio web
+        <input name="companyWebsite" tabIndex={-1} autoComplete="off" />
+      </label>
+      <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
+        Tus datos se usan solo para coordinar servicios OficiosPro.
+      </p>
+    </>
   );
 }

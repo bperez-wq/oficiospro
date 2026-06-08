@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { AdminPricingPanel } from "@/components/AdminPricingPanel";
 import { defaultBookings, specialists } from "@/data/mock";
 import {
   calculateServiceEconomics,
@@ -11,6 +12,8 @@ import {
   type CommercialConfig,
   type SubscriptionPlan,
 } from "@/data/marketplace";
+import { calculateClientCreditsFromSpecialistPayout, estimateClientPriceCLP, estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
+import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
 import {
   addPaymentCredits,
@@ -701,6 +704,9 @@ export function AdminPanel() {
                 <input value={config.specialistReferralBonus} onChange={(event) => updateReferralBonus(event.target.value)} />
               </label>
             </div>
+            <div className="mt-6">
+              <AdminPricingPanel />
+            </div>
           </Panel>
         ) : null}
 
@@ -767,7 +773,7 @@ export function AdminPanel() {
                           <input value={specialty.name} onChange={(event) => updateSpecialty(type.id, specialty.id, { name: event.target.value })} />
                         </label>
                         <label className="field">
-                          Créditos sugeridos
+                          Créditos cliente base
                           <input type="number" value={specialty.suggestedCredits} onChange={(event) => updateSpecialty(type.id, specialty.id, { suggestedCredits: Number(event.target.value) })} />
                         </label>
                         <label className="field">
@@ -1291,23 +1297,45 @@ function SpecialistDetailPanel({
         <div className="mt-5 grid gap-4">
           <h3 className="text-xl font-black">Servicios ofrecidos</h3>
           {(specialist.services ?? []).map((service, index) => {
+            const expectedPayout = Number(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP ?? 0);
+            const calculatedClientCredits = Number(service.clientCredits || calculateClientCreditsFromSpecialistPayout({
+              specialistExpectedPayoutCLP: expectedPayout,
+              categoryId: service.serviceTypeId,
+              emergency: service.emergency,
+              config: defaultPricingConfig,
+            }));
+            const estimatedClientPrice = estimateClientPriceCLP({
+              specialistExpectedPayoutCLP: expectedPayout,
+              categoryId: service.serviceTypeId,
+              emergency: service.emergency,
+              config: defaultPricingConfig,
+            });
+            const estimatedMargin = estimatePlatformMarginCLP({
+              specialistExpectedPayoutCLP: expectedPayout,
+              categoryId: service.serviceTypeId,
+              emergency: service.emergency,
+              config: defaultPricingConfig,
+            });
             const economics = calculateServiceEconomics({
-              clientCredits: Number(service.clientCredits),
-              specialistPayoutCLP: Number(service.specialistPayoutCLP),
+              clientCredits: calculatedClientCredits,
+              specialistPayoutCLP: expectedPayout,
               serviceTypeId: service.serviceTypeId,
               config,
             });
             return (
               <article key={`${service.name}-${index}`} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-2">
                 <InfoBox label="Servicio" value={service.name || service.specialty} />
-                <InfoBox label="Margen" value={`${formatCLP(economics.marginCLP)} · ${economics.status}`} />
+                <InfoBox label="Tarifa esperada especialista CLP" value={formatPricingCLP(expectedPayout)} />
+                <InfoBox label="Créditos cliente calculados" value={`${calculatedClientCredits} créditos`} />
+                <InfoBox label="Precio cliente CLP estimado interno" value={formatPricingCLP(estimatedClientPrice)} />
+                <InfoBox label="Margen estimado" value={`${formatPricingCLP(estimatedMargin)} · ${economics.status}`} />
                 <label className="field">
-                  Precio cliente en créditos
-                  <input type="number" value={service.clientCredits} onChange={(event) => onUpdateService(index, { clientCredits: Number(event.target.value) })} />
+                  Créditos cliente
+                  <input type="number" value={calculatedClientCredits} onChange={(event) => onUpdateService(index, { clientCredits: Number(event.target.value), pricingStatus: "adjusted_by_oficiospro" })} />
                 </label>
                 <label className="field">
-                  Pago especialista CLP
-                  <input type="number" value={service.specialistPayoutCLP} onChange={(event) => onUpdateService(index, { specialistPayoutCLP: Number(event.target.value) })} />
+                  Payout especialista aprobado CLP
+                  <input type="number" value={Number(service.specialistApprovedPayoutCLP ?? expectedPayout)} onChange={(event) => onUpdateService(index, { specialistApprovedPayoutCLP: Number(event.target.value), specialistPayoutCLP: Number(event.target.value), pricingStatus: "adjusted_by_oficiospro" })} />
                 </label>
               </article>
             );
