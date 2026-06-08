@@ -1,6 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 120 120" fill="none">
+  
   <rect width="120" height="120" rx="30" fill="#08746F"></rect>
   <text x="58" y="62" text-anchor="middle" dominant-baseline="central" font-family="Archivo, Arial, sans-serif" font-weight="900" font-size="54" letter-spacing="-2.5" fill="#FFFFFF">OP</text>
-
+  
   <polygon points="92,17 96.4,23.6 103,28 96.4,32.4 92,39 87.6,32.4 81,28 87.6,23.6" fill="#F2A93B"></polygon>
 </svg>
