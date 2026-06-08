@@ -14,8 +14,8 @@ export default function ClubHogarPage() {
       <PlatformNav />
       <AppHero
         eyebrow="Club Hogar"
-        title="Tus créditos son tu cuenta de ahorro para mantenciones."
-        subtitle="Acumula créditos hasta 24 meses, reserva especialistas verificados y libera el pago solo al finalizar el trabajo."
+        title="Tus créditos son saldo disponible para mantenciones reales."
+        subtitle="Acumula créditos para servicios del hogar, reténlos al reservar y libera el pago cuando el trabajo queda cerrado con respaldo."
       >
         <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-primary">
           Usar créditos
@@ -36,7 +36,7 @@ export default function ClubHogarPage() {
           <p className="eyebrow">Simulador visual</p>
           <h2 className="text-3xl font-black">Con {featuredPlan.name}, acumulas {featuredPlan.monthlyCredits} créditos cada mes.</h2>
           <p className="mt-3 font-semibold leading-7 text-muted">
-            Por {formatCLP(featuredPlan.priceCLP)}/mes puedes planificar visitas, diagnósticos y mantenciones sin partir desde cero cada vez.
+            Por {formatCLP(featuredPlan.priceCLP)}/mes cargas saldo disponible en créditos para planificar visitas, diagnósticos y mantenciones sin partir desde cero cada vez.
           </p>
           <div className="mt-6 grid gap-3 md:grid-cols-3">
             {[
@@ -51,7 +51,7 @@ export default function ClubHogarPage() {
             ))}
           </div>
           <p className="mt-4 rounded-2xl bg-sun-soft p-4 text-sm font-black text-sun-dark">
-            Renovación automática mensual. Los créditos vencen a los 24 meses.
+            Renovación automática mensual. Los créditos quedan sujetos a términos de vigencia, uso, retención y devolución.
           </p>
         </article>
         <article className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
@@ -59,7 +59,7 @@ export default function ClubHogarPage() {
           <div className="p-6">
             <h2 className="text-2xl font-black">Lo que incluye Club Hogar</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {["Créditos acumulables hasta 24 meses", "Técnicos verificados", "Garantía OficiosPro", "Pago liberado al finalizar", "Historial de servicios", "Atención prioritaria"].map((item) => (
+              {["Créditos acumulables hasta 24 meses", "Saldo disponible para servicios", "Créditos retenidos hasta cerrar el servicio", "Pago protegido", "Historial de uso", "Garantía OficiosPro"].map((item) => (
                 <span key={item} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
                   {item}
                 </span>
@@ -102,6 +102,9 @@ export default function ClubHogarPage() {
         <article className="panel">
           <p className="eyebrow">Historial de créditos</p>
           <h2 className="mb-5 text-3xl font-black">Movimientos de créditos</h2>
+          <p className="mb-5 text-sm font-bold leading-6 text-muted">
+            El historial separa cargas, usos, retenciones y devoluciones para que el saldo se entienda antes y después de cada servicio.
+          </p>
           <TransactionList transactions={defaultTransactions} />
         </article>
       </section>

@@ -1,4 +1,5 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
 import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -14,7 +15,7 @@ export default function EmpresasPage() {
       <AppHero
         eyebrow="OficiosPro Empresas"
         title="Centraliza mantenciones, sucursales y créditos corporativos."
-        subtitle="Accede a una red de especialistas verificados para oficinas, restaurantes, bodegas, retail, plantas productivas, agroindustria y comunidades."
+        subtitle="Externaliza mantenciones de forma controlada con técnicos verificados, centros de costo, reportes, documentación del servicio, facturación y trazabilidad."
       >
         <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary">
           Solicitar contacto
@@ -30,7 +31,7 @@ export default function EmpresasPage() {
             <p className="eyebrow text-teal-200">Continuidad operacional</p>
             <h2 className="text-4xl font-black leading-tight">Centraliza tus mantenciones y paga con créditos corporativos.</h2>
             <p className="mt-4 font-semibold leading-7 text-white/75">
-              Reduce tiempo administrativo, ordena proveedores, controla consumo por sucursal y recibe facturación mensual consolidada.
+              Reduce carga administrativa, ordena proveedores externos, controla consumo por sucursal y prepara trazabilidad para facturación mensual consolidada.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               {companyUseCases.map((item) => (
@@ -68,7 +69,7 @@ export default function EmpresasPage() {
         <div className="mb-8 max-w-3xl">
           <p className="eyebrow">Planes empresa</p>
           <h2 className="section-title">Membresía fija mensual + bolsa de créditos.</h2>
-          <p className="section-lead">Diseñado para empresas que necesitan respuesta operacional, control y trazabilidad.</p>
+          <p className="section-lead">Diseñado para empresas que necesitan respuesta operacional, créditos corporativos, control por centro de costo, documentación y trazabilidad.</p>
         </div>
         <div className="grid gap-5 md:grid-cols-3">
           {enterprisePlans.map((plan) => (
@@ -79,12 +80,12 @@ export default function EmpresasPage() {
 
       <section className="grid gap-5 md:grid-cols-3">
         {[
-          ["Facturación mensual consolidada", "Una factura, múltiples servicios y sucursales."],
-          ["Dashboard de consumo", "Créditos usados, solicitudes abiertas e historial."],
+          ["Facturación y trazabilidad", "Documentación preparada para revisión administrativa, contable y tributaria."],
+          ["Dashboard de consumo", "Créditos corporativos, solicitudes abiertas, centros de costo e historial."],
           ["SLA y priorización", "Respuesta rápida para operación crítica."],
-          ["Gestión por sucursal", "Ordena locales, oficinas, bodegas y comunidades."],
+          ["Gestión por sucursal", "Ordena locales, oficinas, bodegas, comunidades y responsables internos."],
           ["Reportes mensuales", "Control de mantenciones, gastos y proveedores."],
-          ["Casos corporativos", "Restaurantes, oficinas, bodegas, comunidades, retail, plantas productivas y agroindustria."],
+          ["Externalización controlada", "Contrata servicios sin aumentar carga operativa permanente."],
         ].map(([title, text]) => (
           <article key={title} className="panel card-hover">
             <h3 className="text-xl font-black">{title}</h3>
@@ -99,11 +100,13 @@ export default function EmpresasPage() {
           <p className="eyebrow">Solicitud empresa</p>
           <h2 className="text-3xl font-black">Cuéntanos tu operación.</h2>
           <p className="mt-3 font-semibold leading-7 text-muted">
-            Recibiremos la solicitud con datos de contacto, sucursales y plan objetivo para activar una cuenta corporativa.
+            Recibiremos la solicitud con datos de contacto, sucursales, centros de costo y plan objetivo para preparar una cuenta corporativa.
           </p>
           <img src="/assets/club-empresas.webp" alt="Equipo técnico trabajando en una empresa" className="mt-6 h-72 w-full rounded-2xl object-cover" />
         </article>
       </section>
+
+      <ContactTrustStrip />
     </main>
   );
 }

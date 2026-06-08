@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
+import { AdminCreditLedgerPreview } from "@/components/AdminCreditLedgerPreview";
 import { AdminPricingPanel } from "@/components/AdminPricingPanel";
 import { defaultBookings, specialists } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -1268,6 +1269,10 @@ function PaymentsAdminPanel({
         <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
         <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
         <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
+      </div>
+
+      <div className="mt-5">
+        <AdminCreditLedgerPreview />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-[0.85fr_1.15fr]">

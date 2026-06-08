@@ -23,7 +23,7 @@ export default function ContactoPage() {
             ))}
           </div>
           <p className="mt-5 text-xs font-bold leading-5 text-muted">
-            Aliases preparados para operación futura: hola@oficiospro.cl, postulaciones@oficiospro.cl, empresas@oficiospro.cl y soporte@oficiospro.cl.
+            Centralizamos el primer contacto en este correo para responder con contexto y derivar internamente cada solicitud.
           </p>
         </article>
         <ContactForm />
