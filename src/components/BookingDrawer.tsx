@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
+import { createPortal } from "react-dom";
 import type { Specialist } from "@/data/mock";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
@@ -21,10 +22,12 @@ export function BookingDrawer({
   open: boolean;
   onClose: () => void;
 }) {
+  const [mounted, setMounted] = useState(false);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
   const [selectedDate, setSelectedDate] = useState(getWeekDates()[0]);
   const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
   const [success, setSuccess] = useState("");
+  const dialogRef = useRef<HTMLDivElement | null>(null);
   const services = useMemo(() => (specialist.servicePricing?.length ? specialist.servicePricing : [getPrimaryFlexibleService(specialist)]), [specialist]);
   const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id ?? "");
   const [estimatedHours, setEstimatedHours] = useState(services[0]?.minHours ?? 2);
@@ -34,6 +37,51 @@ export function BookingDrawer({
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
   const slots = useMemo(() => getSlotsForDate(profile, selectedDate, bookings), [bookings, profile, selectedDate]);
   const summary = useMemo(() => getAvailabilitySummary(profile, bookings), [bookings, profile]);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!open || !mounted) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusTimer = window.setTimeout(() => dialogRef.current?.focus(), 0);
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable.length) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [mounted, onClose, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -49,7 +97,7 @@ export function BookingDrawer({
     setIsSubscriber(false);
   }, [open, profile, services]);
 
-  if (!open) return null;
+  if (!open || !mounted) return null;
 
   async function reserve() {
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
@@ -136,13 +184,24 @@ export function BookingDrawer({
   const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
   const currentHoldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
 
-  return (
-    <div className="fixed inset-0 z-[110] bg-ink/60 p-3 backdrop-blur-sm md:p-6" role="dialog" aria-modal="true">
-      <div className="ml-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-card">
+  function closeFromBackdrop(event: MouseEvent<HTMLDivElement>) {
+    if (event.target === event.currentTarget) onClose();
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[110] bg-ink/60 p-3 backdrop-blur-sm md:p-6" onMouseDown={closeFromBackdrop}>
+      <div
+        ref={dialogRef}
+        className="ml-auto flex h-full max-w-4xl flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-card outline-none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="booking-drawer-title"
+        tabIndex={-1}
+      >
         <div className="flex items-start justify-between gap-4 border-b border-line p-5 md:p-6">
           <div>
             <p className="eyebrow">Disponibilidad referencial</p>
-            <h2 className="text-3xl font-black text-ink">{specialist.name}</h2>
+            <h2 id="booking-drawer-title" className="text-3xl font-black text-ink">{specialist.name}</h2>
             <p className="mt-1 text-sm font-bold text-muted">
               {specialist.specialty} · {specialist.commune ?? specialist.zone} · {pricingSummary(selectedService)}
             </p>
@@ -256,7 +315,8 @@ export function BookingDrawer({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
