@@ -244,9 +244,43 @@ export type PendingSpecialistReference = {
   year?: string;
 };
 
+export type SpecialistPublicationStatus =
+  | "pending_review"
+  | "approved"
+  | "published"
+  | "unpublished"
+  | "suspended"
+  | "rejected"
+  | "deleted";
+
+export type IdentityReviewStatus = "pending" | "approved" | "rejected" | "needs_review";
+
+export type SpecialistIdentityVerification = {
+  profilePhotoUrl: string;
+  idFrontUrl: string;
+  idBackUrl: string;
+  selfieUrl: string;
+  profilePhotoName?: string;
+  idFrontName?: string;
+  idBackName?: string;
+  selfieName?: string;
+  verificationStatus: IdentityReviewStatus;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  notes: string;
+  secureStorageConfigured?: boolean;
+};
+
 export type PendingSpecialistProfile = {
   id?: string;
   status: "pendiente" | "aprobado" | "rechazado" | "info solicitada";
+  publicationStatus?: SpecialistPublicationStatus;
+  slug?: string;
+  approvedAt?: string;
+  publishedAt?: string;
+  unpublishedAt?: string;
+  suspendedAt?: string;
+  deletedAt?: string;
   name: string;
   firstNames?: string;
   lastNames?: string;
@@ -254,6 +288,7 @@ export type PendingSpecialistProfile = {
   phone: string;
   email: string;
   profilePhoto: string;
+  identityVerification?: SpecialistIdentityVerification;
   address: string;
   commune: string;
   region: string;
@@ -724,30 +759,48 @@ export function savePendingSpecialists(items: PendingSpecialistProfile[]) {
 
 export function appendPendingSpecialist(item: Omit<PendingSpecialistProfile, "id">) {
   const existing = getPendingSpecialists();
-  const storedItem: PendingSpecialistProfile = { ...item, id: `pending-specialist-${Date.now()}` };
+  const id = `pending-specialist-${Date.now()}`;
+  const storedItem: PendingSpecialistProfile = {
+    ...item,
+    id,
+    slug: item.slug ?? specialistSlug(item.name, item.specialty, item.commune, id),
+    publicationStatus: item.publicationStatus ?? "pending_review",
+  };
   savePendingSpecialists([storedItem, ...existing]);
   return storedItem;
 }
 
 export function getPublishedSpecialists() {
-  return read<Specialist[]>(keys.publishedSpecialists, []);
+  return read<Specialist[]>(keys.publishedSpecialists, []).filter((specialist) => isPublicSpecialistStatus(specialist.publicationStatus));
 }
 
 export function savePublishedSpecialists(items: Specialist[]) {
   write(keys.publishedSpecialists, items);
 }
 
+export function getAllAdminSpecialists() {
+  return read<Specialist[]>(keys.publishedSpecialists, []);
+}
+
 export function approveAndPublishSpecialist(id: string) {
   const pending = getPendingSpecialists();
   const request = pending.find((item) => item.id === id);
   if (!request) return null;
+  const readiness = specialistPublicationReadiness(request);
+  if (!readiness.ok) return { ok: false as const, missing: readiness.missing, specialist: null };
 
   savePendingSpecialists(pending.filter((item) => item.id !== id));
 
-  const published = getPublishedSpecialists();
-  const specialist = toPublishedSpecialist(request);
+  const published = getAllAdminSpecialists();
+  const specialist = toPublishedSpecialist({
+    ...request,
+    status: "aprobado",
+    publicationStatus: "published",
+    approvedAt: request.approvedAt ?? new Date().toISOString(),
+    publishedAt: request.publishedAt ?? new Date().toISOString(),
+  });
   savePublishedSpecialists([specialist, ...published.filter((item) => item.id !== specialist.id)]);
-  return specialist;
+  return { ok: true as const, missing: [], specialist };
 }
 
 export function rejectPendingSpecialist(id: string) {
@@ -756,6 +809,45 @@ export function rejectPendingSpecialist(id: string) {
     item.id === id ? { ...item, status: "rechazado" as const, reviewedAt: new Date().toISOString() } : item,
   );
   savePendingSpecialists(updatedPending);
+}
+
+export function updatePublishedSpecialistStatus(id: string, publicationStatus: SpecialistPublicationStatus) {
+  const all = getAllAdminSpecialists();
+  const now = new Date().toISOString();
+  const updated = all.map((specialist) =>
+    specialist.id === id
+      ? {
+          ...specialist,
+          publicationStatus,
+          publishedFromAdmin: true,
+          ...(publicationStatus === "published" ? { publishedAt: specialist.publishedAt ?? now } : {}),
+          ...(publicationStatus === "unpublished" ? { unpublishedAt: now } : {}),
+          ...(publicationStatus === "suspended" ? { suspendedAt: now } : {}),
+          ...(publicationStatus === "deleted" ? { deletedAt: now } : {}),
+        }
+      : specialist,
+  );
+  savePublishedSpecialists(updated);
+  return updated.find((specialist) => specialist.id === id) ?? null;
+}
+
+export function updatePendingSpecialistIdentity(id: string, patch: Partial<SpecialistIdentityVerification>) {
+  const pending = getPendingSpecialists();
+  const updated = pending.map((item) =>
+    item.id === id
+      ? {
+          ...item,
+          identityVerification: {
+            ...defaultIdentityVerification(),
+            ...(item.identityVerification ?? {}),
+            ...patch,
+            reviewedAt: patch.verificationStatus ? new Date().toISOString() : (patch.reviewedAt ?? item.identityVerification?.reviewedAt ?? null),
+          },
+        }
+      : item,
+  );
+  savePendingSpecialists(updated);
+  return updated.find((item) => item.id === id) ?? null;
 }
 
 export function getCommercialConfig() {
@@ -1263,12 +1355,7 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
   const portfolioPhotos = request.portfolioPhotos ?? [];
   const references = request.references ?? [];
   const serviceType = getServiceTypeById(primaryService?.serviceTypeId ?? "hogar") ?? serviceTypes[0];
-  const publicId = `aprobado-${(request.id ?? request.name)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")}`;
+  const publicId = request.slug ?? specialistSlug(request.name, displaySpecialty(primaryService), request.commune, request.id);
   const initials = (request.name ?? "Especialista OficiosPro")
     .split(" ")
     .map((part) => part[0])
@@ -1278,6 +1365,10 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
 
   return {
     id: publicId,
+    slug: publicId,
+    publicationStatus: request.publicationStatus ?? "published",
+    approvedAt: request.approvedAt,
+    publishedAt: request.publishedAt,
     name: request.name ?? "Especialista OficiosPro",
     initials,
     specialty: displaySpecialty(primaryService),
@@ -1300,8 +1391,8 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     years: 1,
     top: false,
     badges: ["Verificado", "Aprobado", certifications.length ? "Certificado" : "Nuevo"],
-    image: "/assets/hero-hogar.webp",
-    foto: request.profilePhoto,
+    image: request.identityVerification?.profilePhotoUrl || request.profilePhoto || "/assets/hero-hogar.webp",
+    foto: request.identityVerification?.profilePhotoUrl || request.profilePhoto,
     gallery: portfolioPhotos.length ? portfolioPhotos : ["Portafolio recibido"],
     galleryImages: ["/assets/work-bathroom.webp", "/assets/work-electrical.webp", "/assets/work-hvac.webp"],
     distance: 0,
@@ -1321,14 +1412,63 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     rank: "Fundador",
     validation: {
       rut: "approved",
-      identityDocument: "pending",
-      selfie: "pending",
+      identityDocument: request.identityVerification?.verificationStatus === "approved" ? "approved" : "pending",
+      selfie: request.identityVerification?.verificationStatus === "approved" ? "approved" : "pending",
       certifications: certifications.length ? "approved" : "pending",
       references: references.length,
       portfolioPhotos: portfolioPhotos.length,
     },
     publishedFromAdmin: true,
   };
+}
+
+export function defaultIdentityVerification(): SpecialistIdentityVerification {
+  return {
+    profilePhotoUrl: "",
+    idFrontUrl: "",
+    idBackUrl: "",
+    selfieUrl: "",
+    verificationStatus: "pending",
+    reviewedBy: null,
+    reviewedAt: null,
+    notes: "",
+    secureStorageConfigured: false,
+  };
+}
+
+export function specialistSlug(name: string, specialty?: string, commune?: string, fallback?: string) {
+  const base = [name, specialty, commune].filter(Boolean).join(" ");
+  const slug = (base || fallback || `especialista-${Date.now()}`)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "");
+  return slug || fallback || `especialista-${Date.now()}`;
+}
+
+export function isPublicSpecialistStatus(status?: SpecialistPublicationStatus) {
+  return status === undefined || status === "published" || status === "approved";
+}
+
+export function specialistPublicationReadiness(request: PendingSpecialistProfile) {
+  const identity = request.identityVerification;
+  const completeReferences = (request.references ?? []).filter((reference) => reference.name && reference.phone && reference.work);
+  const services = request.services ?? [];
+  const missing = [
+    identity?.verificationStatus === "approved" ? "" : "Identidad aprobada",
+    completeReferences.length >= 3 ? "" : "3 referencias completas",
+    request.profilePhoto || identity?.profilePhotoUrl ? "" : "Foto pública",
+    identity?.idFrontUrl ? "" : "Cédula frontal",
+    identity?.idBackUrl ? "" : "Cédula reverso",
+    identity?.selfieUrl ? "" : "Selfie de verificación",
+    services.length ? "" : "Servicios declarados",
+    request.commune && request.coverageRadiusKm ? "" : "Comuna y cobertura",
+    services.some((service) => service.pricingMode === "quote_required" || Number(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP ?? service.clientCredits ?? 0) > 0)
+      ? ""
+      : "Precios o modalidad de cotización",
+  ].filter(Boolean);
+  return { ok: missing.length === 0, missing };
 }
 
 function pendingServiceToFlexibleService(service: PendingSpecialistService, request: PendingSpecialistProfile, index: number): FlexibleService {

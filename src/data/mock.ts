@@ -20,6 +20,13 @@ export type WorkHistory = {
 
 export type Specialist = {
   id: string;
+  slug?: string;
+  publicationStatus?: "pending_review" | "approved" | "published" | "unpublished" | "suspended" | "rejected" | "deleted";
+  approvedAt?: string;
+  publishedAt?: string;
+  unpublishedAt?: string;
+  suspendedAt?: string;
+  deletedAt?: string;
   name: string;
   initials: string;
   specialty: string;

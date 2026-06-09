@@ -31,8 +31,8 @@ import {
   getPaymentCreditWallet,
   getPaymentRecords,
   getPaymentSubscriptions,
+  getAllAdminSpecialists,
   getPendingSpecialists,
-  getPublishedSpecialists,
   getQuickSearchLeads,
   getQuoteAgreements,
   getServiceRequestLeads,
@@ -45,12 +45,15 @@ import {
   savePendingSpecialists,
   saveStoredItems,
   seedMockState,
+  specialistPublicationReadiness,
   updateAdditionalRequestStatus,
   updateQuoteAgreement,
   updateQuoteAgreementStatus,
   updatePaymentSubscriptionStatus,
   usePaymentCredits,
   updateConversionLeadStatus,
+  updatePendingSpecialistIdentity,
+  updatePublishedSpecialistStatus,
   type ConversionLeadKind,
   type ConversionLeadStatus,
   type EnterpriseLead,
@@ -62,6 +65,7 @@ import {
   type PaymentSubscriptionStatus,
   type PendingSpecialistProfile,
   type PendingSpecialistService,
+  type SpecialistPublicationStatus,
   type QuickSearchLead,
   type ServiceRequestLead,
   type SpecialistPayout,
@@ -203,7 +207,7 @@ function defaultCommunes(): CoverageCommune[] {
 export function AdminPanel() {
   const [activeSection, setActiveSection] = useState<AdminSection>("resumen");
   const [pendingSpecialists, setPendingSpecialists] = useState<PendingSpecialistProfile[]>([]);
-  const [publishedSpecialists, setPublishedSpecialists] = useState(getPublishedSpecialists());
+  const [publishedSpecialists, setPublishedSpecialists] = useState(getAllAdminSpecialists());
   const [companyRequests, setCompanyRequests] = useState<CompanyRequest[]>([]);
   const [homeLeads, setHomeLeads] = useState<HomeLead[]>([]);
   const [enterpriseLeads, setEnterpriseLeads] = useState<EnterpriseLead[]>([]);
@@ -225,6 +229,7 @@ export function AdminPanel() {
   const [notes, setNotes] = useState<LeadNoteMap>({});
   const [selectedSpecialist, setSelectedSpecialist] = useState<PendingSpecialistProfile | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequestLead | null>(null);
+  const [publishedFilter, setPublishedFilter] = useState<SpecialistPublicationStatus | "all">("all");
   const [notice, setNotice] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<MockSession | null>(null);
@@ -257,7 +262,7 @@ export function AdminPanel() {
 
   function refresh() {
     setPendingSpecialists(getPendingSpecialists());
-    setPublishedSpecialists(getPublishedSpecialists());
+    setPublishedSpecialists(getAllAdminSpecialists());
     setCompanyRequests(getStoredItems<CompanyRequest>("companies"));
     setHomeLeads(getHomeLeads());
     setEnterpriseLeads(getEnterpriseLeads());
@@ -275,7 +280,8 @@ export function AdminPanel() {
   }
 
   const approvedBase = specialists.filter((specialist) => specialist.verified !== false);
-  const visiblePublished = [...approvedBase, ...publishedSpecialists];
+  const managedPublished = publishedSpecialists.filter((specialist) => publishedFilter === "all" || specialist.publicationStatus === publishedFilter);
+  const visiblePublished = publishedFilter === "all" ? [...approvedBase, ...managedPublished] : managedPublished;
   const pendingOnly = pendingSpecialists.filter((item) => item.status === "pendiente" || item.status === "info solicitada");
   const rejectedOnly = pendingSpecialists.filter((item) => item.status === "rechazado");
   const estimatedMargin = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * 0.35, 0);
@@ -311,7 +317,11 @@ export function AdminPanel() {
 
   function approveRequest(id: string | undefined) {
     if (!id) return;
-    approveAndPublishSpecialist(id);
+    const result = approveAndPublishSpecialist(id);
+    if (!result?.ok) {
+      setNotice(`No se puede publicar este especialista hasta completar verificación de identidad y referencias. Faltan: ${(result?.missing ?? []).join(", ")}`);
+      return;
+    }
     refresh();
     setSelectedSpecialist(null);
     setNotice("Especialista aprobado y publicado en el marketplace.");
@@ -345,6 +355,34 @@ export function AdminPanel() {
     savePendingSpecialists(next);
     setPendingSpecialists(next);
     setNotice("Servicio del especialista actualizado.");
+  }
+
+  function updateIdentityReview(status: "approved" | "rejected" | "needs_review", note?: string) {
+    if (!selectedSpecialist?.id) return;
+    const updated = updatePendingSpecialistIdentity(selectedSpecialist.id, {
+      verificationStatus: status,
+      reviewedBy: adminSession?.email ?? "admin@oficiospro.cl",
+      notes: note ?? selectedSpecialist.identityVerification?.notes ?? "",
+    });
+    refresh();
+    if (updated) setSelectedSpecialist(updated);
+    setNotice(`Verificación de identidad actualizada a ${status}.`);
+  }
+
+  function saveIdentityNote(note: string) {
+    if (!selectedSpecialist?.id) return;
+    const updated = updatePendingSpecialistIdentity(selectedSpecialist.id, { notes: note });
+    refresh();
+    if (updated) setSelectedSpecialist(updated);
+    setNotice("Nota interna de identidad guardada.");
+  }
+
+  function changePublishedStatus(id: string, status: SpecialistPublicationStatus) {
+    if (status === "deleted" && !window.confirm("¿Seguro que quieres eliminar este especialista? No aparecerá públicamente.")) return;
+    if (status === "suspended" && !window.confirm("Este especialista dejará de aparecer en búsquedas hasta que lo reactives.")) return;
+    updatePublishedSpecialistStatus(id, status);
+    refresh();
+    setNotice(`Especialista actualizado a ${status}.`);
   }
 
   function updateLeadStatus(kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) {
@@ -669,13 +707,32 @@ export function AdminPanel() {
         {activeSection === "publicados" ? (
           <Panel title="Especialistas publicados" eyebrow="Marketplace">
             <div className="grid gap-3">
+              <label className="field max-w-sm">
+                Filtrar estado
+                <select value={publishedFilter} onChange={(event) => setPublishedFilter(event.target.value as SpecialistPublicationStatus | "all")}>
+                  <option value="all">Todos</option>
+                  <option value="published">Publicados</option>
+                  <option value="approved">Aprobados internos</option>
+                  <option value="unpublished">Despublicados</option>
+                  <option value="suspended">Suspendidos</option>
+                  <option value="rejected">Rechazados</option>
+                  <option value="deleted">Eliminados</option>
+                </select>
+              </label>
               {visiblePublished.map((specialist) => (
                 <article key={specialist.id} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-[1fr_auto]">
                   <div>
                     <strong>{specialist.name}</strong>
                     <p className="mt-1 text-sm font-bold text-muted">{specialist.specialty} · {specialist.commune ?? specialist.zone} · {specialist.rating}/5 · {specialist.credits} créditos</p>
                   </div>
-                  <Link className="btn-secondary" href={`/especialistas/${specialist.id}`}>Ver perfil</Link>
+                  <div className="flex flex-wrap gap-2">
+                    <Link className="btn-secondary" href={`/especialistas/${specialist.slug ?? specialist.id}`}>Ver perfil</Link>
+                    {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => setNotice("Edición inline pendiente: ajusta servicios desde la postulación antes de publicar.")}>Editar</button> : null}
+                    {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "unpublished")}>Despublicar</button> : null}
+                    {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "suspended")}>Suspender</button> : null}
+                    {specialist.publishedFromAdmin && specialist.publicationStatus !== "published" ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "published")}>Reactivar</button> : null}
+                    {specialist.publishedFromAdmin ? <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-50" type="button" onClick={() => changePublishedStatus(specialist.id, "deleted")}>Eliminar</button> : null}
+                  </div>
                 </article>
               ))}
             </div>
@@ -912,6 +969,8 @@ export function AdminPanel() {
             onReject={() => rejectRequest(selectedSpecialist.id)}
             onMoreInfo={() => requestMoreInfo(selectedSpecialist.id)}
             onUpdateService={updatePendingService}
+            onIdentityStatus={updateIdentityReview}
+            onIdentityNote={saveIdentityNote}
           />
         ) : null}
 
@@ -1410,6 +1469,8 @@ function SpecialistDetailPanel({
   onReject,
   onMoreInfo,
   onUpdateService,
+  onIdentityStatus,
+  onIdentityNote,
 }: {
   specialist: PendingSpecialistProfile;
   config: CommercialConfig;
@@ -1418,7 +1479,11 @@ function SpecialistDetailPanel({
   onReject: () => void;
   onMoreInfo: () => void;
   onUpdateService: (index: number, patch: Partial<PendingSpecialistService>) => void;
+  onIdentityStatus: (status: "approved" | "rejected" | "needs_review", note?: string) => void;
+  onIdentityNote: (note: string) => void;
 }) {
+  const identity = specialist.identityVerification;
+  const readiness = specialistPublicationReadiness(specialist);
   return (
     <div className="fixed inset-0 z-[90] bg-ink/60 p-4 backdrop-blur-sm">
       <aside className="ml-auto h-full max-w-3xl overflow-y-auto rounded-[28px] bg-white p-6 shadow-card">
@@ -1435,6 +1500,32 @@ function SpecialistDetailPanel({
           <InfoBox label="Comuna y radio" value={`${specialist.commune} · ${specialist.coverageRadiusKm} km`} />
           <InfoBox label="Dirección base" value={specialist.address} />
           <InfoBox label="Certificaciones" value={(specialist.certifications ?? []).join(", ") || "sin declarar"} />
+        </div>
+        <div className="mt-5 rounded-3xl border border-line bg-slate-50 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">Verificación de identidad</p>
+              <h3 className="text-xl font-black">Documentos privados</h3>
+              <p className="mt-2 text-sm font-bold text-muted">Storage seguro privado pendiente de configurar. Estos documentos solo deben revisarse dentro de admin.</p>
+            </div>
+            <span className="chip bg-white text-brand-dark">{identity?.verificationStatus ?? "pending"}</span>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            <IdentityDocumentBox label="Foto perfil" src={identity?.profilePhotoUrl || specialist.profilePhoto} name={identity?.profilePhotoName} />
+            <IdentityDocumentBox label="Cédula frontal" src={identity?.idFrontUrl} name={identity?.idFrontName} />
+            <IdentityDocumentBox label="Cédula reverso" src={identity?.idBackUrl} name={identity?.idBackName} />
+            <IdentityDocumentBox label="Selfie" src={identity?.selfieUrl} name={identity?.selfieName} />
+          </div>
+          <label className="field mt-4">
+            Nota interna de identidad
+            <textarea defaultValue={identity?.notes ?? ""} onBlur={(event) => onIdentityNote(event.target.value)} placeholder="Observaciones de revisión documental." />
+          </label>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" onClick={() => onIdentityStatus("approved")}>Aprobar identidad</button>
+            <button className="btn-secondary" type="button" onClick={() => onIdentityStatus("needs_review")}>Solicitar nueva foto</button>
+            <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-50" type="button" onClick={() => onIdentityStatus("rejected")}>Rechazar identidad</button>
+          </div>
+          {!readiness.ok ? <p className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-black text-amber-900">No se puede publicar este especialista hasta completar verificación de identidad y referencias. Faltan: {readiness.missing.join(", ")}</p> : null}
         </div>
         <div className="mt-5 grid gap-4">
           <h3 className="text-xl font-black">Servicios ofrecidos</h3>
@@ -1566,6 +1657,16 @@ function InfoBox({ label, value }: { label: string; value: string }) {
     <div className="rounded-2xl border border-line bg-slate-50 p-4">
       <span className="text-xs font-black uppercase text-muted">{label}</span>
       <strong className="mt-2 block text-sm font-black text-ink">{value}</strong>
+    </div>
+  );
+}
+
+function IdentityDocumentBox({ label, src, name }: { label: string; src?: string; name?: string }) {
+  return (
+    <div className="rounded-2xl border border-line bg-white p-3">
+      <span className="text-xs font-black uppercase text-muted">{label}</span>
+      {src ? <img src={src} alt={label} className="mt-2 h-28 w-full rounded-xl object-cover" /> : <div className="mt-2 grid h-28 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-muted">Pendiente</div>}
+      <strong className="mt-2 block break-words text-xs text-ink">{name || (src ? "Archivo cargado" : "Sin archivo")}</strong>
     </div>
   );
 }
