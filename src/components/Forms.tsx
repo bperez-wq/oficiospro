@@ -83,7 +83,7 @@ const emptyReference: ReferenceDraft = { name: "", company: "", phone: "", email
 const noFormalCertificationLabel = "No tengo certificaciones formales";
 const certificationOptions = ["SEC", "HVAC", "Gas", "Soldadura", "Otro"];
 const specialistSuccessMessage =
-  "Recibimos tu postulación. El equipo OficiosPro revisará tus datos y te contactará para avanzar con la verificación.";
+  "Tu postulación fue recibida. Revisaremos tus antecedentes antes de publicar tu perfil.";
 const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 
