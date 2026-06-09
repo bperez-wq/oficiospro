@@ -1,6 +1,7 @@
-node_modules
-.next
-out
+work/
+node_modules/
+.next/
+out/
 .env
 .env.local
 .vercel
