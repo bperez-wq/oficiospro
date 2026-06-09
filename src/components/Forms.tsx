@@ -16,6 +16,7 @@ import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/
 import {
   appendPendingSpecialist,
   appendStoredItem,
+  defaultIdentityVerification,
   saveClientProfile,
   setMockSession,
   type PendingSpecialistProfile,
@@ -446,6 +447,16 @@ export function SpecialistRegisterForm() {
   const [services, setServices] = useState<ServiceDraft[]>([createEmptyService()]);
   const [references, setReferences] = useState<ReferenceDraft[]>([{ ...emptyReference }, { ...emptyReference }, { ...emptyReference }]);
   const [profilePhoto, setProfilePhoto] = useState("");
+  const [identityDocuments, setIdentityDocuments] = useState({
+    profilePhotoUrl: "",
+    profilePhotoName: "",
+    idFrontUrl: "",
+    idFrontName: "",
+    idBackUrl: "",
+    idBackName: "",
+    selfieUrl: "",
+    selfieName: "",
+  });
   const [portfolioPhotos, setPortfolioPhotos] = useState<string[]>([]);
   const [selectedCertifications, setSelectedCertifications] = useState<string[]>([]);
   const [hasNoFormalCertifications, setHasNoFormalCertifications] = useState(false);
@@ -512,6 +523,29 @@ export function SpecialistRegisterForm() {
     });
   }, [identity, baseRegion, baseCommune, services]);
 
+  useEffect(() => {
+    return () => {
+      Object.entries(identityDocuments)
+        .filter(([key, value]) => key.endsWith("Url") && value.startsWith("blob:"))
+        .forEach(([, value]) => URL.revokeObjectURL(value));
+    };
+  }, [identityDocuments]);
+
+  function updateIdentityDocument(
+    field: "profilePhoto" | "idFront" | "idBack" | "selfie",
+    file: File | undefined,
+  ) {
+    if (!file) return;
+    const urlKey = `${field}Url` as keyof typeof identityDocuments;
+    const nameKey = `${field}Name` as keyof typeof identityDocuments;
+    setIdentityDocuments((current) => {
+      const previousUrl = current[urlKey];
+      if (previousUrl?.startsWith("blob:")) URL.revokeObjectURL(previousUrl);
+      return { ...current, [urlKey]: URL.createObjectURL(file), [nameKey]: file.name };
+    });
+    if (field === "profilePhoto") setProfilePhoto(file.name);
+  }
+
   function updateService(index: number, patch: Partial<ServiceDraft>) {
     setServices((current) =>
       current.map((service, serviceIndex) => {
@@ -565,6 +599,10 @@ export function SpecialistRegisterForm() {
       const hasName = `${identity.firstNames} ${identity.lastNames}`.trim().length > 1;
       if (!hasName || !identity.whatsapp || !identity.email) {
         setStatus("Completa nombre completo o nombre comercial, WhatsApp o telefono y email para continuar.");
+        return false;
+      }
+      if (!identityDocuments.profilePhotoUrl || !identityDocuments.idFrontUrl || !identityDocuments.idBackUrl || !identityDocuments.selfieUrl) {
+        setStatus("Completa foto de perfil, cédula frontal, cédula reverso y selfie de verificación para continuar.");
         return false;
       }
     }
@@ -682,6 +720,11 @@ export function SpecialistRegisterForm() {
       phone: identity.whatsapp,
       email: identity.email,
       profilePhoto,
+      identityVerification: {
+        ...defaultIdentityVerification(),
+        ...identityDocuments,
+        verificationStatus: "pending",
+      },
       address: baseAddress,
       commune: baseCommune,
       region: regionNameForCode(baseRegion),
@@ -766,6 +809,21 @@ export function SpecialistRegisterForm() {
         certifications: selectedCertifications,
         otherCertificationText,
         hasNoFormalCertifications,
+        identityVerification: {
+          profilePhotoUrl: identityDocuments.profilePhotoUrl,
+          idFrontUrl: identityDocuments.idFrontUrl,
+          idBackUrl: identityDocuments.idBackUrl,
+          selfieUrl: identityDocuments.selfieUrl,
+          profilePhotoName: identityDocuments.profilePhotoName,
+          idFrontName: identityDocuments.idFrontName,
+          idBackName: identityDocuments.idBackName,
+          selfieName: identityDocuments.selfieName,
+          verificationStatus: "pending",
+          reviewedBy: null,
+          reviewedAt: null,
+          notes: "",
+        },
+        identityStatus: "pending",
         referencesText: completedReferences.map((reference) => `${reference.name} - ${reference.phone} - ${reference.work}`).join("\n"),
         portfolioUrl: portfolioPhotos.join(", "),
         notes: services.map((service) => service.specialistComments).filter(Boolean).join("\n"),
@@ -854,9 +912,27 @@ export function SpecialistRegisterForm() {
           </label>
           <label className="field">
             Foto de perfil
-            <input type="file" accept="image/*" onChange={(event) => setProfilePhoto(event.currentTarget.files?.[0]?.name ?? "")} />
-            <span className="text-xs font-bold text-muted">{profilePhoto ? `Archivo seleccionado: ${profilePhoto}` : "Opcional ahora. OficiosPro puede solicitarla antes de activar el perfil."}</span>
+            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("profilePhoto", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
+          <label className="field">
+            Foto cédula frontal
+            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
+          </label>
+          <label className="field">
+            Foto cédula reverso
+            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
+          </label>
+          <label className="field">
+            Selfie de verificación
+            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
+          </label>
+          <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
+            Estos documentos se usan solo para validar tu identidad antes de publicar tu perfil. Tu cédula y selfie no serán visibles públicamente.
+          </div>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
@@ -1382,6 +1458,17 @@ function SuccessMessage({ children, className = "" }: { children: ReactNode; cla
 
 function Warning({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 font-black text-amber-800">{children}</p>;
+}
+
+function IdentityPreview({ src, name, privateDocument = false }: { src: string; name: string; privateDocument?: boolean }) {
+  if (!src) return <span className="text-xs font-bold text-muted">Archivo obligatorio. Puedes reemplazarlo antes de enviar.</span>;
+  return (
+    <span className="grid gap-2 rounded-2xl border border-line bg-slate-50 p-3">
+      <img src={src} alt={privateDocument ? "Documento privado cargado" : "Foto de perfil cargada"} className="h-28 w-full rounded-xl object-cover" />
+      <span className="text-xs font-bold text-muted">{name || "Archivo cargado"}</span>
+      {privateDocument ? <span className="text-xs font-bold text-muted">Documento privado: no se mostrará en el perfil público.</span> : null}
+    </span>
+  );
 }
 
 function MockMapPin({ title, lat, lng }: { title: string; lat: number | null; lng: number | null }) {

@@ -141,15 +141,9 @@ export function SpecialistCard({
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
-          {specialist.publishedFromAdmin ? (
-            <button className="btn-secondary flex-1" type="button" onClick={() => onReserve?.(specialist.id)}>
-              Ver perfil
-            </button>
-          ) : (
-            <Link href={`/especialistas/${specialist.id}`} className="btn-secondary flex-1">
-              Ver perfil
-            </Link>
-          )}
+          <Link href={`/especialistas/${specialist.slug ?? specialist.id}`} className="btn-secondary flex-1">
+            Ver perfil
+          </Link>
           <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={openBookingModal}>
             {bookingPrimaryAction(primaryService)}
           </button>

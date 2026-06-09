@@ -47,6 +47,7 @@ CREATE INDEX IF NOT EXISTS idx_lead_submissions_email ON lead_submissions (email
 
 CREATE TABLE IF NOT EXISTS specialist_applications (
   id TEXT PRIMARY KEY,
+  slug TEXT,
   firstName TEXT,
   lastName TEXT,
   rut TEXT,
@@ -65,12 +66,19 @@ CREATE TABLE IF NOT EXISTS specialist_applications (
   referencesJson TEXT,
   portfolioJson TEXT,
   certificationsJson TEXT,
+  identityVerificationJson TEXT,
   payloadJson TEXT,
   source TEXT,
   leadSubmissionId TEXT,
+  publicationStatus TEXT DEFAULT 'pending_review',
   status TEXT DEFAULT 'pending',
   createdAt TEXT NOT NULL,
-  updatedAt TEXT NOT NULL
+  updatedAt TEXT NOT NULL,
+  approvedAt TEXT,
+  publishedAt TEXT,
+  unpublishedAt TEXT,
+  suspendedAt TEXT,
+  deletedAt TEXT
 );
 
 CREATE TABLE IF NOT EXISTS customer_leads (
@@ -140,6 +148,8 @@ CREATE TABLE IF NOT EXISTS conversion_events (
 );
 
 CREATE INDEX IF NOT EXISTS idx_specialist_applications_status ON specialist_applications (status);
+CREATE INDEX IF NOT EXISTS idx_specialist_applications_slug ON specialist_applications (slug);
+CREATE INDEX IF NOT EXISTS idx_specialist_applications_publicationStatus ON specialist_applications (publicationStatus);
 CREATE INDEX IF NOT EXISTS idx_specialist_applications_createdAt ON specialist_applications (createdAt);
 CREATE INDEX IF NOT EXISTS idx_specialist_applications_comuna ON specialist_applications (comuna);
 CREATE INDEX IF NOT EXISTS idx_customer_leads_status ON customer_leads (status);

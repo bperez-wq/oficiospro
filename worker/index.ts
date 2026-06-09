@@ -244,7 +244,14 @@ export default {
       }
     }
 
-    return env.ASSETS.fetch(request);
+    if (/^\/especialistas\/[^/]+\/?$/.test(url.pathname)) {
+      const fallbackUrl = new URL(request.url);
+      fallbackUrl.pathname = "/especialistas/perfil-publico";
+      return env.ASSETS.fetch(new Request(fallbackUrl, request));
+    }
+    const assetResponse = await env.ASSETS.fetch(request);
+    if (assetResponse.status !== 404) return assetResponse;
+    return assetResponse;
   },
 };
 
@@ -382,13 +389,19 @@ async function updateSpecialistApplicationStatus(request: Request, env: Env, id:
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
-  const status = action === "approve" ? "approved" : action === "reject" ? "rejected" : "more_info";
-  const current = await env.DB.prepare("SELECT id, leadSubmissionId FROM specialist_applications WHERE id = ?").bind(id).first<{ id: string; leadSubmissionId?: string }>();
+  const status = action === "approve" ? "published" : action === "reject" ? "rejected" : "more_info";
+  const current = await env.DB.prepare("SELECT * FROM specialist_applications WHERE id = ?").bind(id).first<Record<string, unknown>>();
   if (!current) return json({ ok: false, error: "specialist_application_not_found" }, 404);
+  if (action === "approve") {
+    const missing = specialistWorkerMissingRequirements(current);
+    if (missing.length) return json({ ok: false, error: "specialist_publication_incomplete", missing }, 422);
+  }
 
   const updatedAt = new Date().toISOString();
-  await env.DB.prepare("UPDATE specialist_applications SET status = ?, updatedAt = ? WHERE id = ?").bind(status, updatedAt, id).run();
-  const leadId = current.leadSubmissionId || id;
+  await env.DB.prepare("UPDATE specialist_applications SET status = ?, publicationStatus = ?, approvedAt = COALESCE(approvedAt, ?), publishedAt = CASE WHEN ? = 'published' THEN COALESCE(publishedAt, ?) ELSE publishedAt END, updatedAt = ? WHERE id = ?")
+    .bind(status, status, updatedAt, status, updatedAt, updatedAt, id)
+    .run();
+  const leadId = String(current.leadSubmissionId || id);
   await env.DB.prepare("UPDATE lead_submissions SET status = ? WHERE id = ?").bind(status, leadId).run();
   await insertConversionEventRecord(env.DB, {
     type: `specialist_${status}`,
@@ -417,7 +430,7 @@ async function createConversionEvent(request: Request, env: Env) {
 
 async function listPublicSpecialists(env: Env) {
   if (!env.DB) return json({ ok: true, specialists: [], stored: false, error: "database_not_configured" });
-  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE status = ? ORDER BY updatedAt DESC LIMIT 100").bind("approved").all();
+  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE publicationStatus IN ('published', 'approved') AND status NOT IN ('deleted', 'suspended', 'unpublished', 'rejected') ORDER BY updatedAt DESC LIMIT 100").all();
   return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true });
 }
 
@@ -624,13 +637,14 @@ async function insertSpecialistApplication(db: D1Database, lead: LeadRecord) {
   await db
     .prepare(
       `INSERT OR REPLACE INTO specialist_applications (
-        id, firstName, lastName, rut, email, whatsapp, region, comuna, address, serviceTypes, specialties,
+        id, slug, firstName, lastName, rut, email, whatsapp, region, comuna, address, serviceTypes, specialties,
         servicesOffered, priceMode, credits, providerChargeCLP, coverageRadiusKm, referencesJson,
-        portfolioJson, certificationsJson, payloadJson, source, leadSubmissionId, status, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        portfolioJson, certificationsJson, identityVerificationJson, payloadJson, source, leadSubmissionId, publicationStatus, status, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       lead.id,
+      specialistWorkerSlug(lead.fullName ?? textFrom(payload.fullName), lead.service || textFrom(firstService.specialty), lead.communeName || textFrom(payload.communeName), lead.id),
       textFrom(payload.firstNames) || names.firstName,
       textFrom(payload.lastNames) || names.lastName,
       textFrom(payload.rut),
@@ -649,9 +663,11 @@ async function insertSpecialistApplication(db: D1Database, lead: LeadRecord) {
       referencesJson,
       portfolioJson,
       certificationsJson,
+      JSON.stringify(payload.identityVerification ?? {}),
       lead.payloadJson,
       sourceForLead(lead),
       lead.id,
+      "pending_review",
       "pending",
       lead.createdAt,
       lead.createdAt,
@@ -1272,6 +1288,33 @@ function sourceForLead(lead: LeadRecord) {
   return [lead.sourcePage, lead.sourceComponent, lead.sourceButton].filter(Boolean).join(" · ");
 }
 
+function specialistWorkerSlug(name: string, specialty: string, commune: string, fallback: string) {
+  return [name, specialty, commune].filter(Boolean).join(" ")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "") || fallback;
+}
+
+function specialistWorkerMissingRequirements(row: Record<string, unknown>) {
+  const identity = normalizeNestedRecord(safeJson(String(row.identityVerificationJson ?? "{}")));
+  const references = String(row.referencesJson ?? "");
+  const services = String(row.servicesOffered ?? "");
+  const missing = [
+    textFrom(identity.profilePhotoUrl) ? "" : "Foto pública",
+    textFrom(identity.idFrontUrl) ? "" : "Cédula frontal",
+    textFrom(identity.idBackUrl) ? "" : "Cédula reverso",
+    textFrom(identity.selfieUrl) ? "" : "Selfie de verificación",
+    textFrom(identity.verificationStatus) === "approved" ? "" : "Identidad aprobada",
+    references.split(" - ").length >= 3 || references.includes("\\n") ? "" : "3 referencias completas",
+    services ? "" : "Servicios declarados",
+    row.comuna ? "" : "Comuna y cobertura",
+    Number(row.credits ?? 0) > 0 || row.priceMode === "quote_required" ? "" : "Precios o modalidad de cotización",
+  ].filter(Boolean);
+  return missing;
+}
+
 function toPublicSpecialist(row: Record<string, any>) {
   const payload = normalizeNestedRecord(safeJson(String(row.payloadJson ?? "{}")));
   const services = asArray(safeJson(String(row.servicesOffered ?? "[]"))).map((service) => asRecord(service));
@@ -1289,7 +1332,9 @@ function toPublicSpecialist(row: Record<string, any>) {
     .toUpperCase();
 
   return {
-    id: String(row.id),
+    id: String(row.slug ?? row.id),
+    slug: String(row.slug ?? row.id),
+    publicationStatus: String(row.publicationStatus ?? row.status ?? "published") as any,
     name: fullName,
     initials: initials || "OP",
     category: textFrom(row.serviceTypes) || serviceName,
