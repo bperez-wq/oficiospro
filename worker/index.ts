@@ -430,7 +430,7 @@ async function createConversionEvent(request: Request, env: Env) {
 
 async function listPublicSpecialists(env: Env) {
   if (!env.DB) return json({ ok: true, specialists: [], stored: false, error: "database_not_configured" });
-  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE publicationStatus IN ('published', 'approved') AND status NOT IN ('deleted', 'suspended', 'unpublished', 'rejected') ORDER BY updatedAt DESC LIMIT 100").all();
+  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE publicationStatus = 'published' AND status NOT IN ('deleted', 'suspended', 'unpublished', 'rejected') ORDER BY updatedAt DESC LIMIT 100").all();
   return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true });
 }
 

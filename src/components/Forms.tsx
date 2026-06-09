@@ -634,6 +634,10 @@ export function SpecialistRegisterForm() {
         return false;
       }
     }
+    if (currentStep === 4 && completedReferences.length < 3) {
+      setStatus("Completa 3 referencias laborales antes de enviar tu postulación.");
+      return false;
+    }
     if (currentStep === 5 && (!consentContact || !consentVerification)) {
       setStatus("Autoriza el contacto y la revision de antecedentes para enviar tu postulacion.");
       return false;

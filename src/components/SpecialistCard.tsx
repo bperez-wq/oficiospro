@@ -141,7 +141,7 @@ export function SpecialistCard({
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
-          <Link href={`/especialistas/${specialist.slug ?? specialist.id}`} className="btn-secondary flex-1">
+          <Link href={`/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}`} className="btn-secondary flex-1">
             Ver perfil
           </Link>
           <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={openBookingModal}>

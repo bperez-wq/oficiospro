@@ -2,23 +2,55 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { ConversionButton } from "@/components/ConversionModal";
 import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
-import { availabilityLabels, specialists, type Specialist } from "@/data/mock";
+import { availabilityLabels, type Specialist } from "@/data/mock";
 import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
-import { getPublishedSpecialists, seedMockState } from "@/lib/storage";
+import { getSpecialistBySlugOrId, seedMockState } from "@/lib/storage";
+
+type LookupDiagnostics = {
+  searched: string;
+  sources: string[];
+  availableCount: number;
+};
+
+export function SpecialistProfileFromQuery() {
+  const params = useSearchParams();
+  return <SpecialistPublicProfile id={params.get("id") ?? ""} />;
+}
 
 export function SpecialistPublicProfile({ id, initialSpecialist = null }: { id: string; initialSpecialist?: Specialist | null }) {
   const [specialist, setSpecialist] = useState<Specialist | null>(initialSpecialist);
   const [loaded, setLoaded] = useState(Boolean(initialSpecialist));
+  const [diagnostics, setDiagnostics] = useState<LookupDiagnostics>({ searched: id, sources: [], availableCount: 0 });
 
   useEffect(() => {
     const pathId = window.location.pathname.split("/").filter(Boolean).at(-1) ?? id;
-    if (initialSpecialist && (initialSpecialist.id === pathId || initialSpecialist.slug === pathId)) return;
+    const requestedId = id || pathId;
+    if (initialSpecialist && (initialSpecialist.id === requestedId || initialSpecialist.slug === requestedId || initialSpecialist.id === pathId || initialSpecialist.slug === pathId)) return;
+    let cancelled = false;
     seedMockState();
-    const all = [...specialists, ...getPublishedSpecialists()];
-    setSpecialist(all.find((item) => item.id === pathId || item.slug === pathId || item.id === id || item.slug === id) ?? null);
-    setLoaded(true);
+
+    async function load() {
+      const remoteSpecialists = await fetch("/api/specialists")
+        .then((response) => response.json())
+        .then((data: { specialists?: Specialist[] }) => (Array.isArray(data.specialists) ? data.specialists : []))
+        .catch(() => [] as Specialist[]);
+      const result = getSpecialistBySlugOrId(requestedId, remoteSpecialists);
+      if (cancelled) return;
+      setSpecialist(result.specialist);
+      setDiagnostics(result.diagnostics);
+      setLoaded(true);
+      if (!result.specialist) {
+        console.warn("OficiosPro specialist lookup failed", result.diagnostics);
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
   }, [id, initialSpecialist]);
 
   if (!loaded) return <section>Cargando perfil...</section>;
@@ -29,9 +61,11 @@ export function SpecialistPublicProfile({ id, initialSpecialist = null }: { id: 
         <section className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
           <p className="eyebrow">Perfil no encontrado</p>
           <h1 className="mt-3 text-4xl font-black text-ink">No encontramos este especialista.</h1>
-          <Link className="btn-secondary mt-6 inline-flex" href="/especialistas">
-            Volver a especialistas
-          </Link>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link className="btn-secondary" href="/especialistas">Volver a especialistas</Link>
+            <Link className="btn-secondary" href="/especialistas">Ver todos los especialistas</Link>
+            <Link className="btn-primary" href="/contacto">Solicitar ayuda</Link>
+          </div>
         </section>
       </section>
     );
