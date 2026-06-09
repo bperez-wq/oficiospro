@@ -10,6 +10,7 @@ import { availabilityLabels, type Specialist } from "@/data/mock";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
+import { getServiceCreditPair, getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 
 export function SpecialistCard({
   specialist,
@@ -35,11 +36,9 @@ export function SpecialistCard({
   const [summary, setSummary] = useState<AvailabilitySummary | null>(null);
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
   const primaryService = useMemo(() => getPrimaryFlexibleService(specialist), [specialist]);
-  const badges = [
-    specialist.verified ? "Verificado" : null,
-    specialist.top ? "Top especialista" : null,
-    specialist.certifications.length ? "Certificado" : null,
-  ].filter(Boolean) as string[];
+  const trustBadges = useMemo(() => getTrustBadges(specialist), [specialist]);
+  const specialistLevel = useMemo(() => getSpecialistLevel(specialist), [specialist]);
+  const creditPair = useMemo(() => getServiceCreditPair(primaryService, specialist.credits), [primaryService, specialist.credits]);
   const coverageStatus =
     specialist.coverageRadiusKm && specialist.distance <= specialist.coverageRadiusKm
       ? "Dentro de tu zona"
@@ -114,8 +113,8 @@ export function SpecialistCard({
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {specialist.rank ? <span className="chip bg-gold/15 text-gold">{specialist.rank}</span> : null}
-          {badges.map((badge) => (
+          <span className="chip bg-gold/15 text-gold">Nivel {specialistLevel}</span>
+          {trustBadges.map((badge) => (
             <span key={badge} className={badgeClass(badge)}>
               {badge}
             </span>
@@ -126,7 +125,16 @@ export function SpecialistCard({
         <div className="rounded-2xl border border-brand/10 bg-gradient-to-br from-brand-soft to-white p-4">
           <span className="text-sm font-black uppercase text-muted">Precio desde</span>
           <strong className="block text-2xl font-black text-ink">{pricingSummary(primaryService)}</strong>
+          <div className="mt-3 grid gap-2 sm:grid-cols-2">
+            <span className="rounded-2xl bg-white p-3 text-sm font-black text-ink">
+              Normal: {creditPair.baseCredits} creditos
+            </span>
+            <span className="rounded-2xl bg-white p-3 text-sm font-black text-brand-dark">
+              Club Hogar: {creditPair.clubCredits} creditos
+            </span>
+          </div>
           <p className="text-sm font-bold text-muted">{pricingModeLabel(primaryService.pricingMode)} · {pricingDetail(primaryService)}</p>
+          {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} creditos por solicitud con Club Hogar.</p> : null}
           {specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
               A {specialist.distance} km · {coverageStatus} · radio {specialist.coverageRadiusKm} km
@@ -138,6 +146,16 @@ export function SpecialistCard({
           <span className="text-xs font-black uppercase text-muted">Próximo horario</span>
           <strong className="mt-1 block text-base text-ink">{summary?.detail ?? "Disponibilidad referencial"}</strong>
           <p className="mt-1 text-sm font-bold leading-5 text-muted">{nextSlotLabel}</p>
+        </div>
+
+        <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+          <span className="text-xs font-black uppercase text-emerald-900">Proteccion OficiosPro</span>
+          <div className="mt-3 grid gap-2 text-sm font-bold leading-5 text-emerald-950">
+            <span>Tus creditos se retienen hasta confirmar avance.</span>
+            <span>El especialista es revisado antes de publicarse.</span>
+            <span>Puedes calificar despues del servicio.</span>
+            <span>Los adicionales requieren aprobacion.</span>
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">
@@ -196,9 +214,10 @@ function snapshotSpecialist(specialist: Specialist): Specialist {
 }
 
 function badgeClass(badge: string) {
-  if (badge === "Verificado") return "chip-emerald";
+  if (badge === "Identidad verificada") return "chip-emerald";
   if (badge === "Top especialista") return "chip-sun";
-  if (badge === "Certificado") return "chip-accent";
+  if (badge === "Certificacion cargada") return "chip-accent";
+  if (badge === "Respuesta rapida") return "chip-brand";
   return "chip-brand";
 }
 

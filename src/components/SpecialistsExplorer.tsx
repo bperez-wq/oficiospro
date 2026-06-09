@@ -23,6 +23,7 @@ import {
   regionNameForCode,
   serviceTypeOptions,
 } from "@/lib/catalog";
+import { recommendationScore } from "@/lib/trust";
 
 const availabilityOptions = [
   { value: "all", label: "Cualquier horario" },
@@ -32,10 +33,12 @@ const availabilityOptions = [
 ];
 
 const sortOptions = [
-  { value: "rating", label: "Mejor calificación" },
-  { value: "credits", label: "Menos créditos" },
-  { value: "response", label: "Respuesta rápida" },
-  { value: "distance", label: "Más cercano" },
+  { value: "recommended", label: "Recomendados" },
+  { value: "rating", label: "Mejor calificacion" },
+  { value: "distance", label: "Mas cercanos" },
+  { value: "credits", label: "Menor precio en creditos" },
+  { value: "response", label: "Respuesta mas rapida" },
+  { value: "jobs", label: "Mas trabajos completados" },
 ];
 
 export function SpecialistsExplorer() {
@@ -48,7 +51,7 @@ export function SpecialistsExplorer() {
   const [availability, setAvailability] = useState("all");
   const [rating, setRating] = useState(0);
   const [maxCredits, setMaxCredits] = useState(999);
-  const [sort, setSort] = useState("rating");
+  const [sort, setSort] = useState("recommended");
   const [withinCoverage, setWithinCoverage] = useState(false);
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
@@ -108,17 +111,24 @@ export function SpecialistsExplorer() {
   ];
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
   const activeFilters = [
-    query ? `Búsqueda: ${query}` : "",
-    category !== "all" ? `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}` : "",
-    specialty !== "all" ? `Especialidad: ${specialty}` : "",
-    region !== ALL_REGIONS_VALUE ? `Región: ${regionNameForCode(region)}` : "",
-    zone && zone !== ALL_COMMUNES_VALUE ? `Comuna: ${zone}` : "",
-    availability !== "all" ? `Disponibilidad: ${availability}` : "",
-    rating > 0 ? `Calificación desde ${rating.toFixed(1)}` : "",
-    maxCredits < 999 ? `Hasta ${maxCredits} créditos` : "",
-    withinCoverage ? "Dentro de cobertura" : "",
-  ].filter(Boolean);
+    query ? { label: `Busqueda: ${query}`, clear: () => setQuery("") } : null,
+    category !== "all" ? { label: `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}`, clear: () => setCategory("all") } : null,
+    specialty !== "all" ? { label: `Especialidad: ${specialty}`, clear: () => setSpecialty("all") } : null,
+    region !== ALL_REGIONS_VALUE ? { label: `Region: ${regionNameForCode(region)}`, clear: () => {
+      setRegion(ALL_REGIONS_VALUE);
+      setZone(ALL_COMMUNES_VALUE);
+    } } : null,
+    zone && zone !== ALL_COMMUNES_VALUE ? { label: `Comuna: ${zone}`, clear: () => setZone(ALL_COMMUNES_VALUE) } : null,
+    availability !== "all" ? { label: `Disponibilidad: ${availabilityOptions.find((item) => item.value === availability)?.label ?? availability}`, clear: () => setAvailability("all") } : null,
+    rating > 0 ? { label: `Calificacion desde ${rating.toFixed(1)}`, clear: () => setRating(0) } : null,
+    maxCredits < 999 ? { label: `Hasta ${maxCredits} creditos`, clear: () => setMaxCredits(999) } : null,
+    withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
+  ].filter(Boolean) as { label: string; clear: () => void }[];
   const hasActiveFilters = activeFilters.length > 0;
+  const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
+  const resultContext = hasLocationContext
+    ? "Ordenados por cercania y reputacion"
+    : "Agrega tu comuna para ver especialistas cerca de ti";
 
   useEffect(() => {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
@@ -165,6 +175,8 @@ export function SpecialistsExplorer() {
         if (sort === "credits") return a.credits - b.credits;
         if (sort === "response") return Number.parseFloat(a.responseTime) - Number.parseFloat(b.responseTime);
         if (sort === "distance") return a.distance - b.distance;
+        if (sort === "jobs") return (b.trabajosCompletados ?? b.jobs) - (a.trabajosCompletados ?? a.jobs);
+        if (sort === "recommended") return recommendationScore(b) - recommendationScore(a);
         return b.rating - a.rating;
       });
   }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, query, rating, region, sort, specialty, withinCoverage, zone]);
@@ -179,7 +191,7 @@ export function SpecialistsExplorer() {
     setRating(0);
     setMaxCredits(999);
     setWithinCoverage(false);
-    setSort("rating");
+    setSort("recommended");
   }
 
   function reserve(id: string) {
@@ -285,21 +297,34 @@ export function SpecialistsExplorer() {
               <p className="eyebrow">Especialistas disponibles</p>
               <h2 className="text-3xl font-black md:text-4xl">Técnicos recomendados</h2>
               <p className="mt-2 text-sm font-bold text-muted">
-                {hasActiveFilters ? "Resultados según los filtros activos." : "Mostrando todos los especialistas disponibles"}
+                {resultContext}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <strong className="chip bg-brand-soft text-brand-dark">{visible.length} resultados</strong>
+              <strong className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
               <button className="rounded-full border border-line px-4 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={clearFilters}>
                 Limpiar filtros
               </button>
             </div>
           </div>
-          <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-            {hasActiveFilters
-              ? `Filtros activos: ${activeFilters.join(" · ")}`
-              : "Explora todos los especialistas verificados disponibles en OficiosPro."}
-          </p>
+          <div className="rounded-2xl border border-line bg-slate-50 p-4">
+            {hasActiveFilters ? (
+              <div className="flex flex-wrap gap-2">
+                {activeFilters.map((filter) => (
+                  <button
+                    key={filter.label}
+                    className="rounded-full border border-line bg-white px-3 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand"
+                    type="button"
+                    onClick={filter.clear}
+                  >
+                    {filter.label} x
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm font-bold text-muted">Explora todos los especialistas verificados disponibles en OficiosPro.</p>
+            )}
+          </div>
           <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>

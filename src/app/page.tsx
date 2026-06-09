@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
@@ -231,6 +232,10 @@ export default function HomePage() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="section-compact">
+        <CreditExplainer compact />
       </section>
 
       <section className="bg-enterprise py-20 text-white" id="empresas">

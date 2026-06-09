@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { PlatformNav } from "@/components/PlatformNav";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
@@ -205,6 +206,29 @@ export default function CheckoutPage() {
             <SummaryTile label="Créditos mensuales" value={`${plan.monthlyCredits} créditos`} />
             <SummaryTile label="Próximo cobro" value={nextBilling.toLocaleDateString("es-CL")} />
           </div>
+
+          <div className="mt-8">
+            <CreditExplainer
+              availableCredits={plan.monthlyCredits}
+              monthlyCredits={plan.monthlyCredits}
+              baseServiceCredits={paymentContext.credits}
+              clubServiceCredits={Math.max(0, paymentContext.credits - 2)}
+              compact
+            />
+          </div>
+
+          <section className="mt-8 grid gap-4 rounded-[24px] border border-line bg-white p-5 sm:grid-cols-2">
+            <article className="rounded-2xl border border-line bg-slate-50 p-4">
+              <p className="eyebrow">Sin suscripcion</p>
+              <h2 className="text-xl font-black">Compra creditos sin renovacion mensual.</h2>
+              <p className="mt-2 text-sm font-bold text-muted">Puedes comprar creditos puntuales y pagar precio normal en cada solicitud.</p>
+            </article>
+            <article className="rounded-2xl border border-brand/20 bg-brand-soft p-4">
+              <p className="eyebrow">Con Club Hogar</p>
+              <h2 className="text-xl font-black">Conviene si haces 2 solicitudes al mes.</h2>
+              <p className="mt-2 text-sm font-bold text-brand-dark">Ahorro: 4 creditos al mes, mas creditos acumulables y beneficios.</p>
+            </article>
+          </section>
 
           <div className="mt-8 grid gap-4 rounded-[24px] border border-line bg-slate-50 p-5">
             <div className="grid gap-4 md:grid-cols-2">

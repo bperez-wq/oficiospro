@@ -9,7 +9,7 @@ import { TimeSlotPicker } from "@/components/TimeSlotPicker";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { formatDisplayDate, getAvailabilitySummary, getSlotsForDate, getWeekDates, type TimeSlot } from "@/lib/availability";
 import { createBookingRequest, getBookingRequests, getSpecialistAvailabilityProfile, type BookingRequest } from "@/lib/bookingStorage";
-import { createQuoteAgreement, usePaymentCredits } from "@/lib/storage";
+import { createQuoteAgreement, getMockSession, getPaymentCreditWallet, usePaymentCredits } from "@/lib/storage";
 import { bookingPrimaryAction, creditsForInitialHold, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { submitLead } from "@/lib/leadClient";
 
@@ -34,6 +34,15 @@ export function BookingDrawer({
   const [estimatedHours, setEstimatedHours] = useState(services[0]?.minHours ?? 2);
   const [requestDescription, setRequestDescription] = useState("");
   const [isSubscriber, setIsSubscriber] = useState(false);
+  const [hasSession, setHasSession] = useState(false);
+  const [customer, setCustomer] = useState({
+    names: "",
+    lastName: "",
+    email: "",
+    whatsapp: "",
+    rut: "",
+    commune: specialist.commune ?? specialist.zone,
+  });
   const selectedService = useMemo<FlexibleService>(() => services.find((service) => service.id === selectedServiceId) ?? services[0] ?? getPrimaryFlexibleService(specialist), [selectedServiceId, services, specialist]);
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
   const slots = useMemo(() => getSlotsForDate(profile, selectedDate, bookings), [bookings, profile, selectedDate]);
@@ -96,6 +105,16 @@ export function BookingDrawer({
     setEstimatedHours(services[0]?.minHours ?? 2);
     setRequestDescription("");
     setIsSubscriber(false);
+    const session = getMockSession();
+    setHasSession(Boolean(session));
+    setCustomer({
+      names: session?.name?.split(" ").slice(0, 1).join(" ") ?? "",
+      lastName: session?.name?.split(" ").slice(1).join(" ") ?? "",
+      email: session?.email ?? "",
+      whatsapp: "",
+      rut: "",
+      commune: specialist.commune ?? specialist.zone,
+    });
     setSubmitting(false);
   }, [open, profile, services]);
 
@@ -109,14 +128,19 @@ export function BookingDrawer({
       return;
     }
     if (!needsQuoteOnly && !selectedSlot) return;
+    if (!hasSession && !customerReady(customer)) {
+      setSuccess("Completa tus datos minimos para continuar sin perder la reserva.");
+      return;
+    }
     setSubmitting(true);
     try {
       const heldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
+      const customerName = hasSession ? getMockSession()?.name ?? "Cliente OficiosPro" : `${customer.names} ${customer.lastName}`.trim();
       if (needsQuoteOnly) {
         const quote = createQuoteAgreement({
           specialistId: specialist.id,
           specialistName: specialist.name,
-          customerName: "Cliente OficiosPro",
+          customerName,
           serviceName: selectedService.name,
           commune: specialist.commune ?? specialist.zone,
           status: "quote_requested",
@@ -125,7 +149,9 @@ export function BookingDrawer({
         });
         const leadResult = await submitLead({
           leadType: "booking_request",
-          fullName: "Cliente OficiosPro",
+          fullName: customerName,
+          email: customer.email,
+          phone: customer.whatsapp,
           service: selectedService.name,
           problemDescription: requestDescription,
           regionName: specialist.region,
@@ -136,7 +162,7 @@ export function BookingDrawer({
           sourceComponent: "BookingDrawer",
           sourceButton: "Solicitar cotizacion",
           consentContact: false,
-          payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id },
+          payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, rut: customer.rut },
         });
         setSuccess(leadResult.ok ? "Cotizacion solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
         setRequestDescription("");
@@ -166,7 +192,9 @@ export function BookingDrawer({
       }
       const leadResult = await submitLead({
         leadType: "booking_request",
-        fullName: "Cliente OficiosPro",
+        fullName: customerName,
+        email: customer.email,
+        phone: customer.whatsapp,
         service: selectedService.name,
         problemDescription: requestDescription,
         regionName: specialist.region,
@@ -178,7 +206,7 @@ export function BookingDrawer({
         creditsEstimate: heldCredits,
         sourceComponent: "BookingDrawer",
         sourceButton: bookingPrimaryAction(selectedService),
-        payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits },
+        payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits, rut: customer.rut },
         consentContact: false,
       });
       setBookings(getBookingRequests());
@@ -191,6 +219,8 @@ export function BookingDrawer({
 
   const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
   const currentHoldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
+  const wallet = getPaymentCreditWallet();
+  const missingCredits = Math.max(0, currentHoldCredits - wallet.currentBalance);
 
   function closeFromBackdrop(event: MouseEvent<HTMLDivElement>) {
     if (event.target === event.currentTarget) onClose();
@@ -226,6 +256,45 @@ export function BookingDrawer({
             <InfoTile label="Zona" value={specialist.commune ?? specialist.zone} detail={profile.communeCoverage.slice(0, 3).join(", ") || "Cobertura por confirmar"} />
           </div>
 
+          <div className="grid gap-3 md:grid-cols-3">
+            <StepTile number="1" title="Que necesitas" detail="Servicio, comuna, comentario y urgencia." active />
+            <StepTile number="2" title="Creditos" detail="Precio normal, Club Hogar y saldo disponible." active />
+            <StepTile number="3" title="Confirmacion" detail="Fecha tentativa y creditos a retener." active={Boolean(selectedSlot) || needsQuoteOnly} />
+          </div>
+
+          {!hasSession ? (
+            <section className="rounded-[24px] border border-line bg-slate-50 p-4">
+              <p className="eyebrow">Continua sin perder la reserva</p>
+              <h3 className="text-2xl font-black">Datos minimos de contacto</h3>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <label className="field">
+                  Nombres
+                  <input value={customer.names} onChange={(event) => setCustomer({ ...customer, names: event.target.value })} />
+                </label>
+                <label className="field">
+                  Apellidos
+                  <input value={customer.lastName} onChange={(event) => setCustomer({ ...customer, lastName: event.target.value })} />
+                </label>
+                <label className="field">
+                  Email
+                  <input type="email" value={customer.email} onChange={(event) => setCustomer({ ...customer, email: event.target.value })} />
+                </label>
+                <label className="field">
+                  WhatsApp
+                  <input value={customer.whatsapp} onChange={(event) => setCustomer({ ...customer, whatsapp: event.target.value })} />
+                </label>
+                <label className="field">
+                  RUT
+                  <input value={customer.rut} onChange={(event) => setCustomer({ ...customer, rut: event.target.value })} />
+                </label>
+                <label className="field">
+                  Comuna
+                  <input value={customer.commune} onChange={(event) => setCustomer({ ...customer, commune: event.target.value })} />
+                </label>
+              </div>
+            </section>
+          ) : null}
+
           <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
             <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
               <div>
@@ -260,6 +329,23 @@ export function BookingDrawer({
               <strong className="block text-ink">{pricingSummary(selectedService, isSubscriber)}</strong>
               <p className="mt-1 text-sm font-bold text-brand-dark">{pricingDetail(selectedService)}</p>
               <p className="mt-1 text-sm font-bold text-brand-dark">Retencion inicial estimada: {currentHoldCredits || "por confirmar"} creditos.</p>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-2">
+              <article className="rounded-2xl border border-line bg-white p-4">
+                <p className="text-xs font-black uppercase text-muted">Sin suscripcion</p>
+                <h4 className="mt-1 text-lg font-black">Compra creditos cuando los necesitas</h4>
+                <p className="mt-2 text-sm font-bold text-muted">Pagas precio normal en creditos y no tienes renovacion mensual.</p>
+              </article>
+              <article className="rounded-2xl border border-brand/20 bg-brand-soft p-4">
+                <p className="text-xs font-black uppercase text-brand-dark">Con Club Hogar</p>
+                <h4 className="mt-1 text-lg font-black">Ahorras 2 creditos por solicitud</h4>
+                <p className="mt-2 text-sm font-bold text-brand-dark">Recibes creditos mensuales, los acumulas y accedes a beneficios.</p>
+              </article>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-3">
+              <InfoTile label="Disponibles" value={`${wallet.currentBalance} creditos`} detail="Saldo actual para reservar o comprar servicios." />
+              <InfoTile label="A retener" value={`${currentHoldCredits || 0} creditos`} detail="Quedan protegidos hasta confirmar avance." />
+              <InfoTile label="Faltantes" value={`${missingCredits} creditos`} detail={missingCredits ? "Puedes comprar creditos o activar Club Hogar." : "Tienes saldo suficiente para continuar."} />
             </div>
             {selectedService.pricingMode === "hourly" ? (
               <label className="field mt-4">
@@ -304,6 +390,25 @@ export function BookingDrawer({
             </>
           )}
 
+          <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
+            <p className="eyebrow">Confirmacion</p>
+            <h3 className="text-2xl font-black">Resumen antes de enviar</h3>
+            <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <InfoTile label="Especialista" value={specialist.name} detail={specialist.specialty} />
+              <InfoTile label="Servicio" value={selectedService.name} detail={pricingModeLabel(selectedService.pricingMode)} />
+              <InfoTile label="Fecha tentativa" value={needsQuoteOnly ? "Por coordinar" : selectedSlot?.label ?? "Selecciona horario"} detail={needsQuoteOnly ? "Propuesta posterior" : formatDisplayDate(selectedDate)} />
+              <InfoTile label="Creditos" value={`${currentHoldCredits || 0}`} detail="Retencion inicial protegida." />
+            </div>
+            <div className="mt-4 grid gap-2 text-sm font-black text-muted sm:grid-cols-3">
+              {["Solicitud creada", "Creditos retenidos", "Pendiente aceptacion especialista", "Aceptado", "Completado", "Calificado"].map((status) => (
+                <span key={status} className="rounded-2xl bg-slate-50 p-3">{status}</span>
+              ))}
+            </div>
+            <p className="mt-4 rounded-2xl bg-emerald-50 p-3 text-sm font-black text-emerald-950">
+              Todo adicional requiere tu aprobacion antes de cobrarse.
+            </p>
+          </section>
+
           <InstantContactPanel specialist={specialist} />
         </div>
 
@@ -335,5 +440,28 @@ function InfoTile({ label, value, detail }: { label: string; value: string; deta
       <strong className="mt-1 block text-xl text-ink">{value}</strong>
       <p className="mt-1 text-sm font-bold leading-5 text-muted">{detail}</p>
     </article>
+  );
+}
+
+function StepTile({ number, title, detail, active }: { number: string; title: string; detail: string; active: boolean }) {
+  return (
+    <article className={`rounded-2xl border p-4 ${active ? "border-brand/20 bg-brand-soft" : "border-line bg-slate-50"}`}>
+      <span className={`grid h-8 w-8 place-items-center rounded-full text-sm font-black ${active ? "bg-brand text-white" : "bg-white text-muted"}`}>
+        {number}
+      </span>
+      <strong className="mt-3 block text-ink">{title}</strong>
+      <p className="mt-1 text-sm font-bold leading-5 text-muted">{detail}</p>
+    </article>
+  );
+}
+
+function customerReady(customer: { names: string; lastName: string; email: string; whatsapp: string; rut: string; commune: string }) {
+  return Boolean(
+    customer.names.trim() &&
+      customer.lastName.trim() &&
+      customer.email.trim() &&
+      customer.whatsapp.trim() &&
+      customer.rut.trim() &&
+      customer.commune.trim(),
   );
 }

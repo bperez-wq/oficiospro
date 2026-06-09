@@ -4,10 +4,24 @@ import { defaultFlexibleServices, type FlexibleService, type PricingMode } from 
 export type Availability = "now" | "today" | "tomorrow";
 
 export type Review = {
+  id?: string;
+  specialistId?: string;
   author: string;
+  customerName?: string;
   rating: number;
+  ratingGeneral?: number;
+  ratingPuntualidad?: number;
+  ratingCalidad?: number;
+  ratingComunicacion?: number;
+  ratingPrecio?: number;
   text: string;
+  comment?: string;
+  serviceName?: string;
+  comuna?: string;
   date: string;
+  verifiedService?: boolean;
+  hidden?: boolean;
+  reviewedByAdmin?: boolean;
 };
 
 export type WorkHistory = {

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -126,6 +127,14 @@ export function ClientDashboard() {
         </article>
       </section>
 
+      <CreditExplainer
+        availableCredits={paymentWallet?.currentBalance ?? balance}
+        heldCredits={paymentWallet?.heldCredits ?? 0}
+        expiringCredits={paymentWallet?.expiringCreditsTotal ?? 0}
+        monthlyCredits={subscription?.monthlyCredits ?? 35}
+        compact
+      />
+
       <section className="panel">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
@@ -168,6 +177,10 @@ export function ClientDashboard() {
             ))}
           </div>
           <div className="grid gap-3">
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+              <p className="eyebrow">Adicionales por aprobar</p>
+              <h3 className="text-xl font-black text-emerald-950">Este adicional no se cobrara sin tu aprobacion.</h3>
+            </div>
             {additionalRequests.map((additional) => {
               const needsPayment = additionalNeedsPayment(additional, paymentWallet?.currentBalance ?? balance);
               return (
@@ -177,7 +190,11 @@ export function ClientDashboard() {
                     <span className="chip bg-brand-soft text-brand-dark">{additional.status}</span>
                   </div>
                   <p className="mt-2 text-sm font-bold text-muted">{additional.specialistName} · {additional.requestedCredits} créditos</p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}. El cobro adicional requiere tu aprobación.</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}. El cobro adicional requiere tu aprobacion.</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <MiniMetric label="Motivo" value={additional.reason} />
+                    <MiniMetric label="Comprobante" value={additional.photoName ?? additional.receiptName ?? "Opcional"} />
+                  </div>
                   {needsPayment ? <p className="mt-2 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-900">Saldo insuficiente: compra créditos, activa Club Hogar o paga la diferencia.</p> : null}
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "approved", "Adicional aprobado por cliente.")}>
@@ -194,6 +211,29 @@ export function ClientDashboard() {
               );
             })}
           </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="eyebrow">Reputacion</p>
+            <h2 className="text-2xl font-black">Servicios por calificar</h2>
+          </div>
+          <span className="chip bg-brand-soft text-brand-dark">{completed.length} completados</span>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          {completed.length ? completed.slice(0, 4).map((booking) => (
+            <article key={booking.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+              <strong>{booking.service}</strong>
+              <p className="mt-1 text-sm font-bold text-muted">{booking.specialistName} · {booking.commune} · {booking.date}</p>
+              <button className="btn-secondary mt-3" type="button">
+                Calificar servicio
+              </button>
+            </article>
+          )) : (
+            <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">Cuando completes un servicio, podras calificarlo y ayudar a construir reputacion verificada.</p>
+          )}
         </div>
       </section>
 
@@ -403,6 +443,34 @@ export function SpecialistDashboard() {
             ))}
           </div>
           <div className="grid gap-3">
+            <article className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
+              <p className="eyebrow">Solicitar adicional</p>
+              <h3 className="text-xl font-black">Todo adicional queda pendiente de aprobacion del cliente.</h3>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <label className="field">
+                  Tipo
+                  <select defaultValue="materials">
+                    <option value="materials">Materiales</option>
+                    <option value="additional_labor">Mano de obra adicional</option>
+                    <option value="spare_parts">Repuesto</option>
+                    <option value="additional_hours">Horas extra</option>
+                    <option value="other">Otro</option>
+                  </select>
+                </label>
+                <label className="field">
+                  Creditos solicitados
+                  <input type="number" defaultValue={10} min={2} step={2} />
+                </label>
+                <label className="field sm:col-span-2">
+                  Descripcion y motivo
+                  <textarea placeholder="Explica que cambia, por que se necesita y que evidencia adjuntas." />
+                </label>
+                <label className="field sm:col-span-2">
+                  Foto opcional
+                  <input type="text" placeholder="Nombre o link del comprobante" />
+                </label>
+              </div>
+            </article>
             {additionals.map((additional) => (
               <article key={additional.id} className="rounded-2xl border border-line bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-center justify-between gap-2">

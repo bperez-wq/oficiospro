@@ -1,4 +1,5 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { TransactionList } from "@/components/Lists";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -31,6 +32,13 @@ export default function ClubHogarPage() {
         ))}
       </section>
 
+      <CreditExplainer
+        availableCredits={featuredPlan.monthlyCredits}
+        monthlyCredits={featuredPlan.monthlyCredits}
+        baseServiceCredits={12}
+        clubServiceCredits={10}
+      />
+
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <article className="panel">
           <p className="eyebrow">Simulador visual</p>
@@ -38,8 +46,9 @@ export default function ClubHogarPage() {
           <p className="mt-3 font-semibold leading-7 text-muted">
             Por {formatCLP(featuredPlan.priceCLP)}/mes cargas saldo disponible en créditos para planificar visitas, diagnósticos y mantenciones sin partir desde cero cada vez.
           </p>
-          <div className="mt-6 grid gap-3 md:grid-cols-3">
+          <div className="mt-6 grid gap-3 md:grid-cols-4">
             {[
+              ["1 mes", featuredPlan.monthlyCredits],
               ["3 meses", featuredPlan.monthlyCredits * 3],
               ["6 meses", featuredPlan.monthlyCredits * 6],
               ["12 meses", featuredPlan.monthlyCredits * 12],

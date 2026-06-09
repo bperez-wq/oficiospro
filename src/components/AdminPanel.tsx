@@ -16,6 +16,7 @@ import {
 } from "@/data/marketplace";
 import { calculateClientCreditsFromSpecialistPayout, estimateClientPriceCLP, estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
 import { quoteTotalCredits } from "@/lib/flexiblePricing";
+import { getSpecialistReviews, type SpecialistReview } from "@/lib/trust";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
 import {
@@ -79,6 +80,7 @@ type AdminSection =
   | "pendientes"
   | "publicados"
   | "solicitudes"
+  | "reviews"
   | "leads-hogar"
   | "leads-empresas"
   | "pagos"
@@ -124,16 +126,18 @@ type EditableServiceType = { id: string; name: string; description: string; acti
 type CoverageCommune = { name: string; region: string; active: boolean; priority: boolean };
 type LeadNoteMap = Record<string, string>;
 type NumericConfigKey = Exclude<keyof CommercialConfig, "specialistReferralBonus">;
+type AdminReviewRow = SpecialistReview & { specialistName: string; hidden: boolean; reviewedByAdmin: boolean };
 
 const adminSections: { id: AdminSection; label: string }[] = [
   { id: "resumen", label: "Resumen" },
   { id: "pendientes", label: "Especialistas pendientes" },
   { id: "publicados", label: "Especialistas publicados" },
   { id: "solicitudes", label: "Solicitudes de clientes" },
+  { id: "reviews", label: "Reviews" },
   { id: "leads-hogar", label: "Leads Club Hogar" },
   { id: "leads-empresas", label: "Leads Empresas" },
   { id: "pagos", label: "Pagos y créditos" },
-  { id: "negociacion", label: "Tarifas y negociación" },
+  { id: "negociacion", label: "Tarifas, cotizaciones y negociación" },
   { id: "catalogo", label: "Catálogo de servicios" },
   { id: "comunas", label: "Comunas y cobertura" },
   { id: "creditos", label: "Créditos y márgenes" },
@@ -231,6 +235,9 @@ export function AdminPanel() {
   const [selectedSpecialist, setSelectedSpecialist] = useState<PendingSpecialistProfile | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequestLead | null>(null);
   const [publishedFilter, setPublishedFilter] = useState<SpecialistPublicationStatus | "all">("all");
+  const [reviewRatingFilter, setReviewRatingFilter] = useState("all");
+  const [hiddenReviewIds, setHiddenReviewIds] = useState<Record<string, boolean>>({});
+  const [reviewedReviewIds, setReviewedReviewIds] = useState<Record<string, boolean>>({});
   const [notice, setNotice] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [adminSession, setAdminSession] = useState<MockSession | null>(null);
@@ -290,6 +297,19 @@ export function AdminPanel() {
   const pendingOnly = pendingSpecialists.filter((item) => item.status === "pendiente" || item.status === "info solicitada");
   const rejectedOnly = pendingSpecialists.filter((item) => item.status === "rechazado");
   const estimatedMargin = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * 0.35, 0);
+  const reviewRows = useMemo<AdminReviewRow[]>(
+    () =>
+      [...specialists, ...publishedSpecialists].flatMap((specialist) =>
+        getSpecialistReviews(specialist).map((review) => ({
+          ...review,
+          specialistName: specialist.name,
+          hidden: Boolean(hiddenReviewIds[review.id] ?? review.hidden),
+          reviewedByAdmin: Boolean(reviewedReviewIds[review.id] ?? review.reviewedByAdmin),
+        })),
+      ),
+    [hiddenReviewIds, publishedSpecialists, reviewedReviewIds],
+  );
+  const filteredReviewRows = reviewRows.filter((review) => reviewRatingFilter === "all" || Math.round(review.ratingGeneral).toString() === reviewRatingFilter);
   const kpis = [
     { label: "Especialistas pendientes", value: pendingOnly.length.toString() },
     { label: "Especialistas aprobados", value: visiblePublished.length.toString() },
@@ -299,6 +319,7 @@ export function AdminPanel() {
     { label: "Pagos recientes", value: payments.length.toString() },
     { label: "Propuestas pendientes", value: quoteAgreements.filter((item) => ["quote_requested", "proposal_sent", "platform_review", "customer_counteroffer"].includes(item.status)).length.toString() },
     { label: "Adicionales pendientes", value: additionalRequests.filter((item) => item.status === "pending_customer_approval" || item.status === "clarification_requested").length.toString() },
+    { label: "Reviews nuevas", value: reviewRows.filter((review) => !review.reviewedByAdmin).length.toString() },
     { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
     { label: "Créditos vendidos", value: String(defaultBookings.reduce((sum, booking) => sum + booking.credits, 0)) },
     { label: "Margen estimado", value: formatCLP(Math.round(estimatedMargin)) },
@@ -456,6 +477,16 @@ export function AdminPanel() {
     updatePaymentSubscriptionStatus(id, status);
     refreshPaymentState();
     setNotice(`Suscripción marcada como ${status}.`);
+  }
+
+  function markReviewReviewed(id: string) {
+    setReviewedReviewIds((current) => ({ ...current, [id]: true }));
+    setNotice("Review marcada como revisada.");
+  }
+
+  function toggleReviewHidden(id: string) {
+    setHiddenReviewIds((current) => ({ ...current, [id]: !current[id] }));
+    setNotice("Visibilidad de review actualizada.");
   }
 
   function paySpecialistPayout(id: string) {
@@ -675,6 +706,7 @@ export function AdminPanel() {
                 <div className="grid gap-3">
                   <SummaryRow label="Especialistas pendientes" value={pendingOnly.length} action={() => setActiveSection("pendientes")} />
                   <SummaryRow label="Solicitudes de clientes" value={serviceRequests.length} action={() => setActiveSection("solicitudes")} />
+                  <SummaryRow label="Reviews nuevas" value={reviewRows.filter((review) => !review.reviewedByAdmin).length} action={() => setActiveSection("reviews")} />
                   <SummaryRow label="Leads comerciales" value={allLeads.length} action={() => setActiveSection("leads-hogar")} />
                 </div>
               </Panel>
@@ -742,6 +774,7 @@ export function AdminPanel() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Link className="btn-secondary" href={`/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}`}>Ver perfil</Link>
+                    <button className="btn-secondary" type="button" onClick={() => setActiveSection("reviews")}>Ver reviews</button>
                     {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => editPublishedSpecialist(specialist)}>Editar</button> : null}
                     {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "unpublished")}>Despublicar</button> : null}
                     {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "suspended")}>Suspender</button> : null}
@@ -769,6 +802,16 @@ export function AdminPanel() {
               )) : <EmptyState text="Aún no hay solicitudes de clientes." />}
             </div>
           </Panel>
+        ) : null}
+
+        {activeSection === "reviews" ? (
+          <ReviewsAdminPanel
+            reviews={filteredReviewRows}
+            ratingFilter={reviewRatingFilter}
+            onRatingFilter={setReviewRatingFilter}
+            onReviewed={markReviewReviewed}
+            onHidden={toggleReviewHidden}
+          />
         ) : null}
 
         {activeSection === "leads-hogar" ? (
@@ -1182,6 +1225,79 @@ function LeadsPanel({
   );
 }
 
+function ReviewsAdminPanel({
+  reviews,
+  ratingFilter,
+  onRatingFilter,
+  onReviewed,
+  onHidden,
+}: {
+  reviews: AdminReviewRow[];
+  ratingFilter: string;
+  onRatingFilter: (value: string) => void;
+  onReviewed: (id: string) => void;
+  onHidden: (id: string) => void;
+}) {
+  const visibleCount = reviews.filter((review) => !review.hidden).length;
+  const pendingCount = reviews.filter((review) => !review.reviewedByAdmin).length;
+
+  return (
+    <Panel title="Reviews" eyebrow="Reputacion y calidad">
+      <div className="mb-5 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <MiniMetric label="Reviews visibles" value={visibleCount.toString()} />
+          <MiniMetric label="Pendientes revision" value={pendingCount.toString()} />
+          <MiniMetric label="Ocultas" value={reviews.filter((review) => review.hidden).length.toString()} />
+        </div>
+        <label className="field min-w-56">
+          Filtrar rating
+          <select value={ratingFilter} onChange={(event) => onRatingFilter(event.target.value)}>
+            <option value="all">Todos</option>
+            <option value="5">5 estrellas</option>
+            <option value="4">4 estrellas</option>
+            <option value="3">3 estrellas</option>
+            <option value="2">2 estrellas</option>
+            <option value="1">1 estrella</option>
+          </select>
+        </label>
+      </div>
+      <div className="grid gap-3">
+        {reviews.length ? reviews.map((review) => (
+          <article key={review.id} className={`rounded-2xl border p-4 ${review.hidden ? "border-rose-100 bg-rose-50" : "border-line bg-slate-50"}`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <strong>{review.specialistName}</strong>
+                <p className="mt-1 text-sm font-bold text-muted">{review.customerName} · {review.serviceName} · {review.comuna}</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <span className="chip bg-white text-brand-dark">{review.ratingGeneral}/5</span>
+                {review.verifiedService ? <span className="chip bg-brand-soft text-brand-dark">Opinion verificada</span> : null}
+                {review.reviewedByAdmin ? <span className="chip bg-white text-brand-dark">Revisada</span> : null}
+                {review.hidden ? <span className="chip bg-rose-100 text-rose-800">Oculta</span> : null}
+              </div>
+            </div>
+            <p className="mt-3 text-sm font-semibold leading-6 text-muted">{review.comment}</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-4">
+              <MiniMetric label="Puntualidad" value={`${review.ratingPuntualidad}/5`} />
+              <MiniMetric label="Calidad" value={`${review.ratingCalidad}/5`} />
+              <MiniMetric label="Comunicacion" value={`${review.ratingComunicacion}/5`} />
+              <MiniMetric label="Precio" value={`${review.ratingPrecio}/5`} />
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button className="btn-secondary" type="button" onClick={() => onReviewed(review.id)}>
+                Marcar revisada
+              </button>
+              <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-50" type="button" onClick={() => onHidden(review.id)}>
+                {review.hidden ? "Mostrar review" : "Ocultar review"}
+              </button>
+            </div>
+          </article>
+        )) : <EmptyState text="No hay reviews con ese filtro." />}
+      </div>
+    </Panel>
+  );
+}
+
 type LeadRow = {
   id: string;
   createdAt: string;
@@ -1221,7 +1337,7 @@ function NegotiationAdminPanel({
 }) {
   const lowMarginQuotes = quotes.filter((quote) => (quote.proposal?.platformMarginCredits ?? 0) > 0 && (quote.proposal?.platformMarginCredits ?? 0) < 10);
   return (
-    <Panel title="Tarifas, cotizaciones y negociación" eyebrow="Propuesta y acuerdo">
+    <Panel title="Tarifas, cotizaciones y negociación" eyebrow="Adicionales y acuerdo">
       <div className="grid gap-4 md:grid-cols-4">
         <MiniMetric label="Servicios precio fijo" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "fixed").length.toString()} />
         <MiniMetric label="Servicios por hora" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "hourly").length.toString()} />
