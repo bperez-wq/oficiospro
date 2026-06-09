@@ -1,6 +1,6 @@
 "use client";
 
-import { defaultBookings, defaultTransactions, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import { defaultBookings, defaultTransactions, specialists as baseSpecialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import {
   defaultAdditionalRequests,
   defaultQuoteAgreements,
@@ -771,7 +771,7 @@ export function appendPendingSpecialist(item: Omit<PendingSpecialistProfile, "id
 }
 
 export function getPublishedSpecialists() {
-  return read<Specialist[]>(keys.publishedSpecialists, []).filter((specialist) => isPublicSpecialistStatus(specialist.publicationStatus));
+  return read<Specialist[]>(keys.publishedSpecialists, []).filter((specialist) => isPublicSpecialistStatus(specialist.publicationStatus ?? specialist.status));
 }
 
 export function savePublishedSpecialists(items: Specialist[]) {
@@ -792,8 +792,13 @@ export function approveAndPublishSpecialist(id: string) {
   savePendingSpecialists(pending.filter((item) => item.id !== id));
 
   const published = getAllAdminSpecialists();
+  const slug = uniqueSpecialistSlug(
+    request.slug ?? specialistSlug(request.name, request.specialty, request.commune, request.id),
+    published.map((item) => item.slug ?? item.id),
+  );
   const specialist = toPublishedSpecialist({
     ...request,
+    slug,
     status: "aprobado",
     publicationStatus: "published",
     approvedAt: request.approvedAt ?? new Date().toISOString(),
@@ -818,6 +823,7 @@ export function updatePublishedSpecialistStatus(id: string, publicationStatus: S
     specialist.id === id
       ? {
           ...specialist,
+          status: publicationStatus,
           publicationStatus,
           publishedFromAdmin: true,
           ...(publicationStatus === "published" ? { publishedAt: specialist.publishedAt ?? now } : {}),
@@ -827,6 +833,13 @@ export function updatePublishedSpecialistStatus(id: string, publicationStatus: S
         }
       : specialist,
   );
+  savePublishedSpecialists(updated);
+  return updated.find((specialist) => specialist.id === id) ?? null;
+}
+
+export function updatePublishedSpecialistProfile(id: string, patch: Partial<Pick<Specialist, "name" | "specialty" | "description">>) {
+  const all = getAllAdminSpecialists();
+  const updated = all.map((specialist) => (specialist.id === id ? { ...specialist, ...patch } : specialist));
   savePublishedSpecialists(updated);
   return updated.find((specialist) => specialist.id === id) ?? null;
 }
@@ -1366,6 +1379,7 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
   return {
     id: publicId,
     slug: publicId,
+    status: request.publicationStatus ?? "published",
     publicationStatus: request.publicationStatus ?? "published",
     approvedAt: request.approvedAt,
     publishedAt: request.publishedAt,
@@ -1447,8 +1461,43 @@ export function specialistSlug(name: string, specialty?: string, commune?: strin
   return slug || fallback || `especialista-${Date.now()}`;
 }
 
+export function uniqueSpecialistSlug(baseSlug: string, existingSlugs: string[]) {
+  const existing = new Set(existingSlugs.filter(Boolean));
+  if (!existing.has(baseSlug)) return baseSlug;
+  let suffix = 2;
+  while (existing.has(`${baseSlug}-${suffix}`)) suffix += 1;
+  return `${baseSlug}-${suffix}`;
+}
+
+export function getSpecialistBySlugOrId(idOrSlug: string, extraSpecialists: Specialist[] = []) {
+  const needle = idOrSlug.trim();
+  const publicPublished = getPublishedSpecialists();
+  const combined = [...extraSpecialists, ...publicPublished, ...baseSpecialists];
+  const seen = new Set<string>();
+  const specialists = combined.filter((specialist) => {
+    const key = specialist.slug ?? specialist.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  const specialist =
+    specialists.find((item) => item.slug === needle) ??
+    specialists.find((item) => item.id === needle) ??
+    specialists.find((item) => String((item as Specialist & { legacyId?: string }).legacyId ?? "") === needle) ??
+    null;
+
+  return {
+    specialist,
+    diagnostics: {
+      searched: needle,
+      sources: ["extraSpecialists", "publishedSpecialists", "baseSpecialists"],
+      availableCount: specialists.length,
+    },
+  };
+}
+
 export function isPublicSpecialistStatus(status?: SpecialistPublicationStatus) {
-  return status === undefined || status === "published" || status === "approved";
+  return status === undefined || status === "published";
 }
 
 export function specialistPublicationReadiness(request: PendingSpecialistProfile) {

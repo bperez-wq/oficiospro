@@ -53,6 +53,7 @@ import {
   usePaymentCredits,
   updateConversionLeadStatus,
   updatePendingSpecialistIdentity,
+  updatePublishedSpecialistProfile,
   updatePublishedSpecialistStatus,
   type ConversionLeadKind,
   type ConversionLeadStatus,
@@ -280,7 +281,11 @@ export function AdminPanel() {
   }
 
   const approvedBase = specialists.filter((specialist) => specialist.verified !== false);
-  const managedPublished = publishedSpecialists.filter((specialist) => publishedFilter === "all" || specialist.publicationStatus === publishedFilter);
+  const managedPublished = publishedSpecialists.filter((specialist) =>
+    publishedFilter === "all"
+      ? (specialist.publicationStatus ?? specialist.status) !== "deleted"
+      : (specialist.publicationStatus ?? specialist.status) === publishedFilter,
+  );
   const visiblePublished = publishedFilter === "all" ? [...approvedBase, ...managedPublished] : managedPublished;
   const pendingOnly = pendingSpecialists.filter((item) => item.status === "pendiente" || item.status === "info solicitada");
   const rejectedOnly = pendingSpecialists.filter((item) => item.status === "rechazado");
@@ -383,6 +388,16 @@ export function AdminPanel() {
     updatePublishedSpecialistStatus(id, status);
     refresh();
     setNotice(`Especialista actualizado a ${status}.`);
+  }
+
+  function editPublishedSpecialist(specialist: (typeof publishedSpecialists)[number]) {
+    const name = window.prompt("Nombre público del especialista", specialist.name);
+    if (name === null) return;
+    const specialty = window.prompt("Especialidad pública", specialist.specialty);
+    if (specialty === null) return;
+    updatePublishedSpecialistProfile(specialist.id, { name: name.trim() || specialist.name, specialty: specialty.trim() || specialist.specialty });
+    refresh();
+    setNotice("Especialista actualizado.");
   }
 
   function updateLeadStatus(kind: ConversionLeadKind, id: string, status: ConversionLeadStatus) {
@@ -726,11 +741,11 @@ export function AdminPanel() {
                     <p className="mt-1 text-sm font-bold text-muted">{specialist.specialty} · {specialist.commune ?? specialist.zone} · {specialist.rating}/5 · {specialist.credits} créditos</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link className="btn-secondary" href={`/especialistas/${specialist.slug ?? specialist.id}`}>Ver perfil</Link>
-                    {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => setNotice("Edición inline pendiente: ajusta servicios desde la postulación antes de publicar.")}>Editar</button> : null}
+                    <Link className="btn-secondary" href={`/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}`}>Ver perfil</Link>
+                    {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => editPublishedSpecialist(specialist)}>Editar</button> : null}
                     {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "unpublished")}>Despublicar</button> : null}
                     {specialist.publishedFromAdmin ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "suspended")}>Suspender</button> : null}
-                    {specialist.publishedFromAdmin && specialist.publicationStatus !== "published" ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "published")}>Reactivar</button> : null}
+                    {specialist.publishedFromAdmin && (specialist.publicationStatus ?? specialist.status) !== "published" ? <button className="btn-secondary" type="button" onClick={() => changePublishedStatus(specialist.id, "published")}>Reactivar</button> : null}
                     {specialist.publishedFromAdmin ? <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-50" type="button" onClick={() => changePublishedStatus(specialist.id, "deleted")}>Eliminar</button> : null}
                   </div>
                 </article>
