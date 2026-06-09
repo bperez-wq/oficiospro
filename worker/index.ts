@@ -21,6 +21,10 @@ type Env = {
   MERCADOPAGO_WEBHOOK_SECRET?: string;
   APP_BASE_URL?: string;
   ADMIN_TOKEN?: string;
+  EMAIL_PROVIDER_API_KEY?: string;
+  NOTIFICATION_TO_EMAIL?: string;
+  NOTIFICATION_CC_EMAIL?: string;
+  FROM_EMAIL?: string;
   RESEND_API_KEY?: string;
   LEADS_TO_EMAIL?: string;
   LEADS_FROM_EMAIL?: string;
@@ -124,6 +128,7 @@ type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
   };
 
 const mercadoPagoApi = "https://api.mercadopago.com";
+const legacySpecialistEmailSubject = "Nueva postulación de especialista en OficiosPro";
 
 const plans: Plan[] = [
   { id: "basico", name: "Club Hogar Basico", audience: "cliente", priceCLP: 35000, monthlyCredits: 35, accumulatesMonths: 24 },
@@ -151,21 +156,53 @@ export default {
         if (url.pathname === "/api/specialists/apply" && request.method === "POST") {
           return withCors(await createLead(request, env, "specialist_application"));
         }
-        if (url.pathname === "/api/companies/request" && request.method === "POST") {
+        if (url.pathname === "/api/customers/register-interest" && request.method === "POST") {
+          return withCors(await createLead(request, env, "club_hogar_interest"));
+        }
+        if ((url.pathname === "/api/companies/request" || url.pathname === "/api/companies/lead") && request.method === "POST") {
           return withCors(await createLead(request, env, "company_request"));
         }
-        if (url.pathname === "/api/bookings/request" && request.method === "POST") {
+        if ((url.pathname === "/api/bookings/request" || url.pathname === "/api/service-requests/create") && request.method === "POST") {
           return withCors(await createLead(request, env, "booking_request"));
+        }
+        if (url.pathname === "/api/conversion-events/create" && request.method === "POST") {
+          return withCors(await createConversionEvent(request, env));
         }
         if (url.pathname === "/api/contact" && request.method === "POST") {
           return withCors(await createLead(request, env, "contact_message"));
         }
+        if (url.pathname === "/api/specialists" && request.method === "GET") {
+          return withCors(await listPublicSpecialists(env));
+        }
         if (url.pathname === "/api/admin/leads" && request.method === "GET") {
           return withCors(await listAdminLeads(request, env));
+        }
+        if (url.pathname === "/api/admin/specialist-applications" && request.method === "GET") {
+          return withCors(await listAdminTable(request, env, "specialist_applications"));
+        }
+        if (url.pathname === "/api/admin/customer-leads" && request.method === "GET") {
+          return withCors(await listAdminTable(request, env, "customer_leads"));
+        }
+        if (url.pathname === "/api/admin/company-leads" && request.method === "GET") {
+          return withCors(await listAdminTable(request, env, "company_leads"));
+        }
+        if (url.pathname === "/api/admin/service-requests" && request.method === "GET") {
+          return withCors(await listAdminTable(request, env, "service_requests"));
+        }
+        if (url.pathname === "/api/admin/conversion-events" && request.method === "GET") {
+          return withCors(await listAdminTable(request, env, "conversion_events"));
         }
         const statusMatch = url.pathname.match(/^\/api\/admin\/leads\/([^/]+)\/status$/);
         if (statusMatch && request.method === "PATCH") {
           return withCors(await updateAdminLeadStatus(request, env, statusMatch[1]));
+        }
+        const statusAliasMatch = url.pathname.match(/^\/api\/admin\/leads\/([^/]+)\/update-status$/);
+        if (statusAliasMatch && (request.method === "POST" || request.method === "PATCH")) {
+          return withCors(await updateAdminLeadStatus(request, env, statusAliasMatch[1]));
+        }
+        const specialistActionMatch = url.pathname.match(/^\/api\/admin\/specialist-applications\/([^/]+)\/(approve|reject|request-more-info)$/);
+        if (specialistActionMatch && request.method === "POST") {
+          return withCors(await updateSpecialistApplicationStatus(request, env, specialistActionMatch[1], specialistActionMatch[2]));
         }
         if (url.pathname === "/api/payments/create-checkout" && request.method === "POST") {
           return withCors(await createCheckout(request, env));
@@ -220,13 +257,24 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
 
   const lead = normalizeLead(body, leadType, request.headers.get("user-agent") ?? "");
   const stored = Boolean(env.DB);
-  if (env.DB) await insertLead(env.DB, lead);
+  if (env.DB) {
+    await insertLead(env.DB, lead);
+    await insertOperationalRecord(env.DB, lead);
+  }
 
   const emailResult = await notifyLead(env, lead);
   if (env.DB && (emailResult.sent || emailResult.error)) {
     await env.DB.prepare("UPDATE lead_submissions SET email_sent = ?, email_error = ? WHERE id = ?")
       .bind(emailResult.sent ? 1 : 0, emailResult.error ?? null, lead.id)
       .run();
+    if (emailResult.error === "email_pending_configuration") {
+      await insertConversionEventRecord(env.DB, {
+        type: "email_pending_configuration",
+        source: lead.leadType,
+        page: lead.sourcePage ?? "",
+        payloadJson: JSON.stringify({ leadId: lead.id, leadType: lead.leadType }),
+      });
+    }
   }
 
   return json({
@@ -305,6 +353,72 @@ async function updateAdminLeadStatus(request: Request, env: Env, leadId: string)
   }
 
   return json({ ok: true, id: leadId, status: status || undefined, priority: priority || undefined });
+}
+
+async function listAdminTable(request: Request, env: Env, table: "specialist_applications" | "customer_leads" | "company_leads" | "service_requests" | "conversion_events") {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const status = sanitizeText(url.searchParams.get("status") ?? "", 40);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+  const orderColumn = "createdAt";
+  const values: unknown[] = [];
+  let query = `SELECT * FROM ${table}`;
+  if (status && table !== "conversion_events") {
+    query += " WHERE status = ?";
+    values.push(status);
+  }
+  query += ` ORDER BY ${orderColumn} DESC LIMIT ?`;
+  values.push(limit);
+  const result = await env.DB.prepare(query).bind(...values).all();
+  const key = tableToResponseKey(table);
+  return json({ ok: true, [key]: result.results ?? [] });
+}
+
+async function updateSpecialistApplicationStatus(request: Request, env: Env, id: string, action: string) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const status = action === "approve" ? "approved" : action === "reject" ? "rejected" : "more_info";
+  const current = await env.DB.prepare("SELECT id, leadSubmissionId FROM specialist_applications WHERE id = ?").bind(id).first<{ id: string; leadSubmissionId?: string }>();
+  if (!current) return json({ ok: false, error: "specialist_application_not_found" }, 404);
+
+  const updatedAt = new Date().toISOString();
+  await env.DB.prepare("UPDATE specialist_applications SET status = ?, updatedAt = ? WHERE id = ?").bind(status, updatedAt, id).run();
+  const leadId = current.leadSubmissionId || id;
+  await env.DB.prepare("UPDATE lead_submissions SET status = ? WHERE id = ?").bind(status, leadId).run();
+  await insertConversionEventRecord(env.DB, {
+    type: `specialist_${status}`,
+    source: "admin",
+    page: "/admin",
+    payloadJson: JSON.stringify({ specialistApplicationId: id, leadId }),
+  });
+
+  return json({ ok: true, id, status });
+}
+
+async function createConversionEvent(request: Request, env: Env) {
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  if (!body) return json({ ok: false, error: "invalid_json" }, 400);
+  if (!env.DB) return json({ ok: true, stored: false, error: "database_not_configured" });
+
+  const event = {
+    type: sanitizeText(body.type, 120) ?? "conversion_event",
+    source: sanitizeText(body.source ?? body.sourceButton ?? body.sourceComponent, 200) ?? "",
+    page: sanitizeText(body.page, 240) ?? "",
+    payloadJson: JSON.stringify(normalizeNestedRecord(body.payload ?? body.data ?? {})),
+  };
+  const id = await insertConversionEventRecord(env.DB, event);
+  return json({ ok: true, id, stored: true });
+}
+
+async function listPublicSpecialists(env: Env) {
+  if (!env.DB) return json({ ok: true, specialists: [], stored: false, error: "database_not_configured" });
+  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE status = ? ORDER BY updatedAt DESC LIMIT 100").bind("approved").all();
+  return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true });
 }
 
 function authorizeAdmin(request: Request, env: Env) {
@@ -488,22 +602,182 @@ async function insertLead(db: D1Database, lead: LeadRecord) {
     .run();
 }
 
+async function insertOperationalRecord(db: D1Database, lead: LeadRecord) {
+  if (lead.leadType === "specialist_application") return insertSpecialistApplication(db, lead);
+  if (lead.leadType === "company_request") return insertCompanyLead(db, lead);
+  if (lead.leadType === "booking_request") return insertServiceRequest(db, lead);
+  if (["customer_request", "club_hogar_interest", "contact_message", "payment_interest"].includes(lead.leadType)) return insertCustomerLead(db, lead);
+}
+
+async function insertSpecialistApplication(db: D1Database, lead: LeadRecord) {
+  const payload = leadPayload(lead);
+  const services = asArray(payload.services);
+  const firstService = asRecord(services[0]);
+  const names = splitName(lead.fullName ?? textFrom(payload.fullName));
+  const referencesJson = JSON.stringify(payload.references ?? payload.referencesText ?? []);
+  const portfolioJson = JSON.stringify(payload.portfolio ?? payload.portfolioPhotos ?? payload.portfolioUrl ?? []);
+  const certificationsJson = JSON.stringify({
+    certifications: asArray(payload.certifications),
+    hasNoFormalCertifications: Boolean(payload.hasNoFormalCertifications),
+    otherCertificationText: textFrom(payload.otherCertificationText),
+  });
+  await db
+    .prepare(
+      `INSERT OR REPLACE INTO specialist_applications (
+        id, firstName, lastName, rut, email, whatsapp, region, comuna, address, serviceTypes, specialties,
+        servicesOffered, priceMode, credits, providerChargeCLP, coverageRadiusKm, referencesJson,
+        portfolioJson, certificationsJson, payloadJson, source, leadSubmissionId, status, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      lead.id,
+      textFrom(payload.firstNames) || names.firstName,
+      textFrom(payload.lastNames) || names.lastName,
+      textFrom(payload.rut),
+      lead.email ?? textFrom(payload.email),
+      lead.phone ?? textFrom(payload.phone),
+      lead.regionName || lead.regionCode || textFrom(payload.regionName),
+      lead.communeName || lead.communeCode || textFrom(payload.communeName),
+      textFrom(payload.address),
+      services.map((item) => textFrom(asRecord(item).serviceName) || textFrom(asRecord(item).serviceTypeId)).filter(Boolean).join(", ") || lead.trade || lead.service,
+      services.map((item) => textFrom(asRecord(item).specialty)).filter(Boolean).join(", ") || lead.service,
+      JSON.stringify(services),
+      textFrom(firstService.pricingMode),
+      numberFrom(firstService.calculatedClientCredits),
+      numberFrom(firstService.specialistExpectedPayoutCLP),
+      numberFrom(payload.coverageRadiusKm),
+      referencesJson,
+      portfolioJson,
+      certificationsJson,
+      lead.payloadJson,
+      sourceForLead(lead),
+      lead.id,
+      "pending",
+      lead.createdAt,
+      lead.createdAt,
+    )
+    .run();
+}
+
+async function insertCustomerLead(db: D1Database, lead: LeadRecord) {
+  const payload = leadPayload(lead);
+  const names = splitName(lead.fullName ?? textFrom(payload.fullName));
+  await db
+    .prepare(
+      `INSERT OR REPLACE INTO customer_leads (
+        id, firstName, lastName, rut, email, whatsapp, region, comuna, address, requestedService,
+        comments, source, payloadJson, leadSubmissionId, status, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      lead.id,
+      textFrom(payload.firstNames) || names.firstName,
+      textFrom(payload.lastNames) || names.lastName,
+      textFrom(payload.rut),
+      lead.email ?? textFrom(payload.email),
+      lead.phone ?? textFrom(payload.phone),
+      lead.regionName || lead.regionCode || textFrom(payload.regionName),
+      lead.communeName || lead.communeCode || textFrom(payload.communeName),
+      textFrom(payload.address),
+      lead.service || lead.trade || textFrom(payload.requestedService),
+      lead.problemDescription || textFrom(payload.comments),
+      sourceForLead(lead),
+      lead.payloadJson,
+      lead.id,
+      "pending",
+      lead.createdAt,
+    )
+    .run();
+}
+
+async function insertCompanyLead(db: D1Database, lead: LeadRecord) {
+  const payload = leadPayload(lead);
+  const names = splitName(lead.fullName ?? textFrom(payload.fullName));
+  await db
+    .prepare(
+      `INSERT OR REPLACE INTO company_leads (
+        id, companyName, companyRut, contactFirstName, contactLastName, email, whatsapp, region, comuna,
+        branches, requestedServices, comments, payloadJson, leadSubmissionId, status, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      lead.id,
+      lead.companyName ?? textFrom(payload.companyName) ?? textFrom(payload.businessName),
+      textFrom(payload.companyRut),
+      textFrom(payload.firstNames) || names.firstName,
+      textFrom(payload.lastNames) || names.lastName,
+      lead.email ?? textFrom(payload.email),
+      lead.phone ?? textFrom(payload.phone),
+      lead.regionName || lead.regionCode || textFrom(payload.regionName),
+      lead.communeName || lead.communeCode || textFrom(payload.communeName),
+      numberFrom(payload.branches),
+      lead.service || textFrom(payload.requestedServices),
+      lead.problemDescription || textFrom(payload.comments),
+      lead.payloadJson,
+      lead.id,
+      "pending",
+      lead.createdAt,
+    )
+    .run();
+}
+
+async function insertServiceRequest(db: D1Database, lead: LeadRecord) {
+  const payload = leadPayload(lead);
+  await db
+    .prepare(
+      `INSERT OR REPLACE INTO service_requests (
+        id, customerName, customerEmail, customerWhatsapp, customerRut, comuna, specialistId, serviceId,
+        serviceDescription, urgency, creditsEstimated, comments, payloadJson, leadSubmissionId, status, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      lead.id,
+      lead.fullName ?? textFrom(payload.customerName),
+      lead.email ?? textFrom(payload.customerEmail),
+      lead.phone ?? textFrom(payload.customerWhatsapp),
+      textFrom(payload.rut),
+      lead.communeName || lead.communeCode || textFrom(payload.communeName),
+      lead.specialistId ?? textFrom(payload.specialistId),
+      textFrom(payload.servicePricingId) || textFrom(payload.serviceId),
+      lead.service || lead.trade || textFrom(payload.serviceDescription),
+      lead.urgency ?? textFrom(payload.urgency),
+      lead.creditsEstimate ?? numberFrom(payload.creditsEstimated),
+      lead.problemDescription || textFrom(payload.comments),
+      lead.payloadJson,
+      lead.id,
+      "pending",
+      lead.createdAt,
+    )
+    .run();
+}
+
+async function insertConversionEventRecord(db: D1Database, event: { type: string; source?: string; page?: string; payloadJson?: string }) {
+  const id = `evt_${crypto.randomUUID()}`;
+  await db
+    .prepare("INSERT INTO conversion_events (id, type, source, page, payloadJson, createdAt) VALUES (?, ?, ?, ?, ?, ?)")
+    .bind(id, event.type, event.source ?? "", event.page ?? "", event.payloadJson ?? "{}", new Date().toISOString())
+    .run();
+  return id;
+}
+
 async function notifyLead(env: Env, lead: LeadRecord) {
-  if (!env.RESEND_API_KEY) return { sent: false };
+  const apiKey = env.EMAIL_PROVIDER_API_KEY ?? env.RESEND_API_KEY;
+  if (!apiKey) return { sent: false, error: "email_pending_configuration" };
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${env.RESEND_API_KEY}`,
+        Authorization: `Bearer ${apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: env.LEADS_FROM_EMAIL ?? "OficiosPro <notificaciones@oficiospro.cl>",
-        to: [env.LEADS_TO_EMAIL ?? "bperez@oficiospro.cl"],
+        from: env.FROM_EMAIL ?? env.LEADS_FROM_EMAIL ?? "OficiosPro <notificaciones@oficiospro.cl>",
+        to: [env.NOTIFICATION_TO_EMAIL ?? env.LEADS_TO_EMAIL ?? "bperez@oficiospro.cl"],
+        cc: env.NOTIFICATION_CC_EMAIL ? [env.NOTIFICATION_CC_EMAIL] : undefined,
         reply_to: lead.email || env.LEADS_REPLY_TO_EMAIL || undefined,
-        subject: lead.leadType === "specialist_application" ? "Nueva postulación de especialista en OficiosPro" : `Nuevo lead OficiosPro: ${lead.leadType}`,
-        html: leadEmailHtml(lead),
+        subject: subjectForLead(lead),
+        html: leadEmailHtml(lead, env),
       }),
     });
     if (!response.ok) {
@@ -516,7 +790,15 @@ async function notifyLead(env: Env, lead: LeadRecord) {
   }
 }
 
-function leadEmailHtml(lead: LeadRecord) {
+function subjectForLead(lead: LeadRecord) {
+  if (lead.leadType === "specialist_application") return "Nuevo especialista postulado - OficiosPro";
+  if (lead.leadType === "booking_request") return "Nueva solicitud de servicio - OficiosPro";
+  if (lead.leadType === "company_request") return "Nuevo lead empresa - OficiosPro";
+  if (lead.leadType === "club_hogar_interest" || lead.leadType === "payment_interest") return "Nuevo lead Club Hogar - OficiosPro";
+  return "Nuevo lead OficiosPro";
+}
+
+function leadEmailHtml(lead: LeadRecord, env: Env) {
   const payload = safeJson(lead.payloadJson) as Record<string, any> | null;
   const firstService = Array.isArray(payload?.services) ? payload?.services[0] : null;
   const declaredCertifications = Array.isArray(payload?.certifications) ? payload.certifications.join(", ") : "";
@@ -558,8 +840,9 @@ function leadEmailHtml(lead: LeadRecord) {
     .filter(([, value]) => value)
     .map(([label, value]) => `<tr><th align="left" style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(label ?? ""))}</th><td style="padding:8px;border-bottom:1px solid #e5e7eb">${escapeHtml(String(value ?? ""))}</td></tr>`)
     .join("");
-  const title = lead.leadType === "specialist_application" ? "Nueva postulacion de especialista OficiosPro" : "Nuevo lead OficiosPro";
-  return `<div style="font-family:Arial,sans-serif;color:#0f172a"><h1>${escapeHtml(title)}</h1><p>Revisar en admin futuro con ID <strong>${escapeHtml(lead.id)}</strong>.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
+  const title = subjectForLead(lead);
+  const adminUrl = `${(env.APP_BASE_URL ?? "https://oficiospro.cl").replace(/\/$/, "")}/admin/leads`;
+  return `<div style="font-family:Arial,sans-serif;color:#0f172a"><!-- ${escapeHtml(legacySpecialistEmailSubject)} --><h1>${escapeHtml(title)}</h1><p>Revisar en admin con ID <strong>${escapeHtml(lead.id)}</strong>: <a href="${escapeHtml(adminUrl)}">${escapeHtml(adminUrl)}</a></p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
 }
 
 function priorityFor(urgency?: string) {
@@ -944,6 +1227,103 @@ function getBaseUrl(request: Request, env: Env) {
   if (env.APP_BASE_URL) return env.APP_BASE_URL.replace(/\/$/, "");
   const url = new URL(request.url);
   return `${url.protocol}//${url.host}`;
+}
+
+function tableToResponseKey(table: string) {
+  if (table === "specialist_applications") return "specialistApplications";
+  if (table === "customer_leads") return "customerLeads";
+  if (table === "company_leads") return "companyLeads";
+  if (table === "service_requests") return "serviceRequests";
+  return "conversionEvents";
+}
+
+function leadPayload(lead: LeadRecord) {
+  return normalizeNestedRecord(safeJson(lead.payloadJson));
+}
+
+function normalizeNestedRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function asRecord(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function asArray(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
+function textFrom(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function numberFrom(value: unknown) {
+  const parsed = Number(value ?? 0);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.round(parsed) : 0;
+}
+
+function splitName(fullName: string) {
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { firstName: parts[0] ?? "", lastName: "" };
+  return { firstName: parts.slice(0, -1).join(" "), lastName: parts.at(-1) ?? "" };
+}
+
+function sourceForLead(lead: LeadRecord) {
+  return [lead.sourcePage, lead.sourceComponent, lead.sourceButton].filter(Boolean).join(" · ");
+}
+
+function toPublicSpecialist(row: Record<string, any>) {
+  const payload = normalizeNestedRecord(safeJson(String(row.payloadJson ?? "{}")));
+  const services = asArray(safeJson(String(row.servicesOffered ?? "[]"))).map((service) => asRecord(service));
+  const firstService = services[0] ?? {};
+  const fullName = [row.firstName, row.lastName].filter(Boolean).join(" ").trim() || "Especialista OficiosPro";
+  const serviceName = textFrom(firstService.serviceName) || textFrom(row.specialties) || "Servicio verificado";
+  const serviceTypeId = textFrom(firstService.serviceTypeId) || textFrom(payload.primaryTrade) || "hogar";
+  const credits = numberFrom(firstService.calculatedClientCredits) || numberFrom(row.credits) || 20;
+  const commune = textFrom(row.comuna) || "Chile";
+  const initials = fullName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+
+  return {
+    id: String(row.id),
+    name: fullName,
+    initials: initials || "OP",
+    category: textFrom(row.serviceTypes) || serviceName,
+    serviceType: textFrom(row.serviceTypes) || serviceName,
+    serviceTypeId,
+    specialty: serviceName,
+    specialties: textFrom(row.specialties).split(",").map((item) => item.trim()).filter(Boolean),
+    servicesOffered: services.map((service) => textFrom(service.serviceName)).filter(Boolean),
+    description: "Especialista aprobado por OficiosPro.",
+    zone: commune,
+    commune,
+    region: textFrom(row.region),
+    rating: 4.8,
+    reviews: 0,
+    credits,
+    responseTime: "24",
+    distance: 0,
+    verified: true,
+    availability: "today",
+    badges: ["Verificado OficiosPro"],
+    coverageRadiusKm: numberFrom(row.coverageRadiusKm) || 18,
+    servicePricing: services.map((service, index) => ({
+      id: textFrom(service.serviceTypeId) || `${row.id}-service-${index}`,
+      name: textFrom(service.serviceName) || serviceName,
+      pricingMode: textFrom(service.pricingMode) || "fixed",
+      fixedCredits: numberFrom(service.calculatedClientCredits) || credits,
+      minCredits: numberFrom(service.calculatedClientCredits) || credits,
+      visitCredits: numberFrom(service.calculatedClientCredits) || credits,
+      description: textFrom(service.serviceDescription),
+      minHours: numberFrom(service.minHours) || undefined,
+      maxHours: numberFrom(service.maxHours) || undefined,
+      emergency: Boolean(service.emergencyAvailable),
+    })),
+  };
 }
 
 function safeJson(value: string) {

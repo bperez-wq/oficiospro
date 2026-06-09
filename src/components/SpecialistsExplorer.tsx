@@ -79,6 +79,18 @@ export function SpecialistsExplorer() {
       setClientLng(clientProfile.lng);
       setNotice(`Ubicación privada disponible para ordenar por cercanía desde ${clientProfile.commune}.`);
     }
+    fetch("/api/specialists")
+      .then((response) => response.json())
+      .then((data: { specialists?: Specialist[] }) => {
+        if (!Array.isArray(data.specialists) || !data.specialists.length) return;
+        setApprovedSpecialists((current) => {
+          const existingIds = new Set(current.map((item) => item.id));
+          return [...data.specialists!.filter((item) => !existingIds.has(item.id)), ...current];
+        });
+      })
+      .catch(() => {
+        // Keep the static marketplace available while D1 is being configured.
+      });
   }, []);
 
   useEffect(() => {

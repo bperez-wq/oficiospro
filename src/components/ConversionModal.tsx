@@ -13,7 +13,7 @@ import {
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
-import { submitLead } from "@/lib/leadClient";
+import { submitConversionEvent, submitLead } from "@/lib/leadClient";
 import {
   clearSpecialistQuickDraft,
   mergeSpecialistDraft,
@@ -23,7 +23,7 @@ import {
 } from "@/lib/specialistDraft";
 import { getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import {
-  appendConversionEvent,
+  appendConversionEvent as appendLocalConversionEvent,
   appendEnterpriseLead,
   appendHomeLead,
   appendQuickSearchLead,
@@ -120,7 +120,7 @@ export function ConversionModalProvider({ children }: { children: ReactNode }) {
 
   function openModal(nextOptions: OpenConversionModalOptions) {
     setOptions(nextOptions);
-    appendConversionEvent({
+    const event = {
       type: "modal_opened",
       sourceButton: nextOptions.sourceButton,
       data: {
@@ -128,6 +128,12 @@ export function ConversionModalProvider({ children }: { children: ReactNode }) {
         planId: nextOptions.planId,
         specialistId: nextOptions.specialist?.id,
       },
+    } as const;
+    appendLocalConversionEvent(event);
+    void submitConversionEvent({
+      type: event.type,
+      sourceButton: event.sourceButton,
+      data: event.data,
     });
   }
 
@@ -235,6 +241,16 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
 
   if (!options) return null;
+
+  function appendConversionEvent(event: Parameters<typeof appendLocalConversionEvent>[0]) {
+    appendLocalConversionEvent(event);
+    void submitConversionEvent({
+      type: event.type,
+      sourceButton: event.sourceButton,
+      page: event.page,
+      data: event.data,
+    });
+  }
 
   function closeModal() {
     onClose();

@@ -170,3 +170,53 @@ TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
 - Si `DB` y `RESEND_API_KEY` están configurados correctamente, el lead queda guardado y se envía email a `LEADS_TO_EMAIL`.
 - Si `ADMIN_TOKEN` no existe, el admin responde `admin_token_not_configured` para evitar un panel silenciosamente inseguro.
 - `/admin/leads` es un panel interno no enlazado desde la navegación pública; solicita `ADMIN_TOKEN` en pantalla y lo guarda solo en `sessionStorage`.
+
+## 12. Persistencia operativa D1 agregada
+
+Ademas de `lead_submissions`, la migracion crea tablas operativas para que el admin pueda revisar datos reales por flujo:
+
+- `specialist_applications`
+- `customer_leads`
+- `company_leads`
+- `service_requests`
+- `conversion_events`
+
+`schema.sql` queda disponible para aplicar el schema completo desde Cloudflare:
+
+```bash
+npx wrangler d1 execute oficiospro-leads --remote --file=./schema.sql
+```
+
+Endpoints operativos:
+
+```text
+POST /api/specialists/apply
+POST /api/customers/register-interest
+POST /api/companies/lead
+POST /api/service-requests/create
+POST /api/conversion-events/create
+
+GET /api/admin/specialist-applications
+GET /api/admin/customer-leads
+GET /api/admin/company-leads
+GET /api/admin/service-requests
+GET /api/admin/conversion-events
+
+POST /api/admin/specialist-applications/:id/approve
+POST /api/admin/specialist-applications/:id/reject
+POST /api/admin/specialist-applications/:id/request-more-info
+POST /api/admin/leads/:id/update-status
+```
+
+Variables nuevas recomendadas para email:
+
+```text
+EMAIL_PROVIDER_API_KEY=<secret Cloudflare, Resend actualmente>
+NOTIFICATION_TO_EMAIL=bperez@oficiospro.cl
+NOTIFICATION_CC_EMAIL=bperez@calbu.cl
+FROM_EMAIL=OficiosPro <notificaciones@oficiospro.cl>
+```
+
+Compatibilidad temporal: el Worker tambien acepta `RESEND_API_KEY`, `LEADS_TO_EMAIL`, `LEADS_FROM_EMAIL` y `LEADS_REPLY_TO_EMAIL`.
+
+Si `EMAIL_PROVIDER_API_KEY` no esta configurada, el lead queda guardado en D1, se registra un evento `email_pending_configuration` y la UI no promete correo.

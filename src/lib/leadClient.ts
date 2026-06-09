@@ -7,10 +7,10 @@ const localLeadBackupKey = "oficiospro.leadSubmissions.localBackup";
 const endpointByType: Record<LeadSubmissionPayload["leadType"], string> = {
   customer_request: "/api/jobs/request",
   specialist_application: "/api/specialists/apply",
-  company_request: "/api/companies/request",
-  booking_request: "/api/bookings/request",
+  company_request: "/api/companies/lead",
+  booking_request: "/api/service-requests/create",
   contact_message: "/api/contact",
-  club_hogar_interest: "/api/leads",
+  club_hogar_interest: "/api/customers/register-interest",
   payment_interest: "/api/leads",
 };
 
@@ -85,5 +85,25 @@ export async function submitLead(payload: LeadSubmissionPayload, endpoint = endp
     };
     backupLead(body, result);
     return result;
+  }
+}
+
+export async function submitConversionEvent(event: { type: string; source?: string; sourceButton?: string; sourceComponent?: string; page?: string; data?: Record<string, unknown>; payload?: Record<string, unknown> }) {
+  const body = {
+    ...pageSource(),
+    ...event,
+    payload: event.payload ?? event.data ?? {},
+  };
+
+  try {
+    const response = await fetch("/api/conversion-events/create", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; id?: string; stored?: boolean; error?: string };
+    return { ok: Boolean(data.ok) && response.ok, id: data.id, stored: Boolean(data.stored), error: data.error };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "network_error" };
   }
 }

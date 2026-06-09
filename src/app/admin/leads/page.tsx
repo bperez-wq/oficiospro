@@ -59,7 +59,7 @@ const leadTypes = [
   ["club_hogar_interest", "Club Hogar"],
   ["payment_interest", "Pago/checkout"],
 ];
-const statusOptions = ["nuevo", "postulado", "contactado", "en_revision", "convertido", "perdido", "cerrado"];
+const statusOptions = ["nuevo", "pending", "postulado", "contactado", "en_revision", "approved", "rejected", "more_info", "convertido", "perdido", "cerrado"];
 
 export default function AdminLeadsPage() {
   const [tokenDraft, setTokenDraft] = useState("");
@@ -157,6 +157,27 @@ export default function AdminLeadsPage() {
       setNotice(`Lead ${leadId} actualizado a ${status}.`);
     } catch {
       setNotice("No pudimos actualizar el estado. Intenta nuevamente.");
+    }
+  }
+
+  async function updateSpecialistApplication(leadId: string, action: "approve" | "reject" | "request-more-info") {
+    if (!token) return;
+    setNotice("Actualizando postulación...");
+    try {
+      const response = await fetch(`/api/admin/specialist-applications/${encodeURIComponent(leadId)}/${action}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = (await response.json().catch(() => ({}))) as { ok?: boolean; status?: string; error?: string };
+      if (!response.ok || !data.ok) {
+        setNotice(adminErrorMessage(data.error ?? `http_${response.status}`));
+        return;
+      }
+      const nextStatus = data.status ?? (action === "approve" ? "approved" : action === "reject" ? "rejected" : "more_info");
+      setLeads((current) => current.map((lead) => (lead.id === leadId ? { ...lead, status: nextStatus } : lead)));
+      setNotice(`Postulación actualizada a ${nextStatus}.`);
+    } catch {
+      setNotice("No pudimos actualizar la postulación. Intenta nuevamente.");
     }
   }
 
@@ -288,13 +309,21 @@ export default function AdminLeadsPage() {
           )}
         </div>
 
-        <LeadDetail lead={selectedLead} onStatus={updateStatus} />
+        <LeadDetail lead={selectedLead} onStatus={updateStatus} onSpecialistAction={updateSpecialistApplication} />
       </section>
     </main>
   );
 }
 
-function LeadDetail({ lead, onStatus }: { lead: AdminLead | null; onStatus: (id: string, status: string) => void }) {
+function LeadDetail({
+  lead,
+  onStatus,
+  onSpecialistAction,
+}: {
+  lead: AdminLead | null;
+  onStatus: (id: string, status: string) => void;
+  onSpecialistAction: (id: string, action: "approve" | "reject" | "request-more-info") => void;
+}) {
   const payload = parsePayload(getLeadValue(lead, "payload_json", "payloadJson"));
   const pricingRows = internalPricingRows(payload);
 
@@ -336,6 +365,19 @@ function LeadDetail({ lead, onStatus }: { lead: AdminLead | null; onStatus: (id:
       </div>
 
       <div className="mt-5 grid gap-4">
+        {getLeadValue(lead, "lead_type", "leadType") === "specialist_application" ? (
+          <div className="flex flex-wrap gap-2 rounded-2xl border border-line bg-slate-50 p-4">
+            <button className="btn-primary" type="button" onClick={() => onSpecialistAction(lead.id, "approve")}>
+              Aprobar
+            </button>
+            <button className="btn-secondary" type="button" onClick={() => onSpecialistAction(lead.id, "request-more-info")}>
+              Solicitar más información
+            </button>
+            <button className="rounded-2xl border border-rose-200 px-4 py-3 text-sm font-black text-rose-700 transition hover:bg-rose-50" type="button" onClick={() => onSpecialistAction(lead.id, "reject")}>
+              Rechazar
+            </button>
+          </div>
+        ) : null}
         <Info label="Descripción" value={getLeadValue(lead, "problem_description", "problemDescription")} large />
         <Info label="Fuente" value={[getLeadValue(lead, "source_component", "sourceComponent"), getLeadValue(lead, "source_button", "sourceButton")].filter(Boolean).join(" / ")} large />
         {getLeadValue(lead, "email_error", "emailError") ? <Info label="Error email" value={getLeadValue(lead, "email_error", "emailError")} large /> : null}
