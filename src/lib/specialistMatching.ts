@@ -182,6 +182,29 @@ export const categoryRoutes: Record<string, CategoryRouteConfig> = {
   },
 };
 
+categoryRoutes["comunidades-edificios"] = {
+  ...categoryRoutes.comunidades,
+  label: "Comunidades y edificios",
+};
+
+categoryRoutes["empresas-industria"] = {
+  categoryId: "empresas",
+  label: "Empresas e industria",
+  title: "Especialistas para empresas e industria",
+  subtitle: "Mantencion comercial, refrigeracion, seguridad, limpieza, motores, soldadura, tableros y operacion industrial.",
+  terms: [...categoryRoutes.empresas.terms, ...categoryRoutes.industria.terms, "empresas industria", "operacion industrial"],
+  suggestions: ["Mantencion comercial", "Refrigeracion comercial", "Seguridad", "Limpieza", "Soldadura", "Tableros"],
+};
+
+categoryRoutes["agroindustria-campos"] = {
+  categoryId: "agroindustria",
+  label: "Agroindustria y campos",
+  title: "Especialistas para agroindustria y campos",
+  subtitle: "Riego tecnificado, maquinaria agricola, packing, bombas, contratistas, poda, cosecha y lineas de proceso.",
+  terms: [...categoryRoutes.agricultura.terms, ...categoryRoutes.agroindustria.terms, "agroindustria campos", "campo"],
+  suggestions: ["Riego tecnificado", "Maquinaria agricola", "Packing y frio", "Bombas de riego", "Poda y cosecha"],
+};
+
 export const specialtyRoutes: Record<string, SpecialtyRouteConfig> = {
   gasfiteria: { label: "Gasfiteria", terms: ["gasfiter", "filtracion", "calefont", "redes de agua", "destape", "griferia", "agua", "gas"], categoryId: "hogar" },
   electricidad: { label: "Electricidad", terms: ["electric", "sec", "tablero", "luminaria", "enchufe", "cortocircuito", "normalizacion"], categoryId: "electricidad" },
@@ -198,6 +221,39 @@ export const specialtyRoutes: Record<string, SpecialtyRouteConfig> = {
   "mantencion-industrial": { label: "Mantencion industrial", terms: ["industrial", "motores", "bombas", "soldadura", "hidraulica", "neumatica"], categoryId: "industria" },
   "urgencias-hogar-empresa": { label: "Urgencias hogar y empresa", terms: ["emergencia", "urgente", "fuga", "corte", "porton", "destape"], categoryId: "emergencias" },
 };
+
+Object.assign(specialtyRoutes, {
+  calefont: { label: "Calefont", terms: ["calefont", "calentador", "gas", "agua caliente"], categoryId: "hogar" },
+  filtraciones: { label: "Filtraciones", terms: ["filtracion", "humedad", "gotera", "fuga", "agua"], categoryId: "hogar" },
+  cerrajeria: { label: "Cerrajeria", terms: ["cerraj", "cerradura", "llave", "chapas"], categoryId: "hogar" },
+  pintura: { label: "Pintura", terms: ["pintura", "pintor", "terminaciones", "muro"], categoryId: "construccion" },
+  jardineria: { label: "Jardineria", terms: ["jardineria", "jardin", "poda", "paisajismo", "riego"], categoryId: "jardineria" },
+  piscinas: { label: "Piscinas", terms: ["piscina", "piscinas", "bomba piscina", "mantencion piscina"], categoryId: "hogar" },
+  "reparaciones-menores": { label: "Reparaciones menores", terms: ["reparaciones menores", "maestro", "arreglo", "mantencion hogar"], categoryId: "hogar" },
+  "salas-de-bombas": { label: "Salas de bombas", terms: ["sala de bombas", "bombas", "presurizacion", "bomba agua"], categoryId: "empresas" },
+  portones: { label: "Portones", terms: ["porton", "portones", "motor porton", "control de acceso"], categoryId: "empresas" },
+  camaras: { label: "Camaras", terms: ["camara", "camaras", "cctv", "seguridad electronica"], categoryId: "automatizacion" },
+  calderas: { label: "Calderas", terms: ["caldera", "calderas", "calefaccion central"], categoryId: "empresas" },
+  "electricidad-comun": { label: "Electricidad comun", terms: ["electricidad comun", "tablero", "luminaria", "edificio", "condominio"], categoryId: "empresas" },
+  "mantencion-preventiva": { label: "Mantencion preventiva", terms: ["mantencion preventiva", "mantencion", "preventiva", "operacion"], categoryId: "empresas" },
+  "refrigeracion-comercial": { label: "Refrigeracion comercial", terms: ["refrigeracion comercial", "frio", "camara", "vitrina", "congelador", "frigor"], categoryId: "empresas" },
+  "seguridad-electronica": { label: "Seguridad electronica", terms: ["seguridad electronica", "camara", "cctv", "alarma", "control de acceso"], categoryId: "automatizacion" },
+  limpieza: { label: "Limpieza", terms: ["limpieza", "aseo", "sanitizacion", "mantencion"], categoryId: "all" },
+  soldadura: { label: "Soldadura", terms: ["soldadura", "soldador", "estructura metalica"], categoryId: "industria" },
+  "bombas-motores": { label: "Bombas y motores", terms: ["bombas", "motores", "motor", "bomba", "hidraulica"], categoryId: "industria" },
+  "tableros-plc": { label: "Tableros / PLC", terms: ["tablero", "plc", "automatizacion", "control", "industrial"], categoryId: "industria" },
+  "bombas-de-riego": { label: "Bombas de riego", terms: ["bomba de riego", "bombas de riego", "riego", "bomba"], categoryId: "agroindustria" },
+  "contratistas-agricolas": { label: "Contratistas agricolas", terms: ["contratistas", "contratista agricola", "agricola", "campo"], categoryId: "agroindustria" },
+  "poda-cosecha": { label: "Poda y cosecha", terms: ["poda", "cosecha", "temporada", "campo"], categoryId: "agroindustria" },
+  "lineas-proceso": { label: "Lineas de proceso", terms: ["lineas de proceso", "proceso", "packing", "planta"], categoryId: "agroindustria" },
+  "fuga-de-agua": { label: "Fuga de agua", terms: ["fuga", "fuga de agua", "filtracion", "agua", "urgente"], categoryId: "emergencias" },
+  "corte-electrico": { label: "Corte electrico", terms: ["corte electrico", "corte", "electric", "cortocircuito", "urgente"], categoryId: "emergencias" },
+  "calefont-detenido": { label: "Calefont detenido", terms: ["calefont detenido", "calefont", "gas", "emergencia"], categoryId: "emergencias" },
+  cerrajero: { label: "Cerrajero", terms: ["cerrajero", "cerraj", "cerradura", "llave", "urgente"], categoryId: "emergencias" },
+  "porton-detenido": { label: "Porton detenido", terms: ["porton detenido", "porton", "motor porton", "emergencia"], categoryId: "emergencias" },
+  "destape-urgente": { label: "Destape urgente", terms: ["destape urgente", "destape", "alcantarillado", "desague", "emergencia"], categoryId: "emergencias" },
+  "refrigeracion-critica": { label: "Refrigeracion critica", terms: ["refrigeracion critica", "refrigeracion", "frio", "camara", "emergencia"], categoryId: "emergencias" },
+} satisfies Record<string, SpecialtyRouteConfig>);
 
 export function specialistSearchText(specialist: Specialist) {
   const servicePricingText = (specialist.servicePricing ?? [])

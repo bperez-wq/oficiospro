@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
@@ -67,6 +68,8 @@ const levelOptions = [
 
 export function SpecialistsExplorer() {
   const { openModal } = useConversionModal();
+  const searchParams = useSearchParams();
+  const searchParamsKey = searchParams.toString();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [specialty, setSpecialty] = useState("all");
@@ -90,40 +93,6 @@ export function SpecialistsExplorer() {
   useEffect(() => {
     seedMockState();
     setApprovedSpecialists(getPublishedSpecialists());
-    const params = new URLSearchParams(window.location.search);
-    const requestedType = params.get("categoria") ?? params.get("tipo");
-    const requestedRegion = params.get("region");
-    const requestedCommune = params.get("comuna");
-    const requestedSpecialty = params.get("especialidad");
-    const requestedQuery = params.get("q");
-    const requestedAvailability = params.get("disponibilidad");
-    const requestedRating = params.get("rating");
-    const requestedPrice = params.get("precio");
-    const requestedLevel = params.get("nivel");
-    const requestedQuickResponse = params.get("respuesta") ?? params.get("respuesta_rapida");
-    if (requestedType) {
-      const normalizedCategory = normalizeRouteParam(requestedType);
-      setCategoryParam(normalizedCategory);
-      setCategory("all");
-    }
-    if (requestedRegion) setRegion(regionCodeForName(requestedRegion) || requestedRegion);
-    if (requestedCommune) {
-      const normalizedCommune = normalizePlaceName(requestedCommune);
-      setZone(normalizedCommune);
-      if (!requestedRegion) setRegion(communeRegionCode(normalizedCommune) || ALL_REGIONS_VALUE);
-    }
-    if (requestedSpecialty && requestedSpecialty !== "todas") {
-      const normalizedSpecialty = normalizeRouteParam(requestedSpecialty);
-      setSpecialtyParam(normalizedSpecialty);
-      window.setTimeout(() => setSpecialty(matchSpecialtyValue(normalizedSpecialty, specialtyFilterOptions)), 0);
-    }
-    if (requestedAvailability && availabilityOptions.some((item) => item.value === requestedAvailability)) setAvailability(requestedAvailability);
-    if (requestedRating) setRating(Math.min(5, Math.max(0, Number(requestedRating) || 0)));
-    if (requestedPrice) setMaxCredits(Math.max(10, Number(requestedPrice) || 999));
-    if (requestedLevel && levelOptions.some((item) => item.value === requestedLevel)) setLevel(requestedLevel);
-    if (requestedQuickResponse === "rapida" || requestedQuickResponse === "true") setQuickResponse(true);
-    setSourceSection(params.get("sourceSection") ?? "");
-    if (requestedQuery) setQuery(requestedQuery);
     const clientProfile = getClientProfile();
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
@@ -143,6 +112,49 @@ export function SpecialistsExplorer() {
         // Keep the static marketplace available while D1 is being configured.
       });
   }, []);
+
+  useEffect(() => {
+    const requestedType = searchParams.get("categoria") ?? searchParams.get("tipo");
+    const requestedRegion = searchParams.get("region");
+    const requestedCommune = searchParams.get("comuna");
+    const requestedSpecialty = searchParams.get("especialidad");
+    const requestedQuery = searchParams.get("q");
+    const requestedAvailability = searchParams.get("disponibilidad");
+    const requestedRating = searchParams.get("rating");
+    const requestedPrice = searchParams.get("precio");
+    const requestedLevel = searchParams.get("nivel");
+    const requestedQuickResponse = searchParams.get("respuesta") ?? searchParams.get("respuesta_rapida");
+
+    if (requestedType) {
+      setCategoryParam(normalizeRouteParam(requestedType));
+      setCategory("all");
+    } else {
+      setCategoryParam("");
+    }
+
+    if (requestedSpecialty && requestedSpecialty !== "todas") {
+      const normalizedSpecialty = normalizeRouteParam(requestedSpecialty);
+      setSpecialtyParam(normalizedSpecialty);
+      window.setTimeout(() => setSpecialty(matchSpecialtyValue(normalizedSpecialty, specialtyFilterOptions)), 0);
+    } else {
+      setSpecialtyParam("");
+      setSpecialty("all");
+    }
+
+    setQuery(requestedQuery ?? "");
+    setSourceSection(searchParams.get("sourceSection") ?? "");
+    if (requestedRegion) setRegion(regionCodeForName(requestedRegion) || requestedRegion);
+    if (requestedCommune) {
+      const normalizedCommune = normalizePlaceName(requestedCommune);
+      setZone(normalizedCommune);
+      if (!requestedRegion) setRegion(communeRegionCode(normalizedCommune) || ALL_REGIONS_VALUE);
+    }
+    if (requestedAvailability && availabilityOptions.some((item) => item.value === requestedAvailability)) setAvailability(requestedAvailability);
+    if (requestedRating) setRating(Math.min(5, Math.max(0, Number(requestedRating) || 0)));
+    if (requestedPrice) setMaxCredits(Math.max(10, Number(requestedPrice) || 999));
+    if (requestedLevel && levelOptions.some((item) => item.value === requestedLevel)) setLevel(requestedLevel);
+    setQuickResponse(requestedQuickResponse === "rapida" || requestedQuickResponse === "true");
+  }, [searchParamsKey]);
 
   useEffect(() => {
     setSpecialty("all");

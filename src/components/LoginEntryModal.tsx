@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { setMockSession, type MockSession } from "@/lib/storage";
 
 type LoginMode = "login" | "client" | "specialist" | "company";
@@ -25,6 +25,59 @@ export function LoginEntryModal({
   const [mode, setMode] = useState<LoginMode>("login");
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const dialogRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
+  const emailRef = useRef<HTMLInputElement | null>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    previousFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.removeEventListener("keydown", handleKeyDown);
+      previousFocusRef.current?.focus();
+    };
+  }, [onClose, open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const focusTimer = window.setTimeout(() => {
+      if (mode === "login") {
+        emailRef.current?.focus();
+        return;
+      }
+      titleRef.current?.focus();
+    }, 0);
+
+    return () => window.clearTimeout(focusTimer);
+  }, [mode, open]);
 
   if (!open) return null;
 
@@ -51,20 +104,26 @@ export function LoginEntryModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[130] grid place-items-center bg-ink/60 p-3 backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <section className="w-full max-w-2xl overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-card">
-        <div className="flex items-start justify-between gap-4 border-b border-line p-5 md:p-6">
+    <div className="fixed inset-0 z-[130] flex min-h-dvh items-center justify-center overflow-y-auto bg-ink/65 p-4 backdrop-blur-sm md:p-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section
+        ref={dialogRef}
+        className="flex max-h-[calc(100dvh-32px)] w-full max-w-2xl flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-card outline-none"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-entry-title"
+      >
+        <div className="flex shrink-0 items-start justify-between gap-4 border-b border-line bg-white p-5 md:p-6">
           <div>
             <p className="eyebrow">Cuenta</p>
-            <h2 className="text-3xl font-black text-ink">Ingresa a OficiosPro</h2>
+            <h2 ref={titleRef} id="login-entry-title" tabIndex={-1} className="text-3xl font-black text-ink outline-none">Ingresa a OficiosPro</h2>
             <p className="mt-1 text-sm font-bold leading-6 text-muted">Explora libremente. Inicia sesion cuando quieras reservar, pagar o gestionar solicitudes.</p>
           </div>
-          <button className="grid h-11 w-11 place-items-center rounded-full border border-line text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={onClose} aria-label="Cerrar ingreso">
+          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={onClose} aria-label="Cerrar ingreso">
             x
           </button>
         </div>
 
-        <div className="grid gap-5 p-5 md:p-6">
+        <div className="grid gap-5 overflow-y-auto p-5 md:p-6">
           <div className="grid gap-2 sm:grid-cols-4">
             {[
               ["login", "Iniciar sesion"],
@@ -90,7 +149,7 @@ export function LoginEntryModal({
             <form className="grid gap-4" onSubmit={submit}>
               <label className="field">
                 Email
-                <input name="email" type="email" autoComplete="email" required />
+                <input ref={emailRef} name="email" type="email" autoComplete="email" required />
               </label>
               <label className="field">
                 Contrasena

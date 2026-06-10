@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ConversionButton } from "@/components/ConversionModal";
 import { SpecialistsExplorer } from "@/components/SpecialistsExplorer";
@@ -19,7 +20,9 @@ export default function SpecialistsPage() {
           Crear cuenta
         </ConversionButton>
       </AppHero>
-      <SpecialistsExplorer />
+      <Suspense fallback={<div className="rounded-[28px] border border-line bg-white p-6 shadow-soft text-sm font-black text-muted">Cargando especialistas...</div>}>
+        <SpecialistsExplorer />
+      </Suspense>
     </main>
   );
 }

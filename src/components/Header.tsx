@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -18,66 +18,66 @@ const categoryGroups = [
     items: [
       ["Gasfiteria", "/especialistas?categoria=hogar&especialidad=gasfiteria"],
       ["Electricidad", "/especialistas?categoria=hogar&especialidad=electricidad"],
-      ["Calefont", "/especialistas?categoria=hogar&q=calefont"],
-      ["Filtraciones", "/especialistas?categoria=hogar&q=filtracion"],
-      ["Cerrajeria", "/especialistas?categoria=hogar&q=cerrajero"],
-      ["Pintura", "/especialistas?categoria=hogar&q=pintura"],
-      ["Jardineria", "/especialistas?categoria=hogar&q=jardineria"],
-      ["Piscinas", "/especialistas?categoria=hogar&q=piscina"],
-      ["Reparaciones menores", "/especialistas?categoria=hogar&q=reparaciones"],
+      ["Calefont", "/especialistas?categoria=hogar&especialidad=calefont"],
+      ["Filtraciones", "/especialistas?categoria=hogar&especialidad=filtraciones"],
+      ["Cerrajeria", "/especialistas?categoria=hogar&especialidad=cerrajeria"],
+      ["Pintura", "/especialistas?categoria=hogar&especialidad=pintura"],
+      ["Jardineria", "/especialistas?categoria=hogar&especialidad=jardineria"],
+      ["Piscinas", "/especialistas?categoria=hogar&especialidad=piscinas"],
+      ["Reparaciones menores", "/especialistas?categoria=hogar&especialidad=reparaciones-menores"],
     ],
   },
   {
     title: "Comunidades y edificios",
-    href: "/especialistas?categoria=comunidades",
+    href: "/especialistas?categoria=comunidades-edificios",
     items: [
-      ["Salas de bombas", "/especialistas?categoria=comunidades&q=bombas"],
-      ["Portones", "/especialistas?categoria=comunidades&q=portones"],
-      ["Camaras", "/especialistas?categoria=comunidades&q=camaras"],
-      ["Calderas", "/especialistas?categoria=comunidades&q=calderas"],
-      ["Piscinas", "/especialistas?categoria=comunidades&q=piscinas"],
-      ["Electricidad comun", "/especialistas?categoria=comunidades&q=electricidad"],
-      ["Mantencion preventiva", "/especialistas?categoria=comunidades&q=mantencion"],
+      ["Salas de bombas", "/especialistas?categoria=comunidades-edificios&especialidad=salas-de-bombas"],
+      ["Portones", "/especialistas?categoria=comunidades-edificios&especialidad=portones"],
+      ["Camaras", "/especialistas?categoria=comunidades-edificios&especialidad=camaras"],
+      ["Calderas", "/especialistas?categoria=comunidades-edificios&especialidad=calderas"],
+      ["Piscinas", "/especialistas?categoria=comunidades-edificios&especialidad=piscinas"],
+      ["Electricidad comun", "/especialistas?categoria=comunidades-edificios&especialidad=electricidad-comun"],
+      ["Mantencion preventiva", "/especialistas?categoria=comunidades-edificios&especialidad=mantencion-preventiva"],
     ],
   },
   {
     title: "Empresas e industria",
-    href: "/especialistas?categoria=empresas",
+    href: "/especialistas?categoria=empresas-industria",
     items: [
-      ["Mantencion comercial", "/especialistas?categoria=empresas&especialidad=mantencion-comercial"],
-      ["Refrigeracion comercial", "/especialistas?categoria=empresas&q=refrigeracion"],
-      ["Seguridad electronica", "/especialistas?categoria=empresas&q=seguridad"],
-      ["Limpieza", "/especialistas?categoria=empresas&q=limpieza"],
-      ["Mantencion industrial", "/especialistas?categoria=industria&especialidad=mantencion-industrial"],
-      ["Soldadura", "/especialistas?categoria=industria&q=soldadura"],
-      ["Bombas y motores", "/especialistas?categoria=industria&q=bombas"],
-      ["Tableros / PLC", "/especialistas?categoria=industria&q=plc"],
+      ["Mantencion comercial", "/especialistas?categoria=empresas-industria&especialidad=mantencion-comercial"],
+      ["Refrigeracion comercial", "/especialistas?categoria=empresas-industria&especialidad=refrigeracion-comercial"],
+      ["Seguridad electronica", "/especialistas?categoria=empresas-industria&especialidad=seguridad-electronica"],
+      ["Limpieza", "/especialistas?categoria=empresas-industria&especialidad=limpieza"],
+      ["Mantencion industrial", "/especialistas?categoria=empresas-industria&especialidad=mantencion-industrial"],
+      ["Soldadura", "/especialistas?categoria=empresas-industria&especialidad=soldadura"],
+      ["Bombas y motores", "/especialistas?categoria=empresas-industria&especialidad=bombas-motores"],
+      ["Tableros / PLC", "/especialistas?categoria=empresas-industria&especialidad=tableros-plc"],
     ],
   },
   {
     title: "Agroindustria y campos",
-    href: "/especialistas?categoria=agricultura",
+    href: "/especialistas?categoria=agroindustria-campos",
     items: [
-      ["Riego tecnificado", "/especialistas?categoria=agricultura&especialidad=riego-tecnificado"],
-      ["Maquinaria agricola", "/especialistas?categoria=agricultura&especialidad=maquinaria-agricola"],
-      ["Packing y frio", "/especialistas?categoria=agroindustria&especialidad=packing-frio"],
-      ["Bombas de riego", "/especialistas?categoria=agricultura&q=bombas%20de%20riego"],
-      ["Contratistas agricolas", "/especialistas?categoria=agricultura&q=contratistas"],
-      ["Poda y cosecha", "/especialistas?categoria=agricultura&q=poda%20cosecha"],
-      ["Lineas de proceso", "/especialistas?categoria=agroindustria&q=lineas%20de%20proceso"],
+      ["Riego tecnificado", "/especialistas?categoria=agroindustria-campos&especialidad=riego-tecnificado"],
+      ["Maquinaria agricola", "/especialistas?categoria=agroindustria-campos&especialidad=maquinaria-agricola"],
+      ["Packing y frio", "/especialistas?categoria=agroindustria-campos&especialidad=packing-frio"],
+      ["Bombas de riego", "/especialistas?categoria=agroindustria-campos&especialidad=bombas-de-riego"],
+      ["Contratistas agricolas", "/especialistas?categoria=agroindustria-campos&especialidad=contratistas-agricolas"],
+      ["Poda y cosecha", "/especialistas?categoria=agroindustria-campos&especialidad=poda-cosecha"],
+      ["Lineas de proceso", "/especialistas?categoria=agroindustria-campos&especialidad=lineas-proceso"],
     ],
   },
   {
     title: "Emergencias",
     href: "/especialistas?categoria=emergencias",
     items: [
-      ["Fuga de agua", "/especialistas?categoria=emergencias&q=fuga%20de%20agua"],
-      ["Corte electrico", "/especialistas?categoria=emergencias&q=corte%20electrico"],
-      ["Calefont detenido", "/especialistas?categoria=emergencias&q=calefont%20detenido"],
-      ["Cerrajero", "/especialistas?categoria=emergencias&q=cerrajero"],
-      ["Porton detenido", "/especialistas?categoria=emergencias&q=porton%20detenido"],
-      ["Destape urgente", "/especialistas?categoria=emergencias&q=destape"],
-      ["Refrigeracion critica", "/especialistas?categoria=emergencias&q=refrigeracion%20critica"],
+      ["Fuga de agua", "/especialistas?categoria=emergencias&especialidad=fuga-de-agua"],
+      ["Corte electrico", "/especialistas?categoria=emergencias&especialidad=corte-electrico"],
+      ["Calefont detenido", "/especialistas?categoria=emergencias&especialidad=calefont-detenido"],
+      ["Cerrajero", "/especialistas?categoria=emergencias&especialidad=cerrajero"],
+      ["Porton detenido", "/especialistas?categoria=emergencias&especialidad=porton-detenido"],
+      ["Destape urgente", "/especialistas?categoria=emergencias&especialidad=destape-urgente"],
+      ["Refrigeracion critica", "/especialistas?categoria=emergencias&especialidad=refrigeracion-critica"],
     ],
   },
 ] as const;
@@ -128,6 +128,8 @@ export function Header() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const categoryCloseTimerRef = useRef<number | null>(null);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -147,6 +149,31 @@ export function Header() {
 
   const isAdmin = session?.role === "admin";
 
+  useEffect(() => {
+    if (!categoryOpen) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!categoryMenuRef.current?.contains(event.target as Node)) closeCategoryMenu();
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") closeCategoryMenu();
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [categoryOpen]);
+
+  useEffect(() => {
+    return () => {
+      if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
+    };
+  }, []);
+
   function logout() {
     clearMockSession();
     setSession(null);
@@ -155,9 +182,37 @@ export function Header() {
   }
 
   function closeMenus() {
-    setCategoryOpen(false);
+    closeCategoryMenu();
     setUserMenuOpen(false);
     setMobileOpen(false);
+  }
+
+  function openCategoryMenu() {
+    if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
+    categoryCloseTimerRef.current = null;
+    setCategoryOpen(true);
+  }
+
+  function scheduleCategoryClose() {
+    if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
+    categoryCloseTimerRef.current = window.setTimeout(() => {
+      setCategoryOpen(false);
+      categoryCloseTimerRef.current = null;
+    }, 200);
+  }
+
+  function closeCategoryMenu() {
+    if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
+    categoryCloseTimerRef.current = null;
+    setCategoryOpen(false);
+  }
+
+  function toggleCategoryMenu() {
+    if (categoryOpen) {
+      closeCategoryMenu();
+      return;
+    }
+    openCategoryMenu();
   }
 
   return (
@@ -189,16 +244,28 @@ export function Header() {
           <HeaderSearch />
           <nav className="flex shrink-0 items-center gap-1 text-sm font-black text-muted">
             <NavLink href="/especialistas" label="Especialistas" pathname={pathname} />
-            <div className="relative" onMouseEnter={() => setCategoryOpen(true)} onMouseLeave={() => setCategoryOpen(false)}>
+            <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
                 className={categoryOpen ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
                 type="button"
+                aria-haspopup="menu"
                 aria-expanded={categoryOpen}
-                onClick={() => setCategoryOpen((current) => !current)}
+                aria-controls="header-category-menu"
+                onClick={toggleCategoryMenu}
+                onKeyDown={(event) => {
+                  if (event.key === "Escape") {
+                    event.preventDefault();
+                    closeCategoryMenu();
+                  }
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    toggleCategoryMenu();
+                  }
+                }}
               >
                 Categorias
               </button>
-              <MegaCategoryMenu open={categoryOpen} onClose={() => setCategoryOpen(false)} />
+              <MegaCategoryMenu open={categoryOpen} onClose={closeCategoryMenu} />
             </div>
             <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
             <NavLink href="/empresas" label="Empresas" pathname={pathname} />
@@ -320,22 +387,24 @@ function MegaCategoryMenu({ open, onClose }: { open: boolean; onClose: () => voi
   if (!open) return null;
 
   return (
-    <div className="absolute left-1/2 top-[calc(100%+14px)] z-[90] w-[min(1120px,calc(100vw-40px))] -translate-x-1/2 rounded-[28px] border border-line bg-white p-5 shadow-card">
-      <div className="grid gap-4 xl:grid-cols-5">
-        {categoryGroups.map((group) => (
-          <section key={group.title} className="rounded-2xl bg-slate-50 p-4">
-            <Link href={group.href} className="block text-sm font-black text-ink transition hover:text-brand" onClick={onClose}>
-              {group.title}
-            </Link>
-            <div className="mt-3 grid gap-1">
-              {group.items.map(([label, href]) => (
-                <Link key={href} href={href} className="rounded-xl px-2 py-2 text-sm font-bold text-muted transition hover:bg-white hover:text-brand-dark" onClick={onClose}>
-                  {label}
-                </Link>
-              ))}
-            </div>
-          </section>
-        ))}
+    <div id="header-category-menu" className="absolute left-1/2 top-full z-[90] w-[min(1120px,calc(100vw-40px))] -translate-x-1/2 pt-3" role="menu">
+      <div className="rounded-[28px] border border-line bg-white p-5 shadow-card">
+        <div className="grid gap-4 xl:grid-cols-5">
+          {categoryGroups.map((group) => (
+            <section key={group.title} className="rounded-2xl bg-slate-50 p-4">
+              <Link href={group.href} role="menuitem" className="block rounded-xl px-2 py-2 text-sm font-black text-ink transition hover:bg-white hover:text-brand" onClick={onClose}>
+                {group.title}
+              </Link>
+              <div className="mt-2 grid gap-1">
+                {group.items.map(([label, href]) => (
+                  <Link key={href} href={href} role="menuitem" className="rounded-xl px-2 py-2 text-sm font-bold text-muted transition hover:bg-white hover:text-brand-dark focus:bg-white focus:text-brand-dark focus:outline-none" onClick={onClose}>
+                    {label}
+                  </Link>
+                ))}
+              </div>
+            </section>
+          ))}
+        </div>
       </div>
     </div>
   );
