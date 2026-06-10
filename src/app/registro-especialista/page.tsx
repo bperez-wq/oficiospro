@@ -1,5 +1,6 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
+import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
 
 export default function SpecialistRegisterPage() {
@@ -11,9 +12,15 @@ export default function SpecialistRegisterPage() {
         title="Convierte tu oficio en un perfil profesional verificable."
         subtitle="Postula para mostrar trabajos, recibir oportunidades calificadas, ordenar agenda, construir reputación y avanzar hacia una formalización progresiva con soporte OficiosPro."
       />
+      <section className="grid gap-3 md:grid-cols-4">
+        <DashboardMetricCard label="Perfil" value="Público" detail="Con foto, servicios y zona" />
+        <DashboardMetricCard label="Validación" value="Guiada" detail="Identidad, referencias y oficio" tone="brand" />
+        <DashboardMetricCard label="Agenda" value="Ordenada" detail="Disponibilidad y solicitudes" />
+        <DashboardMetricCard label="Reputación" value="Acumulable" detail="Trabajos y calificaciones" />
+      </section>
       <section className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <SpecialistRegisterForm />
-        <article className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
+        <MarketplaceCard className="overflow-hidden p-0" hover={false}>
           <img src="/assets/work-electrical.webp" alt="Especialista mostrando un trabajo terminado" className="h-80 w-full object-cover" />
           <div className="p-6">
             <h2 className="text-2xl font-black">Perfil profesional con revisión de antecedentes.</h2>
@@ -26,7 +33,7 @@ export default function SpecialistRegisterPage() {
               ))}
             </div>
           </div>
-        </article>
+        </MarketplaceCard>
       </section>
       <ContactTrustStrip />
     </main>

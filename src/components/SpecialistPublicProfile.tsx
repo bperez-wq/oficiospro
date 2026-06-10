@@ -5,7 +5,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { DashboardMetricCard } from "@/components/DesignSystem";
 import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
+import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
@@ -124,10 +126,10 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
         </div>
         <div className="grid gap-6 p-6">
           <div className="grid gap-3 sm:grid-cols-4">
-            <SmallStat label="Calificación" value={`${specialist.rating.toFixed(1)}/5`} />
-            <SmallStat label="Trabajos" value={(specialist.trabajosCompletados ?? specialist.jobs).toString()} />
-            <SmallStat label="Respuesta" value={specialist.responseTime} />
-            <SmallStat label="Precio desde" value={`${specialist.precioDesdeCreditos ?? specialist.credits} créditos`} />
+            <DashboardMetricCard label="Calificación" value={`${specialist.rating.toFixed(1)}/5`} />
+            <DashboardMetricCard label="Trabajos" value={(specialist.trabajosCompletados ?? specialist.jobs).toString()} />
+            <DashboardMetricCard label="Respuesta" value={specialist.responseTime} />
+            <DashboardMetricCard label="Precio desde" value={`${specialist.precioDesdeCreditos ?? specialist.credits} créditos`} tone="brand" />
           </div>
           <section className="rounded-[24px] border border-brand/15 bg-brand-soft p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -295,16 +297,15 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
       initialSelectedServiceId={selectedServiceId}
       onClose={() => setBookingOpen(false)}
     />
+    <StickyMobileCTA>
+      <button className="btn-primary min-h-11 flex-1 px-3 text-sm" type="button" onClick={() => openBookingForService(primaryService)}>
+        Reservar
+      </button>
+      <Link className="btn-secondary min-h-11 flex-1 px-3 text-sm" href="/especialistas">
+        Ver más
+      </Link>
+    </StickyMobileCTA>
     </>
-  );
-}
-
-function SmallStat({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-2xl bg-slate-50 p-4">
-      <strong className="block text-xl font-black">{value}</strong>
-      <span className="text-sm font-bold text-muted">{label}</span>
-    </article>
   );
 }
 

@@ -10,6 +10,8 @@ import { useConversionModal } from "@/components/ConversionModal";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { SpecialistCard } from "@/components/SpecialistCard";
+import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
+import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import {
   getClientProfile,
   getMockSession,
@@ -82,6 +84,7 @@ export function SpecialistsExplorer() {
   const [quickResponse, setQuickResponse] = useState(false);
   const [sort, setSort] = useState("recommended");
   const [withinCoverage, setWithinCoverage] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [categoryParam, setCategoryParam] = useState("");
   const [specialtyParam, setSpecialtyParam] = useState("");
   const [sourceSection, setSourceSection] = useState("");
@@ -260,6 +263,13 @@ export function SpecialistsExplorer() {
       });
   }, [activeSearchIntent, availability, category, categoryParam, clientLat, clientLng, level, marketplaceSpecialists, maxCredits, query, quickResponse, rating, region, sort, specialty, specialtyParam, withinCoverage, zone]);
 
+  const resultMetrics = useMemo(() => {
+    const premium = visible.filter((item) => ["Oro", "Platino"].includes(getSpecialistLevel(item))).length;
+    const fast = visible.filter((item) => responseMinutes(item.responseTime) <= 60).length;
+    const averageRating = visible.length ? (visible.reduce((sum, item) => sum + item.rating, 0) / visible.length).toFixed(1) : "0.0";
+    return { premium, fast, averageRating };
+  }, [visible]);
+
   function clearFilters() {
     setQuery("");
     setCategory("all");
@@ -358,8 +368,17 @@ export function SpecialistsExplorer() {
         </p>
       </section>
 
+      <div className="grid gap-2 sm:grid-cols-2 lg:hidden">
+        <button className="btn-primary" type="button" onClick={() => setFiltersOpen((current) => !current)}>
+          {filtersOpen ? "Ocultar filtros" : "Mostrar filtros"}
+        </button>
+        <button className="btn-secondary" type="button" onClick={clearFilters}>
+          Limpiar filtros
+        </button>
+      </div>
+
       <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[260px_1fr]">
-        <aside className="grid gap-3 self-start rounded-3xl bg-slate-50 p-4 lg:sticky lg:top-28">
+        <aside className={`${filtersOpen ? "grid" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 lg:sticky lg:top-28 lg:grid`}>
           <div>
             <p className="eyebrow">Busca por confianza</p>
             <h2 className="text-2xl font-black">Filtra especialistas</h2>
@@ -428,7 +447,7 @@ export function SpecialistsExplorer() {
           </div>
         </aside>
 
-        <div className="grid gap-5">
+        <div id="especialistas-results" className="grid gap-5">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="eyebrow">Especialistas disponibles</p>
@@ -443,6 +462,11 @@ export function SpecialistsExplorer() {
                 Limpiar filtros
               </button>
             </div>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <DashboardMetricCard label="Promedio rating" value={`${resultMetrics.averageRating}/5`} detail="Basado en resultados visibles" />
+            <DashboardMetricCard label="Nivel Oro/Platino" value={resultMetrics.premium.toString()} detail="Perfiles con mayor reputacion" tone="brand" />
+            <DashboardMetricCard label="Respuesta rapida" value={resultMetrics.fast.toString()} detail="Especialistas con respuesta menor a 1 h" />
           </div>
           <div className="rounded-2xl border border-line bg-slate-50 p-4">
             {hasActiveFilters ? (
@@ -522,12 +546,12 @@ export function SpecialistsExplorer() {
                 );
               })
             ) : (
-              <div className="rounded-[24px] border border-line bg-slate-50 p-6 xl:col-span-2">
-                <h3 className="text-2xl font-black">Estamos sumando especialistas para este servicio en tu zona.</h3>
-                <p className="mt-2 text-sm font-bold leading-6 text-muted">
-                  Dejanos tu solicitud y te ayudamos a encontrar una alternativa verificada.
-                </p>
-                <div className="mt-5 flex flex-wrap gap-3">
+              <div className="xl:col-span-2">
+                <EmptyState
+                  title="Estamos sumando especialistas para este servicio en tu zona."
+                  text="Dejanos tu solicitud y te ayudamos a encontrar una alternativa verificada."
+                  action={
+                    <>
                   <button
                     className="btn-primary"
                     type="button"
@@ -552,12 +576,22 @@ export function SpecialistsExplorer() {
                   <button className="btn-secondary" type="button" onClick={clearFilters}>
                     Limpiar filtros
                   </button>
-                </div>
+                    </>
+                  }
+                />
               </div>
             )}
           </div>
         </div>
       </section>
+      <StickyMobileCTA>
+        <button className="btn-secondary min-h-11 flex-1 px-3 text-sm" type="button" onClick={() => setFiltersOpen(true)}>
+          Filtros
+        </button>
+        <a className="btn-primary min-h-11 flex-1 px-3 text-sm" href="#especialistas-results">
+          Ver resultados
+        </a>
+      </StickyMobileCTA>
     </div>
   );
 }

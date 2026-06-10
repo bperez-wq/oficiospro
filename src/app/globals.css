@@ -4,6 +4,13 @@
 
 :root {
   color-scheme: light;
+  --op-radius-card: 28px;
+  --op-radius-panel: 24px;
+  --op-radius-control: 16px;
+  --op-shadow-soft: 0 18px 50px rgba(20, 32, 31, 0.08);
+  --op-shadow-lift: 0 28px 80px rgba(20, 32, 31, 0.14);
+  --op-surface: rgba(255, 255, 255, 0.94);
+  --op-surface-muted: #f8faf9;
 }
 
 * {

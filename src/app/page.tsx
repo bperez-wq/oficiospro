@@ -129,7 +129,7 @@ export default function HomePage() {
               Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
             </h1>
             <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-muted">
-              Explora especialistas verificados sin registrarte, compara reputación, precio en créditos y disponibilidad, y crea tu cuenta al momento de reservar.
+              Compara especialistas verificados, reputación, precio en créditos y disponibilidad antes de reservar.
             </p>
             <HeroSearchPanel />
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
@@ -207,12 +207,11 @@ export default function HomePage() {
         <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
           <div>
             <p className="eyebrow">Propósito OficiosPro</p>
-            <h2 className="section-title">Empoderamos el oficio. Empoderamos al trabajador.</h2>
+            <h2 className="section-title">El buen trabajo técnico merece visibilidad.</h2>
           </div>
           <div className="grid gap-4">
             <p className="text-lg font-semibold leading-8 text-ink">
-              OficiosPro ayuda a que los especialistas confiables sean encontrados, evaluados y recomendados. Cada trabajo bien hecho construye reputación,
-              visibilidad y mejores oportunidades.
+              OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
             </p>
             <div className="flex flex-wrap gap-2">
               {["El lugar donde los buenos trabajadores brillan", "Reputación con cada trabajo", "Oficios profesionales y visibles"].map((item) => (

@@ -1,6 +1,7 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
+import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
@@ -43,10 +44,10 @@ export default function EmpresasPage() {
           </div>
           <div className="rounded-[26px] bg-white p-5 text-ink">
             <div className="grid gap-3 md:grid-cols-4">
-              <Metric label="Créditos" value={companyDashboard.creditsAvailable.toString()} />
-              <Metric label="Usados" value={companyDashboard.creditsUsed.toString()} />
-              <Metric label="Respuesta" value={companyDashboard.responseTime} />
-              <Metric label="Sucursales" value={companyDashboard.activeBranches.toString()} />
+              <DashboardMetricCard label="Créditos" value={companyDashboard.creditsAvailable.toString()} />
+              <DashboardMetricCard label="Usados" value={companyDashboard.creditsUsed.toString()} />
+              <DashboardMetricCard label="Respuesta" value={companyDashboard.responseTime} tone="brand" />
+              <DashboardMetricCard label="Sucursales" value={companyDashboard.activeBranches.toString()} />
             </div>
             <div className="mt-5 grid gap-3">
               {companyDashboard.services.map((service) => (
@@ -87,10 +88,10 @@ export default function EmpresasPage() {
           ["Reportes mensuales", "Control de mantenciones, gastos y proveedores."],
           ["Externalización controlada", "Contrata servicios sin aumentar carga operativa permanente."],
         ].map(([title, text]) => (
-          <article key={title} className="panel card-hover">
+          <MarketplaceCard key={title}>
             <h3 className="text-xl font-black">{title}</h3>
             <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
-          </article>
+          </MarketplaceCard>
         ))}
       </section>
 
@@ -108,14 +109,5 @@ export default function EmpresasPage() {
 
       <ContactTrustStrip />
     </main>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-2xl bg-slate-50 p-4">
-      <span className="text-xs font-black uppercase text-muted">{label}</span>
-      <strong className="mt-1 block text-2xl font-black">{value}</strong>
-    </article>
   );
 }

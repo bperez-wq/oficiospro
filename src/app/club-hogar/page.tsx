@@ -1,6 +1,7 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { DashboardMetricCard, VisualRail } from "@/components/DesignSystem";
 import { TransactionList } from "@/components/Lists";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { defaultTransactions, workStories } from "@/data/mock";
@@ -25,6 +26,21 @@ export default function ClubHogarPage() {
           Crear cuenta
         </ConversionButton>
       </AppHero>
+
+      <VisualRail
+        eyebrow="Uso cotidiano"
+        title="Créditos listos para resolver sin volver a cotizar desde cero."
+        text="La experiencia se entiende como saldo, retención protegida y respaldo de cada servicio cerrado."
+      >
+        <div className="grid gap-3 sm:grid-cols-3">
+          <DashboardMetricCard label="Carga mensual" value={`${featuredPlan.monthlyCredits} cr`} detail={featuredPlan.name} tone="brand" />
+          <DashboardMetricCard label="Vigencia" value="24 meses" detail="Créditos acumulables" />
+          <DashboardMetricCard label="Ahorro Club" value="2 cr" detail="Por solicitud elegible" />
+        </div>
+        <div className="overflow-hidden rounded-2xl border border-line bg-white">
+          <img src="/assets/work-bathroom.webp" alt="Servicio del hogar realizado por especialista OficiosPro" className="h-44 w-full object-cover" />
+        </div>
+      </VisualRail>
 
       <section className="grid gap-5 md:grid-cols-3">
         {clientPlans.map((plan) => (

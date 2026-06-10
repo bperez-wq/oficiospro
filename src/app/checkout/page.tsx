@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { formatCLP, getPlanById } from "@/data/marketplace";
@@ -245,10 +246,10 @@ export default function CheckoutPage() {
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
-            <SummaryTile label="Plan seleccionado" value={plan.name} />
-            <SummaryTile label="Precio mensual" value={formatCLP(plan.priceCLP)} />
-            <SummaryTile label="Créditos checkout" value={`${checkoutCredits} créditos`} />
-            <SummaryTile label="Total CLP visible" value={formatCLP(checkoutAmountCLP)} />
+            <DashboardMetricCard label="Plan seleccionado" value={plan.name} />
+            <DashboardMetricCard label="Precio mensual" value={formatCLP(plan.priceCLP)} />
+            <DashboardMetricCard label="Creditos checkout" value={`${checkoutCredits} creditos`} tone="brand" />
+            <DashboardMetricCard label="Total CLP visible" value={formatCLP(checkoutAmountCLP)} />
           </div>
 
           <section className="mt-8 rounded-[24px] border border-line bg-white p-5">
@@ -269,9 +270,7 @@ export default function CheckoutPage() {
                   </article>
                 ))
               ) : (
-                <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-                  No hay items guardados. Puedes activar un plan o comprar creditos puntuales desde este checkout.
-                </p>
+                <EmptyState eyebrow="Checkout" title="Compra directa disponible" text="Puedes activar un plan o comprar creditos puntuales desde este checkout." />
               )}
             </div>
           </section>
@@ -434,14 +433,5 @@ export default function CheckoutPage() {
         </aside>
       </section>
     </main>
-  );
-}
-
-function SummaryTile({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-2xl border border-line bg-white p-5 shadow-sm">
-      <span className="text-sm font-black uppercase text-muted">{label}</span>
-      <strong className="mt-2 block text-2xl font-black text-ink">{value}</strong>
-    </article>
   );
 }

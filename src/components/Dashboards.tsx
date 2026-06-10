@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { DashboardMetricCard } from "@/components/DesignSystem";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import { BookingList, TransactionList } from "@/components/Lists";
@@ -595,30 +596,15 @@ export function CompanyDashboard() {
 }
 
 function StatCard({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="panel card-hover">
-      <span className="font-bold text-muted">{label}</span>
-      <strong className="mt-2 block text-4xl font-black">{value}</strong>
-    </article>
-  );
+  return <DashboardMetricCard label={label} value={value} />;
 }
 
 function MetricDark({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-2xl bg-white/10 p-5">
-      <span className="font-bold text-white/70">{label}</span>
-      <strong className="mt-2 block text-3xl font-black">{value}</strong>
-    </article>
-  );
+  return <DashboardMetricCard label={label} value={value} tone="dark" />;
 }
 
 function MiniMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <article className="rounded-2xl border border-line bg-white p-3">
-      <span className="text-xs font-black uppercase text-muted">{label}</span>
-      <strong className="mt-1 block text-lg font-black text-ink">{value}</strong>
-    </article>
-  );
+  return <DashboardMetricCard label={label} value={value} compact />;
 }
 
 function RoleGuardMessage({ checking = false }: { checking?: boolean }) {
