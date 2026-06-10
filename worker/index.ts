@@ -20,6 +20,7 @@ type Env = {
   MERCADOPAGO_PUBLIC_KEY?: string;
   MERCADOPAGO_WEBHOOK_SECRET?: string;
   APP_BASE_URL?: string;
+  ADMIN_API_TOKEN?: string;
   ADMIN_TOKEN?: string;
   EMAIL_PROVIDER_API_KEY?: string;
   NOTIFICATION_TO_EMAIL?: string;
@@ -90,6 +91,10 @@ type LeadPayload = {
   consentContact?: boolean;
   consentTerms?: boolean;
   honeypot?: string;
+  website?: string;
+  companySite?: string;
+  formStartedAt?: string;
+  formElapsedMs?: number;
   payload?: Record<string, unknown>;
 };
 
@@ -129,6 +134,17 @@ type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
 
 const mercadoPagoApi = "https://api.mercadopago.com";
 const legacySpecialistEmailSubject = "Nueva postulación de especialista en OficiosPro";
+const maxJsonBodyBytes = 32_000;
+const memoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+
+class SafeHttpError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: string,
+  ) {
+    super(code);
+  }
+}
 
 const plans: Plan[] = [
   { id: "basico", name: "Club Hogar Basico", audience: "cliente", priceCLP: 35000, monthlyCredits: 35, accumulatesMonths: 24 },
@@ -217,28 +233,34 @@ export default {
           return withCors(await paymentStatus(url, env));
         }
         if (url.pathname === "/api/credits/add" && request.method === "POST") {
+          const auth = requireAdmin(request, env);
+          if (auth) return withCors(auth);
           return withCors(await addCredits(request));
         }
         if (url.pathname === "/api/credits/use" && request.method === "POST") {
+          const auth = requireAdmin(request, env);
+          if (auth) return withCors(auth);
           return withCors(await useCredits(request));
         }
         if (url.pathname === "/api/credits/wallet" && request.method === "GET") {
           return withCors(await getWallet(url));
         }
         if (url.pathname === "/api/admin/payments/reconcile" && request.method === "POST") {
+          const auth = requireAdmin(request, env);
+          if (auth) return withCors(auth);
           return withCors(await reconcilePayments(request));
         }
 
         return withCors(json({ ok: false, error: "endpoint_not_found" }, 404));
       } catch (error) {
+        const safeError = error instanceof SafeHttpError ? error : null;
         return withCors(
           json(
             {
               ok: false,
-              error: "internal_error",
-              message: error instanceof Error ? error.message : "Error inesperado",
+              error: safeError?.code ?? "internal_error",
             },
-            500,
+            safeError?.status ?? 500,
           ),
         );
       }
@@ -250,19 +272,31 @@ export default {
       return env.ASSETS.fetch(new Request(fallbackUrl, request));
     }
     const assetResponse = await env.ASSETS.fetch(request);
-    if (assetResponse.status !== 404) return assetResponse;
-    return assetResponse;
+    if (assetResponse.status !== 404) return withSecurityHeaders(assetResponse);
+    return withSecurityHeaders(assetResponse);
   },
 };
 
 async function createLead(request: Request, env: Env, forcedType?: LeadType) {
   const body = await readLeadPayload(request);
-  if (body.honeypot) return json({ ok: false, error: "spam_rejected" }, 400);
+  if (body.honeypot || body.website || body.companySite) return json({ ok: false, error: "spam_rejected" }, 400);
 
   const leadType = forcedType ?? body.leadType;
   if (!leadType || !isLeadType(leadType)) return json({ ok: false, error: "invalid_lead_type" }, 400);
+  await enforceRateLimit(request, `lead:${leadType}`, { email: body.email, phone: body.phone, limit: leadType === "specialist_application" ? 5 : 10, windowMs: 60 * 60 * 1000 });
+  validateLeadPayload(body, leadType);
+  const suspiciousFastSubmit = typeof body.formElapsedMs === "number" && body.formElapsedMs > 0 && body.formElapsedMs < 2000;
+  const normalizedBody = suspiciousFastSubmit
+    ? {
+        ...body,
+        payload: {
+          ...(body.payload ?? {}),
+          spamSignals: ["fast_submit_under_2s"],
+        },
+      }
+    : body;
 
-  const lead = normalizeLead(body, leadType, request.headers.get("user-agent") ?? "");
+  const lead = normalizeLead(normalizedBody, leadType, request.headers.get("user-agent") ?? "");
   const stored = Boolean(env.DB);
   if (env.DB) {
     await insertLead(env.DB, lead);
@@ -414,15 +448,15 @@ async function updateSpecialistApplicationStatus(request: Request, env: Env, id:
 }
 
 async function createConversionEvent(request: Request, env: Env) {
-  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
-  if (!body) return json({ ok: false, error: "invalid_json" }, 400);
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  await enforceRateLimit(request, "conversion_event", { limit: 20, windowMs: 60 * 60 * 1000 });
   if (!env.DB) return json({ ok: true, stored: false, error: "database_not_configured" });
 
   const event = {
     type: sanitizeText(body.type, 120) ?? "conversion_event",
     source: sanitizeText(body.source ?? body.sourceButton ?? body.sourceComponent, 200) ?? "",
     page: sanitizeText(body.page, 240) ?? "",
-    payloadJson: JSON.stringify(normalizeNestedRecord(body.payload ?? body.data ?? {})),
+    payloadJson: JSON.stringify(sanitizePayloadObject(body.payload ?? body.data ?? {})),
   };
   const id = await insertConversionEventRecord(env.DB, event);
   return json({ ok: true, id, stored: true });
@@ -435,21 +469,80 @@ async function listPublicSpecialists(env: Env) {
 }
 
 function authorizeAdmin(request: Request, env: Env) {
-  if (!env.ADMIN_TOKEN) return json({ ok: false, error: "admin_token_not_configured" }, 503);
+  return requireAdmin(request, env);
+}
+
+function requireAdmin(request: Request, env: Env) {
+  const configuredToken = env.ADMIN_API_TOKEN ?? env.ADMIN_TOKEN;
+  if (!configuredToken) return json({ ok: false, error: "admin_token_not_configured" }, 503);
   const header = request.headers.get("authorization") ?? "";
   const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
-  if (!token || token !== env.ADMIN_TOKEN) return json({ ok: false, error: "unauthorized" }, 401);
+  if (!token || !timingSafeEqual(token, configuredToken)) return json({ ok: false, error: "unauthorized" }, 401);
   return null;
 }
 
 async function readLeadPayload(request: Request) {
+  return readJsonBody<LeadPayload>(request);
+}
+
+async function readJsonBody<T = Record<string, unknown>>(request: Request) {
+  const contentType = request.headers.get("content-type") ?? "";
+  if (!contentType.toLowerCase().includes("application/json")) throw new SafeHttpError(415, "unsupported_content_type");
   const contentLength = Number(request.headers.get("content-length") ?? 0);
-  if (contentLength > 32_000) throw new Error("payload_too_large");
+  if (contentLength > maxJsonBodyBytes) throw new SafeHttpError(413, "payload_too_large");
   const text = await request.text();
-  if (text.length > 32_000) throw new Error("payload_too_large");
+  if (text.length > maxJsonBodyBytes) throw new SafeHttpError(413, "payload_too_large");
   const payload = safeJson(text);
-  if (!payload || typeof payload !== "object") throw new Error("invalid_json");
-  return payload as LeadPayload;
+  if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new SafeHttpError(400, "invalid_json");
+  return payload as T;
+}
+
+async function enforceRateLimit(
+  request: Request,
+  scope: string,
+  options: { email?: string; phone?: string; limit: number; windowMs: number },
+) {
+  const ip = clientIp(request);
+  const keys = [
+    `${scope}:ip:${ip}`,
+    options.email ? `${scope}:email:${sanitizeEmail(options.email) ?? "invalid"}` : "",
+    options.phone ? `${scope}:phone:${sanitizeText(options.phone, 40) ?? "invalid"}` : "",
+  ].filter(Boolean);
+  const now = Date.now();
+  for (const key of keys) {
+    const current = memoryRateLimits.get(key);
+    const next = !current || current.resetAt <= now ? { count: 1, resetAt: now + options.windowMs } : { count: current.count + 1, resetAt: current.resetAt };
+    memoryRateLimits.set(key, next);
+    if (next.count > options.limit) throw new SafeHttpError(429, "rate_limited");
+  }
+}
+
+function validateLeadPayload(body: LeadPayload, leadType: LeadType) {
+  if (body.email && !isValidEmail(body.email)) throw new SafeHttpError(400, "invalid_email");
+  if (body.phone && !isValidPhone(body.phone)) throw new SafeHttpError(400, "invalid_phone");
+
+  const nested = normalizeNestedRecord(body.payload ?? {});
+  const rut = textFrom(nested.rut) || textFrom(nested.companyRut);
+  if (rut && !isValidRutFormat(rut)) throw new SafeHttpError(400, "invalid_rut");
+  if (body.creditsEstimate !== undefined && (!Number.isFinite(Number(body.creditsEstimate)) || Number(body.creditsEstimate) < 0)) {
+    throw new SafeHttpError(400, "invalid_credits");
+  }
+
+  const fullName = textFrom(body.fullName);
+  const service = textFrom(body.service) || textFrom(body.trade) || textFrom(nested.requestedService);
+  const commune = textFrom(body.communeName) || textFrom(body.communeCode) || textFrom(nested.communeName);
+  const contact = Boolean(body.email || body.phone);
+
+  if (leadType === "specialist_application" && (!fullName || !contact || !service || !commune)) throw new SafeHttpError(400, "missing_required_fields");
+  if (leadType === "company_request" && (!textFrom(body.companyName) || !contact || !commune)) throw new SafeHttpError(400, "missing_required_fields");
+  if (leadType === "booking_request" && (!fullName || !contact || !service || !commune)) throw new SafeHttpError(400, "missing_required_fields");
+  if ((leadType === "club_hogar_interest" || leadType === "payment_interest") && (!fullName || !contact || !commune)) throw new SafeHttpError(400, "missing_required_fields");
+  if (leadType === "contact_message" && (!fullName || !contact)) throw new SafeHttpError(400, "missing_required_fields");
+  if (leadType === "customer_request" && !service && !textFrom(body.problemDescription)) throw new SafeHttpError(400, "missing_required_fields");
+}
+
+function clientIp(request: Request) {
+  return request.headers.get("cf-connecting-ip") ?? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "local";
 }
 
 function isLeadType(value: string): value is LeadType {
@@ -507,13 +600,14 @@ function normalizeLead(body: LeadPayload, leadType: LeadType, userAgent: string)
 }
 
 function normalizeNestedPayload(payload: Record<string, unknown>, leadType: LeadType) {
-  if (leadType !== "specialist_application") return payload;
+  const cleanedPayload = normalizeNestedRecord(sanitizePayloadObject(payload));
+  if (leadType !== "specialist_application") return cleanedPayload;
 
-  const services = Array.isArray(payload.services) ? payload.services.map(normalizeSpecialistServicePayload) : [];
-  const hasNoFormalCertifications = Boolean(payload.hasNoFormalCertifications);
-  const certifications = Array.isArray(payload.certifications) ? payload.certifications.filter((item) => typeof item === "string") : [];
+  const services = Array.isArray(cleanedPayload.services) ? cleanedPayload.services.map(normalizeSpecialistServicePayload) : [];
+  const hasNoFormalCertifications = Boolean(cleanedPayload.hasNoFormalCertifications);
+  const certifications = Array.isArray(cleanedPayload.certifications) ? cleanedPayload.certifications.filter((item) => typeof item === "string") : [];
   return {
-    ...payload,
+    ...cleanedPayload,
     services,
     hasNoFormalCertifications,
     certifications,
@@ -544,6 +638,34 @@ function normalizeSpecialistServicePayload(service: unknown) {
     calculatedClientCredits,
     estimatedClientPriceCLP: calculatedClientCredits * workerPricingConfig.customerCreditValueCLP,
   };
+}
+
+function sanitizeIdentityVerificationForStorage(value: unknown) {
+  const identity = normalizeNestedRecord(value);
+  const hasDocumentNames = Boolean(textFrom(identity.idFrontName) || textFrom(identity.idBackName) || textFrom(identity.selfieName));
+  return {
+    profilePhotoUrl: safePrivateOrPublicAssetUrl(identity.profilePhotoUrl, false),
+    idFrontUrl: safePrivateOrPublicAssetUrl(identity.idFrontUrl, true),
+    idBackUrl: safePrivateOrPublicAssetUrl(identity.idBackUrl, true),
+    selfieUrl: safePrivateOrPublicAssetUrl(identity.selfieUrl, true),
+    profilePhotoName: sanitizeText(identity.profilePhotoName, 160) ?? "",
+    idFrontName: sanitizeText(identity.idFrontName, 160) ?? "",
+    idBackName: sanitizeText(identity.idBackName, 160) ?? "",
+    selfieName: sanitizeText(identity.selfieName, 160) ?? "",
+    verificationStatus: "pending",
+    reviewedBy: null,
+    reviewedAt: null,
+    notes: "",
+    secureStorageConfigured: false,
+    identityStorageStatus: hasDocumentNames ? "pending_secure_storage" : "not_submitted",
+  };
+}
+
+function safePrivateOrPublicAssetUrl(value: unknown, privateDocument: boolean) {
+  const text = sanitizeText(value, 500) ?? "";
+  if (!text || text.startsWith("blob:") || text.startsWith("data:")) return "";
+  if (privateDocument) return text.startsWith("r2://") || text.startsWith("supabase-private://") ? text : "";
+  return text.startsWith("/") || text.startsWith("https://") ? text : "";
 }
 
 function normalizeMoney(value: unknown) {
@@ -663,7 +785,7 @@ async function insertSpecialistApplication(db: D1Database, lead: LeadRecord) {
       referencesJson,
       portfolioJson,
       certificationsJson,
-      JSON.stringify(payload.identityVerification ?? {}),
+      JSON.stringify(sanitizeIdentityVerificationForStorage(payload.identityVerification)),
       lead.payloadJson,
       sourceForLead(lead),
       lead.id,
@@ -869,13 +991,66 @@ function priorityFor(urgency?: string) {
 
 function sanitizeText(value: unknown, maxLength: number) {
   if (typeof value !== "string") return undefined;
-  return value.replace(/[\u0000-\u001f\u007f]/g, " ").trim().slice(0, maxLength) || undefined;
+  return value
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
+    .replace(/[<>]/g, "")
+    .replace(/[\u0000-\u001f\u007f]/g, " ")
+    .trim()
+    .slice(0, maxLength) || undefined;
 }
 
 function sanitizeEmail(value: unknown) {
   const text = sanitizeText(value, 180);
   if (!text) return undefined;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? text.toLowerCase() : undefined;
+}
+
+function isValidEmail(value: unknown) {
+  return Boolean(sanitizeEmail(value));
+}
+
+function isValidPhone(value: unknown) {
+  const text = sanitizeText(value, 40);
+  return Boolean(text && /^[+0-9()\s-]{8,24}$/.test(text));
+}
+
+function isValidRutFormat(value: string) {
+  return /^\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]$/.test(value.trim());
+}
+
+function sanitizePayloadObject(value: unknown, depth = 0): unknown {
+  if (depth > 6) return undefined;
+  if (typeof value === "string") return sanitizeText(value, 4000) ?? "";
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "boolean" || value === null || value === undefined) return value;
+  if (Array.isArray(value)) return value.slice(0, 50).map((item) => sanitizePayloadObject(item, depth + 1));
+  if (typeof value !== "object") return undefined;
+
+  const dangerousKeys = new Set(["role", "isadmin", "admin", "token", "authorization", "password", "admin_token", "admin_api_token"]);
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .filter(([key]) => !dangerousKeys.has(key.toLowerCase()))
+      .slice(0, 80)
+      .map(([key, item]) => [sanitizeText(key, 80) ?? "field", sanitizePayloadObject(item, depth + 1)]),
+  );
+}
+
+function redactSensitive(value: unknown): unknown {
+  if (typeof value === "string") {
+    return value
+      .replace(/\b(\d{1,2})\.?\d{3}\.?\d{3}-?[\dkK]\b/g, "$1.***.***-*")
+      .replace(/\b([^@\s])[^@\s]*@([^@\s]+\.[^@\s]+)\b/g, "$1***@$2")
+      .replace(/(\+?56\s?9\s?)\d{4}\s?(\d{4})/g, "$1**** $2")
+      .replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [REDACTED]");
+  }
+  if (Array.isArray(value)) return value.map(redactSensitive);
+  if (!value || typeof value !== "object") return value;
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
+      key,
+      /token|secret|password|authorization|rut|phone|whatsapp|email|cedula|selfie|idfront|idback/i.test(key) ? "[REDACTED]" : redactSensitive(item),
+    ]),
+  );
 }
 
 function escapeHtml(value: string) {
@@ -887,8 +1062,10 @@ function escapeHtml(value: string) {
 }
 
 async function createCheckout(request: Request, env: Env) {
-  const body = (await request.json()) as CheckoutRequest;
-  const plan = findPlan(body.planId);
+  const body = await readJsonBody<CheckoutRequest>(request);
+  await enforceRateLimit(request, "payments:create-checkout", { email: body.email, phone: body.whatsapp, limit: 10, windowMs: 60 * 60 * 1000 });
+  validateCheckoutRequest(body, "checkout");
+  const plan = findPlanStrict(body.planId);
   const creditsPack = Number(body.creditsPack ?? 0);
   const isCreditsPurchase = creditsPack > 0;
   const itemTitle = isCreditsPurchase ? `${creditsPack} creditos OficiosPro` : plan.name;
@@ -946,8 +1123,10 @@ async function createCheckout(request: Request, env: Env) {
 }
 
 async function createSubscription(request: Request, env: Env) {
-  const body = (await request.json()) as CheckoutRequest;
-  const plan = findPlan(body.planId);
+  const body = await readJsonBody<CheckoutRequest>(request);
+  await enforceRateLimit(request, "payments:create-subscription", { email: body.email, phone: body.whatsapp, limit: 10, windowMs: 60 * 60 * 1000 });
+  validateCheckoutRequest(body, "subscription");
+  const plan = findPlanStrict(body.planId);
   const baseUrl = getBaseUrl(request, env);
 
   if (!env.MERCADOPAGO_ACCESS_TOKEN) {
@@ -1010,17 +1189,19 @@ async function processWebhook(request: Request, env: Env) {
     null;
   const topic = url.searchParams.get("type") ?? url.searchParams.get("topic") ?? payload?.type ?? payload?.topic ?? "unknown";
   const eventId = `${topic}:${dataId ?? "sin-id"}`;
+  const hasWebhookSecret = Boolean(env.MERCADOPAGO_WEBHOOK_SECRET);
 
   return json({
     ok: true,
     received: true,
     verified,
+    security: hasWebhookSecret ? "signature_checked" : "webhook_secret_not_configured",
     eventId,
     topic,
     dataId,
-    action: inferWebhookAction(topic, payload),
+    action: hasWebhookSecret ? inferWebhookAction(topic, payload) : "store_event_for_reconciliation",
     idempotencyKey: eventId,
-    creditOperation: inferCreditOperation(topic, payload),
+    creditOperation: hasWebhookSecret ? inferCreditOperation(topic, payload) : "none",
   });
 }
 
@@ -1039,7 +1220,7 @@ async function paymentStatus(url: URL, env: Env) {
 }
 
 async function addCredits(request: Request) {
-  const body = (await request.json()) as { userId?: string; amount?: number; reason?: string; relatedPaymentId?: string };
+  const body = await readJsonBody<{ userId?: string; amount?: number; reason?: string; relatedPaymentId?: string }>(request);
   const amount = normalizeCredits(body.amount);
   return json({
     ok: true,
@@ -1055,7 +1236,7 @@ async function addCredits(request: Request) {
 }
 
 async function useCredits(request: Request) {
-  const body = (await request.json()) as { userId?: string; amount?: number; action?: "hold" | "capture" | "refund"; relatedServiceRequestId?: string };
+  const body = await readJsonBody<{ userId?: string; amount?: number; action?: "hold" | "capture" | "refund"; relatedServiceRequestId?: string }>(request);
   const amount = normalizeCredits(body.amount);
   const type = body.action === "refund" ? "refund" : body.action === "capture" ? "service_capture" : "service_hold";
   return json({
@@ -1088,7 +1269,7 @@ async function getWallet(url: URL) {
 }
 
 async function reconcilePayments(request: Request) {
-  const body = ((await request.json().catch(() => ({}))) as { from?: string; to?: string });
+  const body = await readJsonBody<{ from?: string; to?: string }>(request);
   return json({
     ok: true,
     reconciledAt: new Date().toISOString(),
@@ -1108,6 +1289,26 @@ async function reconcilePayments(request: Request) {
 
 function findPlan(planId?: string | null) {
   return plans.find((plan) => plan.id === planId) ?? plans[1];
+}
+
+function findPlanStrict(planId?: string | null) {
+  const plan = plans.find((item) => item.id === planId);
+  if (!plan) throw new SafeHttpError(400, "invalid_plan");
+  return plan;
+}
+
+function validateCheckoutRequest(body: CheckoutRequest, mode: "checkout" | "subscription") {
+  if (!body.planId || !plans.some((plan) => plan.id === body.planId)) throw new SafeHttpError(400, "invalid_plan");
+  if (mode === "subscription" && !body.email) throw new SafeHttpError(400, "missing_required_fields");
+  if (body.email && !isValidEmail(body.email)) throw new SafeHttpError(400, "invalid_email");
+  if (body.whatsapp && !isValidPhone(body.whatsapp)) throw new SafeHttpError(400, "invalid_phone");
+  if (body.rut && !isValidRutFormat(body.rut)) throw new SafeHttpError(400, "invalid_rut");
+  if (mode === "checkout" && body.creditsPack !== undefined) {
+    const creditsPack = Number(body.creditsPack);
+    if (!Number.isFinite(creditsPack) || creditsPack <= 0 || creditsPack > 1000 || creditsPack % 2 !== 0) {
+      throw new SafeHttpError(400, "invalid_credits_pack");
+    }
+  }
 }
 
 function buildPayer(body: CheckoutRequest) {
@@ -1149,7 +1350,7 @@ async function mercadoPagoFetch(env: Env, endpoint: string, body: unknown) {
   });
   const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {
-    throw new Error(`Mercado Pago ${response.status}: ${JSON.stringify(payload)}`);
+    throw new Error(`Mercado Pago ${response.status}: ${JSON.stringify(redactSensitive(payload))}`);
   }
   return payload;
 }
@@ -1162,7 +1363,7 @@ async function mercadoPagoGet(env: Env, endpoint: string) {
   });
   const payload = (await response.json().catch(() => ({}))) as Record<string, unknown>;
   if (!response.ok) {
-    throw new Error(`Mercado Pago ${response.status}: ${JSON.stringify(payload)}`);
+    throw new Error(`Mercado Pago ${response.status}: ${JSON.stringify(redactSensitive(payload))}`);
   }
   return payload;
 }
@@ -1228,8 +1429,8 @@ function creditTransaction(type: string, amount: number, relatedPaymentId?: stri
 
 function normalizeCredits(amount?: number) {
   const value = Number(amount ?? 0);
-  if (!Number.isFinite(value) || value <= 0) throw new Error("credit_amount_invalid");
-  if (value % 2 !== 0) throw new Error("credits_must_be_even");
+  if (!Number.isFinite(value) || value <= 0) throw new SafeHttpError(400, "credit_amount_invalid");
+  if (value % 2 !== 0) throw new SafeHttpError(400, "credits_must_be_even");
   return value;
 }
 
@@ -1394,5 +1595,28 @@ function withCors(response: Response) {
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-signature,x-request-id");
+  return withSecurityHeaders(new Response(response.body, { status: response.status, statusText: response.statusText, headers }));
+}
+
+function withSecurityHeaders(response: Response) {
+  const headers = new Headers(response.headers);
+  headers.set("X-Content-Type-Options", "nosniff");
+  headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=(self), payment=(self)");
+  headers.set("X-Frame-Options", "DENY");
+  headers.set(
+    "Content-Security-Policy",
+    [
+      "default-src 'self'",
+      "script-src 'self' 'unsafe-inline' https://www.mercadopago.com https://*.mercadopago.com",
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: blob: https:",
+      "connect-src 'self' https://api.mercadopago.com https://*.mercadopago.com",
+      "frame-src https://www.mercadopago.com https://*.mercadopago.com",
+      "frame-ancestors 'none'",
+      "base-uri 'self'",
+      "form-action 'self' https://www.mercadopago.com https://*.mercadopago.com",
+    ].join("; "),
+  );
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
 }

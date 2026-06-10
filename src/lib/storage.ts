@@ -53,6 +53,7 @@ export type MockSession = {
   email?: string;
   planId?: string;
   createdAt: string;
+  expiresAt?: string;
 };
 
 export type MockSubscription = {
@@ -269,6 +270,7 @@ export type SpecialistIdentityVerification = {
   reviewedAt: string | null;
   notes: string;
   secureStorageConfigured?: boolean;
+  identityStorageStatus?: "pending_secure_storage" | "stored_private" | "not_submitted";
 };
 
 export type PendingSpecialistProfile = {
@@ -872,11 +874,21 @@ export function saveCommercialConfig(config: CommercialConfig) {
 }
 
 export function getMockSession() {
-  return read<MockSession | null>(keys.session, null);
+  const session = read<MockSession | null>(keys.session, null);
+  if (!session) return null;
+  if (session.expiresAt && new Date(session.expiresAt).getTime() <= Date.now()) {
+    remove(keys.session);
+    return null;
+  }
+  return session;
 }
 
 export function setMockSession(session: MockSession) {
-  write(keys.session, session);
+  const maxAgeMs = session.role === "admin" ? 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
+  write(keys.session, {
+    ...session,
+    expiresAt: session.expiresAt ?? new Date(Date.now() + maxAgeMs).toISOString(),
+  });
 }
 
 export function clearMockSession() {
@@ -1447,6 +1459,7 @@ export function defaultIdentityVerification(): SpecialistIdentityVerification {
     reviewedAt: null,
     notes: "",
     secureStorageConfigured: false,
+    identityStorageStatus: "pending_secure_storage",
   };
 }
 

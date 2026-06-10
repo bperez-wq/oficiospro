@@ -37,6 +37,10 @@ export type LeadSubmissionPayload = {
   consentContact?: boolean;
   consentTerms?: boolean;
   honeypot?: string;
+  website?: string;
+  companySite?: string;
+  formStartedAt?: string;
+  formElapsedMs?: number;
   payload?: Record<string, unknown>;
 };
 

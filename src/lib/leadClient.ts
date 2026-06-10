@@ -3,6 +3,7 @@
 import { leadMessageForResult, type LeadSubmissionPayload, type LeadSubmitResult } from "@/lib/leads";
 
 const localLeadBackupKey = "oficiospro.leadSubmissions.localBackup";
+const leadClientLoadedAt = Date.now();
 
 const endpointByType: Record<LeadSubmissionPayload["leadType"], string> = {
   customer_request: "/api/jobs/request",
@@ -56,6 +57,8 @@ export async function submitLead(payload: LeadSubmissionPayload, endpoint = endp
     ...payload,
     consentContact: payload.consentContact ?? true,
     consentTerms: payload.consentTerms ?? true,
+    formStartedAt: new Date(leadClientLoadedAt).toISOString(),
+    formElapsedMs: Date.now() - leadClientLoadedAt,
   };
 
   try {

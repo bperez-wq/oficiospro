@@ -11,6 +11,7 @@ import {
   getAdditionalRequests,
   getBookings,
   getClientProfile,
+  getMockSession,
   getPaymentCreditTransactions,
   getPaymentCreditWallet,
   getQuoteAgreements,
@@ -31,8 +32,10 @@ import {
 } from "@/lib/storage";
 import { distanceInKm } from "@/data/marketplace";
 import { additionalNeedsPayment, quoteTotalCredits } from "@/lib/flexiblePricing";
+import { canAccess } from "@/lib/security";
 
 export function ClientDashboard() {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [balance, setBalance] = useState(135);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
@@ -45,6 +48,12 @@ export function ClientDashboard() {
   const [additionalRequests, setAdditionalRequests] = useState<AdditionalRequest[]>([]);
 
   useEffect(() => {
+    const session = getMockSession();
+    if (!canAccess(session?.role, "customer_dashboard", "read")) {
+      setAuthorized(false);
+      return;
+    }
+    setAuthorized(true);
     seedMockState();
     const paymentWallet = getPaymentCreditWallet();
     const paymentTransactions = getPaymentCreditTransactions();
@@ -69,6 +78,9 @@ export function ClientDashboard() {
     setQuoteAgreements(getQuoteAgreements());
     setAdditionalRequests(getAdditionalRequests());
   }, []);
+
+  if (authorized === false) return <RoleGuardMessage />;
+  if (authorized === null) return <RoleGuardMessage checking />;
 
   const upcoming = bookings.filter((booking) => booking.status !== "Finalizada");
   const completed = bookings.filter((booking) => booking.status === "Finalizada");
@@ -316,6 +328,7 @@ export function ClientDashboard() {
 }
 
 export function SpecialistDashboard() {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const specialist = specialists[0];
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [referrals, setReferrals] = useState<ReferralState | null>(null);
@@ -324,6 +337,12 @@ export function SpecialistDashboard() {
   const [additionals, setAdditionals] = useState<AdditionalRequest[]>([]);
 
   useEffect(() => {
+    const session = getMockSession();
+    if (!canAccess(session?.role, "specialist_dashboard", "read")) {
+      setAuthorized(false);
+      return;
+    }
+    setAuthorized(true);
     seedMockState();
     setBookings(getBookings().filter((booking) => booking.specialistId === specialist.id));
     setReferrals(getReferralState());
@@ -331,6 +350,9 @@ export function SpecialistDashboard() {
     setAdditionals(getAdditionalRequests());
     setSubmittedNotice(new URLSearchParams(window.location.search).get("submitted") === "1");
   }, [specialist.id]);
+
+  if (authorized === false) return <RoleGuardMessage />;
+  if (authorized === null) return <RoleGuardMessage checking />;
 
   const earnedCredits = bookings.reduce((sum, booking) => sum + booking.credits, 0);
 
@@ -506,11 +528,20 @@ export function SpecialistDashboard() {
 }
 
 export function CompanyDashboard() {
+  const [authorized, setAuthorized] = useState<boolean | null>(null);
   const corporateTransactions = [
     { id: "ctx-001", type: "Carga corporativa", detail: "Plan Empresa mensual", amount: 200, date: "2026-06-01" },
     { id: "ctx-002", type: "Servicio", detail: "Técnico HVAC Quilicura", amount: -55, date: "2026-06-02" },
     { id: "ctx-003", type: "Servicio", detail: "Electricista Vitacura", amount: -42, date: "2026-06-01" },
   ];
+
+  useEffect(() => {
+    const session = getMockSession();
+    setAuthorized(canAccess(session?.role, "company_dashboard", "read"));
+  }, []);
+
+  if (authorized === false) return <RoleGuardMessage />;
+  if (authorized === null) return <RoleGuardMessage checking />;
 
   return (
     <div className="grid gap-6">
@@ -587,5 +618,22 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
       <span className="text-xs font-black uppercase text-muted">{label}</span>
       <strong className="mt-1 block text-lg font-black text-ink">{value}</strong>
     </article>
+  );
+}
+
+function RoleGuardMessage({ checking = false }: { checking?: boolean }) {
+  return (
+    <section className="panel">
+      <p className="eyebrow">Acceso protegido</p>
+      <h2 className="text-3xl font-black">{checking ? "Validando sesión..." : "No autorizado"}</h2>
+      <p className="mt-3 font-semibold leading-7 text-muted">
+        {checking ? "Estamos revisando el rol de tu sesión." : "Inicia sesión con el rol correcto para ver este dashboard."}
+      </p>
+      {!checking ? (
+        <Link className="btn-primary mt-6" href="/login">
+          Ir al login
+        </Link>
+      ) : null}
+    </section>
   );
 }

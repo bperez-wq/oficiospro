@@ -8,6 +8,7 @@ import { defaultBookings, specialists } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import {
   calculateServiceEconomics,
+  defaultCommercialConfig as marketplaceDefaultConfig,
   formatCLP,
   serviceTypes,
   subscriptionPlans,
@@ -19,6 +20,7 @@ import { quoteTotalCredits } from "@/lib/flexiblePricing";
 import { getSpecialistReviews, type SpecialistReview } from "@/lib/trust";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
+import { canAccess } from "@/lib/security";
 import {
   addPaymentCredits,
   approveAndPublishSpecialist,
@@ -90,6 +92,7 @@ type AdminSection =
   | "creditos"
   | "planes"
   | "referidos"
+  | "seguridad"
   | "configuracion";
 
 type CompanyRequest = {
@@ -143,6 +146,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "creditos", label: "Créditos y márgenes" },
   { id: "planes", label: "Planes" },
   { id: "referidos", label: "Referidos" },
+  { id: "seguridad", label: "Checklist de seguridad" },
   { id: "configuracion", label: "Configuración" },
 ];
 
@@ -212,7 +216,7 @@ function defaultCommunes(): CoverageCommune[] {
 export function AdminPanel() {
   const [activeSection, setActiveSection] = useState<AdminSection>("resumen");
   const [pendingSpecialists, setPendingSpecialists] = useState<PendingSpecialistProfile[]>([]);
-  const [publishedSpecialists, setPublishedSpecialists] = useState(getAllAdminSpecialists());
+  const [publishedSpecialists, setPublishedSpecialists] = useState<ReturnType<typeof getAllAdminSpecialists>>([]);
   const [companyRequests, setCompanyRequests] = useState<CompanyRequest[]>([]);
   const [homeLeads, setHomeLeads] = useState<HomeLead[]>([]);
   const [enterpriseLeads, setEnterpriseLeads] = useState<EnterpriseLead[]>([]);
@@ -221,13 +225,18 @@ export function AdminPanel() {
   const [payments, setPayments] = useState<PaymentRecord[]>([]);
   const [paymentSubscriptions, setPaymentSubscriptions] = useState<PaymentSubscriptionRecord[]>([]);
   const [paymentTransactions, setPaymentTransactions] = useState<PaymentCreditTransaction[]>([]);
-  const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet>(getPaymentCreditWallet());
+  const [paymentWallet, setPaymentWallet] = useState<PaymentCreditWallet>({
+    userId: "",
+    currentBalance: 0,
+    expiringCredits: [],
+    updatedAt: "",
+  });
   const [payouts, setPayouts] = useState<SpecialistPayout[]>([]);
   const [quoteAgreements, setQuoteAgreements] = useState<QuoteAgreement[]>([]);
   const [additionalRequests, setAdditionalRequests] = useState<AdditionalRequest[]>([]);
   const [creditAdjustment, setCreditAdjustment] = useState(10);
   const [otherServiceRequests, setOtherServiceRequests] = useState<QuickSearchLead[]>([]);
-  const [config, setConfig] = useState<CommercialConfig>(getCommercialConfig());
+  const [config, setConfig] = useState<CommercialConfig>(marketplaceDefaultConfig);
   const [plans, setPlans] = useState<AdminPlan[]>(defaultPlans());
   const [catalog, setCatalog] = useState<EditableServiceType[]>(defaultCatalog());
   const [coverage, setCoverage] = useState<CoverageCommune[]>(defaultCommunes());
@@ -240,13 +249,26 @@ export function AdminPanel() {
   const [reviewedReviewIds, setReviewedReviewIds] = useState<Record<string, boolean>>({});
   const [notice, setNotice] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [authState, setAuthState] = useState<"checking" | "authenticated" | "unauthenticated" | "forbidden">("checking");
   const [adminSession, setAdminSession] = useState<MockSession | null>(null);
 
   useEffect(() => {
-    seedMockState();
     const session = getMockSession();
     setAdminSession(session);
-    setIsAdmin(session?.role === "admin");
+    if (!session) {
+      setAuthState("unauthenticated");
+      setIsAdmin(false);
+      window.location.replace("/login?next=/admin");
+      return;
+    }
+    if (!canAccess(session.role, "admin", "read")) {
+      setAuthState("forbidden");
+      setIsAdmin(false);
+      return;
+    }
+    setAuthState("authenticated");
+    setIsAdmin(true);
+    seedMockState();
     refresh();
     setPlans(readLocal(adminKeys.plans, defaultPlans()));
     setCatalog(readLocal(adminKeys.catalog, defaultCatalog()));
@@ -616,6 +638,48 @@ export function AdminPanel() {
     ],
     [companyRequests, enterpriseLeads, homeLeads, specialistLeads],
   );
+  const securityChecklist = [
+    {
+      label: "Variables sensibles no expuestas",
+      status: "OK",
+      detail: ".env reales ignorados; .env.example solo debe contener placeholders.",
+    },
+    {
+      label: "Admin protegido",
+      status: "OK",
+      detail: "/admin valida rol admin antes de cargar datos; /api/admin/* requiere token del Worker.",
+    },
+    {
+      label: "Formularios validados",
+      status: "OK",
+      detail: "Worker valida JSON, tamaño, campos mínimos, email/teléfono/RUT y limpia HTML básico.",
+    },
+    {
+      label: "Rate limit configurado",
+      status: "Requiere atención",
+      detail: "Activo con fallback en memoria; falta KV/D1 durable para producción con múltiples isolates.",
+    },
+    {
+      label: "Email configurado",
+      status: "Pendiente",
+      detail: "Requiere RESEND_API_KEY y correos transaccionales en Cloudflare secrets.",
+    },
+    {
+      label: "Storage identidad configurado",
+      status: "Requiere atención",
+      detail: "Cédula y selfie quedan marcadas como pendientes de storage privado R2/Supabase.",
+    },
+    {
+      label: "Mercado Pago webhook configurado",
+      status: "Requiere atención",
+      detail: "Firma validada si existe MERCADOPAGO_WEBHOOK_SECRET; falta storage durable de eventos procesados.",
+    },
+    {
+      label: "RLS configurado si aplica",
+      status: "Pendiente",
+      detail: "Supabase no es requisito de build; revisar docs/supabase-security-plan.md antes de producción real.",
+    },
+  ] as const;
   const companyLeadRows = [
     ...enterpriseLeads.map((lead) => toLeadRow({ ...lead, interest: lead.serviceType ?? lead.interest })),
     ...companyRequests.map((lead) => ({
@@ -631,6 +695,27 @@ export function AdminPanel() {
   ];
 
   if (!isAdmin) {
+    if (authState === "checking" || authState === "unauthenticated") {
+      return (
+        <section className="panel">
+          <p className="eyebrow">Acceso administrador</p>
+          <h2 className="text-3xl font-black">Validando sesión...</h2>
+          <p className="mt-3 font-semibold leading-7 text-muted">Te llevaremos al login si no hay una sesión activa.</p>
+        </section>
+      );
+    }
+    if (authState === "forbidden") {
+      return (
+        <section className="panel">
+          <p className="eyebrow">Acceso administrador</p>
+          <h2 className="text-3xl font-black">No autorizado</h2>
+          <p className="mt-3 font-semibold leading-7 text-muted">Tu sesión no tiene rol admin. No se cargaron datos sensibles del panel.</p>
+          <button className="btn-secondary mt-6" type="button" onClick={closeAdminSession}>
+            Cerrar sesión
+          </button>
+        </section>
+      );
+    }
     return (
       <section className="panel">
         <p className="eyebrow">Acceso administrador</p>
@@ -1019,6 +1104,8 @@ export function AdminPanel() {
           </Panel>
         ) : null}
 
+        {activeSection === "seguridad" ? <SecurityChecklistPanel items={securityChecklist} /> : null}
+
         {selectedSpecialist ? (
           <SpecialistDetailPanel
             specialist={selectedSpecialist}
@@ -1221,6 +1308,34 @@ function LeadsPanel({
             </div>
           </article>
         )) : <EmptyState text="No hay leads para esta sección." />}
+      </div>
+    </Panel>
+  );
+}
+
+function SecurityChecklistPanel({
+  items,
+}: {
+  items: ReadonlyArray<{ label: string; status: "OK" | "Pendiente" | "Requiere atención"; detail: string }>;
+}) {
+  const toneByStatus = {
+    OK: "bg-brand-soft text-brand-dark",
+    Pendiente: "bg-amber-50 text-amber-800",
+    "Requiere atención": "bg-rose-50 text-rose-800",
+  };
+
+  return (
+    <Panel title="Checklist de seguridad" eyebrow="Panel interno OficiosPro">
+      <div className="grid gap-3">
+        {items.map((item) => (
+          <article key={item.label} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-[1fr_auto] md:items-center">
+            <div>
+              <strong>{item.label}</strong>
+              <p className="mt-1 text-sm font-bold text-muted">{item.detail}</p>
+            </div>
+            <span className={`chip ${toneByStatus[item.status]}`}>{item.status}</span>
+          </article>
+        ))}
       </div>
     </Panel>
   );
@@ -1638,15 +1753,19 @@ function SpecialistDetailPanel({
             <div>
               <p className="eyebrow">Verificación de identidad</p>
               <h3 className="text-xl font-black">Documentos privados</h3>
-              <p className="mt-2 text-sm font-bold text-muted">Storage seguro privado pendiente de configurar. Estos documentos solo deben revisarse dentro de admin.</p>
+              <p className="mt-2 text-sm font-bold text-muted">
+                {identity?.identityStorageStatus === "stored_private"
+                  ? "Documentos almacenados en storage privado."
+                  : "Documentos pendientes de almacenamiento seguro. No se muestran imágenes sensibles en el panel."}
+              </p>
             </div>
             <span className="chip bg-white text-brand-dark">{identity?.verificationStatus ?? "pending"}</span>
           </div>
           <div className="mt-4 grid gap-3 md:grid-cols-4">
             <IdentityDocumentBox label="Foto perfil" src={identity?.profilePhotoUrl || specialist.profilePhoto} name={identity?.profilePhotoName} />
-            <IdentityDocumentBox label="Cédula frontal" src={identity?.idFrontUrl} name={identity?.idFrontName} />
-            <IdentityDocumentBox label="Cédula reverso" src={identity?.idBackUrl} name={identity?.idBackName} />
-            <IdentityDocumentBox label="Selfie" src={identity?.selfieUrl} name={identity?.selfieName} />
+            <IdentityDocumentBox label="Cédula frontal" src={identity?.idFrontUrl} name={identity?.idFrontName} privateDocument />
+            <IdentityDocumentBox label="Cédula reverso" src={identity?.idBackUrl} name={identity?.idBackName} privateDocument />
+            <IdentityDocumentBox label="Selfie" src={identity?.selfieUrl} name={identity?.selfieName} privateDocument />
           </div>
           <label className="field mt-4">
             Nota interna de identidad
@@ -1793,11 +1912,17 @@ function InfoBox({ label, value }: { label: string; value: string }) {
   );
 }
 
-function IdentityDocumentBox({ label, src, name }: { label: string; src?: string; name?: string }) {
+function IdentityDocumentBox({ label, src, name, privateDocument = false }: { label: string; src?: string; name?: string; privateDocument?: boolean }) {
   return (
     <div className="rounded-2xl border border-line bg-white p-3">
       <span className="text-xs font-black uppercase text-muted">{label}</span>
-      {src ? <img src={src} alt={label} className="mt-2 h-28 w-full rounded-xl object-cover" /> : <div className="mt-2 grid h-28 place-items-center rounded-xl bg-slate-100 text-xs font-bold text-muted">Pendiente</div>}
+      {src && !privateDocument ? (
+        <img src={src} alt={label} className="mt-2 h-28 w-full rounded-xl object-cover" />
+      ) : (
+        <div className="mt-2 grid h-28 place-items-center rounded-xl bg-slate-100 p-2 text-center text-xs font-bold text-muted">
+          {privateDocument ? "Privado: revisar solo en storage seguro" : "Pendiente"}
+        </div>
+      )}
       <strong className="mt-2 block break-words text-xs text-ink">{name || (src ? "Archivo cargado" : "Sin archivo")}</strong>
     </div>
   );

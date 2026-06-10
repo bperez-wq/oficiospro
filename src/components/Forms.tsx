@@ -164,6 +164,38 @@ function marginWarningForService(service: ServiceDraft) {
   return service.specialistExpectedPayoutCLP > 0 && marginCLP < 5000;
 }
 
+const loginAttemptKey = "oficiospro.loginAttempts";
+
+function readLoginAttempts() {
+  if (typeof window === "undefined") return { count: 0, firstAttemptAt: 0, lockedUntil: 0 };
+  try {
+    return JSON.parse(window.localStorage.getItem(loginAttemptKey) ?? "{\"count\":0,\"firstAttemptAt\":0,\"lockedUntil\":0}") as {
+      count: number;
+      firstAttemptAt: number;
+      lockedUntil: number;
+    };
+  } catch {
+    return { count: 0, firstAttemptAt: 0, lockedUntil: 0 };
+  }
+}
+
+function recordFailedLoginAttempt() {
+  if (typeof window === "undefined") return;
+  const now = Date.now();
+  const current = readLoginAttempts();
+  const count = now - current.firstAttemptAt > 60_000 ? 1 : current.count + 1;
+  const next = {
+    count,
+    firstAttemptAt: now - current.firstAttemptAt > 60_000 ? now : current.firstAttemptAt || now,
+    lockedUntil: count >= 3 ? now + 60_000 : 0,
+  };
+  window.localStorage.setItem(loginAttemptKey, JSON.stringify(next));
+}
+
+function clearLoginAttempts() {
+  if (typeof window !== "undefined") window.localStorage.removeItem(loginAttemptKey);
+}
+
 export function LoginForm() {
   const [status, setStatus] = useState("");
   const [isLocal, setIsLocal] = useState(false);
@@ -177,6 +209,11 @@ export function LoginForm() {
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim().toLowerCase();
     const password = String(data.get("password") ?? "");
+    const attempts = readLoginAttempts();
+    if (attempts.lockedUntil > Date.now()) {
+      setStatus("Demasiados intentos. Espera un minuto y vuelve a probar.");
+      return;
+    }
     const credentials = {
       "admin@oficiospro.cl": { password: "Admin1234!", role: "admin" as const, name: "Administrador OficiosPro", path: "/admin" },
       "cliente@oficiospro.cl": { password: "Cliente1234!", role: "client" as const, name: "Cliente OficiosPro", path: "/dashboard-cliente" },
@@ -186,10 +223,12 @@ export function LoginForm() {
     const account = credentials[email as keyof typeof credentials];
 
     if (!account || account.password !== password) {
+      recordFailedLoginAttempt();
       setStatus("Email o contraseña incorrectos.");
       return;
     }
 
+    clearLoginAttempts();
     setMockSession({ role: account.role, name: account.name, email, createdAt: new Date().toISOString() });
     setStatus("Acceso correcto. Redirigiendo...");
     window.setTimeout(() => {
@@ -346,6 +385,7 @@ export function ClientRegisterForm() {
       sourceComponent: "ClientRegisterForm",
       sourceButton: "Crear cuenta y continuar",
       referralCode: String(data.get("referralCode") ?? ""),
+      honeypot: String(data.get("website") ?? ""),
       payload: { planId, rut: data.get("rut"), address: data.get("address"), reserveId },
     });
     setStatus(reserveId ? "Cuenta creada. Te llevaremos a confirmar tu reserva." : "Cuenta creada. Te llevaremos al checkout para activar tu plan.");
@@ -357,6 +397,10 @@ export function ClientRegisterForm() {
   return (
     <FormShell title="Registro cliente" text="Crea tu cuenta para reservar especialistas, activar créditos y encontrar técnicos cerca de ti.">
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
+        <label className="hidden" aria-hidden="true">
+          Sitio web
+          <input name="website" tabIndex={-1} autoComplete="off" />
+        </label>
         <label className="field">
           Nombres
           <input name="firstNames" placeholder="Ej: Juan" required />
@@ -463,6 +507,7 @@ export function SpecialistRegisterForm() {
   const [otherCertificationText, setOtherCertificationText] = useState("");
   const [consentContact, setConsentContact] = useState(false);
   const [consentVerification, setConsentVerification] = useState(false);
+  const [websiteTrap, setWebsiteTrap] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [draftNotice, setDraftNotice] = useState("");
@@ -601,10 +646,6 @@ export function SpecialistRegisterForm() {
         setStatus("Completa nombre completo o nombre comercial, WhatsApp o telefono y email para continuar.");
         return false;
       }
-      if (!identityDocuments.profilePhotoUrl || !identityDocuments.idFrontUrl || !identityDocuments.idBackUrl || !identityDocuments.selfieUrl) {
-        setStatus("Completa foto de perfil, cédula frontal, cédula reverso y selfie de verificación para continuar.");
-        return false;
-      }
     }
     if (currentStep === 2) {
       if (!baseRegion || !baseCommune) {
@@ -674,6 +715,10 @@ export function SpecialistRegisterForm() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (websiteTrap) {
+      setStatus("No pudimos completar el envio ahora. Escribenos a bperez@oficiospro.cl y revisaremos tu postulacion.");
+      return;
+    }
     for (const currentStep of [1, 2, 3, 4, 5]) {
       if (!validateStep(currentStep)) {
         setStep(currentStep);
@@ -713,6 +758,21 @@ export function SpecialistRegisterForm() {
         emergencyAvailable: service.emergency,
       };
     });
+    const hasIdentityDocuments = Boolean(identityDocuments.idFrontName || identityDocuments.idBackName || identityDocuments.selfieName);
+    const privateIdentityVerification = {
+      ...defaultIdentityVerification(),
+      profilePhotoUrl: "",
+      idFrontUrl: "",
+      idBackUrl: "",
+      selfieUrl: "",
+      profilePhotoName: identityDocuments.profilePhotoName,
+      idFrontName: identityDocuments.idFrontName,
+      idBackName: identityDocuments.idBackName,
+      selfieName: identityDocuments.selfieName,
+      verificationStatus: "pending" as const,
+      secureStorageConfigured: false,
+      identityStorageStatus: hasIdentityDocuments ? ("pending_secure_storage" as const) : ("not_submitted" as const),
+    };
     const request = appendPendingSpecialist({
       status: "pendiente",
       reviewStatus: "pendiente_revision",
@@ -724,11 +784,7 @@ export function SpecialistRegisterForm() {
       phone: identity.whatsapp,
       email: identity.email,
       profilePhoto,
-      identityVerification: {
-        ...defaultIdentityVerification(),
-        ...identityDocuments,
-        verificationStatus: "pending",
-      },
+      identityVerification: privateIdentityVerification,
       address: baseAddress,
       commune: baseCommune,
       region: regionNameForCode(baseRegion),
@@ -794,6 +850,7 @@ export function SpecialistRegisterForm() {
       sourceButton: "Enviar perfil para revisión",
       consentContact,
       consentTerms: consentVerification,
+      honeypot: websiteTrap,
       payload: {
         localRequestId: request.id,
         fullName,
@@ -813,21 +870,8 @@ export function SpecialistRegisterForm() {
         certifications: selectedCertifications,
         otherCertificationText,
         hasNoFormalCertifications,
-        identityVerification: {
-          profilePhotoUrl: identityDocuments.profilePhotoUrl,
-          idFrontUrl: identityDocuments.idFrontUrl,
-          idBackUrl: identityDocuments.idBackUrl,
-          selfieUrl: identityDocuments.selfieUrl,
-          profilePhotoName: identityDocuments.profilePhotoName,
-          idFrontName: identityDocuments.idFrontName,
-          idBackName: identityDocuments.idBackName,
-          selfieName: identityDocuments.selfieName,
-          verificationStatus: "pending",
-          reviewedBy: null,
-          reviewedAt: null,
-          notes: "",
-        },
-        identityStatus: "pending",
+        identityVerification: privateIdentityVerification,
+        identityStatus: privateIdentityVerification.identityStorageStatus,
         referencesText: completedReferences.map((reference) => `${reference.name} - ${reference.phone} - ${reference.work}`).join("\n"),
         portfolioUrl: portfolioPhotos.join(", "),
         notes: services.map((service) => service.specialistComments).filter(Boolean).join("\n"),
@@ -864,6 +908,10 @@ export function SpecialistRegisterForm() {
   return (
     <FormShell title="Postulación especialista" text="Tu oficio merece visibilidad, confianza y mejores oportunidades. Completa este onboarding para construir reputación desde el primer trabajo.">
       <form className="grid gap-6" onSubmit={submit}>
+        <label className="hidden" aria-hidden="true">
+          Sitio web
+          <input value={websiteTrap} onChange={(event) => setWebsiteTrap(event.target.value)} tabIndex={-1} autoComplete="off" />
+        </label>
         <div className="grid gap-3 md:grid-cols-5">
           {[
             ["Identidad", "Datos y contacto"],
@@ -916,22 +964,22 @@ export function SpecialistRegisterForm() {
           </label>
           <label className="field">
             Foto de perfil
-            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("profilePhoto", event.currentTarget.files?.[0])} />
+            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("profilePhoto", event.currentTarget.files?.[0])} />
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
           <label className="field">
             Foto cédula frontal
-            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
             <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
           </label>
           <label className="field">
             Foto cédula reverso
-            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
             <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
           </label>
           <label className="field">
             Selfie de verificación
-            <input type="file" accept="image/*" required onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
             <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
           </label>
           <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
@@ -1341,6 +1389,7 @@ export function CompanyRequestForm() {
       communeName: commune,
       sourceComponent: "CompanyRequestForm",
       sourceButton: "Enviar solicitud",
+      honeypot: String(data.get("companySite") ?? ""),
       payload: { companyRut: data.get("companyRut"), companyLine: data.get("companyLine"), branches: data.get("branches"), plan: data.get("plan") },
     });
     setStatus(leadResult.ok ? "Solicitud empresa enviada. Quedó visible para revisión comercial." : leadResult.message);
@@ -1349,6 +1398,10 @@ export function CompanyRequestForm() {
   return (
     <FormShell title="Solicitud empresa" text="Cuéntanos el tamaño de tu operación para preparar una cuenta corporativa con créditos, sucursales y facturación mensual.">
       <form className="grid gap-4 md:grid-cols-2" onSubmit={submit}>
+        <label className="hidden" aria-hidden="true">
+          Sitio empresa
+          <input name="companySite" tabIndex={-1} autoComplete="off" />
+        </label>
         <label className="field">
           Razón social
           <input name="businessName" placeholder="Nombre empresa" required />
@@ -1465,7 +1518,7 @@ function Warning({ children }: { children: ReactNode }) {
 }
 
 function IdentityPreview({ src, name, privateDocument = false }: { src: string; name: string; privateDocument?: boolean }) {
-  if (!src) return <span className="text-xs font-bold text-muted">Archivo obligatorio. Puedes reemplazarlo antes de enviar.</span>;
+  if (!src) return <span className="text-xs font-bold text-muted">Archivo opcional. OficiosPro podrá solicitarlo por canal seguro antes de publicar.</span>;
   return (
     <span className="grid gap-2 rounded-2xl border border-line bg-slate-50 p-3">
       <img src={src} alt={privateDocument ? "Documento privado cargado" : "Foto de perfil cargada"} className="h-28 w-full rounded-xl object-cover" />
