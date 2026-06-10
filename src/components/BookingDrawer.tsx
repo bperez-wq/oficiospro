@@ -11,6 +11,7 @@ import { formatDisplayDate, getAvailabilitySummary, getSlotsForDate, getWeekDate
 import { createBookingRequest, getBookingRequests, getSpecialistAvailabilityProfile, type BookingRequest } from "@/lib/bookingStorage";
 import { createQuoteAgreement, getMockSession, getPaymentCreditWallet, usePaymentCredits } from "@/lib/storage";
 import { bookingPrimaryAction, creditsForInitialHold, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { submitLead } from "@/lib/leadClient";
 
 export function BookingDrawer({
@@ -122,6 +123,7 @@ export function BookingDrawer({
 
   async function reserve() {
     if (submitting) return;
+    preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer" });
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
       setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");

@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 
 const items = [
@@ -14,19 +17,30 @@ const items = [
 ];
 
 export function PlatformNav() {
+  const pathname = usePathname();
+
   return (
     <nav className="flex gap-2 overflow-x-auto rounded-3xl border border-line bg-white/90 p-2 shadow-soft">
-      {items.map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          className="whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark"
-        >
-          {item.label}
-        </Link>
-      ))}
+      {items.map((item) => {
+        const active = isActivePath(pathname, item.href);
+        return (
+          <Link
+            key={item.href}
+            href={item.href}
+            aria-current={active ? "page" : undefined}
+            className={active ? "whitespace-nowrap rounded-2xl bg-brand px-4 py-2 text-sm font-black text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-2xl px-4 py-2 text-sm font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark"}
+          >
+            {item.label}
+          </Link>
+        );
+      })}
     </nav>
   );
+}
+
+function isActivePath(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function AppHero({

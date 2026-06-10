@@ -10,7 +10,7 @@ export default function SpecialistsPage() {
       <AppHero
         eyebrow="Especialistas verificados"
         title="Encuentra especialistas verificados"
-        subtitle="Busca por oficio, problema, comuna, disponibilidad o reputación. Cada perfil busca ordenar experiencia, trabajos realizados, evidencia y pago protegido."
+        subtitle="Puedes buscar sin registrarte. Filtra por oficio, comuna, disponibilidad, reputacion y precio en creditos; crea tu cuenta cuando quieras reservar o contactar."
       >
         <Link className="btn-secondary" href="/dashboard-cliente">
           Ver mis créditos

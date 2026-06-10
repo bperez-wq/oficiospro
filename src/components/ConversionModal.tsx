@@ -14,6 +14,7 @@ import {
   specialtyOptionsForType,
 } from "@/lib/catalog";
 import { submitConversionEvent, submitLead } from "@/lib/leadClient";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import {
   clearSpecialistQuickDraft,
   mergeSpecialistDraft,
@@ -165,7 +166,16 @@ export function ConversionButton({
   const { openModal } = useConversionModal();
 
   return (
-    <button className={className} type="button" onClick={() => openModal({ type, sourceButton, planId, specialist })}>
+    <button
+      className={className}
+      type="button"
+      onClick={() => {
+        if (specialist && type === "reserva_especialista") {
+          preserveSpecialistIntent({ specialist, intendedAction: "solicitar", source: sourceButton });
+        }
+        openModal({ type, sourceButton, planId, specialist });
+      }}
+    >
       {children}
     </button>
   );

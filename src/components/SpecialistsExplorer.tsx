@@ -25,6 +25,7 @@ import {
   serviceTypeOptions,
 } from "@/lib/catalog";
 import { submitConversionEvent } from "@/lib/leadClient";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getSpecialistLevel, recommendationScore } from "@/lib/trust";
 
 const availabilityOptions = [
@@ -219,7 +220,10 @@ export function SpecialistsExplorer() {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
     if (!reserveId || !getMockSession()) return;
     const specialist = marketplaceSpecialists.find((item) => item.id === reserveId);
-    if (specialist) openModal({ type: "reserva_especialista", sourceButton: "Reserva pendiente desde registro", specialist });
+    if (specialist) {
+      preserveSpecialistIntent({ specialist, intendedAction: "reservar", source: "Reserva pendiente desde registro" });
+      openModal({ type: "reserva_especialista", sourceButton: "Reserva pendiente desde registro", specialist });
+    }
   }, [marketplaceSpecialists]);
 
   const visible = useMemo(() => {
@@ -289,6 +293,7 @@ export function SpecialistsExplorer() {
   function reserve(id: string) {
     const specialist = marketplaceSpecialists.find((item) => item.id === id) as Specialist | undefined;
     if (!specialist) return;
+    preserveSpecialistIntent({ specialist, intendedAction: "reservar", category: categoryParam || category, specialty: specialtyParam || specialty, commune: zone, source: "SpecialistsExplorer" });
     openModal({ type: "reserva_especialista", sourceButton: "Reservar especialista", specialist });
   }
 

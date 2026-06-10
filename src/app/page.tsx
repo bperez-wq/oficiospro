@@ -128,13 +128,13 @@ export default function HomePage() {
               Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
             </h1>
             <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-muted">
-              Encuentra técnicos confiables, acumula créditos y resuelve mantenciones con respaldo OficiosPro.
+              Explora especialistas verificados sin registrarte, compara reputación, precio en créditos y disponibilidad, y crea tu cuenta al momento de reservar.
             </p>
             <HeroSearchPanel />
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
-              <ConversionButton type="busqueda_rapida" sourceButton="Buscar especialista hero" className="btn-primary">
+              <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
                 Buscar especialista
-              </ConversionButton>
+              </Link>
               <ConversionButton type="registro_especialista" sourceButton="Postular como especialista hero" className="btn-sun">
                 Postular como especialista
               </ConversionButton>
@@ -291,9 +291,9 @@ export default function HomePage() {
       <section className="section" id="especialistas">
         <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Foto protagonista, certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
-          <ConversionButton type="consulta_general" sourceButton="Ver todos especialistas" className="btn-secondary">
+          <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
             Ver todos
-          </ConversionButton>
+          </Link>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {featured.map((specialist) => (

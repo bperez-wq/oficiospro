@@ -10,6 +10,7 @@ import { availabilityLabels, type Specialist } from "@/data/mock";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getServiceCreditPair, getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 
 export function SpecialistCard({
@@ -55,6 +56,7 @@ export function SpecialistCard({
     : "Solicita contacto y revisaremos disponibilidad.";
 
   const openBookingModal = useCallback(() => {
+    preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "reservar", source: "SpecialistCard" });
     setBookingModal({
       isOpen: true,
       specialistId: specialist.id,
@@ -168,11 +170,26 @@ export function SpecialistCard({
         </div>
 
         <div className="grid gap-2 sm:grid-cols-2">
-          <button className="btn-secondary" type="button" data-event="open_instant_contact" onClick={() => setContactOpen((current) => !current)}>
+          <button
+            className="btn-secondary"
+            type="button"
+            data-event="open_instant_contact"
+            onClick={() => {
+              preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "contactar", source: "SpecialistCard" });
+              setContactOpen((current) => !current);
+            }}
+          >
             Contacto inmediato
           </button>
           {onReserve ? (
-            <button className="btn-secondary" type="button" onClick={() => onReserve(specialist.id)}>
+            <button
+              className="btn-secondary"
+              type="button"
+              onClick={() => {
+                preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "solicitar", source: "SpecialistCard" });
+                onReserve(specialist.id);
+              }}
+            >
               Solicitar servicio
             </button>
           ) : (

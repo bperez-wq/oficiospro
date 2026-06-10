@@ -3,6 +3,7 @@
 import { useState } from "react";
 import type { Specialist } from "@/data/mock";
 import { createInstantContactRequest } from "@/lib/bookingStorage";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { submitLead } from "@/lib/leadClient";
 
 export function InstantContactPanel({ specialist, onOpenAgenda }: { specialist: Specialist; onOpenAgenda?: () => void }) {
@@ -11,6 +12,7 @@ export function InstantContactPanel({ specialist, onOpenAgenda }: { specialist: 
 
   async function requestContact() {
     if (submitting) return;
+    preserveSpecialistIntent({ specialist, intendedAction: "contactar", source: "InstantContactPanel" });
     setSubmitting(true);
     try {
       createInstantContactRequest(specialist);

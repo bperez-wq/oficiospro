@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -22,6 +23,7 @@ const adminQuickLinks = [
 
 export function Header() {
   const [session, setSession] = useState<MockSession | null>(null);
+  const pathname = usePathname();
 
   useEffect(() => {
     setSession(getMockSession());
@@ -59,11 +61,19 @@ export function Header() {
               </Link>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              {adminQuickLinks.map((item) => (
-                <Link key={item.href} href={item.href} className="rounded-full bg-white/10 px-3 py-2 text-xs font-black text-white/80 transition hover:bg-white hover:text-ink">
-                  {item.label}
-                </Link>
-              ))}
+              {adminQuickLinks.map((item) => {
+                const active = item.href.startsWith("/admin") && isActivePath(pathname, "/admin");
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    aria-current={active ? "page" : undefined}
+                    className={active ? "rounded-full bg-white px-3 py-2 text-xs font-black text-ink shadow-sm transition hover:bg-teal-100" : "rounded-full bg-white/10 px-3 py-2 text-xs font-black text-white/80 transition hover:bg-white hover:text-ink"}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
               <button className="rounded-full border border-white/25 px-3 py-2 text-xs font-black text-white transition hover:bg-white hover:text-ink" type="button" onClick={logout}>
                 Cerrar sesión
               </button>
@@ -78,11 +88,19 @@ export function Header() {
         </Link>
 
         <nav className="hidden items-center gap-6 text-sm font-black text-muted lg:flex">
-          {navItems.map((item) => (
-            <Link key={item.href} href={item.href} className="transition hover:text-brand">
-              {item.label}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+            const active = isActivePath(pathname, item.href);
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-current={active ? "page" : undefined}
+                className={active ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
+              >
+                {item.label}
+              </Link>
+            );
+          })}
           <ConversionButton type="registro_especialista" sourceButton="Trabaja con nosotros" className="transition hover:text-brand">
             Trabaja con nosotros
           </ConversionButton>
@@ -90,7 +108,7 @@ export function Header() {
 
         <div className="hidden items-center gap-3 md:flex">
           {isAdmin ? (
-            <Link href="/admin" className="rounded-2xl px-4 py-3 text-sm font-black text-brand transition hover:bg-brand-soft">
+            <Link href="/admin" aria-current={isActivePath(pathname, "/admin") ? "page" : undefined} className={isActivePath(pathname, "/admin") ? "rounded-2xl bg-brand px-4 py-3 text-sm font-black text-white shadow-sm transition hover:bg-brand-dark" : "rounded-2xl px-4 py-3 text-sm font-black text-brand transition hover:bg-brand-soft"}>
               Panel admin
             </Link>
           ) : (
@@ -98,23 +116,31 @@ export function Header() {
               Ingresar
             </Link>
           )}
-          <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos" className="btn-primary">
+          <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_header">
             Ver técnicos
-          </ConversionButton>
+          </Link>
         </div>
 
-        <ConversionButton type="busqueda_rapida" sourceButton="Ver técnicos mobile" className="btn-primary px-4 md:hidden">
+        <Link href="/especialistas" className="btn-primary px-4 md:hidden" data-event="browse_specialists_header_mobile">
           Técnicos
-        </ConversionButton>
+        </Link>
       </div>
       <nav className="flex gap-2 overflow-x-auto border-t border-line/70 bg-white px-5 py-3 text-sm font-black text-muted lg:hidden">
-        {navItems.map((item) => (
-          <Link key={item.href} href={item.href} className="whitespace-nowrap rounded-full bg-slate-50 px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark">
-            {item.label}
-          </Link>
-        ))}
+        {navItems.map((item) => {
+          const active = isActivePath(pathname, item.href);
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-current={active ? "page" : undefined}
+              className={active ? "whitespace-nowrap rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-full bg-slate-50 px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
+            >
+              {item.label}
+            </Link>
+          );
+        })}
         {isAdmin ? (
-          <Link href="/admin" className="whitespace-nowrap rounded-full bg-brand-soft px-4 py-2 text-brand-dark transition hover:bg-brand hover:text-white">
+          <Link href="/admin" aria-current={isActivePath(pathname, "/admin") ? "page" : undefined} className={isActivePath(pathname, "/admin") ? "whitespace-nowrap rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-full bg-brand-soft px-4 py-2 text-brand-dark transition hover:bg-brand hover:text-white"}>
             Panel admin
           </Link>
         ) : (
@@ -125,4 +151,9 @@ export function Header() {
       </nav>
     </header>
   );
+}
+
+function isActivePath(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
+  return pathname === href || pathname.startsWith(`${href}/`);
 }

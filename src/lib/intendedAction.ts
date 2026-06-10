@@ -1,0 +1,44 @@
+"use client";
+
+import type { Specialist } from "@/data/mock";
+import type { FlexibleService } from "@/data/flexiblePricing";
+
+export type IntendedAction = "reservar" | "contactar" | "solicitar";
+
+export function preserveSpecialistIntent({
+  specialist,
+  service,
+  intendedAction,
+  category,
+  specialty,
+  commune,
+  source,
+}: {
+  specialist?: Specialist | null;
+  service?: FlexibleService | null;
+  intendedAction: IntendedAction;
+  category?: string;
+  specialty?: string;
+  commune?: string;
+  source?: string;
+}) {
+  if (typeof window === "undefined") return;
+
+  const payload = {
+    specialistId: specialist?.id,
+    specialistSlug: specialist?.slug,
+    serviceId: service?.id,
+    categoria: category ?? specialist?.serviceTypeId ?? specialist?.category,
+    especialidad: specialty ?? service?.specialty ?? specialist?.specialty,
+    comuna: commune ?? specialist?.commune ?? specialist?.zone,
+    intendedAction,
+    source,
+    timestamp: new Date().toISOString(),
+  };
+
+  try {
+    window.sessionStorage.setItem("oficiospro.intendedSpecialistAction", JSON.stringify(payload));
+  } catch {
+    // The user should still continue if browser storage is unavailable.
+  }
+}

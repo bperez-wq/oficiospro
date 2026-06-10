@@ -662,6 +662,7 @@ export function AdminPanel() {
                   activeSection === section.id ? "bg-brand text-white shadow-lg shadow-brand/20" : "text-muted hover:bg-brand-soft hover:text-brand-dark"
                 }`}
                 type="button"
+                aria-selected={activeSection === section.id}
                 onClick={() => setActiveSection(section.id)}
               >
                 {section.label}
