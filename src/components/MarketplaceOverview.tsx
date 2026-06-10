@@ -1,4 +1,5 @@
 import { chileCommunes, chileRegions } from "@/data/chileCommunes";
+import { CategoryCardLink } from "@/components/CategoryCardLink";
 import { allSpecialties, marketplaceCategories, nationalCoverageStats, seoSearchExamples, specialistRanks, validationRequirements } from "@/data/marketplace";
 import { specialists } from "@/data/mock";
 
@@ -69,11 +70,17 @@ export function SpecialtyCatalogPreview() {
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
         {marketplaceCategories.map((category) => (
-          <article key={category.id} className="panel card-hover">
-            <span className="chip bg-brand-soft text-brand-dark">{category.specialties.length} especialidades</span>
-            <h3 className="mt-4 text-xl font-black">{category.name}</h3>
-            <p className="mt-3 text-sm font-semibold leading-6 text-muted">{category.description}</p>
-          </article>
+          <CategoryCardLink
+            key={category.id}
+            href={`/especialistas?categoria=${encodeURIComponent(category.id)}&especialidad=todas&sourceSection=home_catalog_preview`}
+            title={category.name}
+            description={category.description}
+            action="Ver especialistas"
+            sourceSection="home_catalog_preview"
+            category={category.id}
+            specialty="todas"
+            chip={<span className="chip bg-brand-soft text-brand-dark">{category.specialties.length} especialidades</span>}
+          />
         ))}
       </div>
     </section>

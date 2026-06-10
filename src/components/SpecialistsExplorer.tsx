@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
@@ -23,7 +24,8 @@ import {
   regionNameForCode,
   serviceTypeOptions,
 } from "@/lib/catalog";
-import { recommendationScore } from "@/lib/trust";
+import { submitConversionEvent } from "@/lib/leadClient";
+import { getSpecialistLevel, recommendationScore } from "@/lib/trust";
 
 const availabilityOptions = [
   { value: "all", label: "Cualquier horario" },
@@ -41,6 +43,47 @@ const sortOptions = [
   { value: "jobs", label: "Mas trabajos completados" },
 ];
 
+const levelOptions = [
+  { value: "all", label: "Todos los niveles" },
+  { value: "Fundador", label: "Fundador" },
+  { value: "Bronce", label: "Bronce" },
+  { value: "Plata", label: "Plata" },
+  { value: "Oro", label: "Oro" },
+  { value: "Platino", label: "Platino" },
+];
+
+const categoryRoutes: Record<string, { categoryId: string; label: string; title: string }> = {
+  hogar: { categoryId: "hogar", label: "Hogar", title: "Especialistas para hogar y reparaciones" },
+  comunidades: { categoryId: "empresas", label: "Comunidades", title: "Especialistas para comunidades y edificios" },
+  empresas: { categoryId: "empresas", label: "Empresas y comercios", title: "Especialistas para empresas y comercios" },
+  climatizacion: { categoryId: "climatizacion-refrigeracion", label: "Climatizacion", title: "Especialistas en climatizacion y refrigeracion" },
+  "climatizacion-refrigeracion": { categoryId: "climatizacion-refrigeracion", label: "Climatizacion y refrigeracion", title: "Especialistas en climatizacion y refrigeracion" },
+  construccion: { categoryId: "construccion", label: "Construccion", title: "Especialistas en construccion y remodelacion" },
+  seguridad: { categoryId: "automatizacion", label: "Seguridad y tecnologia", title: "Especialistas en seguridad y tecnologia" },
+  limpieza: { categoryId: "all", label: "Limpieza y mantencion", title: "Especialistas en limpieza y mantencion" },
+  industria: { categoryId: "industria", label: "Industria", title: "Especialistas en mantenimiento industrial" },
+  agroindustria: { categoryId: "agroindustria", label: "Agroindustria y packing", title: "Especialistas para agroindustria y packing" },
+  agricultura: { categoryId: "agroindustria", label: "Agricultura y campos", title: "Especialistas para agricultura y campos" },
+  emergencias: { categoryId: "emergencias", label: "Emergencias", title: "Especialistas para emergencias" },
+};
+
+const specialtyRoutes: Record<string, { label: string; terms: string[]; categoryId?: string }> = {
+  gasfiteria: { label: "Gasfiteria", terms: ["gasfiter", "filtracion", "calefont", "redes de agua"], categoryId: "gasfiteria" },
+  electricidad: { label: "Electricidad", terms: ["electric", "sec", "tablero", "luminaria"], categoryId: "electricidad" },
+  "aire-acondicionado-calefaccion": { label: "Aire acondicionado y calefaccion", terms: ["aire acondicionado", "calefaccion", "bombas de calor", "hvac"], categoryId: "climatizacion-refrigeracion" },
+  remodelaciones: { label: "Remodelaciones", terms: ["remodelacion", "maestro", "tabiqueria", "terminaciones"], categoryId: "construccion" },
+  "jardineria-piscinas": { label: "Jardineria y piscinas", terms: ["jardineria", "piscina", "riego", "paisajismo"], categoryId: "jardineria" },
+  "edificios-condominios": { label: "Edificios y condominios", terms: ["comunidades", "edificios", "portones", "salas de bombas"], categoryId: "empresas" },
+  "mantencion-comercial": { label: "Mantencion comercial", terms: ["mantencion oficinas", "retail", "restaurantes", "bodegas"], categoryId: "empresas" },
+  "camaras-alarmas-control-acceso": { label: "Camaras, alarmas y control de acceso", terms: ["camaras", "alarmas", "control de acceso", "cctv"], categoryId: "automatizacion" },
+  "limpieza-mantencion": { label: "Limpieza y mantencion", terms: ["limpieza", "aseo", "sanitizacion", "mantencion"] },
+  "mantencion-industrial": { label: "Mantencion industrial", terms: ["industrial", "motores", "bombas", "soldadura", "hidraulica"], categoryId: "industria" },
+  "packing-frio": { label: "Packing y frio", terms: ["packing", "frio", "frigor", "camara", "lineas de proceso"], categoryId: "agroindustria" },
+  "riego-tecnificado": { label: "Riego tecnificado", terms: ["riego tecnificado", "riego", "bombas de riego", "automatizacion agricola"], categoryId: "agroindustria" },
+  "maquinaria-agricola": { label: "Maquinaria agricola", terms: ["maquinaria agricola", "mecanica agricola", "tractores", "operador maquinaria"], categoryId: "agroindustria" },
+  "urgencias-hogar-empresa": { label: "Urgencias hogar y empresa", terms: ["emergencia", "urgente", "fuga", "corte", "porton"], categoryId: "emergencias" },
+};
+
 export function SpecialistsExplorer() {
   const { openModal } = useConversionModal();
   const [query, setQuery] = useState("");
@@ -51,8 +94,13 @@ export function SpecialistsExplorer() {
   const [availability, setAvailability] = useState("all");
   const [rating, setRating] = useState(0);
   const [maxCredits, setMaxCredits] = useState(999);
+  const [level, setLevel] = useState("all");
+  const [quickResponse, setQuickResponse] = useState(false);
   const [sort, setSort] = useState("recommended");
   const [withinCoverage, setWithinCoverage] = useState(false);
+  const [categoryParam, setCategoryParam] = useState("");
+  const [specialtyParam, setSpecialtyParam] = useState("");
+  const [sourceSection, setSourceSection] = useState("");
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
@@ -62,19 +110,40 @@ export function SpecialistsExplorer() {
     seedMockState();
     setApprovedSpecialists(getPublishedSpecialists());
     const params = new URLSearchParams(window.location.search);
-    const requestedType = params.get("tipo");
+    const requestedType = params.get("categoria") ?? params.get("tipo");
     const requestedRegion = params.get("region");
     const requestedCommune = params.get("comuna");
     const requestedSpecialty = params.get("especialidad");
     const requestedQuery = params.get("q");
-    if (requestedType) setCategory(requestedType);
+    const requestedAvailability = params.get("disponibilidad");
+    const requestedRating = params.get("rating");
+    const requestedPrice = params.get("precio");
+    const requestedLevel = params.get("nivel");
+    const requestedQuickResponse = params.get("respuesta") ?? params.get("respuesta_rapida");
+    if (requestedType) {
+      const normalizedCategory = normalizeRouteParam(requestedType);
+      const normalizedSpecialty = requestedSpecialty ? normalizeRouteParam(requestedSpecialty) : "";
+      const resolvedCategory = resolveRouteCategory(normalizedCategory, normalizedSpecialty);
+      setCategoryParam(normalizedCategory);
+      setCategory(resolvedCategory);
+    }
     if (requestedRegion) setRegion(regionCodeForName(requestedRegion) || requestedRegion);
     if (requestedCommune) {
       const normalizedCommune = normalizePlaceName(requestedCommune);
       setZone(normalizedCommune);
       if (!requestedRegion) setRegion(communeRegionCode(normalizedCommune) || ALL_REGIONS_VALUE);
     }
-    if (requestedSpecialty) window.setTimeout(() => setSpecialty(requestedSpecialty), 0);
+    if (requestedSpecialty && requestedSpecialty !== "todas") {
+      const normalizedSpecialty = normalizeRouteParam(requestedSpecialty);
+      setSpecialtyParam(normalizedSpecialty);
+      window.setTimeout(() => setSpecialty(matchSpecialtyValue(normalizedSpecialty, specialtyFilterOptions)), 0);
+    }
+    if (requestedAvailability && availabilityOptions.some((item) => item.value === requestedAvailability)) setAvailability(requestedAvailability);
+    if (requestedRating) setRating(Math.min(5, Math.max(0, Number(requestedRating) || 0)));
+    if (requestedPrice) setMaxCredits(Math.max(10, Number(requestedPrice) || 999));
+    if (requestedLevel && levelOptions.some((item) => item.value === requestedLevel)) setLevel(requestedLevel);
+    if (requestedQuickResponse === "rapida" || requestedQuickResponse === "true") setQuickResponse(true);
+    setSourceSection(params.get("sourceSection") ?? "");
     if (requestedQuery) setQuery(requestedQuery);
     const clientProfile = getClientProfile();
     if (clientProfile?.lat && clientProfile?.lng) {
@@ -110,10 +179,28 @@ export function SpecialistsExplorer() {
     ...specialties.map((item) => ({ value: item, label: item })),
   ];
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
+  const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
+  const resultContext = hasLocationContext
+    ? "Ordenados por cercania y reputacion"
+    : "Agrega tu comuna para ver especialistas cerca de ti";
+  const routeCategory = categoryParam ? categoryRoutes[categoryParam] : null;
+  const routeSpecialty = specialtyParam ? specialtyRoutes[specialtyParam] : null;
+  const selectedTypeLabel = typeFilterOptions.find((item) => item.value === category)?.label;
+  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Tecnicos recomendados");
+  const contextualSubtitle = routeCategory || routeSpecialty || categoryParam
+    ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos."
+    : resultContext;
   const activeFilters = [
     query ? { label: `Busqueda: ${query}`, clear: () => setQuery("") } : null,
-    category !== "all" ? { label: `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}`, clear: () => setCategory("all") } : null,
-    specialty !== "all" ? { label: `Especialidad: ${specialty}`, clear: () => setSpecialty("all") } : null,
+    category !== "all" ? { label: routeCategory?.label ?? `Tipo: ${typeFilterOptions.find((item) => item.value === category)?.label ?? category}`, clear: () => {
+      setCategory("all");
+      setCategoryParam("");
+    } } : null,
+    specialtyParam ? { label: routeSpecialty?.label ?? `Especialidad: ${labelFromSlug(specialtyParam)}`, clear: () => {
+      setSpecialtyParam("");
+      setSpecialty("all");
+    } } : null,
+    specialty !== "all" && !specialtyParam ? { label: `Especialidad: ${specialty}`, clear: () => setSpecialty("all") } : null,
     region !== ALL_REGIONS_VALUE ? { label: `Region: ${regionNameForCode(region)}`, clear: () => {
       setRegion(ALL_REGIONS_VALUE);
       setZone(ALL_COMMUNES_VALUE);
@@ -122,13 +209,11 @@ export function SpecialistsExplorer() {
     availability !== "all" ? { label: `Disponibilidad: ${availabilityOptions.find((item) => item.value === availability)?.label ?? availability}`, clear: () => setAvailability("all") } : null,
     rating > 0 ? { label: `Calificacion desde ${rating.toFixed(1)}`, clear: () => setRating(0) } : null,
     maxCredits < 999 ? { label: `Hasta ${maxCredits} creditos`, clear: () => setMaxCredits(999) } : null,
+    level !== "all" ? { label: `Nivel ${level}`, clear: () => setLevel("all") } : null,
+    quickResponse ? { label: "Respuesta rapida", clear: () => setQuickResponse(false) } : null,
     withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
   ].filter(Boolean) as { label: string; clear: () => void }[];
   const hasActiveFilters = activeFilters.length > 0;
-  const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
-  const resultContext = hasLocationContext
-    ? "Ordenados por cercania y reputacion"
-    : "Agrega tu comuna para ver especialistas cerca de ti";
 
   useEffect(() => {
     const reserveId = new URLSearchParams(window.location.search).get("reserve");
@@ -165,11 +250,14 @@ export function SpecialistsExplorer() {
       })
       .filter((item) => category === "all" || item.serviceTypeId === category)
       .filter((item) => specialty === "all" || item.specialty === specialty || item.specialties?.includes(specialty))
+      .filter((item) => matchesRouteSpecialty(item, specialtyParam))
       .filter((item) => region === ALL_REGIONS_VALUE || normalizeSearch(item.region ?? "") === normalizeSearch(regionNameForCode(region)))
       .filter((item) => !zone || zone === ALL_COMMUNES_VALUE || item.zone === zone || item.commune === zone)
       .filter((item) => availability === "all" || item.availability === availability)
       .filter((item) => item.rating >= rating)
       .filter((item) => item.credits <= maxCredits)
+      .filter((item) => level === "all" || getSpecialistLevel(item) === level)
+      .filter((item) => !quickResponse || responseMinutes(item.responseTime) <= 60)
       .filter((item) => !withinCoverage || item.distance <= (item.coverageRadiusKm ?? 999))
       .sort((a, b) => {
         if (sort === "credits") return a.credits - b.credits;
@@ -179,7 +267,7 @@ export function SpecialistsExplorer() {
         if (sort === "recommended") return recommendationScore(b) - recommendationScore(a);
         return b.rating - a.rating;
       });
-  }, [availability, category, clientLat, clientLng, marketplaceSpecialists, maxCredits, query, rating, region, sort, specialty, withinCoverage, zone]);
+  }, [availability, category, clientLat, clientLng, level, marketplaceSpecialists, maxCredits, query, quickResponse, rating, region, sort, specialty, specialtyParam, withinCoverage, zone]);
 
   function clearFilters() {
     setQuery("");
@@ -190,6 +278,10 @@ export function SpecialistsExplorer() {
     setAvailability("all");
     setRating(0);
     setMaxCredits(999);
+    setLevel("all");
+    setQuickResponse(false);
+    setCategoryParam("");
+    setSpecialtyParam("");
     setWithinCoverage(false);
     setSort("recommended");
   }
@@ -198,6 +290,39 @@ export function SpecialistsExplorer() {
     const specialist = marketplaceSpecialists.find((item) => item.id === id) as Specialist | undefined;
     if (!specialist) return;
     openModal({ type: "reserva_especialista", sourceButton: "Reservar especialista", specialist });
+  }
+
+  function demandContext(sourceButton: string) {
+    return {
+      categoria: categoryParam || category,
+      especialidad: specialtyParam || specialty,
+      region,
+      comuna: zone,
+      sourceSection: sourceSection || "specialists_empty_state",
+      sourceButton,
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  function recordDemandContext(sourceButton: string) {
+    const payload = demandContext(sourceButton);
+    try {
+      window.sessionStorage.setItem("oficiospro.categoryDemandDraft", JSON.stringify(payload));
+    } catch {
+      // Demand capture should keep navigating even if session storage is unavailable.
+    }
+    void submitConversionEvent({
+      type: "category_search_no_results",
+      source: payload.sourceSection,
+      sourceComponent: "SpecialistsExplorer",
+      sourceButton,
+      payload,
+    });
+  }
+
+  function captureDemand(sourceButton: string) {
+    recordDemandContext(sourceButton);
+    openModal({ type: "consulta_general", sourceButton });
   }
 
   return (
@@ -244,14 +369,21 @@ export function SpecialistsExplorer() {
             label="Tipo de servicio"
             value={category}
             options={typeFilterOptions}
-            onChange={(nextCategory) => setCategory(nextCategory)}
+            onChange={(nextCategory) => {
+              setCategory(nextCategory);
+              setCategoryParam("");
+              setSpecialtyParam("");
+            }}
             placeholder="Busca hogar, empresa, climatización..."
           />
           <SearchableSelect
             label="Especialidad"
             value={specialty}
             options={specialtyFilterOptions}
-            onChange={setSpecialty}
+            onChange={(nextSpecialty) => {
+              setSpecialty(nextSpecialty);
+              setSpecialtyParam("");
+            }}
             placeholder="Busca gasfitería, aire, SEC..."
           />
           <RegionCommuneSelect
@@ -268,6 +400,7 @@ export function SpecialistsExplorer() {
             communePlaceholder="Busca comuna"
           />
           <SearchableSelect label="Disponibilidad" value={availability} options={availabilityOptions} onChange={setAvailability} />
+          <SearchableSelect label="Nivel del especialista" value={level} options={levelOptions} onChange={setLevel} />
           <SearchableSelect label="Ordenar por" value={sort} options={sortOptions} onChange={setSort} />
           <label className="field">
             Calificación mínima {rating > 0 ? rating.toFixed(1) : "sin mínimo"}
@@ -280,6 +413,10 @@ export function SpecialistsExplorer() {
           <label className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm font-black text-slate-700">
             <input type="checkbox" checked={withinCoverage} onChange={(event) => setWithinCoverage(event.target.checked)} />
             Solo especialistas que cubren mi ubicación
+          </label>
+          <label className="flex items-center gap-3 rounded-2xl border border-line bg-white p-4 text-sm font-black text-slate-700">
+            <input type="checkbox" checked={quickResponse} onChange={(event) => setQuickResponse(event.target.checked)} />
+            Respuesta rapida
           </label>
           <div className="grid gap-2">
             <button className="btn-primary w-full" type="button" onClick={clearFilters}>
@@ -295,9 +432,9 @@ export function SpecialistsExplorer() {
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="eyebrow">Especialistas disponibles</p>
-              <h2 className="text-3xl font-black md:text-4xl">Técnicos recomendados</h2>
+              <h2 className="text-3xl font-black md:text-4xl">{contextualTitle}</h2>
               <p className="mt-2 text-sm font-bold text-muted">
-                {resultContext}
+                {contextualSubtitle}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-2">
@@ -359,20 +496,34 @@ export function SpecialistsExplorer() {
               ))
             ) : (
               <div className="rounded-[24px] border border-line bg-slate-50 p-6 xl:col-span-2">
-                <h3 className="text-2xl font-black">No encontramos especialistas con esos filtros.</h3>
+                <h3 className="text-2xl font-black">Estamos sumando especialistas para este servicio en tu zona.</h3>
                 <p className="mt-2 text-sm font-bold leading-6 text-muted">
-                  Puedes limpiar filtros para volver a ver toda la red o solicitar un servicio especial para que OficiosPro lo revise.
+                  Dejanos tu solicitud y te ayudamos a encontrar una alternativa verificada.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-3">
-                  <button className="btn-secondary" type="button" onClick={clearFilters}>
-                    Limpiar filtros
-                  </button>
                   <button
                     className="btn-primary"
                     type="button"
-                    onClick={() => openModal({ type: "consulta_general", sourceButton: "Solicitar servicio especial" })}
+                    onClick={() => captureDemand("Solicitar especialista")}
                   >
-                    Solicitar servicio especial
+                    Solicitar especialista
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => captureDemand("Quiero que me contacten")}
+                  >
+                    Quiero que me contacten
+                  </button>
+                  <Link
+                    className="btn-secondary"
+                    href={`/registro-especialista?categoria=${encodeURIComponent(categoryParam || category)}&especialidad=${encodeURIComponent(specialtyParam || specialty)}&sourceSection=empty_search`}
+                    onClick={() => recordDemandContext("Postular como especialista")}
+                  >
+                    Postular como especialista
+                  </Link>
+                  <button className="btn-secondary" type="button" onClick={clearFilters}>
+                    Limpiar filtros
                   </button>
                 </div>
               </div>
@@ -382,4 +533,62 @@ export function SpecialistsExplorer() {
       </section>
     </div>
   );
+}
+
+function normalizeRouteParam(value: string) {
+  return normalizeSearch(decodeURIComponent(value)).replace(/_/g, "-").replace(/\s+/g, "-");
+}
+
+function resolveRouteCategory(categoryParam: string, specialtyParam: string) {
+  const specialtyCategory = specialtyParam ? specialtyRoutes[specialtyParam]?.categoryId : undefined;
+  if (specialtyCategory) return specialtyCategory;
+  if (categoryRoutes[categoryParam]) return categoryRoutes[categoryParam].categoryId;
+  if (serviceTypeOptions.some((option) => option.value === categoryParam)) return categoryParam;
+  return "all";
+}
+
+function matchSpecialtyValue(specialtyParam: string, options: { value: string; label: string }[]) {
+  if (!specialtyParam || specialtyParam === "todas") return "all";
+  const route = specialtyRoutes[specialtyParam];
+  const exact = options.find((option) => normalizeRouteParam(option.value) === specialtyParam || normalizeRouteParam(option.label) === specialtyParam);
+  if (exact) return exact.value;
+  const byTerm = route
+    ? options.find((option) => route.terms.some((term) => normalizeSearch(`${option.label} ${option.value}`).includes(normalizeSearch(term))))
+    : null;
+  return byTerm?.value ?? "all";
+}
+
+function matchesRouteSpecialty(specialist: Specialist, specialtyParam: string) {
+  if (!specialtyParam || specialtyParam === "todas") return true;
+  const route = specialtyRoutes[specialtyParam];
+  const terms = route?.terms ?? [specialtyParam.replace(/-/g, " ")];
+  const haystack = normalizeSearch(
+    [
+      specialist.name,
+      specialist.specialty,
+      specialist.serviceType,
+      specialist.category,
+      specialist.commune,
+      specialist.zone,
+      specialist.description,
+      ...(specialist.specialties ?? []),
+      ...(specialist.servicesOffered ?? []),
+      ...(specialist.badges ?? []),
+    ].join(" "),
+  );
+  return terms.some((term) => haystack.includes(normalizeSearch(term)));
+}
+
+function labelFromSlug(value: string) {
+  const label = value.replace(/-/g, " ");
+  return label ? label[0].toUpperCase() + label.slice(1) : value;
+}
+
+function responseMinutes(value: string) {
+  const lower = normalizeSearch(value);
+  const numeric = Number.parseFloat(lower.replace(",", "."));
+  if (!Number.isFinite(numeric)) return 999;
+  if (lower.includes("min")) return numeric;
+  if (lower.includes("h")) return numeric * 60;
+  return numeric;
 }

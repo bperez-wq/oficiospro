@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CategoryCardLink } from "@/components/CategoryCardLink";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
@@ -8,6 +9,105 @@ import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import { serviceTypes, subscriptionPlans } from "@/data/marketplace";
+
+const broadServiceCards = [
+  {
+    title: "Hogar y reparaciones",
+    description: "Gasfiteria, electricidad, calefont, filtraciones, pintura y arreglos generales.",
+    category: "hogar",
+    specialty: "gasfiteria",
+    action: "Ver especialistas",
+    chip: "Hogar",
+  },
+  {
+    title: "Comunidades y edificios",
+    description: "Bombas, portones, camaras, calderas, piscinas, salas comunes y mantencion preventiva.",
+    category: "comunidades",
+    specialty: "edificios-condominios",
+    action: "Buscar disponibles",
+    chip: "Comunidades",
+  },
+  {
+    title: "Empresas y comercios",
+    description: "Locales, oficinas, restaurantes, bodegas y sucursales con necesidades de mantencion.",
+    category: "empresas",
+    specialty: "mantencion-comercial",
+    action: "Solicitar servicio",
+    chip: "Empresas",
+  },
+  {
+    title: "Climatizacion y refrigeracion",
+    description: "Aire acondicionado, bombas de calor, camaras de frio, mantencion y diagnostico.",
+    category: "climatizacion",
+    specialty: "aire-acondicionado-calefaccion",
+    action: "Ver especialistas",
+    chip: "Clima y frio",
+  },
+  {
+    title: "Construccion y remodelacion",
+    description: "Maestros, remodelaciones, tabiqueria, pisos, terminaciones y obras menores.",
+    category: "construccion",
+    specialty: "remodelaciones",
+    action: "Ver especialistas",
+    chip: "Obras",
+  },
+  {
+    title: "Jardineria y piscinas",
+    description: "Areas verdes, riego, poda, mantencion de piscinas y paisajismo.",
+    category: "hogar",
+    specialty: "jardineria-piscinas",
+    action: "Buscar disponibles",
+    chip: "Exteriores",
+  },
+  {
+    title: "Seguridad y tecnologia",
+    description: "Camaras, alarmas, control de acceso, redes, citofonia y automatizacion.",
+    category: "seguridad",
+    specialty: "camaras-alarmas-control-acceso",
+    action: "Ver especialistas",
+    chip: "Seguridad",
+  },
+  {
+    title: "Limpieza y mantencion",
+    description: "Limpieza profunda, aseo post obra, mantencion recurrente y sanitizacion.",
+    category: "limpieza",
+    specialty: "limpieza-mantencion",
+    action: "Solicitar servicio",
+    chip: "Mantencion",
+  },
+  {
+    title: "Industria y mantenimiento tecnico",
+    description: "Motores, bombas, tableros, soldadura, hidraulica, neumatica y mantenimiento preventivo.",
+    category: "industria",
+    specialty: "mantencion-industrial",
+    action: "Buscar disponibles",
+    chip: "Industria",
+  },
+  {
+    title: "Agroindustria y packing",
+    description: "Lineas de proceso, frio alimentario, packing, tuneles, camaras y equipos de planta.",
+    category: "agroindustria",
+    specialty: "packing-frio",
+    action: "Ver especialistas",
+    chip: "Agroindustria",
+  },
+  {
+    title: "Agricultura y campos",
+    description: "Riego tecnificado, maquinaria agricola, contratistas, poda, cosecha y labores de temporada.",
+    category: "agricultura",
+    specialty: "riego-tecnificado",
+    action: "Buscar disponibles",
+    chip: "Campos",
+  },
+  {
+    title: "Emergencias",
+    description: "Servicios urgentes para hogar, comunidades y empresas.",
+    category: "emergencias",
+    specialty: "urgencias-hogar-empresa",
+    action: "Solicitar servicio",
+    chip: "Urgente",
+  },
+];
 
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);
@@ -167,24 +267,23 @@ export default function HomePage() {
 
       <section className="section">
         <SectionHeader
-          eyebrow="Cobertura especializada"
-          title="OficiosPro también para agricultura, campos e industria."
-          text="Además del hogar, la red está preparada para contratistas agrícolas, riego, maquinaria, packing, frío alimentario, comunidades y mantención industrial."
+          eyebrow="Rubros y categorias"
+          title="Especialistas para hogares, comunidades, empresas e industria."
+          text="Desde una reparacion urgente en casa hasta mantenciones para edificios, comercios, campos, packing e instalaciones industriales."
         />
-        <div className="grid gap-4 md:grid-cols-3">
-          {[
-            ["Contratistas agrícolas", "Cuadrillas de poda, cosecha, raleo, amarra, desbrote y packing temporal.", "chip-brand"],
-            ["Riego tecnificado", "Riego por goteo, bombas, fertirriego, telemetría, filtros y tableros.", "chip-accent"],
-            ["Maquinaria agrícola", "Mecánicos, operadores, calibración, GPS agrícola e implementos.", "chip-sun"],
-            ["Packing y frío", "Líneas de fruta, cámaras frigoríficas, túneles de frío y frío alimentario.", "chip-accent"],
-            ["Mantención industrial", "PLC, soldadura, hidráulica, neumática, bombas, motores y predictivo.", "chip-brand"],
-            ["Comunidades y edificios", "Salas de bombas, portones, cámaras, calderas, piscinas y espacios comunes.", "chip-emerald"],
-          ].map(([title, text, chip]) => (
-            <article key={title} className="panel card-hover">
-              <span className={chip}>Disponible por comuna</span>
-              <h3 className="mt-4 text-2xl font-black">{title}</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
-            </article>
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {broadServiceCards.map((card) => (
+            <CategoryCardLink
+              key={card.title}
+              href={categoryHref(card.category, card.specialty)}
+              title={card.title}
+              description={card.description}
+              action={card.action}
+              sourceSection="home_broad_service_cards"
+              category={card.category}
+              specialty={card.specialty}
+              chip={<span className="chip bg-brand-soft text-brand-dark">{card.chip}</span>}
+            />
           ))}
         </div>
       </section>
@@ -319,12 +418,21 @@ export default function HomePage() {
       <section className="section">
         <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="La plataforma parte con los servicios de mayor confianza y frecuencia para hogares y empresas." />
         <div className="grid gap-4 md:grid-cols-4">
-          {serviceTypes.map((category) => (
-            <article key={category.id} className="panel card-hover">
-              <h3 className="text-xl font-black">{category.name}</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-muted">{category.description}</p>
-            </article>
-          ))}
+          {serviceTypes.map((category) => {
+            const route = serviceTypeRoute(category.id);
+            return (
+              <CategoryCardLink
+                key={category.id}
+                href={categoryHref(route.category, route.specialty)}
+                title={category.name}
+                description={category.description}
+                action="Ver especialistas"
+                sourceSection="home_service_type_grid"
+                category={route.category}
+                specialty={route.specialty}
+              />
+            );
+          })}
         </div>
       </section>
 
@@ -336,6 +444,31 @@ export default function HomePage() {
       </section>
     </main>
   );
+}
+
+function categoryHref(category: string, specialty: string) {
+  const params = new URLSearchParams({
+    categoria: category,
+    especialidad: specialty,
+    sourceSection: "home",
+  });
+  return `/especialistas?${params.toString()}`;
+}
+
+function serviceTypeRoute(categoryId: string) {
+  const routes: Record<string, { category: string; specialty: string }> = {
+    hogar: { category: "hogar", specialty: "gasfiteria" },
+    gasfiteria: { category: "hogar", specialty: "gasfiteria" },
+    electricidad: { category: "hogar", specialty: "electricidad" },
+    "climatizacion-refrigeracion": { category: "climatizacion", specialty: "aire-acondicionado-calefaccion" },
+    construccion: { category: "construccion", specialty: "remodelaciones" },
+    jardineria: { category: "hogar", specialty: "jardineria-piscinas" },
+    empresas: { category: "empresas", specialty: "mantencion-comercial" },
+    industria: { category: "industria", specialty: "mantencion-industrial" },
+    agroindustria: { category: "agroindustria", specialty: "packing-frio" },
+    emergencias: { category: "emergencias", specialty: "urgencias-hogar-empresa" },
+  };
+  return routes[categoryId] ?? { category: categoryId, specialty: "todas" };
 }
 
 function SectionHeader({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
