@@ -7,6 +7,7 @@ import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { availabilityLabels, type Specialist } from "@/data/mock";
+import type { FlexibleService } from "@/data/flexiblePricing";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
@@ -15,10 +16,16 @@ import { getServiceCreditPair, getSpecialistLevel, getTrustBadges } from "@/lib/
 
 export function SpecialistCard({
   specialist,
+  matchedService,
+  searchIntent,
+  highlightedCreditPrice,
   onReserve,
 }: {
   specialist: Specialist;
-  onReserve?: (id: string) => void;
+  matchedService?: FlexibleService | null;
+  searchIntent?: string;
+  highlightedCreditPrice?: string;
+  onReserve?: (id: string, service?: FlexibleService | null) => void;
 }) {
   const [bookingModal, setBookingModal] = useState<{
     isOpen: boolean;
@@ -37,9 +44,10 @@ export function SpecialistCard({
   const [summary, setSummary] = useState<AvailabilitySummary | null>(null);
   const profile = useMemo(() => getSpecialistAvailabilityProfile(specialist), [specialist]);
   const primaryService = useMemo(() => getPrimaryFlexibleService(specialist), [specialist]);
+  const displayService = matchedService ?? primaryService;
   const trustBadges = useMemo(() => getTrustBadges(specialist), [specialist]);
   const specialistLevel = useMemo(() => getSpecialistLevel(specialist), [specialist]);
-  const creditPair = useMemo(() => getServiceCreditPair(primaryService, specialist.credits), [primaryService, specialist.credits]);
+  const creditPair = useMemo(() => getServiceCreditPair(displayService, specialist.credits), [displayService, specialist.credits]);
   const coverageStatus =
     specialist.coverageRadiusKm && specialist.distance <= specialist.coverageRadiusKm
       ? "Dentro de tu zona"
@@ -56,15 +64,15 @@ export function SpecialistCard({
     : "Solicita contacto y revisaremos disponibilidad.";
 
   const openBookingModal = useCallback(() => {
-    preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "reservar", source: "SpecialistCard" });
+    preserveSpecialistIntent({ specialist, service: displayService, intendedAction: "reservar", source: "SpecialistCard" });
     setBookingModal({
       isOpen: true,
       specialistId: specialist.id,
       specialistSnapshot: snapshotSpecialist(specialist),
-      selectedServiceId: primaryService.id,
+      selectedServiceId: displayService.id,
       selectedSlot: null,
     });
-  }, [primaryService.id, specialist]);
+  }, [displayService, specialist]);
 
   const closeBookingModal = useCallback(() => {
     setBookingModal((current) => ({
@@ -125,8 +133,8 @@ export function SpecialistCard({
         </div>
 
         <div className="rounded-2xl border border-brand/10 bg-gradient-to-br from-brand-soft to-white p-4">
-          <span className="text-sm font-black uppercase text-muted">Precio desde</span>
-          <strong className="block text-2xl font-black text-ink">{pricingSummary(primaryService)}</strong>
+          <span className="text-sm font-black uppercase text-muted">{searchIntent ? "Servicio relacionado" : "Precio desde"}</span>
+          <strong className="block text-2xl font-black text-ink">{highlightedCreditPrice ?? pricingSummary(displayService)}</strong>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <span className="rounded-2xl bg-white p-3 text-sm font-black text-ink">
               Normal: {creditPair.baseCredits} creditos
@@ -135,7 +143,7 @@ export function SpecialistCard({
               Club Hogar: {creditPair.clubCredits} creditos
             </span>
           </div>
-          <p className="text-sm font-bold text-muted">{pricingModeLabel(primaryService.pricingMode)} · {pricingDetail(primaryService)}</p>
+          <p className="text-sm font-bold text-muted">{pricingModeLabel(displayService.pricingMode)} · {pricingDetail(displayService)}</p>
           {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} creditos por solicitud con Club Hogar.</p> : null}
           {specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
@@ -165,7 +173,7 @@ export function SpecialistCard({
             Ver perfil
           </Link>
           <button className="btn-primary flex-1" type="button" data-event="open_specialist_agenda" onClick={openBookingModal}>
-            {bookingPrimaryAction(primaryService)}
+            {bookingPrimaryAction(displayService)}
           </button>
         </div>
 
@@ -175,7 +183,7 @@ export function SpecialistCard({
             type="button"
             data-event="open_instant_contact"
             onClick={() => {
-              preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "contactar", source: "SpecialistCard" });
+              preserveSpecialistIntent({ specialist, service: displayService, intendedAction: "contactar", source: "SpecialistCard" });
               setContactOpen((current) => !current);
             }}
           >
@@ -186,8 +194,8 @@ export function SpecialistCard({
               className="btn-secondary"
               type="button"
               onClick={() => {
-                preserveSpecialistIntent({ specialist, service: primaryService, intendedAction: "solicitar", source: "SpecialistCard" });
-                onReserve(specialist.id);
+                preserveSpecialistIntent({ specialist, service: displayService, intendedAction: "solicitar", source: "SpecialistCard" });
+                onReserve(specialist.id, displayService);
               }}
             >
               Solicitar servicio
@@ -207,6 +215,7 @@ export function SpecialistCard({
           key={bookingModal.specialistId ?? "booking-drawer"}
           specialist={bookingModal.specialistSnapshot}
           open={bookingModal.isOpen}
+          initialSelectedServiceId={bookingModal.selectedServiceId}
           onClose={closeBookingModal}
         />
       ) : null}

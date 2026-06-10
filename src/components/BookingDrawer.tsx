@@ -18,10 +18,12 @@ export function BookingDrawer({
   specialist,
   open,
   onClose,
+  initialSelectedServiceId,
 }: {
   specialist: Specialist;
   open: boolean;
   onClose: () => void;
+  initialSelectedServiceId?: string | null;
 }) {
   const [mounted, setMounted] = useState(false);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
@@ -30,9 +32,16 @@ export function BookingDrawer({
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
-  const services = useMemo(() => (specialist.servicePricing?.length ? specialist.servicePricing : [getPrimaryFlexibleService(specialist)]), [specialist]);
-  const [selectedServiceId, setSelectedServiceId] = useState(services[0]?.id ?? "");
-  const [estimatedHours, setEstimatedHours] = useState(services[0]?.minHours ?? 2);
+  const services = useMemo(() => {
+    const activeServices = specialist.servicePricing?.filter((service) => service.active !== false);
+    return activeServices?.length ? activeServices : [getPrimaryFlexibleService(specialist)];
+  }, [specialist]);
+  const initialService = useMemo(
+    () => services.find((service) => service.id === initialSelectedServiceId) ?? services[0],
+    [initialSelectedServiceId, services],
+  );
+  const [selectedServiceId, setSelectedServiceId] = useState(initialService?.id ?? "");
+  const [estimatedHours, setEstimatedHours] = useState(initialService?.minHours ?? 2);
   const [requestDescription, setRequestDescription] = useState("");
   const [isSubscriber, setIsSubscriber] = useState(false);
   const [hasSession, setHasSession] = useState(false);
@@ -102,8 +111,8 @@ export function BookingDrawer({
     setSelectedDate(nextSummary.nextSlot?.date ?? getWeekDates()[0]);
     setSelectedSlot(nextSummary.nextSlot ?? null);
     setSuccess("");
-    setSelectedServiceId(services[0]?.id ?? "");
-    setEstimatedHours(services[0]?.minHours ?? 2);
+    setSelectedServiceId(initialService?.id ?? "");
+    setEstimatedHours(initialService?.minHours ?? 2);
     setRequestDescription("");
     setIsSubscriber(false);
     const session = getMockSession();
@@ -117,7 +126,7 @@ export function BookingDrawer({
       commune: specialist.commune ?? specialist.zone,
     });
     setSubmitting(false);
-  }, [open, profile, services]);
+  }, [initialService, open, profile]);
 
   if (!open || !mounted) return null;
 

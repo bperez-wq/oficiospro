@@ -3,10 +3,13 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
 import { availabilityLabels, type Specialist } from "@/data/mock";
+import type { FlexibleService } from "@/data/flexiblePricing";
 import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
+import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getSpecialistBySlugOrId, seedMockState } from "@/lib/storage";
 import { getReviewStats, getServiceCreditPair, getSpecialistLevel, getSpecialistReviews, getTrustBadges } from "@/lib/trust";
 
@@ -77,14 +80,30 @@ export function SpecialistPublicProfile({ id, initialSpecialist = null }: { id: 
 
 export function SpecialistProfileView({ specialist }: { specialist: Specialist }) {
   const primaryService = useMemo(() => getPrimaryFlexibleService(specialist), [specialist]);
-  const services = specialist.servicePricing?.length ? specialist.servicePricing : [primaryService];
+  const services = useMemo(() => {
+    const activeServices = specialist.servicePricing?.filter((service) => service.active !== false) ?? [];
+    return activeServices.length ? activeServices : [primaryService];
+  }, [primaryService, specialist.servicePricing]);
+  const [bookingOpen, setBookingOpen] = useState(false);
+  const [selectedServiceId, setSelectedServiceId] = useState<string | null>(primaryService.id);
   const specialistReviews = useMemo(() => getSpecialistReviews(specialist), [specialist]);
   const reviewStats = useMemo(() => getReviewStats(specialistReviews), [specialistReviews]);
   const level = useMemo(() => getSpecialistLevel(specialist), [specialist]);
   const trustBadges = useMemo(() => getTrustBadges(specialist), [specialist]);
   const creditPair = useMemo(() => getServiceCreditPair(primaryService, specialist.credits), [primaryService, specialist.credits]);
+  const relatedHelp = useMemo(
+    () => Array.from(new Set([...(specialist.servicesOffered ?? []), ...(specialist.specialties ?? []), ...services.map((service) => service.name), ...services.map((service) => service.specialty)].filter(Boolean))),
+    [services, specialist.servicesOffered, specialist.specialties],
+  );
+
+  function openBookingForService(service: FlexibleService) {
+    preserveSpecialistIntent({ specialist, service, intendedAction: "reservar", source: "SpecialistPublicProfile" });
+    setSelectedServiceId(service.id);
+    setBookingOpen(true);
+  }
 
   return (
+    <>
     <section className="grid gap-6 lg:grid-cols-[1fr_390px]">
       <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
         <div className="relative h-[460px]">
@@ -133,7 +152,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             </div>
           </section>
           <section>
-            <h2 className="text-2xl font-black">Servicios ofrecidos</h2>
+            <h2 className="text-2xl font-black">Servicios y creditos</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {services.map((service) => (
                 <article key={service.id} className="rounded-2xl border border-line bg-slate-50 p-4">
@@ -145,7 +164,18 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
                   <strong className="mt-3 block text-lg font-black text-ink">{pricingSummary(service)}</strong>
                   <p className="mt-1 text-sm font-bold text-muted">{formatDurationRange(service)}</p>
                   <p className="mt-2 text-sm font-semibold leading-6 text-muted">{pricingDetail(service)}</p>
+                  <button className="btn-primary mt-4 w-full" type="button" onClick={() => openBookingForService(service)}>
+                    Solicitar este servicio
+                  </button>
                 </article>
+              ))}
+            </div>
+          </section>
+          <section className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+            <h2 className="text-2xl font-black">Tambien puede ayudarte con</h2>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {relatedHelp.map((item) => (
+                <span key={item} className="chip bg-brand-soft text-brand-dark">{item}</span>
               ))}
             </div>
           </section>
@@ -236,9 +266,9 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             <span className="rounded-2xl bg-brand-soft p-3 text-sm font-black text-brand-dark">Club Hogar: {creditPair.clubCredits} creditos</span>
           </div>
           <p className="mt-2 text-sm font-semibold leading-6 text-muted">{pricingDetail(primaryService)}</p>
-          <ConversionButton type="reserva_especialista" sourceButton="Reservar desde perfil" specialist={specialist} className="btn-primary mt-5 w-full">
+          <button className="btn-primary mt-5 w-full" type="button" onClick={() => openBookingForService(primaryService)}>
             Reservar
-          </ConversionButton>
+          </button>
           <ConversionButton type="reserva_especialista" sourceButton="Consultar disponibilidad especialista" specialist={specialist} className="btn-secondary mt-3 w-full">
             Consultar disponibilidad
           </ConversionButton>
@@ -259,6 +289,13 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
         <SpecialistProfileAvailability specialist={specialist} />
       </aside>
     </section>
+    <BookingDrawer
+      specialist={specialist}
+      open={bookingOpen}
+      initialSelectedServiceId={selectedServiceId}
+      onClose={() => setBookingOpen(false)}
+    />
+    </>
   );
 }
 

@@ -212,6 +212,9 @@ export type PendingSpecialistService = {
   specialistPayoutCLP: number;
   pricingStatus?: "pending_review" | "approved" | "adjusted_by_oficiospro";
   pricingNotesInternal?: string;
+  active?: boolean;
+  creditPrice?: number;
+  emergencyCredits?: number;
   initialVisitFree: boolean;
   visitCredits: number;
   duration: string;
@@ -310,6 +313,7 @@ export type PendingSpecialistProfile = {
   certificationStatus?: "sin_certificacion_declarada" | "certificacion_declarada_pendiente_revision";
   submittedAt: string;
   reviewedAt?: string;
+  duplicateUpdated?: boolean;
 };
 
 export type ConversionModalType =
@@ -761,6 +765,25 @@ export function savePendingSpecialists(items: PendingSpecialistProfile[]) {
 
 export function appendPendingSpecialist(item: Omit<PendingSpecialistProfile, "id">) {
   const existing = getPendingSpecialists();
+  const duplicate = existing.find((profile) => samePendingSpecialistIdentity(profile, item));
+  if (duplicate) {
+    const mergedServices = mergePendingSpecialistServices(duplicate.services ?? [], item.services ?? []);
+    const updated: PendingSpecialistProfile = {
+      ...duplicate,
+      ...item,
+      id: duplicate.id,
+      slug: duplicate.slug ?? item.slug ?? specialistSlug(item.name, item.specialty, item.commune, duplicate.id),
+      services: mergedServices,
+      references: mergePendingReferences(duplicate.references ?? [], item.references ?? []),
+      portfolioPhotos: Array.from(new Set([...(duplicate.portfolioPhotos ?? []), ...(item.portfolioPhotos ?? [])])),
+      certifications: Array.from(new Set([...(duplicate.certifications ?? []), ...(item.certifications ?? [])])),
+      publicationStatus: duplicate.publicationStatus ?? item.publicationStatus ?? "pending_review",
+      reviewedAt: new Date().toISOString(),
+      duplicateUpdated: true,
+    };
+    savePendingSpecialists([updated, ...existing.filter((profile) => profile.id !== duplicate.id)]);
+    return updated;
+  }
   const id = `pending-specialist-${Date.now()}`;
   const storedItem: PendingSpecialistProfile = {
     ...item,
@@ -770,6 +793,51 @@ export function appendPendingSpecialist(item: Omit<PendingSpecialistProfile, "id
   };
   savePendingSpecialists([storedItem, ...existing]);
   return storedItem;
+}
+
+function samePendingSpecialistIdentity(profile: Pick<PendingSpecialistProfile, "rut" | "email" | "phone">, item: Pick<PendingSpecialistProfile, "rut" | "email" | "phone">) {
+  const rut = normalizeIdentityValue(item.rut);
+  const email = normalizeIdentityValue(item.email);
+  const phone = normalizeIdentityValue(item.phone);
+  return Boolean(
+    (rut && normalizeIdentityValue(profile.rut) === rut) ||
+      (email && normalizeIdentityValue(profile.email) === email) ||
+      (phone && normalizeIdentityValue(profile.phone) === phone),
+  );
+}
+
+function normalizeIdentityValue(value: string | undefined) {
+  return String(value ?? "").toLowerCase().replace(/[^\da-z@.]/g, "");
+}
+
+function mergePendingSpecialistServices(current: PendingSpecialistService[], incoming: PendingSpecialistService[]) {
+  const merged = [...current];
+  for (const service of incoming) {
+    const key = pendingServiceKey(service);
+    const index = merged.findIndex((item) => pendingServiceKey(item) === key);
+    if (index >= 0) {
+      merged[index] = { ...merged[index], ...service, active: service.active ?? merged[index].active ?? true };
+    } else {
+      merged.push(service);
+    }
+  }
+  return merged;
+}
+
+function pendingServiceKey(service: PendingSpecialistService) {
+  return [service.serviceTypeId, service.specialty, service.name].map((value) => normalizeIdentityValue(value)).join("|");
+}
+
+function mergePendingReferences(current: PendingSpecialistReference[], incoming: PendingSpecialistReference[]) {
+  const merged = [...current];
+  for (const reference of incoming) {
+    const key = `${normalizeIdentityValue(reference.phone)}|${normalizeIdentityValue(reference.email)}|${normalizeIdentityValue(reference.work)}`;
+    if (!key.replace(/\|/g, "")) continue;
+    if (!merged.some((item) => `${normalizeIdentityValue(item.phone)}|${normalizeIdentityValue(item.email)}|${normalizeIdentityValue(item.work)}` === key)) {
+      merged.push(reference);
+    }
+  }
+  return merged;
 }
 
 export function getPublishedSpecialists() {
@@ -1357,22 +1425,23 @@ export function simulateAcceptedSpecialistReferral() {
 }
 
 function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
-  const requestServices = request.services?.length
-    ? request.services
-    : [
-        {
-          serviceTypeId: "hogar",
-          specialty: request.specialty ?? "Servicio hogar",
-          name: request.specialty ?? "Servicio hogar",
-          description: "",
-          clientCredits: 20,
-          specialistPayoutCLP: 12000,
-          initialVisitFree: true,
-          visitCredits: 0,
-          duration: "2 horas",
-          emergency: false,
-        },
-      ];
+  let requestServices = (request.services?.length ? request.services.filter((service) => service.active !== false) : []) as PendingSpecialistService[];
+  if (!requestServices.length) {
+    requestServices = [
+      {
+        serviceTypeId: "hogar",
+        specialty: request.specialty ?? "Servicio hogar",
+        name: request.specialty ?? "Servicio hogar",
+        description: "",
+        clientCredits: 20,
+        specialistPayoutCLP: 12000,
+        initialVisitFree: true,
+        visitCredits: 0,
+        duration: "2 horas",
+        emergency: false,
+      },
+    ];
+  }
   const primaryService = requestServices[0];
   const displaySpecialty = (service?: PendingSpecialistService) =>
     service?.isOtherService && service.otherServiceDescription ? service.otherServiceDescription : service?.specialty ?? request.specialty;
@@ -1538,11 +1607,14 @@ function pendingServiceToFlexibleService(service: PendingSpecialistService, requ
   const clientCredits = Number(service.clientCredits || service.fixedCredits || service.visitCredits || service.minCredits || 20);
   return {
     id: `${request.id ?? request.name}-service-${index + 1}`,
+    serviceId: `${request.id ?? request.name}-service-${index + 1}`,
     serviceTypeId: service.serviceTypeId,
+    categoryId: service.serviceTypeId,
     specialty: service.specialty,
     name: service.name || service.specialty,
     description: service.description || service.conditions || "Servicio revisado por OficiosPro.",
     pricingMode,
+    creditPrice: service.creditPrice ?? clientCredits,
     fixedCredits: service.fixedCredits ?? (pricingMode === "fixed" ? clientCredits : undefined),
     hourlyCredits: service.hourlyCredits,
     minHours: service.minHours,
@@ -1550,14 +1622,20 @@ function pendingServiceToFlexibleService(service: PendingSpecialistService, requ
     minCredits: service.minCredits,
     maxCredits: service.maxCredits,
     visitCredits: service.visitCredits,
+    emergencyCredits: service.emergencyCredits,
     clubDiscountCredits: 2,
+    estimatedDuration: service.duration,
     estimatedDurationMinMinutes: service.estimatedDurationMinMinutes ?? service.estimatedDurationMinutes,
     estimatedDurationMaxMinutes: service.estimatedDurationMaxMinutes ?? service.estimatedDurationMinutes,
     specialistPayoutCLP: Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0),
+    specialistExpectedPayoutCLP: Number(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP ?? 0),
+    platformMarginCredits: Math.max(0, clientCredits - Math.round(Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0) / 1000)),
     materialsIncluded: service.materialsIncludedBoolean ?? String(service.materialsIncluded ?? "").toLowerCase().includes("incl"),
     materialsChargedSeparately: service.materialsChargedSeparately ?? String(service.materialsIncluded ?? "").toLowerCase().includes("aparte"),
     initialVisitFree: Boolean(service.initialVisitFree),
     requiresPriorEvaluation: Boolean(service.requiresPriorEvaluation),
+    emergency: Boolean(service.emergencyAvailable ?? service.emergency),
+    active: service.active !== false,
     conditions: service.conditions || service.specialistComments || "Condiciones sujetas a revision de alcance.",
     adminReviewStatus: service.pricingStatus === "approved" ? "approved" : "pending_review",
   };

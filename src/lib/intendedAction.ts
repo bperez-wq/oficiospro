@@ -28,6 +28,9 @@ export function preserveSpecialistIntent({
     specialistId: specialist?.id,
     specialistSlug: specialist?.slug,
     serviceId: service?.id,
+    serviceName: service?.name,
+    creditPrice: serviceCreditPrice(service),
+    pricingMode: service?.pricingMode,
     categoria: category ?? specialist?.serviceTypeId ?? specialist?.category,
     especialidad: specialty ?? service?.specialty ?? specialist?.specialty,
     comuna: commune ?? specialist?.commune ?? specialist?.zone,
@@ -41,4 +44,14 @@ export function preserveSpecialistIntent({
   } catch {
     // The user should still continue if browser storage is unavailable.
   }
+}
+
+function serviceCreditPrice(service?: FlexibleService | null) {
+  if (!service) return undefined;
+  if (service.creditPrice) return service.creditPrice;
+  if (service.pricingMode === "fixed") return service.fixedCredits;
+  if (service.pricingMode === "hourly") return service.hourlyCredits;
+  if (service.pricingMode === "range") return service.minCredits;
+  if (service.pricingMode === "visit_then_quote") return service.visitCredits;
+  return service.minCredits;
 }

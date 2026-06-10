@@ -24,11 +24,14 @@ export type AdditionalType =
 
 export type FlexibleService = {
   id: string;
+  serviceId?: string;
   serviceTypeId: string;
+  categoryId?: string;
   specialty: string;
   name: string;
   description: string;
   pricingMode: PricingMode;
+  creditPrice?: number;
   fixedCredits?: number;
   hourlyCredits?: number;
   minHours?: number;
@@ -36,14 +39,20 @@ export type FlexibleService = {
   minCredits?: number;
   maxCredits?: number;
   visitCredits?: number;
+  emergencyCredits?: number;
   clubDiscountCredits?: number;
+  estimatedDuration?: string;
   estimatedDurationMinMinutes?: number;
   estimatedDurationMaxMinutes?: number;
   specialistPayoutCLP?: number;
+  specialistExpectedPayoutCLP?: number;
+  platformMarginCredits?: number;
   materialsIncluded: boolean;
   materialsChargedSeparately: boolean;
   initialVisitFree: boolean;
   requiresPriorEvaluation: boolean;
+  emergency?: boolean;
+  active?: boolean;
   conditions: string;
   adminReviewStatus?: "pending_review" | "approved" | "needs_adjustment";
   marginWarning?: boolean;

@@ -488,6 +488,7 @@ export function SpecialistRegisterForm() {
     whatsapp: "",
     email: "",
   });
+  const [primaryTradeId, setPrimaryTradeId] = useState(createEmptyService().serviceTypeId);
   const [services, setServices] = useState<ServiceDraft[]>([createEmptyService()]);
   const [references, setReferences] = useState<ReferenceDraft[]>([{ ...emptyReference }, { ...emptyReference }, { ...emptyReference }]);
   const [profilePhoto, setProfilePhoto] = useState("");
@@ -528,6 +529,7 @@ export function SpecialistRegisterForm() {
     setIdentity((current) => mergeSpecialistDraft(current, draft) as typeof current);
     setBaseRegion((current) => (current && current !== DEFAULT_REGION_CODE ? current : draft.baseRegionCode || current || DEFAULT_REGION_CODE));
     setBaseCommune((current) => (current && current !== "Santiago" ? current : draft.baseCommuneName || current));
+    if (draft.serviceTypeId) setPrimaryTradeId(draft.serviceTypeId);
     setServices((current) => {
       if (!draft.serviceTypeId) return current;
       return current.map((service, index) => {
@@ -543,7 +545,6 @@ export function SpecialistRegisterForm() {
   }, []);
 
   useEffect(() => {
-    const primaryService = services[0];
     const hasMeaningfulDraft =
       identity.firstNames ||
       identity.lastNames ||
@@ -552,7 +553,7 @@ export function SpecialistRegisterForm() {
       identity.email ||
       baseRegion ||
       baseCommune ||
-      primaryService?.serviceTypeId;
+      primaryTradeId;
     if (!hasMeaningfulDraft) return;
 
     saveSpecialistQuickDraft({
@@ -561,12 +562,12 @@ export function SpecialistRegisterForm() {
       rut: identity.rut,
       whatsapp: identity.whatsapp,
       email: identity.email,
-      serviceTypeId: primaryService?.serviceTypeId,
+      serviceTypeId: primaryTradeId,
       region: baseRegion,
       commune: baseCommune,
       fromQuickSpecialist: true,
     });
-  }, [identity, baseRegion, baseCommune, services]);
+  }, [identity, baseRegion, baseCommune, primaryTradeId]);
 
   useEffect(() => {
     return () => {
@@ -606,6 +607,20 @@ export function SpecialistRegisterForm() {
           if (patch.specialty !== OTHER_SERVICE_VALUE) next.otherServiceDescription = "";
         }
         return next;
+      }),
+    );
+  }
+
+  function updatePrimaryTrade(serviceTypeId: string) {
+    setPrimaryTradeId(serviceTypeId);
+    setServices((current) =>
+      current.map((service, index) => {
+        if (index !== 0 || service.name.trim()) return service;
+        return {
+          ...service,
+          serviceTypeId,
+          specialty: specialtyOptionsForType(serviceTypeId)[0]?.value ?? service.specialty,
+        };
       }),
     );
   }
@@ -732,8 +747,8 @@ export function SpecialistRegisterForm() {
     const firstNames = identity.firstNames;
     const lastNames = identity.lastNames;
     const fullName = `${firstNames} ${lastNames}`.trim();
-    const mainType = getServiceTypeById(services[0].serviceTypeId);
-    const primaryService = services[0];
+    const mainType = getServiceTypeById(primaryTradeId);
+    const primaryService = services.find((service) => service.serviceTypeId === primaryTradeId) ?? services[0];
     const now = new Date().toISOString();
     const normalizedServices = services.map((service) => {
       const calculatedClientCredits = estimatedClientCreditsForService(service);
@@ -756,6 +771,9 @@ export function SpecialistRegisterForm() {
           ? "Margen bajo detectado. OficiosPro debe revisar antes de publicar."
           : "Tarifa declarada por especialista. OficiosPro calcula creditos cliente antes de publicar.",
         emergencyAvailable: service.emergency,
+        active: true,
+        creditPrice: calculatedClientCredits,
+        emergencyCredits: service.emergency && calculatedClientCredits ? calculatedClientCredits + 10 : undefined,
       };
     });
     const hasIdentityDocuments = Boolean(identityDocuments.idFrontName || identityDocuments.idBackName || identityDocuments.selfieName);
@@ -821,6 +839,8 @@ export function SpecialistRegisterForm() {
       minCredits: service.minCredits,
       maxCredits: service.maxCredits,
       visitCredits: service.visitCredits,
+      creditPrice: service.creditPrice,
+      emergencyCredits: service.emergencyCredits,
       specialistExpectedPayoutCLP: service.specialistExpectedPayoutCLP,
       materialsIncludedBoolean: service.materialsIncludedBoolean,
       materialsChargedSeparately: service.materialsChargedSeparately,
@@ -832,6 +852,7 @@ export function SpecialistRegisterForm() {
       materialsIncluded: service.materialsIncluded,
       conditions: service.conditions,
       emergencyAvailable: service.emergency,
+      active: service.active,
       serviceCommunes: service.serviceCommunes,
       pricingStatus: "pending_review",
     }));
@@ -893,7 +914,13 @@ export function SpecialistRegisterForm() {
     }
     clearSpecialistQuickDraft();
     setSubmitted(true);
-    setStatus(leadResult.error === "database_not_configured" ? specialistDbFallbackMessage : specialistSuccessMessage);
+    setStatus(
+      request.duplicateUpdated
+        ? "Ya existe una postulacion asociada a estos datos. Actualizamos tu postulacion y agregamos los servicios declarados."
+        : leadResult.error === "database_not_configured"
+          ? specialistDbFallbackMessage
+          : specialistSuccessMessage,
+    );
     window.setTimeout(() => {
       window.location.href = "/?postulacion=recibida";
     }, 2500);
@@ -1035,6 +1062,21 @@ export function SpecialistRegisterForm() {
             <button className="btn-secondary" type="button" onClick={() => setServices((current) => [...current, createEmptyService()])}>
               Agregar servicio
             </button>
+          </div>
+
+          <div className="grid gap-4 rounded-[24px] border border-brand/15 bg-brand-soft p-5 md:grid-cols-[1fr_1.4fr]">
+            <SearchableSelect
+              label="Oficio principal"
+              value={primaryTradeId}
+              options={serviceTypeOptions}
+              onChange={updatePrimaryTrade}
+              placeholder="Selecciona el oficio principal"
+              required
+            />
+            <div className="grid gap-2 text-sm font-bold leading-6 text-brand-dark">
+              <span>Puedes aparecer en varias busquedas, pero tendras un solo perfil con toda tu reputacion.</span>
+              <span>Cada servicio puede tener su propio valor en creditos.</span>
+            </div>
           </div>
 
           {services.map((service, index) => (

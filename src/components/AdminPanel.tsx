@@ -1809,6 +1809,11 @@ function SpecialistDetailPanel({
             return (
               <article key={`${service.name}-${index}`} className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:grid-cols-2">
                 <InfoBox label="Servicio" value={service.name || service.specialty} />
+                <InfoBox label="Categoria" value={service.serviceTypeId} />
+                <InfoBox label="Especialidad" value={service.isOtherService ? service.otherServiceDescription ?? service.specialty : service.specialty} />
+                <InfoBox label="Modalidad" value={service.pricingMode ?? "fixed"} />
+                <InfoBox label="Estado servicio" value={service.active === false ? "Pausado" : service.pricingStatus ?? "pending_review"} />
+                <InfoBox label="Cotizacion" value={service.pricingMode === "quote_required" || service.requiresPriorEvaluation ? "Requiere evaluacion" : "No requiere cotizacion previa"} />
                 <InfoBox label="Tarifa esperada especialista CLP" value={formatPricingCLP(expectedPayout)} />
                 <InfoBox label="Créditos cliente calculados" value={`${calculatedClientCredits} créditos`} />
                 <InfoBox label="Precio cliente CLP estimado interno" value={formatPricingCLP(estimatedClientPrice)} />
@@ -1821,6 +1826,17 @@ function SpecialistDetailPanel({
                   Payout especialista aprobado CLP
                   <input type="number" value={Number(service.specialistApprovedPayoutCLP ?? expectedPayout)} onChange={(event) => onUpdateService(index, { specialistApprovedPayoutCLP: Number(event.target.value), specialistPayoutCLP: Number(event.target.value), pricingStatus: "adjusted_by_oficiospro" })} />
                 </label>
+                <div className="flex flex-wrap gap-2 md:col-span-2">
+                  <button className="btn-secondary" type="button" onClick={() => onUpdateService(index, { pricingStatus: "approved", active: true })}>
+                    Aprobar servicio
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => onUpdateService(index, { pricingStatus: "pending_review", active: true })}>
+                    Dejar en revision
+                  </button>
+                  <button className="rounded-2xl border border-amber-200 px-4 py-3 text-sm font-black text-amber-800 transition hover:bg-amber-50" type="button" onClick={() => onUpdateService(index, { active: false, pricingStatus: "pending_review" })}>
+                    Pausar servicio
+                  </button>
+                </div>
               </article>
             );
           })}

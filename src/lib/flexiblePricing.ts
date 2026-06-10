@@ -43,10 +43,10 @@ export function pricingSummary(service: FlexibleService | undefined, isSubscribe
     return `Desde ${service.hourlyCredits ?? 0} creditos/hora`;
   }
   if (service.pricingMode === "range") {
-    return `Estimado: ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;
+    return `Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;
   }
   if (service.pricingMode === "visit_then_quote") {
-    return `Visita tecnica: ${service.visitCredits ?? 0} creditos`;
+    return `Visita desde ${service.visitCredits ?? 0} creditos y luego cotizacion`;
   }
   if (service.pricingMode === "quote_required") {
     return "Requiere cotizacion";
@@ -77,7 +77,7 @@ export function bookingPrimaryAction(service: FlexibleService | undefined) {
 }
 
 export function getPrimaryFlexibleService(specialist: { servicePricing?: FlexibleService[]; credits?: number; specialty?: string; serviceTypeId?: string }) {
-  if (specialist.servicePricing?.length) return specialist.servicePricing[0];
+  if (specialist.servicePricing?.length) return specialist.servicePricing.find((service) => service.active !== false) ?? specialist.servicePricing[0];
   return fallbackFlexibleService(specialist);
 }
 
