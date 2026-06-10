@@ -20,11 +20,13 @@ export function BookingDrawer({
   open,
   onClose,
   initialSelectedServiceId,
+  sourceSection,
 }: {
   specialist: Specialist;
   open: boolean;
   onClose: () => void;
   initialSelectedServiceId?: string | null;
+  sourceSection?: string;
 }) {
   const [mounted, setMounted] = useState(false);
   const [bookings, setBookings] = useState<BookingRequest[]>([]);
@@ -133,7 +135,7 @@ export function BookingDrawer({
 
   async function reserve() {
     if (submitting) return;
-    preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer" });
+    preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer", sourceSection });
     if (!hasSession) {
       const initialCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
       addCartItem({
@@ -185,10 +187,10 @@ export function BookingDrawer({
           specialistId: specialist.id,
           specialistName: specialist.name,
           creditsEstimate: selectedService.minCredits,
-          sourceComponent: "BookingDrawer",
+          sourceComponent: sourceSection ?? "BookingDrawer",
           sourceButton: "Solicitar cotizacion",
           consentContact: false,
-          payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, rut: customer.rut },
+          payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, rut: customer.rut, sourceSection },
         });
         setSuccess(leadResult.ok ? "Cotizacion solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
         setRequestDescription("");
@@ -230,9 +232,9 @@ export function BookingDrawer({
         requestedDate: selectedSlot!.date,
         requestedTime: selectedSlot!.startTime,
         creditsEstimate: heldCredits,
-        sourceComponent: "BookingDrawer",
+        sourceComponent: sourceSection ?? "BookingDrawer",
         sourceButton: bookingPrimaryAction(selectedService),
-        payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits, rut: customer.rut },
+        payload: { pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, estimatedHours, heldCredits, rut: customer.rut, sourceSection },
         consentContact: false,
       });
       setBookings(getBookingRequests());

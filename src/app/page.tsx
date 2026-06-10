@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CategoryCardLink } from "@/components/CategoryCardLink";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
@@ -185,7 +186,9 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto -mt-8 grid max-w-7xl gap-3 px-5 md:grid-cols-5">
+      <FeaturedSpecialistsStrip specialists={specialists} />
+
+      <section className="mx-auto mt-4 grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
           ["4,9/5", "satisfacción"],
           [specialists.length.toString(), "especialistas verificados"],

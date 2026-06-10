@@ -13,6 +13,7 @@ export function preserveSpecialistIntent({
   specialty,
   commune,
   source,
+  sourceSection,
 }: {
   specialist?: Specialist | null;
   service?: FlexibleService | null;
@@ -21,12 +22,13 @@ export function preserveSpecialistIntent({
   specialty?: string;
   commune?: string;
   source?: string;
+  sourceSection?: string;
 }) {
   if (typeof window === "undefined") return;
 
   const payload = {
     specialistId: specialist?.id,
-    specialistSlug: specialist?.slug,
+    specialistSlug: specialist?.slug ?? specialist?.id,
     serviceId: service?.id,
     serviceName: service?.name,
     creditPrice: serviceCreditPrice(service),
@@ -36,6 +38,7 @@ export function preserveSpecialistIntent({
     comuna: commune ?? specialist?.commune ?? specialist?.zone,
     intendedAction,
     source,
+    sourceSection,
     timestamp: new Date().toISOString(),
   };
 
