@@ -6,6 +6,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { PlatformNav } from "@/components/PlatformNav";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { formatCLP, getPlanById } from "@/data/marketplace";
+import { addCartItem } from "@/lib/cart";
 import { DEFAULT_REGION_CODE, regionCodeForName, regionNameForCode } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
 import {
@@ -94,6 +95,13 @@ export default function CheckoutPage() {
     }
     setIsSubmitting(true);
     setStatus("");
+    addCartItem({
+      type: mode === "subscription" ? "subscription_plan" : "credit_pack",
+      title: mode === "subscription" ? plan.name : `${selectedPack ?? paymentContext.credits} creditos`,
+      planId: mode === "subscription" ? plan.id : undefined,
+      credits: mode === "subscription" ? plan.monthlyCredits : selectedPack ?? paymentContext.credits,
+      priceCLP: mode === "subscription" ? plan.priceCLP : (selectedPack ?? paymentContext.credits) * 1000,
+    });
     const endpoint = mode === "subscription" ? "/api/payments/create-subscription" : "/api/payments/create-checkout";
     await submitLead({
       leadType: "payment_interest",

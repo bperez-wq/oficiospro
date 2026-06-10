@@ -13,6 +13,7 @@ import { createQuoteAgreement, getMockSession, getPaymentCreditWallet, usePaymen
 import { bookingPrimaryAction, creditsForInitialHold, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { submitLead } from "@/lib/leadClient";
+import { addCartItem } from "@/lib/cart";
 
 export function BookingDrawer({
   specialist,
@@ -133,6 +134,18 @@ export function BookingDrawer({
   async function reserve() {
     if (submitting) return;
     preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer" });
+    if (!hasSession) {
+      addCartItem({
+        type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
+        title: selectedService.name,
+        credits: creditsForInitialHold(selectedService, estimatedHours, isSubscriber),
+        specialistId: specialist.id,
+        specialistName: specialist.name,
+        serviceId: selectedService.id,
+        serviceName: selectedService.name,
+        pricingMode: selectedService.pricingMode,
+      });
+    }
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
       setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");

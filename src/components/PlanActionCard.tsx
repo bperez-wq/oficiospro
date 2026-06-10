@@ -2,6 +2,7 @@
 
 import { ConversionButton } from "@/components/ConversionModal";
 import { formatCLP, type SubscriptionPlan } from "@/data/marketplace";
+import { addCartItem } from "@/lib/cart";
 
 export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionPlan; featured?: boolean }) {
   return (
@@ -21,14 +22,26 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
           </span>
         ))}
       </div>
-      <ConversionButton
-        type={plan.audience === "empresa" ? "plan_empresa" : "plan_hogar"}
-        planId={plan.id}
-        sourceButton={`Elegir plan ${plan.name}`}
-        className={featured ? "btn-secondary mt-6 w-full" : "btn-primary mt-6 w-full"}
+      <div
+        onClickCapture={() =>
+          addCartItem({
+            type: "subscription_plan",
+            title: plan.name,
+            planId: plan.id,
+            credits: plan.monthlyCredits,
+            priceCLP: plan.priceCLP,
+          })
+        }
       >
-        {plan.ctaLabel ?? "Elegir plan"}
-      </ConversionButton>
+        <ConversionButton
+          type={plan.audience === "empresa" ? "plan_empresa" : "plan_hogar"}
+          planId={plan.id}
+          sourceButton={`Elegir plan ${plan.name}`}
+          className={featured ? "btn-secondary mt-6 w-full" : "btn-primary mt-6 w-full"}
+        >
+          {plan.ctaLabel ?? "Elegir plan"}
+        </ConversionButton>
+      </div>
     </article>
   );
 }
