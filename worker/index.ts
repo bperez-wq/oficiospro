@@ -19,6 +19,9 @@ type Env = {
   MERCADOPAGO_ACCESS_TOKEN?: string;
   MERCADOPAGO_PUBLIC_KEY?: string;
   MERCADOPAGO_WEBHOOK_SECRET?: string;
+  TRANSBANK_COMMERCE_CODE?: string;
+  TRANSBANK_API_KEY?: string;
+  TRANSBANK_ENV?: string;
   APP_BASE_URL?: string;
   ADMIN_API_TOKEN?: string;
   ADMIN_TOKEN?: string;
@@ -41,6 +44,31 @@ type Plan = {
   accumulatesMonths: number;
 };
 
+type PaymentProvider = "mercado_pago" | "transbank_webpay" | "manual_bank_transfer" | "internal_adjustment";
+
+type PaymentIntent = {
+  id: string;
+  provider: PaymentProvider;
+  externalPaymentId?: string;
+  userId: string;
+  userRole: "client" | "company" | "specialist" | "admin";
+  amountCLP: number;
+  credits: number;
+  currency: "CLP";
+  type: "credit_pack" | "subscription_plan" | "service_reservation" | "visit_fee" | "quote_acceptance" | "additional_charge";
+  status: "pending" | "approved" | "rejected" | "cancelled" | "refunded";
+  metadata: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+};
+
+type CreditPack = {
+  id: string;
+  credits: number;
+  amountCLP: number;
+  title: string;
+};
+
 type CheckoutRequest = {
   planId?: string;
   email?: string;
@@ -48,8 +76,11 @@ type CheckoutRequest = {
   rut?: string;
   whatsapp?: string;
   commune?: string;
+  provider?: PaymentProvider;
+  creditPackId?: string;
   creditsPack?: number;
   userId?: string;
+  cart?: unknown[];
 };
 
 type LeadType =
@@ -136,6 +167,7 @@ const mercadoPagoApi = "https://api.mercadopago.com";
 const legacySpecialistEmailSubject = "Nueva postulación de especialista en OficiosPro";
 const maxJsonBodyBytes = 32_000;
 const memoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+const processedWebhookEvents = new Set<string>();
 
 class SafeHttpError extends Error {
   constructor(
@@ -153,6 +185,12 @@ const plans: Plan[] = [
   { id: "pyme", name: "Empresa Pyme", audience: "empresa", priceCLP: 49990, monthlyCredits: 50, accumulatesMonths: 24 },
   { id: "empresa", name: "Empresa", audience: "empresa", priceCLP: 149990, monthlyCredits: 200, accumulatesMonths: 24 },
   { id: "corporativo", name: "Corporativo", audience: "empresa", priceCLP: 499990, monthlyCredits: 650, accumulatesMonths: 24 },
+];
+
+const creditPacks: CreditPack[] = [
+  { id: "credits-20", credits: 20, amountCLP: 20000, title: "20 creditos OficiosPro" },
+  { id: "credits-50", credits: 50, amountCLP: 50000, title: "50 creditos OficiosPro" },
+  { id: "credits-100", credits: 100, amountCLP: 100000, title: "100 creditos OficiosPro" },
 ];
 
 export default {
@@ -1065,18 +1103,33 @@ async function createCheckout(request: Request, env: Env) {
   const body = await readJsonBody<CheckoutRequest>(request);
   await enforceRateLimit(request, "payments:create-checkout", { email: body.email, phone: body.whatsapp, limit: 10, windowMs: 60 * 60 * 1000 });
   validateCheckoutRequest(body, "checkout");
-  const plan = findPlanStrict(body.planId);
-  const creditsPack = Number(body.creditsPack ?? 0);
-  const isCreditsPurchase = creditsPack > 0;
-  const itemTitle = isCreditsPurchase ? `${creditsPack} creditos OficiosPro` : plan.name;
-  const itemPrice = isCreditsPurchase ? creditsPack * 1000 : plan.priceCLP;
+  const provider = normalizePaymentProvider(body.provider);
+  if (provider !== "mercado_pago") return providerPreparing(provider);
+  const pack = findCreditPack(body.creditPackId, body.creditsPack);
+  const isCreditsPurchase = Boolean(pack);
+  const plan = isCreditsPurchase ? findPlan(body.planId) : findPlanStrict(body.planId);
+  const paymentIntent = createWorkerPaymentIntent({
+    provider,
+    userId: body.userId ?? body.email ?? "cliente-oficiospro",
+    userRole: plan.audience === "empresa" ? "company" : "client",
+    amountCLP: pack?.amountCLP ?? plan.priceCLP,
+    credits: pack?.credits ?? plan.monthlyCredits,
+    type: isCreditsPurchase ? "credit_pack" : "subscription_plan",
+    metadata: {
+      planId: plan.id,
+      creditPackId: pack?.id ?? null,
+      paymentContext: sanitizeText(String((body as Record<string, unknown>).paymentContext ?? ""), 80),
+    },
+  });
+  const itemTitle = pack?.title ?? plan.name;
+  const itemPrice = paymentIntent.amountCLP;
   const itemDescription = isCreditsPurchase
     ? "Compra puntual de creditos para reservar servicios tecnicos"
     : `${plan.monthlyCredits} creditos OficiosPro acumulables por ${plan.accumulatesMonths} meses`;
   const baseUrl = getBaseUrl(request, env);
 
   if (!env.MERCADOPAGO_ACCESS_TOKEN) {
-    return paymentsPreparing(plan, "checkout", isCreditsPurchase ? creditsPack : undefined);
+    return paymentsPreparing(plan, "checkout", pack ?? undefined, paymentIntent);
   }
 
   const preference = {
@@ -1091,11 +1144,13 @@ async function createCheckout(request: Request, env: Env) {
       },
     ],
     payer: buildPayer(body),
-    external_reference: externalReference(isCreditsPurchase ? "credits" : "plan", plan.id, body.userId),
+    external_reference: paymentIntent.id,
     metadata: {
+      payment_intent_id: paymentIntent.id,
       plan_id: plan.id,
       credits_per_month: isCreditsPurchase ? 0 : plan.monthlyCredits,
-      credits_pack: isCreditsPurchase ? creditsPack : 0,
+      credit_pack_id: pack?.id ?? "",
+      credits_pack: pack?.credits ?? 0,
       rut: body.rut ?? "",
       whatsapp: body.whatsapp ?? "",
       commune: body.commune ?? "",
@@ -1112,9 +1167,10 @@ async function createCheckout(request: Request, env: Env) {
   const response = await mercadoPagoFetch(env, "/checkout/preferences", preference);
   return json({
     ok: true,
-    provider: "mercadopago",
+    provider: "mercado_pago",
     type: "checkout",
     plan,
+    paymentIntent,
     preferenceId: response.id,
     initPoint: response.init_point,
     sandboxInitPoint: response.sandbox_init_point,
@@ -1126,17 +1182,28 @@ async function createSubscription(request: Request, env: Env) {
   const body = await readJsonBody<CheckoutRequest>(request);
   await enforceRateLimit(request, "payments:create-subscription", { email: body.email, phone: body.whatsapp, limit: 10, windowMs: 60 * 60 * 1000 });
   validateCheckoutRequest(body, "subscription");
+  const provider = normalizePaymentProvider(body.provider);
+  if (provider !== "mercado_pago") return providerPreparing(provider);
   const plan = findPlanStrict(body.planId);
   const baseUrl = getBaseUrl(request, env);
+  const paymentIntent = createWorkerPaymentIntent({
+    provider,
+    userId: body.userId ?? body.email ?? "cliente-oficiospro",
+    userRole: plan.audience === "empresa" ? "company" : "client",
+    amountCLP: plan.priceCLP,
+    credits: plan.monthlyCredits,
+    type: "subscription_plan",
+    metadata: { planId: plan.id, planName: plan.name },
+  });
 
   if (!env.MERCADOPAGO_ACCESS_TOKEN) {
-    return paymentsPreparing(plan, "subscription");
+    return paymentsPreparing(plan, "subscription", undefined, paymentIntent);
   }
 
   const startDate = new Date(Date.now() + 10 * 60 * 1000).toISOString();
   const preapproval = {
     reason: `${plan.name} OficiosPro`,
-    external_reference: externalReference("subscription", plan.id, body.userId),
+    external_reference: paymentIntent.id,
     payer_email: body.email,
     auto_recurring: {
       frequency: 1,
@@ -1148,6 +1215,7 @@ async function createSubscription(request: Request, env: Env) {
     back_url: `${baseUrl}/dashboard-${plan.audience === "empresa" ? "empresa" : "cliente"}/?subscription=authorized&plan=${plan.id}`,
     notification_url: `${baseUrl}/api/payments/webhook`,
     metadata: {
+      payment_intent_id: paymentIntent.id,
       plan_id: plan.id,
       credits_per_month: plan.monthlyCredits,
       rut: body.rut ?? "",
@@ -1159,9 +1227,10 @@ async function createSubscription(request: Request, env: Env) {
   const response = await mercadoPagoFetch(env, "/preapproval", preapproval);
   return json({
     ok: true,
-    provider: "mercadopago",
+    provider: "mercado_pago",
     type: "subscription",
     plan,
+    paymentIntent,
     preapprovalId: response.id,
     initPoint: response.init_point,
     sandboxInitPoint: response.sandbox_init_point,
@@ -1188,20 +1257,24 @@ async function processWebhook(request: Request, env: Env) {
     payload?.resource?.split("/")?.pop() ??
     null;
   const topic = url.searchParams.get("type") ?? url.searchParams.get("topic") ?? payload?.type ?? payload?.topic ?? "unknown";
-  const eventId = `${topic}:${dataId ?? "sin-id"}`;
+  const eventId = `mercado_pago:${topic}:${dataId ?? "sin-id"}`;
   const hasWebhookSecret = Boolean(env.MERCADOPAGO_WEBHOOK_SECRET);
+  const duplicate = processedWebhookEvents.has(eventId);
+  if (!duplicate) processedWebhookEvents.add(eventId);
 
   return json({
     ok: true,
     received: true,
     verified,
     security: hasWebhookSecret ? "signature_checked" : "webhook_secret_not_configured",
+    canApprovePayment: hasWebhookSecret && !duplicate,
+    duplicate,
     eventId,
     topic,
     dataId,
-    action: hasWebhookSecret ? inferWebhookAction(topic, payload) : "store_event_for_reconciliation",
+    action: duplicate ? "already_processed" : hasWebhookSecret ? inferWebhookAction(topic, payload) : "store_event_for_reconciliation",
     idempotencyKey: eventId,
-    creditOperation: hasWebhookSecret ? inferCreditOperation(topic, payload) : "none",
+    creditOperation: hasWebhookSecret && !duplicate ? inferCreditOperation(topic, payload) : "none",
   });
 }
 
@@ -1211,12 +1284,12 @@ async function paymentStatus(url: URL, env: Env) {
 
   if (!id) return json({ ok: false, error: "missing_payment_id" }, 400);
   if (!env.MERCADOPAGO_ACCESS_TOKEN) {
-    return json({ ok: true, status: "preparing", provider: "mercadopago", id, type });
+    return json({ ok: true, status: "preparing", provider: "mercado_pago", id, type });
   }
 
   const endpoint = type === "subscription" ? `/preapproval/${id}` : `/v1/payments/${id}`;
   const response = await mercadoPagoGet(env, endpoint);
-  return json({ ok: true, provider: "mercadopago", type, data: response });
+  return json({ ok: true, provider: "mercado_pago", type, data: response });
 }
 
 async function addCredits(request: Request) {
@@ -1228,6 +1301,11 @@ async function addCredits(request: Request) {
       userId: body.userId ?? "current-user",
       added: amount,
       currentBalance: amount,
+      availableCredits: amount,
+      reservedCredits: 0,
+      expiringCreditsTotal: amount,
+      lifetimePurchased: amount,
+      lifetimeUsed: 0,
       expiringCredits: [{ amount, expiresAt: addMonths(new Date(), 24).toISOString() }],
       updatedAt: new Date().toISOString(),
     },
@@ -1246,6 +1324,11 @@ async function useCredits(request: Request) {
       used: type === "refund" ? 0 : amount,
       returned: type === "refund" ? amount : 0,
       currentBalance: 0,
+      availableCredits: type === "refund" ? amount : 0,
+      reservedCredits: body.action === "hold" ? amount : 0,
+      expiringCreditsTotal: 0,
+      lifetimePurchased: 0,
+      lifetimeUsed: body.action === "capture" ? amount : 0,
       updatedAt: new Date().toISOString(),
     },
     transaction: {
@@ -1262,6 +1345,11 @@ async function getWallet(url: URL) {
     wallet: {
       userId,
       currentBalance: 0,
+      availableCredits: 0,
+      reservedCredits: 0,
+      expiringCreditsTotal: 0,
+      lifetimePurchased: 0,
+      lifetimeUsed: 0,
       expiringCredits: [],
       updatedAt: new Date().toISOString(),
     },
@@ -1297,18 +1385,72 @@ function findPlanStrict(planId?: string | null) {
   return plan;
 }
 
+function findCreditPack(creditPackId?: string | null, creditsPack?: number | string | null) {
+  if (creditPackId) {
+    const pack = creditPacks.find((item) => item.id === creditPackId);
+    if (!pack) throw new SafeHttpError(400, "invalid_credit_pack");
+    return pack;
+  }
+  if (creditsPack === undefined || creditsPack === null || creditsPack === "") return null;
+  const credits = Number(creditsPack);
+  const pack = creditPacks.find((item) => item.credits === credits);
+  if (!pack) throw new SafeHttpError(400, "invalid_credit_pack");
+  return pack;
+}
+
+function normalizePaymentProvider(provider?: string | null): PaymentProvider {
+  if (!provider || provider === "mercadopago") return "mercado_pago";
+  if (provider === "mercado_pago" || provider === "transbank_webpay" || provider === "manual_bank_transfer" || provider === "internal_adjustment") {
+    return provider;
+  }
+  throw new SafeHttpError(400, "invalid_payment_provider");
+}
+
+function createWorkerPaymentIntent({
+  provider,
+  userId,
+  userRole,
+  amountCLP,
+  credits,
+  type,
+  metadata,
+}: {
+  provider: PaymentProvider;
+  userId: string;
+  userRole: PaymentIntent["userRole"];
+  amountCLP: number;
+  credits: number;
+  type: PaymentIntent["type"];
+  metadata: Record<string, unknown>;
+}): PaymentIntent {
+  const now = new Date().toISOString();
+  return {
+    id: `pi-op-${Date.now()}-${crypto.randomUUID().slice(0, 8)}`,
+    provider,
+    userId: sanitizeText(userId, 140) ?? "cliente-oficiospro",
+    userRole,
+    amountCLP: Math.max(0, Math.round(amountCLP)),
+    credits: Math.max(0, Math.round(credits)),
+    currency: "CLP",
+    type,
+    status: "pending",
+    metadata,
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
 function validateCheckoutRequest(body: CheckoutRequest, mode: "checkout" | "subscription") {
-  if (!body.planId || !plans.some((plan) => plan.id === body.planId)) throw new SafeHttpError(400, "invalid_plan");
+  normalizePaymentProvider(body.provider);
+  const hasCreditPack = Boolean(body.creditPackId || body.creditsPack !== undefined);
+  if (mode === "subscription" || !hasCreditPack) {
+    if (!body.planId || !plans.some((plan) => plan.id === body.planId)) throw new SafeHttpError(400, "invalid_plan");
+  }
   if (mode === "subscription" && !body.email) throw new SafeHttpError(400, "missing_required_fields");
   if (body.email && !isValidEmail(body.email)) throw new SafeHttpError(400, "invalid_email");
   if (body.whatsapp && !isValidPhone(body.whatsapp)) throw new SafeHttpError(400, "invalid_phone");
   if (body.rut && !isValidRutFormat(body.rut)) throw new SafeHttpError(400, "invalid_rut");
-  if (mode === "checkout" && body.creditsPack !== undefined) {
-    const creditsPack = Number(body.creditsPack);
-    if (!Number.isFinite(creditsPack) || creditsPack <= 0 || creditsPack > 1000 || creditsPack % 2 !== 0) {
-      throw new SafeHttpError(400, "invalid_credits_pack");
-    }
-  }
+  if (mode === "checkout" && hasCreditPack) findCreditPack(body.creditPackId, body.creditsPack);
 }
 
 function buildPayer(body: CheckoutRequest) {
@@ -1326,16 +1468,28 @@ function externalReference(type: string, planId: string, userId?: string) {
   return `oficiospro:${type}:${planId}:${userId ?? crypto.randomUUID()}`;
 }
 
-function paymentsPreparing(plan: Plan, type: "checkout" | "subscription", creditsPack?: number) {
+function paymentsPreparing(plan: Plan, type: "checkout" | "subscription", pack?: CreditPack, paymentIntent?: PaymentIntent) {
   return json({
     ok: false,
-    provider: "mercadopago",
+    provider: "mercado_pago",
     type,
     status: "preparing",
     code: "payments_not_configured",
     message: "Pago en preparacion",
     plan,
-    creditsPack: creditsPack ?? null,
+    paymentIntent,
+    creditsPack: pack?.credits ?? null,
+    creditPackId: pack?.id ?? null,
+  });
+}
+
+function providerPreparing(provider: PaymentProvider) {
+  return json({
+    ok: false,
+    provider,
+    status: "preparing",
+    code: provider === "transbank_webpay" ? "provider_pending_credentials" : "provider_not_available",
+    message: provider === "transbank_webpay" ? "Transbank preparado, pendiente credenciales." : "Proveedor no disponible para checkout publico.",
   });
 }
 

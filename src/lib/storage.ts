@@ -1,6 +1,7 @@
 "use client";
 
 import { defaultBookings, defaultTransactions, specialists as baseSpecialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import type { PaymentProvider } from "@/lib/payments/types";
 import {
   defaultAdditionalRequests,
   defaultQuoteAgreements,
@@ -72,7 +73,7 @@ export type PaymentStatus = "pending" | "approved" | "rejected" | "failed" | "re
 
 export type PaymentRecord = {
   id: string;
-  provider: "mercadopago";
+  provider: PaymentProvider | "mercadopago";
   type: "checkout" | "subscription" | "credits_purchase";
   planId?: string;
   planName?: string;
@@ -93,7 +94,7 @@ export type PaymentSubscriptionStatus = "pending" | "active" | "paused" | "cance
 
 export type PaymentSubscriptionRecord = {
   id: string;
-  provider: "mercadopago";
+  provider: PaymentProvider | "mercadopago";
   userId: string;
   planId: string;
   planName: string;
@@ -995,7 +996,7 @@ export function seedPaymentState() {
     write<PaymentRecord[]>(keys.payments, [
       {
         id: "pay-op-plus-001",
-        provider: "mercadopago",
+        provider: "mercado_pago",
         type: "subscription",
         planId: "plus",
         planName: "Club Hogar Plus",
@@ -1010,7 +1011,7 @@ export function seedPaymentState() {
       },
       {
         id: "pay-op-credits-001",
-        provider: "mercadopago",
+        provider: "mercado_pago",
         type: "credits_purchase",
         userId: "empresa@oficiospro.cl",
         payerEmail: "empresa@oficiospro.cl",
@@ -1026,7 +1027,7 @@ export function seedPaymentState() {
     write<PaymentSubscriptionRecord[]>(keys.paymentSubscriptions, [
       {
         id: "sub-op-plus-001",
-        provider: "mercadopago",
+        provider: "mercado_pago",
         userId: "cliente@oficiospro.cl",
         planId: "plus",
         planName: "Club Hogar Plus",
@@ -1224,8 +1225,10 @@ export function addPaymentCredits({
     createdAt: new Date().toISOString(),
   };
   savePaymentCreditWallet({
+    ...wallet,
     userId,
     currentBalance: wallet.currentBalance + amount,
+    expiringCreditsTotal: (wallet.expiringCreditsTotal ?? 0) + amount,
     expiringCredits: [...wallet.expiringCredits, { amount, expiresAt }],
     updatedAt: new Date().toISOString(),
   });
@@ -1263,7 +1266,37 @@ export function usePaymentCredits({
   relatedServiceRequestId?: string;
 }) {
   const wallet = getPaymentCreditWallet();
-  const signedAmount = type === "refund" ? Math.abs(amount) : -Math.abs(amount);
+  const absoluteAmount = Math.abs(amount);
+  const isRefund = type === "refund";
+  const isCapture = type === "service_capture" || type.endsWith("_capture");
+  const isHold = type === "service_hold" || type.endsWith("_hold");
+  const isExpiration = type === "expiration";
+  const signedAmount = isRefund ? absoluteAmount : -absoluteAmount;
+  const heldCredits = wallet.heldCredits ?? 0;
+  const quoteHeldCredits = wallet.quoteHeldCredits ?? 0;
+  const additionalHeldCredits = wallet.additionalHeldCredits ?? 0;
+  const nextHeldCredits = isHold ? heldCredits + absoluteAmount : isCapture ? Math.max(0, heldCredits - absoluteAmount) : heldCredits;
+  const nextQuoteHeldCredits = type.includes("quote")
+    ? isHold
+      ? quoteHeldCredits + absoluteAmount
+      : isCapture
+        ? Math.max(0, quoteHeldCredits - absoluteAmount)
+        : quoteHeldCredits
+    : quoteHeldCredits;
+  const nextAdditionalHeldCredits = type.includes("additional") || type.includes("materials")
+    ? isHold
+      ? additionalHeldCredits + absoluteAmount
+      : isCapture
+        ? Math.max(0, additionalHeldCredits - absoluteAmount)
+        : additionalHeldCredits
+    : additionalHeldCredits;
+  const nextBalance = isHold
+    ? Math.max(0, wallet.currentBalance - absoluteAmount)
+    : isRefund
+      ? wallet.currentBalance + absoluteAmount
+      : isExpiration
+        ? Math.max(0, wallet.currentBalance - absoluteAmount)
+        : wallet.currentBalance;
   const transaction: PaymentCreditTransaction = {
     id: `ctx-op-${Date.now()}`,
     userId,
@@ -1275,7 +1308,10 @@ export function usePaymentCredits({
   };
   savePaymentCreditWallet({
     ...wallet,
-    currentBalance: Math.max(0, wallet.currentBalance + signedAmount),
+    currentBalance: nextBalance,
+    heldCredits: nextHeldCredits,
+    quoteHeldCredits: nextQuoteHeldCredits,
+    additionalHeldCredits: nextAdditionalHeldCredits,
     updatedAt: new Date().toISOString(),
   });
   savePaymentCreditTransactions([transaction, ...getPaymentCreditTransactions()]);

@@ -135,10 +135,12 @@ export function BookingDrawer({
     if (submitting) return;
     preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer" });
     if (!hasSession) {
+      const initialCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
       addCartItem({
         type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
         title: selectedService.name,
-        credits: creditsForInitialHold(selectedService, estimatedHours, isSubscriber),
+        credits: initialCredits,
+        amountCLP: initialCredits * 1000,
         specialistId: specialist.id,
         specialistName: specialist.name,
         serviceId: selectedService.id,

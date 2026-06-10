@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatCLP } from "@/data/marketplace";
 import { clearCart, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
+import { cartTotals, checkoutModeForCart, itemAmountCLP } from "@/lib/payments/cart";
 
 export function CartButton({ onOpen }: { onOpen: () => void }) {
   const [count, setCount] = useState(0);
@@ -44,13 +45,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
     return onCartChange(refresh);
   }, []);
 
-  const totals = useMemo(
-    () => ({
-      credits: items.reduce((sum, item) => sum + Number(item.credits ?? 0), 0),
-      priceCLP: items.reduce((sum, item) => sum + Number(item.priceCLP ?? 0), 0),
-    }),
-    [items],
-  );
+  const totals = useMemo(() => cartTotals(items), [items]);
   const checkoutHref = checkoutUrlForItems(items);
 
   if (!open) return null;
@@ -89,7 +84,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2 text-sm font-black">
                       {item.credits ? <span className="rounded-full bg-white px-3 py-1 text-brand-dark">{item.credits} creditos</span> : null}
-                      {item.priceCLP ? <span className="rounded-full bg-white px-3 py-1 text-ink">{formatCLP(item.priceCLP)}</span> : null}
+                      {itemAmountCLP(item) ? <span className="rounded-full bg-white px-3 py-1 text-ink">{formatCLP(itemAmountCLP(item))}</span> : null}
                     </div>
                   </article>
                 ))}
@@ -98,7 +93,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 <span className="text-xs font-black uppercase text-brand-dark">Resumen</span>
                 <div className="mt-2 grid gap-2 text-sm font-black text-brand-dark sm:grid-cols-2">
                   <span>{totals.credits} creditos</span>
-                  <span>{totals.priceCLP ? formatCLP(totals.priceCLP) : "Precio por confirmar"}</span>
+                  <span>{totals.amountCLP ? formatCLP(totals.amountCLP) : "Precio por confirmar"}</span>
                 </div>
               </div>
             </>
@@ -140,15 +135,17 @@ function cartTypeLabel(type: OficiosProCartItem["type"]) {
     service_request: "Solicitud",
     quote_request: "Cotizacion",
     visit: "Visita tecnica",
+    additional_charge: "Adicional aprobado",
   };
   return labels[type];
 }
 
 function checkoutUrlForItems(items: OficiosProCartItem[]) {
-  const plan = items.find((item) => item.type === "subscription_plan" && item.planId);
-  if (plan?.planId) return `/checkout?plan=${encodeURIComponent(plan.planId)}`;
-  const quoteOrVisit = items.find((item) => item.type === "quote_request" || item.type === "visit" || item.type === "service_request");
-  if (quoteOrVisit?.pricingMode === "visit_then_quote") return "/checkout?mode=visit_hold";
-  if (quoteOrVisit?.pricingMode === "quote_required" || quoteOrVisit?.pricingMode === "range") return "/checkout?mode=quote_acceptance_hold";
+  const mode = checkoutModeForCart(items);
+  if (mode.mode === "subscription_plan" && mode.planId) return `/checkout?plan=${encodeURIComponent(mode.planId)}&cartItem=subscription`;
+  if (mode.mode === "credit_pack" && mode.creditPackId) return `/checkout?creditPack=${encodeURIComponent(mode.creditPackId)}&cartItem=credit_pack`;
+  if (mode.mode === "visit_fee") return "/checkout?mode=visit_hold";
+  if (mode.mode === "quote_acceptance") return "/checkout?mode=quote_acceptance_hold";
+  if (mode.mode === "additional_charge") return "/checkout?mode=additional_work_hold";
   return "/checkout";
 }

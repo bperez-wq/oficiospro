@@ -17,6 +17,7 @@ import {
 } from "@/data/marketplace";
 import { calculateClientCreditsFromSpecialistPayout, estimateClientPriceCLP, estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
 import { quoteTotalCredits } from "@/lib/flexiblePricing";
+import { oficiosProMerchant, paymentProviders } from "@/lib/payments/paymentProvider";
 import { getSpecialistReviews, type SpecialistReview } from "@/lib/trust";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
@@ -501,6 +502,15 @@ export function AdminPanel() {
     setNotice(`Suscripción marcada como ${status}.`);
   }
 
+  function retryPaymentReconciliation() {
+    refreshPaymentState();
+    setNotice("Conciliación manual solicitada. Revisa proveedor, webhook y ledger antes de emitir créditos reales.");
+  }
+
+  function markPaymentsReviewed() {
+    setNotice("Pagos y créditos marcados como revisados en esta sesión interna.");
+  }
+
   function markReviewReviewed(id: string) {
     setReviewedReviewIds((current) => ({ ...current, [id]: true }));
     setNotice("Review marcada como revisada.");
@@ -921,6 +931,9 @@ export function AdminPanel() {
             onRefundCredits={refundCredits}
             onSubscriptionStatus={changeSubscriptionStatus}
             onMarkPayoutPaid={paySpecialistPayout}
+            onReconcile={retryPaymentReconciliation}
+            onMarkReviewed={markPaymentsReviewed}
+            onExportPayments={() => exportPaymentRows("pagos-creditos.csv", payments, paymentSubscriptions, paymentTransactions)}
           />
         ) : null}
 
@@ -1544,6 +1557,9 @@ function PaymentsAdminPanel({
   onRefundCredits,
   onSubscriptionStatus,
   onMarkPayoutPaid,
+  onReconcile,
+  onMarkReviewed,
+  onExportPayments,
 }: {
   payments: PaymentRecord[];
   subscriptions: PaymentSubscriptionRecord[];
@@ -1556,25 +1572,81 @@ function PaymentsAdminPanel({
   onRefundCredits: () => void;
   onSubscriptionStatus: (id: string, status: PaymentSubscriptionStatus) => void;
   onMarkPayoutPaid: (id: string) => void;
+  onReconcile: () => void;
+  onMarkReviewed: () => void;
+  onExportPayments: () => void;
 }) {
   const approvedPayments = payments.filter((payment) => payment.status === "approved");
+  const pendingPayments = payments.filter((payment) => payment.status === "pending" || payment.status === "preparing");
+  const rejectedPayments = payments.filter((payment) => ["rejected", "failed", "chargeback"].includes(payment.status));
   const failedSubscriptions = subscriptions.filter((subscription) => subscription.status === "failed_payment");
   const issuedCredits = transactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0);
   const usedCredits = transactions.filter((transaction) => transaction.amount < 0).reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+  const heldCredits = transactions
+    .filter((transaction) => transaction.type === "service_hold" || transaction.type.endsWith("_hold"))
+    .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+  const releasedCredits = transactions
+    .filter((transaction) => transaction.type === "service_capture" || transaction.type.endsWith("_capture") || transaction.type === "refund")
+    .reduce((sum, transaction) => sum + Math.abs(transaction.amount), 0);
+  const paymentsWithoutWebhook = payments.filter((payment) => (payment.status === "pending" || payment.status === "preparing") && !payment.mercadoPagoPaymentId).length;
+  const providerErrors = rejectedPayments.length + failedSubscriptions.length;
+  const usedProviders = Array.from(new Set(payments.map((payment) => normalizePaymentProviderName(payment.provider))));
   const pendingPayouts = payouts.filter((payout) => payout.status !== "pagado");
   const estimatedMargin = payouts.reduce((sum, payout) => sum + payout.platformMarginCLP, 0);
 
   return (
-    <Panel title="Pagos y créditos" eyebrow="Mercado Pago">
+    <Panel title="Pagos y créditos" eyebrow="Operación global">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <MiniMetric label="Pagos recientes" value={payments.length.toString()} />
+        <MiniMetric label="Pagos pendientes" value={pendingPayments.length.toString()} />
         <MiniMetric label="Pagos aprobados" value={approvedPayments.length.toString()} />
-        <MiniMetric label="Suscripciones fallidas" value={failedSubscriptions.length.toString()} />
-        <MiniMetric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+        <MiniMetric label="Pagos rechazados" value={rejectedPayments.length.toString()} />
+        <MiniMetric label="Errores proveedor" value={providerErrors.toString()} />
         <MiniMetric label="Créditos emitidos" value={issuedCredits.toString()} />
-        <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
-        <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
-        <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
+        <MiniMetric label="Créditos retenidos" value={(wallet.heldCredits ?? heldCredits).toString()} />
+        <MiniMetric label="Créditos liberados" value={releasedCredits.toString()} />
+        <MiniMetric label="Pagos sin webhook" value={paymentsWithoutWebhook.toString()} />
+      </div>
+
+      <div className="mt-5 grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <article className="rounded-[24px] border border-line bg-slate-50 p-5">
+          <p className="eyebrow">Proveedor usado</p>
+          <h3 className="text-xl font-black">{usedProviders.length ? usedProviders.join(" + ") : "Mercado Pago"}</h3>
+          <p className="mt-2 text-sm font-bold text-muted">
+            Comercio {oficiosProMerchant.tradeName} · RUT {oficiosProMerchant.rut}. Los montos se concilian contra PaymentIntent y catálogo interno antes de emitir créditos.
+          </p>
+          <div className="mt-4 grid gap-2">
+            {paymentProviders.map((provider) => (
+              <div key={provider.id} className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-line bg-white p-3">
+                <strong>{provider.label}</strong>
+                <span className={`chip ${provider.enabled ? "bg-brand-soft text-brand-dark" : "bg-white text-muted"}`}>{provider.enabled ? "activo" : "preparado"}</span>
+                <p className="w-full text-xs font-bold text-muted">{provider.detail}</p>
+              </div>
+            ))}
+          </div>
+        </article>
+
+        <article className="rounded-[24px] border border-line bg-white p-5 shadow-sm">
+          <p className="eyebrow">Conciliación manual</p>
+          <h3 className="text-xl font-black">Control operacional</h3>
+          <div className="mt-4 grid gap-2">
+            <MiniMetric label="Pagos recientes" value={payments.length.toString()} />
+            <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
+            <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
+            <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
+            <MiniMetric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+          </div>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" onClick={onReconcile}>
+              Reintentar conciliación
+            </button>
+            <button className="btn-secondary" type="button" onClick={onMarkReviewed}>
+              Marcar revisado
+            </button>
+            <button className="btn-secondary" type="button" onClick={onExportPayments}>
+              Exportar CSV
+            </button>
+          </div>
+        </article>
       </div>
 
       <div className="mt-5">
@@ -1621,6 +1693,9 @@ function PaymentsAdminPanel({
                   </div>
                   <p className="mt-2 text-sm font-bold text-muted">
                     {payment.payerEmail} · {formatCLP(payment.amountCLP)} · {payment.credits} créditos
+                  </p>
+                  <p className="mt-2 text-xs font-bold text-muted">
+                    Proveedor {normalizePaymentProviderName(payment.provider)} · {payment.mercadoPagoPaymentId ? `pago ${payment.mercadoPagoPaymentId}` : "webhook pendiente"} · intent {payment.mercadoPagoPreferenceId ?? payment.mercadoPagoPreapprovalId ?? payment.id}
                   </p>
                 </div>
               ))
@@ -1967,6 +2042,11 @@ function EmptyState({ text }: { text: string }) {
   return <p className="rounded-2xl border border-line bg-slate-50 p-5 text-sm font-bold text-muted">{text}</p>;
 }
 
+function normalizePaymentProviderName(provider?: string) {
+  const normalized = provider === "mercadopago" ? "mercado_pago" : provider;
+  return paymentProviders.find((item) => item.id === normalized)?.label ?? provider ?? "Sin proveedor";
+}
+
 function exportRows(filename: string, rows: LeadRow[]) {
   if (typeof window === "undefined") return;
   const headers = ["Fecha", "Nombre", "Email", "WhatsApp", "Comuna", "Interés", "Estado"];
@@ -1976,6 +2056,59 @@ function exportRows(filename: string, rows: LeadRow[]) {
       .join(","),
   );
   const blob = new Blob([[headers.join(","), ...body].join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = window.URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+  window.URL.revokeObjectURL(url);
+}
+
+function exportPaymentRows(
+  filename: string,
+  payments: PaymentRecord[],
+  subscriptions: PaymentSubscriptionRecord[],
+  transactions: PaymentCreditTransaction[],
+) {
+  if (typeof window === "undefined") return;
+  const rows = [
+    ["tipo", "id", "fecha", "proveedor", "estado", "email_usuario", "monto_clp", "creditos", "detalle"],
+    ...payments.map((payment) => [
+      "pago",
+      payment.id,
+      payment.createdAt,
+      normalizePaymentProviderName(payment.provider),
+      payment.status,
+      payment.payerEmail,
+      String(payment.amountCLP),
+      String(payment.credits),
+      payment.planName ?? payment.type,
+    ]),
+    ...subscriptions.map((subscription) => [
+      "suscripcion",
+      subscription.id,
+      subscription.createdAt,
+      normalizePaymentProviderName(subscription.provider),
+      subscription.status,
+      subscription.userId,
+      String(subscription.amountCLP),
+      String(subscription.creditsPerMonth),
+      subscription.planName,
+    ]),
+    ...transactions.map((transaction) => [
+      "ledger",
+      transaction.id,
+      transaction.createdAt,
+      "OficiosPro",
+      transaction.type,
+      transaction.userId,
+      "",
+      String(transaction.amount),
+      transaction.detail,
+    ]),
+  ];
+  const csv = rows.map((row) => row.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = window.URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;

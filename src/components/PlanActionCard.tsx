@@ -29,6 +29,7 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
             title: plan.name,
             planId: plan.id,
             credits: plan.monthlyCredits,
+            amountCLP: plan.priceCLP,
             priceCLP: plan.priceCLP,
           })
         }

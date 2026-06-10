@@ -1,39 +1,34 @@
 "use client";
 
-export type CartItemType = "credit_pack" | "subscription_plan" | "service_request" | "quote_request" | "visit";
+import { cartItemStableId } from "@/lib/payments/cart";
+import type { CartItem, CartItemType } from "@/lib/payments/types";
 
-export type OficiosProCartItem = {
-  id: string;
-  type: CartItemType;
-  title: string;
-  credits?: number;
-  priceCLP?: number;
-  planId?: string;
-  specialistId?: string;
-  specialistName?: string;
-  serviceId?: string;
-  serviceName?: string;
-  pricingMode?: string;
-  createdAt: string;
-};
+export type { CartItemType };
+export type OficiosProCartItem = CartItem;
 
 const cartKey = "oficiospro.cart";
+const sessionKey = "oficiospro.session";
 const cartEventName = "oficiospro-cart-updated";
 
 export function getCartItems() {
   if (typeof window === "undefined") return [] as OficiosProCartItem[];
-  try {
-    const raw = window.localStorage.getItem(cartKey) ?? window.sessionStorage.getItem(cartKey);
-    const parsed = raw ? JSON.parse(raw) : [];
-    return Array.isArray(parsed) ? (parsed as OficiosProCartItem[]) : [];
-  } catch {
-    return [];
-  }
+  const sessionItems = readCartStorage(window.sessionStorage);
+  const localItems = hasSession() ? readCartStorage(window.localStorage) : [];
+  const seen = new Set<string>();
+  return [...sessionItems, ...localItems].filter((item) => {
+    if (!item?.id || seen.has(item.id)) return false;
+    seen.add(item.id);
+    return true;
+  });
 }
 
 export function saveCartItems(items: OficiosProCartItem[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(cartKey, JSON.stringify(items));
+  if (hasSession()) {
+    window.localStorage.setItem(cartKey, JSON.stringify(items));
+  } else {
+    window.sessionStorage.setItem(cartKey, JSON.stringify(items));
+  }
   window.dispatchEvent(new CustomEvent(cartEventName));
 }
 
@@ -55,7 +50,10 @@ export function removeCartItem(id: string) {
 }
 
 export function clearCart() {
-  saveCartItems([]);
+  if (typeof window === "undefined") return;
+  window.localStorage.removeItem(cartKey);
+  window.sessionStorage.removeItem(cartKey);
+  window.dispatchEvent(new CustomEvent(cartEventName));
 }
 
 export function onCartChange(callback: () => void) {
@@ -68,18 +66,17 @@ export function onCartChange(callback: () => void) {
   };
 }
 
-function cartItemStableId(item: Omit<OficiosProCartItem, "id" | "createdAt">) {
-  return [
-    item.type,
-    item.planId,
-    item.specialistId,
-    item.serviceId,
-    item.pricingMode,
-    item.credits,
-    item.title,
-  ]
-    .filter(Boolean)
-    .join(":")
-    .toLowerCase()
-    .replace(/[^a-z0-9:.-]+/g, "-");
+function hasSession() {
+  if (typeof window === "undefined") return false;
+  return Boolean(window.localStorage.getItem(sessionKey));
+}
+
+function readCartStorage(storage: Storage) {
+  try {
+    const raw = storage.getItem(cartKey);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? (parsed as OficiosProCartItem[]) : [];
+  } catch {
+    return [];
+  }
 }
