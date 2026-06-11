@@ -1,116 +1,20 @@
 import Link from "next/link";
-import { CategoryCardLink } from "@/components/CategoryCardLink";
-import { CreditExplainer } from "@/components/CreditExplainer";
+import type { ReactNode } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
+import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
+import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
+import { HomeCreditPreview } from "@/components/HomeCreditPreview";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
+import { QuickProblemLinks } from "@/components/QuickProblemLinks";
 import { WorkProofGallery } from "@/components/WorkProofGallery";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
-import { serviceTypes, subscriptionPlans } from "@/data/marketplace";
-
-const broadServiceCards = [
-  {
-    title: "Hogar y reparaciones",
-    description: "Gasfiteria, electricidad, calefont, filtraciones, pintura y arreglos generales.",
-    category: "hogar",
-    specialty: "gasfiteria",
-    action: "Ver especialistas",
-    chip: "Hogar",
-  },
-  {
-    title: "Comunidades y edificios",
-    description: "Bombas, portones, camaras, calderas, piscinas, salas comunes y mantencion preventiva.",
-    category: "comunidades",
-    specialty: "edificios-condominios",
-    action: "Buscar disponibles",
-    chip: "Comunidades",
-  },
-  {
-    title: "Empresas y comercios",
-    description: "Locales, oficinas, restaurantes, bodegas y sucursales con necesidades de mantencion.",
-    category: "empresas",
-    specialty: "mantencion-comercial",
-    action: "Solicitar servicio",
-    chip: "Empresas",
-  },
-  {
-    title: "Climatizacion y refrigeracion",
-    description: "Aire acondicionado, bombas de calor, camaras de frio, mantencion y diagnostico.",
-    category: "climatizacion",
-    specialty: "aire-acondicionado-calefaccion",
-    action: "Ver especialistas",
-    chip: "Clima y frio",
-  },
-  {
-    title: "Construccion y remodelacion",
-    description: "Maestros, remodelaciones, tabiqueria, pisos, terminaciones y obras menores.",
-    category: "construccion",
-    specialty: "remodelaciones",
-    action: "Ver especialistas",
-    chip: "Obras",
-  },
-  {
-    title: "Jardineria y piscinas",
-    description: "Areas verdes, riego, poda, mantencion de piscinas y paisajismo.",
-    category: "hogar",
-    specialty: "jardineria-piscinas",
-    action: "Buscar disponibles",
-    chip: "Exteriores",
-  },
-  {
-    title: "Seguridad y tecnologia",
-    description: "Camaras, alarmas, control de acceso, redes, citofonia y automatizacion.",
-    category: "seguridad",
-    specialty: "camaras-alarmas-control-acceso",
-    action: "Ver especialistas",
-    chip: "Seguridad",
-  },
-  {
-    title: "Limpieza y mantencion",
-    description: "Limpieza profunda, aseo post obra, mantencion recurrente y sanitizacion.",
-    category: "limpieza",
-    specialty: "limpieza-mantencion",
-    action: "Solicitar servicio",
-    chip: "Mantencion",
-  },
-  {
-    title: "Industria y mantenimiento tecnico",
-    description: "Motores, bombas, tableros, soldadura, hidraulica, neumatica y mantenimiento preventivo.",
-    category: "industria",
-    specialty: "mantencion-industrial",
-    action: "Buscar disponibles",
-    chip: "Industria",
-  },
-  {
-    title: "Agroindustria y packing",
-    description: "Lineas de proceso, frio alimentario, packing, tuneles, camaras y equipos de planta.",
-    category: "agroindustria",
-    specialty: "packing-frio",
-    action: "Ver especialistas",
-    chip: "Agroindustria",
-  },
-  {
-    title: "Agricultura y campos",
-    description: "Riego tecnificado, maquinaria agricola, contratistas, poda, cosecha y labores de temporada.",
-    category: "agricultura",
-    specialty: "riego-tecnificado",
-    action: "Buscar disponibles",
-    chip: "Campos",
-  },
-  {
-    title: "Emergencias",
-    description: "Servicios urgentes para hogar, comunidades y empresas.",
-    category: "emergencias",
-    specialty: "urgencias-hogar-empresa",
-    action: "Solicitar servicio",
-    chip: "Urgente",
-  },
-];
+import { subscriptionPlans } from "@/data/marketplace";
 
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);
@@ -121,7 +25,7 @@ export default function HomePage() {
       <PostulationToast />
       <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
-        <div className="section grid items-center gap-12 lg:grid-cols-[0.95fr_1.05fr]">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-10 md:py-16 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="animate-fade-up">
             <span className="eyebrow-pill">
               <span className="h-2 w-2 rounded-full bg-brand" />
@@ -130,28 +34,26 @@ export default function HomePage() {
             <h1 className="max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">
               Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
             </h1>
-            <p className="mt-6 max-w-3xl text-lg font-semibold leading-8 text-muted">
-              Compara especialistas verificados, reputación, precio en créditos y disponibilidad antes de reservar.
+            <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-muted md:text-lg">
+              Explora sin registrarte, compara reputación y reserva o cotiza pagando con créditos.
             </p>
             <HeroSearchPanel />
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
               <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
                 Buscar especialista
               </Link>
               <ConversionButton type="registro_especialista" sourceButton="Postular como especialista hero" className="btn-sun">
                 Postular como especialista
               </ConversionButton>
-              <ConversionButton type="contacto_empresa" sourceButton="Soluciones para empresas hero" className="btn-secondary">
-                Soluciones para empresas
-              </ConversionButton>
+              <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
+                ¿Cómo funcionan los créditos? →
+              </Link>
             </div>
-            <div className="mt-10 flex flex-wrap gap-2.5">
+            <div className="mt-7 flex flex-wrap gap-2.5">
               {[
                 ["★", "4,9 promedio", "chip-sun"],
                 ["✓", "Pago protegido", "chip-brand"],
-                ["◆", "Créditos acumulables", "chip-accent"],
                 ["✓", "Técnicos verificados", "chip-emerald"],
-                ["↗", "Respuesta rápida", "chip-sun"],
                 ["◎", "Cobertura nacional", "chip-brand"],
               ].map(([icon, label, cls]) => (
                 <span key={label} className={`${cls} px-3.5 py-2 text-[13px]`}>
@@ -161,7 +63,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="relative min-h-[520px]">
+          <div className="relative hidden min-h-[520px] lg:block">
             <div className="absolute inset-0 rounded-[34px] bg-gradient-to-br from-brand-soft via-mint to-accent-soft" />
             <div className="surface-grid absolute inset-0 rounded-[34px] opacity-40" />
             <img
@@ -190,12 +92,14 @@ export default function HomePage() {
 
       <FeaturedSpecialistsStrip specialists={specialists} />
 
-      <section className="mx-auto mt-4 grid max-w-7xl gap-3 px-5 md:grid-cols-5">
+      <QuickProblemLinks />
+
+      <section className="mx-auto grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
           ["4,9/5", "satisfacción"],
           [specialists.length.toString(), "especialistas verificados"],
           ["35 min", "respuesta rápida"],
-          ["24 meses", "créditos acumulables"],
+          ["Créditos", "acumulables mes a mes"],
           ["Pago seguro", "al finalizar"],
         ].map(([value, label]) => (
           <article key={label} className="stat-tile">
@@ -205,32 +109,11 @@ export default function HomePage() {
         ))}
       </section>
 
-      <section className="section">
-        <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
-          <div>
-            <p className="eyebrow">Propósito OficiosPro</p>
-            <h2 className="section-title">El buen trabajo técnico merece visibilidad.</h2>
-          </div>
-          <div className="grid gap-4">
-            <p className="text-lg font-semibold leading-8 text-ink">
-              OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
-            </p>
-            <div className="flex flex-wrap gap-2">
-              {["El lugar donde los buenos trabajadores brillan", "Reputación con cada trabajo", "Oficios profesionales y visibles"].map((item) => (
-                <span key={item} className="chip bg-white text-brand-dark">
-                  {item}
-                </span>
-              ))}
-            </div>
-            <ConversionButton type="registro_especialista" sourceButton="Quiero inscribir mi oficio propósito" className="btn-sun mt-6">
-              Quiero inscribir mi oficio
-            </ConversionButton>
-          </div>
-        </div>
+      <section className="section-compact">
         <SectionHeader
           eyebrow="Cómo funciona"
-          title="De buscar un especialista a cerrar el trabajo, sin perseguir presupuestos."
-          text="OficiosPro ordena disponibilidad, reputación y créditos para que la decisión sea rápida y confiable."
+          title="De buscar a cerrar el trabajo, sin perseguir presupuestos."
+          text="Disponibilidad, reputación y créditos ordenados para decidir rápido."
         />
         <HowItWorksFlow />
       </section>
@@ -239,43 +122,6 @@ export default function HomePage() {
         <div className="rounded-[32px] bg-slate-50 p-5 md:p-8">
           <SectionHeader eyebrow="Trabajos realizados" title="Evidencia visual antes de reservar." text="La confianza mejora cuando puedes ver trabajos, comunas, créditos usados y calificaciones." />
           <WorkProofGallery stories={workStories} />
-        </div>
-      </section>
-
-      <section className="section">
-        <SectionHeader
-          eyebrow="Rubros y categorias"
-          title="Especialistas para hogares, comunidades, empresas e industria."
-          text="Desde una reparacion urgente en casa hasta mantenciones para edificios, comercios, campos, packing e instalaciones industriales."
-        />
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {broadServiceCards.map((card) => (
-            <CategoryCardLink
-              key={card.title}
-              href={categoryHref(card.category, card.specialty)}
-              title={card.title}
-              description={card.description}
-              action={card.action}
-              sourceSection="home_broad_service_cards"
-              category={card.category}
-              specialty={card.specialty}
-              chip={<span className="chip bg-brand-soft text-brand-dark">{card.chip}</span>}
-            />
-          ))}
-        </div>
-      </section>
-
-      <section className="section" id="especialistas">
-        <div className="mb-10 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Foto protagonista, certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
-          <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
-            Ver todos
-          </Link>
-        </div>
-        <div className="grid gap-5 lg:grid-cols-3">
-          {featured.map((specialist) => (
-            <SpecialistCard key={specialist.id} specialist={specialist} />
-          ))}
         </div>
       </section>
 
@@ -288,7 +134,7 @@ export default function HomePage() {
               Acumula créditos mensuales para resolver problemas de gasfitería, electricidad, jardín, climatización o mantenciones cuando los necesites.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
-              {["Créditos hasta 24 meses", "Garantía OficiosPro", "Atención prioritaria", "Historial de servicios"].map((item) => (
+              {["Créditos acumulables", "Garantía OficiosPro", "Atención prioritaria", "Historial de servicios"].map((item) => (
                 <span key={item} className="chip bg-brand-soft text-brand-dark">
                   {item}
                 </span>
@@ -311,7 +157,7 @@ export default function HomePage() {
       </section>
 
       <section className="section-compact">
-        <CreditExplainer compact />
+        <HomeCreditPreview />
       </section>
 
       <section className="bg-enterprise py-20 text-white" id="empresas">
@@ -329,11 +175,19 @@ export default function HomePage() {
                 </span>
               ))}
             </div>
-            <ConversionButton type="contacto_empresa" sourceButton="Soluciones para empresas" className="btn-primary mt-7">
-              Soluciones para empresas
-            </ConversionButton>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa home" className="btn-primary">
+                Solicitar cuenta empresa
+              </ConversionButton>
+              <Link href="/empresas" className="btn-secondary border-white/20 bg-white/10 text-white hover:border-white/40" data-event="home_business_solutions">
+                Soluciones para empresas
+              </Link>
+            </div>
           </div>
           <DashboardPreview />
+        </div>
+        <div className="mx-auto mt-10 max-w-7xl px-5">
+          <HomeBusinessUseCases />
         </div>
         <div className="mx-auto mt-10 grid max-w-7xl gap-4 px-5 md:grid-cols-3">
           {enterprisePlans.map((plan) => (
@@ -343,6 +197,20 @@ export default function HomePage() {
       </section>
 
       <section className="section">
+        <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
+          <div>
+            <p className="eyebrow">Propósito OficiosPro</p>
+            <h2 className="section-title">El buen trabajo técnico merece visibilidad.</h2>
+          </div>
+          <div className="grid gap-4">
+            <p className="text-lg font-semibold leading-8 text-ink">
+              OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
+            </p>
+            <ConversionButton type="registro_especialista" sourceButton="Quiero inscribir mi oficio propósito" className="btn-sun justify-self-start">
+              Quiero inscribir mi oficio
+            </ConversionButton>
+          </div>
+        </div>
         <SectionHeader eyebrow="Confianza antes que precio" title="Los mejores especialistas brillan por evidencia, no por promesas." text="OficiosPro muestra reputación, comentarios reales, trabajos completados y certificaciones para que el precio en créditos no sea la única variable." />
         <div className="grid gap-5 md:grid-cols-3">
           {testimonials.map((testimonial) => (
@@ -358,6 +226,20 @@ export default function HomePage() {
                 </div>
               </div>
             </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="section-compact" id="especialistas">
+        <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
+          <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
+            Ver todos
+          </Link>
+        </div>
+        <div className="grid gap-5 lg:grid-cols-3">
+          {featured.map((specialist) => (
+            <SpecialistCard key={specialist.id} specialist={specialist} />
           ))}
         </div>
       </section>
@@ -392,60 +274,50 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="section">
-        <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="La plataforma parte con los servicios de mayor confianza y frecuencia para hogares y empresas." />
-        <div className="grid gap-4 md:grid-cols-4">
-          {serviceTypes.map((category) => {
-            const route = serviceTypeRoute(category.id);
-            return (
-              <CategoryCardLink
-                key={category.id}
-                href={categoryHref(route.category, route.specialty)}
-                title={category.name}
-                description={category.description}
-                action="Ver especialistas"
-                sourceSection="home_service_type_grid"
-                category={route.category}
-                specialty={route.specialty}
-              />
-            );
-          })}
-        </div>
+      <section className="section-compact">
+        <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="Explora por rubro: cada grupo despliega sus especialidades." />
+        <HomeCategoryAccordion />
       </section>
 
-      <section className="section grid gap-10">
-        <NationalCoveragePanel />
-        <SpecialtyCatalogPreview />
-        <ValidationAndRankPanel />
-        <LocalSeoPanel />
+      <section className="section-compact grid gap-3">
+        <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">Más sobre la red OficiosPro</h2>
+        <CollapsiblePanel title="Cobertura nacional" detail="Regiones y comunas donde opera la red.">
+          <NationalCoveragePanel />
+        </CollapsiblePanel>
+        <CollapsiblePanel title="Catálogo de especialidades" detail="Todos los oficios y servicios disponibles.">
+          <SpecialtyCatalogPreview />
+        </CollapsiblePanel>
+        <CollapsiblePanel title="Validación y ranking" detail="Cómo verificamos y ordenamos a los especialistas.">
+          <ValidationAndRankPanel />
+        </CollapsiblePanel>
+        <CollapsiblePanel title="Búsquedas locales" detail="Servicios más buscados por comuna.">
+          <LocalSeoPanel />
+        </CollapsiblePanel>
       </section>
     </main>
   );
 }
 
-function categoryHref(category: string, specialty: string) {
-  const params = new URLSearchParams({
-    categoria: category,
-    especialidad: specialty,
-    sourceSection: "home",
-  });
-  return `/especialistas?${params.toString()}`;
-}
-
-function serviceTypeRoute(categoryId: string) {
-  const routes: Record<string, { category: string; specialty: string }> = {
-    hogar: { category: "hogar", specialty: "gasfiteria" },
-    gasfiteria: { category: "hogar", specialty: "gasfiteria" },
-    electricidad: { category: "hogar", specialty: "electricidad" },
-    "climatizacion-refrigeracion": { category: "climatizacion", specialty: "aire-acondicionado-calefaccion" },
-    construccion: { category: "construccion", specialty: "remodelaciones" },
-    jardineria: { category: "hogar", specialty: "jardineria-piscinas" },
-    empresas: { category: "empresas", specialty: "mantencion-comercial" },
-    industria: { category: "industria", specialty: "mantencion-industrial" },
-    agroindustria: { category: "agroindustria", specialty: "packing-frio" },
-    emergencias: { category: "emergencias", specialty: "urgencias-hogar-empresa" },
-  };
-  return routes[categoryId] ?? { category: categoryId, specialty: "todas" };
+function CollapsiblePanel({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
+  return (
+    <details className="group overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition duration-200 open:border-brand/30 open:shadow-card">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
+        <span className="min-w-0">
+          <strong className="block text-lg font-black text-ink">{title}</strong>
+          <span className="block truncate text-sm font-bold text-muted">{detail}</span>
+        </span>
+        <span
+          aria-hidden
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-300 group-open:rotate-180 group-open:border-brand group-open:text-brand-dark"
+        >
+          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </span>
+      </summary>
+      <div className="border-t border-line p-5">{children}</div>
+    </details>
+  );
 }
 
 function SectionHeader({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {

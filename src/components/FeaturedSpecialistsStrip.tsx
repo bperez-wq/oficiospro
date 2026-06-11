@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { SpecialistCompactCard, SpecialistCompactCardSkeleton } from "@/components/SpecialistCompactCard";
 import type { Specialist } from "@/data/mock";
@@ -25,7 +25,12 @@ function featuredScore(specialist: Specialist) {
 export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specialist[] }) {
   const [selectedSpecialist, setSelectedSpecialist] = useState<Specialist | null>(null);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
   const loading = !specialists;
+
+  function scrollByCards(direction: 1 | -1) {
+    scrollerRef.current?.scrollBy({ left: direction * 440, behavior: "smooth" });
+  }
   const featuredSpecialists = useMemo(
     () =>
       [...(specialists ?? [])]
@@ -55,9 +60,9 @@ export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specia
   }
 
   return (
-    <section className="border-b border-line bg-white/92 py-5 shadow-sm">
+    <section className="border-b border-line bg-white/92 py-8 shadow-sm md:py-10">
       <div className="mx-auto max-w-7xl px-5">
-        <div className="mb-3 flex items-end justify-between gap-4">
+        <div className="mb-4 flex items-end justify-between gap-4">
           <div>
             <p className="eyebrow mb-1 flex items-center gap-2">
               Especialistas destacados
@@ -67,15 +72,38 @@ export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specia
                 </span>
               ) : null}
             </p>
-            <h2 className="text-xl font-black text-ink md:text-2xl">Reserva rápido con perfiles mejor evaluados.</h2>
+            <h2 className="text-2xl font-black text-ink md:text-3xl">Reserva rápido con perfiles mejor evaluados.</h2>
+            <p className="mt-1 text-sm font-bold text-muted">Compara reputación, precio en créditos y disponibilidad.</p>
           </div>
-          <Link
-            href="/especialistas?sourceSection=featured_specialists_strip"
-            className="group inline-flex shrink-0 items-center gap-1 text-sm font-black text-brand-dark transition hover:text-brand"
-          >
-            Ver todos
-            <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <button
+              className="hidden h-10 w-10 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
+              type="button"
+              onClick={() => scrollByCards(-1)}
+              aria-label="Ver especialistas anteriores"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="m15 18-6-6 6-6" />
+              </svg>
+            </button>
+            <button
+              className="hidden h-10 w-10 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
+              type="button"
+              onClick={() => scrollByCards(1)}
+              aria-label="Ver más especialistas"
+            >
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <path d="m9 6 6 6-6 6" />
+              </svg>
+            </button>
+            <Link
+              href="/especialistas?sourceSection=featured_specialists_strip"
+              className="group inline-flex items-center gap-1 text-sm font-black text-brand-dark transition hover:text-brand"
+            >
+              Ver todos
+              <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+            </Link>
+          </div>
         </div>
 
         {loading ? (
@@ -96,7 +124,10 @@ export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specia
           <div className="relative -mx-5">
             <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 z-10 hidden w-10 bg-gradient-to-r from-white to-transparent lg:block" />
             <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 z-10 hidden w-10 bg-gradient-to-l from-white to-transparent lg:block" />
-            <div className="no-scrollbar grid snap-x snap-mandatory auto-cols-[78%] grid-flow-col gap-3.5 overflow-x-auto scroll-smooth scroll-px-5 overscroll-x-contain px-5 pb-2 sm:auto-cols-[42%] md:auto-cols-[30%] lg:auto-cols-[185px] xl:auto-cols-[172px]">
+            <div
+              ref={scrollerRef}
+              className="no-scrollbar grid snap-x snap-mandatory auto-cols-[78%] grid-flow-col gap-3.5 overflow-x-auto scroll-smooth scroll-px-5 overscroll-x-contain px-5 pb-2 sm:auto-cols-[44%] md:auto-cols-[31%] lg:auto-cols-[215px] xl:auto-cols-[205px]"
+            >
               {featuredSpecialists.map((specialist) => (
                 <SpecialistCompactCard key={specialist.id} specialist={specialist} sourceSection={sourceSection} onReserve={openBooking} />
               ))}
