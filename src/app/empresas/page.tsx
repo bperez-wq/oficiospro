@@ -2,6 +2,7 @@ import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
+import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
@@ -19,12 +20,20 @@ export default function EmpresasPage() {
         subtitle="Externaliza mantenciones de forma controlada con técnicos verificados, centros de costo, reportes, documentación del servicio, facturación y trazabilidad."
       >
         <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary">
-          Solicitar contacto
+          Solicitar cuenta empresa
         </ConversionButton>
-        <ConversionButton type="contacto_empresa" sourceButton="Ver planes empresa" className="btn-secondary">
-          Ver planes empresa
+        <ConversionButton type="contacto_empresa" sourceButton="Hablar con ventas empresa" className="btn-secondary">
+          Hablar con ventas
         </ConversionButton>
       </AppHero>
+
+      <section>
+        <div className="mb-6 max-w-3xl">
+          <p className="eyebrow">Casos de uso</p>
+          <h2 className="section-title">Una red para cada tipo de operación.</h2>
+        </div>
+        <HomeBusinessUseCases />
+      </section>
 
       <section className="enterprise-shell p-6 md:p-8">
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">

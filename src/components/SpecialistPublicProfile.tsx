@@ -10,6 +10,7 @@ import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAva
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
+import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getSpecialistBySlugOrId, seedMockState } from "@/lib/storage";
@@ -299,11 +300,16 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
     />
     <StickyMobileCTA>
       <button className="btn-primary min-h-11 flex-1 px-3 text-sm" type="button" onClick={() => openBookingForService(primaryService)}>
-        Reservar
+        {bagActionLabel(primaryService.pricingMode)}
       </button>
-      <Link className="btn-secondary min-h-11 flex-1 px-3 text-sm" href="/especialistas">
-        Ver más
-      </Link>
+      <button
+        className="btn-secondary min-h-11 flex-1 px-3 text-sm"
+        type="button"
+        data-event="profile_add_to_bag"
+        onClick={() => addSpecialistToBagAndProceed({ specialist, service: primaryService, sourceSection: "specialist_profile", proceed: "page" })}
+      >
+        Agregar a Bolsa
+      </button>
     </StickyMobileCTA>
     </>
   );
