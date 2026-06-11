@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { availabilityLabels, type Specialist } from "@/data/mock";
+import { fallbackSpecialistImage } from "@/data/visualAssets";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
@@ -45,8 +46,9 @@ export function SpecialistCompactCard({
       <div className="flex gap-3">
         <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
           <img
-            src={specialist.image}
+            src={specialist.image || fallbackSpecialistImage(specialist.serviceTypeId, specialist.specialty)}
             alt={`${specialist.name}, ${specialist.specialty}`}
+            loading="lazy"
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />
         </div>

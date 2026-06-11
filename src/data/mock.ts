@@ -124,12 +124,13 @@ export const availabilityLabels: Record<Availability, string> = {
   tomorrow: "Disponible mañana",
 };
 
-const bathroom = "/assets/work-bathroom.webp";
-const electrical = "/assets/work-electrical.webp";
-const garden = "/assets/work-garden.webp";
-const hvac = "/assets/work-hvac.webp";
-const home = "/assets/hero-hogar.webp";
-const enterprise = "/assets/club-empresas.webp";
+/* Banco propio de imágenes de oficios (ver src/data/visualAssets.ts). */
+const bathroom = "/assets/oficios/gasfiteria/gasfiteria-griferia-01.jpg";
+const electrical = "/assets/oficios/electricidad/electricidad-tablero-01.jpg";
+const garden = "/assets/oficios/jardineria/jardineria-poda-01.jpg";
+const hvac = "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg";
+const home = "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg";
+const enterprise = "/assets/oficios/industria/industria-planta-01.jpg";
 
 const baseSpecialists: Specialist[] = [
   {

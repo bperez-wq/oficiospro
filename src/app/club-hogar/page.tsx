@@ -11,6 +11,13 @@ import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { defaultTransactions, workStories } from "@/data/mock";
 import { formatCLP, subscriptionPlans } from "@/data/marketplace";
 
+const comparisonExamples: [string, number, string][] = [
+  ["Mantención calefont", 25, "/assets/oficios/calefont/calefont-mantencion-01.jpg"],
+  ["Filtración (gasfitería)", 18, "/assets/oficios/gasfiteria/gasfiteria-red-exterior-01.jpg"],
+  ["Revisión eléctrica", 12, "/assets/oficios/electricidad/electricidad-luminaria-01.jpg"],
+  ["Jardín puesta a punto", 18, "/assets/oficios/jardineria/jardineria-plantacion-01.jpg"],
+];
+
 const clubFaq = [
   {
     question: "¿Qué pasa si no uso mis créditos este mes?",
@@ -65,7 +72,7 @@ export default function ClubHogarPage() {
           <DashboardMetricCard label="Ahorro Club" value="2 cr" detail="Por solicitud elegible" />
         </div>
         <div className="overflow-hidden rounded-2xl border border-line bg-white">
-          <img src="/assets/work-bathroom.webp" alt="Servicio del hogar realizado por especialista OficiosPro" className="h-44 w-full object-cover" />
+          <img src="/assets/oficios/calefont/calefont-mantencion-01.jpg" alt="Especialista revisando un calefont a domicilio" loading="lazy" className="h-44 w-full object-cover" />
         </div>
       </VisualRail>
 
@@ -75,15 +82,13 @@ export default function ClubHogarPage() {
           <h2 className="mt-3 text-2xl font-black text-ink">Compra créditos puntuales</h2>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">Pagas precio normal en cada solicitud. Útil para arreglos esporádicos.</p>
           <div className="mt-4 grid gap-2">
-            {[
-              ["Mantención calefont", 25],
-              ["Filtración (gasfitería)", 18],
-              ["Revisión eléctrica", 12],
-              ["Jardín puesta a punto", 18],
-            ].map(([service, credits]) => (
-              <div key={service} className="flex items-center justify-between rounded-2xl bg-slate-50 px-4 py-3 text-sm font-black">
-                <span className="text-ink">{service}</span>
-                <span className="text-muted">{credits} cr</span>
+            {comparisonExamples.map(([service, credits, image]) => (
+              <div key={service} className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-3 py-2 text-sm font-black">
+                <span className="flex min-w-0 items-center gap-2.5 text-ink">
+                  <img src={image} alt={service} loading="lazy" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                  <span className="truncate">{service}</span>
+                </span>
+                <span className="shrink-0 text-muted">{credits} cr</span>
               </div>
             ))}
           </div>
@@ -96,15 +101,13 @@ export default function ClubHogarPage() {
           <h2 className="mt-3 text-2xl font-black text-ink">Ahorra {defaultCommercialConfig.subscriberDiscountCredits} créditos en cada solicitud</h2>
           <p className="mt-2 text-sm font-bold leading-6 text-muted">Carga mensual acumulable + descuento por solicitud + atención prioritaria.</p>
           <div className="mt-4 grid gap-2">
-            {[
-              ["Mantención calefont", 25],
-              ["Filtración (gasfitería)", 18],
-              ["Revisión eléctrica", 12],
-              ["Jardín puesta a punto", 18],
-            ].map(([service, credits]) => (
-              <div key={service} className="flex items-center justify-between rounded-2xl bg-white px-4 py-3 text-sm font-black shadow-sm">
-                <span className="text-ink">{service}</span>
-                <span className="text-brand-dark">
+            {comparisonExamples.map(([service, credits, image]) => (
+              <div key={service} className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 text-sm font-black shadow-sm">
+                <span className="flex min-w-0 items-center gap-2.5 text-ink">
+                  <img src={image} alt={service} loading="lazy" className="h-10 w-10 shrink-0 rounded-lg object-cover" />
+                  <span className="truncate">{service}</span>
+                </span>
+                <span className="shrink-0 text-brand-dark">
                   {Number(credits) - defaultCommercialConfig.subscriberDiscountCredits} cr
                   <span className="ml-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] text-emerald-700">−{defaultCommercialConfig.subscriberDiscountCredits}</span>
                 </span>
@@ -155,7 +158,7 @@ export default function ClubHogarPage() {
           </p>
         </article>
         <article className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
-          <img src="/assets/work-bathroom.webp" alt="Especialista reparando un baño en un hogar" className="h-72 w-full object-cover" />
+          <img src="/assets/oficios/gasfiteria/gasfiteria-griferia-01.jpg" alt="Gasfíter reparando la grifería del baño" loading="lazy" className="h-72 w-full object-cover" />
           <div className="p-6">
             <h2 className="text-2xl font-black">Lo que incluye Club Hogar</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">

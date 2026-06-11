@@ -21,7 +21,22 @@ export default function SpecialistRegisterPage() {
       <section className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <SpecialistRegisterForm />
         <MarketplaceCard className="overflow-hidden p-0" hover={false}>
-          <img src="/assets/work-electrical.webp" alt="Especialista mostrando un trabajo terminado" className="h-80 w-full object-cover" />
+          <div className="relative">
+            <img src="/assets/oficios/carpinteria/carpinteria-maestro-01.jpg" alt="Maestro carpintero trabajando en su taller" className="h-64 w-full object-cover" />
+            <div aria-hidden className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-ink/60 to-transparent" />
+            <span className="absolute bottom-3 left-4 rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
+              Haz visible tu oficio
+            </span>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5 p-1.5">
+            {[
+              ["/assets/oficios/electricidad/electricidad-instalacion-01.jpg", "Electricista instalando un enchufe en una remodelación"],
+              ["/assets/oficios/industria/industria-soldadura-01.jpg", "Soldador trabajando con protección facial"],
+              ["/assets/oficios/gasfiteria/gasfiteria-medidor-01.jpg", "Técnico revisando un medidor exterior"],
+            ].map(([src, alt]) => (
+              <img key={src} src={src} alt={alt} loading="lazy" className="h-20 w-full rounded-xl object-cover" />
+            ))}
+          </div>
           <div className="p-6">
             <h2 className="text-2xl font-black">Perfil profesional con revisión de antecedentes.</h2>
             <p className="mt-3 font-semibold leading-7 text-muted">Foto destacada, certificaciones, trabajos completados, galería, agenda, pagos trazables y calificaciones verificadas. No prometemos empleo ni ingresos garantizados.</p>

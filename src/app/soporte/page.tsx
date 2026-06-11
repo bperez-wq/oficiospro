@@ -4,9 +4,11 @@ import { VisualFaqAccordion, type FaqItem } from "@/components/VisualFaqAccordio
 
 const supportTopics = ["Créditos", "Reservas", "Pagos", "Adicionales", "Documentos", "Cuenta"];
 
-const supportBlocks: { icon: string; title: string; detail: string; faqs: FaqItem[] }[] = [
+const supportBlocks: { icon: string; image: string; imageAlt: string; title: string; detail: string; faqs: FaqItem[] }[] = [
   {
     icon: "🏠",
+    image: "/assets/oficios/pintura/pintura-interior-01.jpg",
+    imageAlt: "Pintor realizando un trabajo de interior en un hogar",
     title: "Soy cliente",
     detail: "Reservas, créditos y pago protegido",
     faqs: [
@@ -30,6 +32,8 @@ const supportBlocks: { icon: string; title: string; detail: string; faqs: FaqIte
   },
   {
     icon: "🛠️",
+    image: "/assets/oficios/carpinteria/carpinteria-taller-01.jpg",
+    imageAlt: "Carpintero trabajando en su taller",
     title: "Soy especialista",
     detail: "Postulación, perfil y pagos",
     faqs: [
@@ -53,6 +57,8 @@ const supportBlocks: { icon: string; title: string; detail: string; faqs: FaqIte
   },
   {
     icon: "🏢",
+    image: "/assets/oficios/electricidad/electricidad-medidor-01.jpg",
+    imageAlt: "Técnico revisando un medidor en una instalación comercial",
     title: "Soy empresa o comunidad",
     detail: "Cuenta corporativa y facturación",
     faqs: [
@@ -103,15 +109,19 @@ export default function SupportPage() {
 
       <section className="grid items-start gap-5 lg:grid-cols-3">
         {supportBlocks.map((block) => (
-          <article key={block.title} className="rounded-[28px] border border-line bg-white p-5 shadow-soft md:p-6">
-            <div className="mb-4 flex items-center gap-3">
-              <span aria-hidden className="grid h-11 w-11 place-items-center rounded-2xl bg-brand-soft text-xl">{block.icon}</span>
-              <div>
+          <article key={block.title} className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
+            <div className="relative h-24">
+              <img src={block.image} alt={block.imageAlt} loading="lazy" className="h-full w-full object-cover" />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/60 to-ink/10" />
+              <span aria-hidden className="absolute bottom-3 left-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/95 text-lg shadow-soft backdrop-blur">{block.icon}</span>
+            </div>
+            <div className="p-5 md:p-6">
+              <div className="mb-4">
                 <h2 className="text-xl font-black text-ink">{block.title}</h2>
                 <p className="text-sm font-bold text-muted">{block.detail}</p>
               </div>
+              <VisualFaqAccordion items={block.faqs} openFirst={false} />
             </div>
-            <VisualFaqAccordion items={block.faqs} openFirst={false} />
           </article>
         ))}
       </section>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
+import { categoryImages } from "@/data/visualAssets";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
 import { useConversionModal } from "@/components/ConversionModal";
@@ -448,6 +449,20 @@ export function SpecialistsExplorer() {
         </aside>
 
         <div id="especialistas-results" className="grid gap-5">
+          {categoryImages[categoryParam] || categoryImages[category] ? (
+            <div className="relative h-24 overflow-hidden rounded-[24px] border border-line md:h-32">
+              <img
+                src={categoryImages[categoryParam] ?? categoryImages[category]}
+                alt={`Especialista trabajando en ${categoryParam || category}`}
+                className="h-full w-full object-cover"
+              />
+              <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/30 to-transparent" />
+              <span className="absolute bottom-3 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" />
+                Especialistas verificados en tu búsqueda
+              </span>
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="eyebrow">Especialistas disponibles</p>

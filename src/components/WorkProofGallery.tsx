@@ -79,6 +79,7 @@ function ProofCard({ story, featured = false }: { story: WorkHistory; featured?:
       <img
         src={story.image}
         alt={`${story.title} en ${story.commune}`}
+        loading="lazy"
         className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
       />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-ink/10" />

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
 import { availabilityLabels, type Specialist } from "@/data/mock";
+import { fallbackSpecialistImage } from "@/data/visualAssets";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
@@ -50,8 +51,9 @@ export function SpecialistGridCard({
     <article className="group flex flex-col overflow-hidden rounded-[20px] border border-line bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-card">
       <div className="relative h-32 overflow-hidden bg-brand-soft">
         <img
-          src={specialist.image}
+          src={specialist.image || fallbackSpecialistImage(specialist.serviceTypeId, specialist.specialty)}
           alt={`${specialist.name}, ${specialist.specialty} en ${specialist.zone}`}
+          loading="lazy"
           className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
         />
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink/55 to-transparent" />

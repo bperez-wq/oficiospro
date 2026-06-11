@@ -11,8 +11,8 @@ type UseCase = {
 const useCases: UseCase[] = [
   {
     title: "Comunidades y edificios",
-    detail: "Bombas, portones, calderas y áreas comunes",
-    image: "/assets/work-garden.webp",
+    detail: "Bombas, portones, piscinas y áreas comunes",
+    image: "/assets/oficios/piscinas/piscina-mantencion-01.jpg",
     category: "comunidades",
     specialty: "edificios-condominios",
   },
@@ -25,15 +25,15 @@ const useCases: UseCase[] = [
   },
   {
     title: "Restaurantes y frío",
-    detail: "Climatización, cámaras y equipos críticos",
-    image: "/assets/work-hvac.webp",
+    detail: "Climatización, cámaras de frío y equipos críticos",
+    image: "/assets/oficios/agro/agro-camara-frio-01.jpg",
     category: "climatizacion",
     specialty: "aire-acondicionado-calefaccion",
   },
   {
     title: "Industria y bodegas",
-    detail: "Tableros, motores y mantenimiento preventivo",
-    image: "/assets/work-electrical.webp",
+    detail: "Bombas, motores y mantenimiento preventivo",
+    image: "/assets/oficios/industria/industria-bombas-01.jpg",
     category: "industria",
     specialty: "mantencion-industrial",
   },
@@ -61,6 +61,7 @@ export function HomeBusinessUseCases() {
           <img
             src={useCase.image}
             alt={useCase.title}
+            loading="lazy"
             className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
           <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/30 to-ink/10" />

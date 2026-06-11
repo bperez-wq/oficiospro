@@ -2,9 +2,9 @@ import Link from "next/link";
 import { defaultCommercialConfig } from "@/data/commercialConfig";
 
 const examples = [
-  { service: "Mantención calefont", credits: 25 },
-  { service: "Visita técnica eléctrica", credits: 6 },
-  { service: "Jardín puesta a punto", credits: 18 },
+  { service: "Mantención calefont", credits: 25, image: "/assets/oficios/calefont/calefont-revision-01.jpg" },
+  { service: "Visita técnica eléctrica", credits: 6, image: "/assets/oficios/electricidad/electricidad-luminaria-01.jpg" },
+  { service: "Jardín puesta a punto", credits: 18, image: "/assets/oficios/jardineria/jardineria-pasto-01.jpg" },
 ];
 
 /**
@@ -32,10 +32,13 @@ export function HomeCreditPreview() {
       </div>
       <div className="grid gap-3">
         {examples.map((example) => (
-          <article key={example.service} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-4 transition duration-200 hover:border-brand/30 hover:bg-white">
-            <div className="min-w-0">
-              <strong className="block text-base font-black text-ink">{example.service}</strong>
-              <span className="text-sm font-bold text-muted">{example.credits} créditos</span>
+          <article key={example.service} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-3 transition duration-200 hover:border-brand/30 hover:bg-white">
+            <div className="flex min-w-0 items-center gap-3">
+              <img src={example.image} alt={example.service} loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
+              <div className="min-w-0">
+                <strong className="block text-base font-black text-ink">{example.service}</strong>
+                <span className="text-sm font-bold text-muted">{example.credits} créditos</span>
+              </div>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">
               Club Hogar: {Math.max(0, example.credits - discount)} créditos

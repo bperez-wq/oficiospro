@@ -8,6 +8,7 @@ import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { QuickProblemLinks } from "@/components/QuickProblemLinks";
+import { heroCollageImages } from "@/data/visualAssets";
 import { WorkProofGallery } from "@/components/WorkProofGallery";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
@@ -66,11 +67,17 @@ export default function HomePage() {
           <div className="relative hidden min-h-[520px] lg:block">
             <div className="absolute inset-0 rounded-[34px] bg-gradient-to-br from-brand-soft via-mint to-accent-soft" />
             <div className="surface-grid absolute inset-0 rounded-[34px] opacity-40" />
-            <img
-              src="/assets/hero-hogar.webp"
-              alt="Especialista verificado resolviendo una mantención en un hogar"
-              className="absolute inset-x-6 bottom-0 h-[500px] w-[calc(100%-3rem)] rounded-[28px] object-cover shadow-lift"
-            />
+            <div className="absolute inset-x-6 bottom-6 top-6 grid grid-cols-2 grid-rows-2 gap-3">
+              {heroCollageImages.map((image, index) => (
+                <img
+                  key={image.src}
+                  src={image.src}
+                  alt={image.alt}
+                  loading={index === 0 ? undefined : "lazy"}
+                  className="h-full w-full rounded-[24px] object-cover shadow-card"
+                />
+              ))}
+            </div>
             <FloatingCard className="left-0 top-8 animate-float" label="Calificación promedio" value="4,9★" accent="sun" />
             <FloatingCard className="right-0 top-24 animate-float [animation-delay:1.5s]" label="Disponible ahora" value="35 min" accent="accent" />
             <FloatingCard className="bottom-16 left-6 animate-float [animation-delay:0.8s]" label="Precio desde" value="30 créditos" accent="brand" />

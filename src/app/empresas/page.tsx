@@ -35,8 +35,16 @@ export default function EmpresasPage() {
         <HomeBusinessUseCases />
       </section>
 
-      <section className="enterprise-shell p-6 md:p-8">
-        <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+      <section className="enterprise-shell relative overflow-hidden p-6 md:p-8">
+        <img
+          src="/assets/oficios/industria/industria-tablero-01.jpg"
+          alt=""
+          aria-hidden
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover opacity-15"
+        />
+        <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-enterprise via-enterprise/85 to-enterprise/40" />
+        <div className="relative grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
             <p className="eyebrow text-teal-200">Continuidad operacional</p>
             <h2 className="text-4xl font-black leading-tight">Centraliza tus mantenciones y paga con créditos corporativos.</h2>
