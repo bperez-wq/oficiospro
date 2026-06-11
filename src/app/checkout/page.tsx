@@ -66,6 +66,13 @@ export default function CheckoutPage() {
     region: DEFAULT_REGION_CODE,
     commune: "Las Condes",
   });
+  const [billing, setBilling] = useState({
+    documentType: "boleta" as "boleta" | "factura",
+    businessName: "",
+    businessRut: "",
+    businessLine: "",
+    billingEmail: "",
+  });
   const plan = useMemo(() => getPlanById(planId), [planId]);
   const cartSummary = useMemo(() => cartTotals(cartItems), [cartItems]);
   const selectedCreditPack = findCreditPack(selectedPack);
@@ -148,7 +155,19 @@ export default function CheckoutPage() {
       communeName: customer.commune,
       sourceComponent: "CheckoutPage",
       sourceButton: mode === "subscription" ? "Pagar con Mercado Pago" : "Comprar créditos",
-      payload: { planId: plan.id, rut: customer.rut, mode, selectedPack: creditsToBuy, paymentContext: paymentContext.id, provider: selectedProvider },
+      payload: {
+        planId: plan.id,
+        rut: customer.rut,
+        mode,
+        selectedPack: creditsToBuy,
+        paymentContext: paymentContext.id,
+        provider: selectedProvider,
+        billingDocumentType: billing.documentType,
+        billingBusinessName: billing.documentType === "factura" ? billing.businessName : undefined,
+        billingBusinessRut: billing.documentType === "factura" ? billing.businessRut : undefined,
+        billingBusinessLine: billing.documentType === "factura" ? billing.businessLine : undefined,
+        billingEmail: billing.documentType === "factura" ? billing.billingEmail : undefined,
+      },
     });
 
     try {
@@ -324,6 +343,49 @@ export default function CheckoutPage() {
                 communePlaceholder="Busca comuna para comprobante"
                 required
               />
+            </div>
+
+            <div className="grid gap-3 rounded-2xl bg-white p-4">
+              <p className="text-xs font-black uppercase text-muted">Documento tributario</p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {[
+                  { id: "boleta" as const, label: "Boleta", detail: "A nombre del titular de la compra." },
+                  { id: "factura" as const, label: "Factura empresa", detail: "Con razón social, RUT y giro." },
+                ].map((option) => (
+                  <button
+                    key={option.id}
+                    className={`rounded-2xl border p-3 text-left transition hover:border-brand hover:bg-brand-soft ${
+                      billing.documentType === option.id ? "border-brand bg-brand-soft" : "border-line bg-slate-50"
+                    }`}
+                    type="button"
+                    onClick={() => setBilling({ ...billing, documentType: option.id })}
+                  >
+                    <strong className="block text-sm font-black text-ink">{option.label}</strong>
+                    <span className="text-xs font-bold text-muted">{option.detail}</span>
+                  </button>
+                ))}
+              </div>
+              {billing.documentType === "factura" ? (
+                <div className="grid gap-3 md:grid-cols-2">
+                  <label className="field">
+                    Razón social
+                    <input value={billing.businessName} onChange={(event) => setBilling({ ...billing, businessName: event.target.value })} required />
+                  </label>
+                  <label className="field">
+                    RUT empresa
+                    <input value={billing.businessRut} onChange={(event) => setBilling({ ...billing, businessRut: event.target.value })} placeholder="76.123.456-7" required />
+                  </label>
+                  <label className="field">
+                    Giro
+                    <input value={billing.businessLine} onChange={(event) => setBilling({ ...billing, businessLine: event.target.value })} required />
+                  </label>
+                  <label className="field">
+                    Correo de facturación
+                    <input value={billing.billingEmail} onChange={(event) => setBilling({ ...billing, billingEmail: event.target.value })} type="email" required />
+                  </label>
+                </div>
+              ) : null}
+              <p className="text-sm font-bold text-muted">Recibirás el documento tributario correspondiente por tu compra o suscripción.</p>
             </div>
 
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">

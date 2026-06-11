@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { SpecialistDashboard } from "@/components/Dashboards";
+import { SpecialistTaxStatusCard } from "@/components/SpecialistTaxStatusCard";
 import { specialists } from "@/data/mock";
 
 export default function DashboardEspecialistaPage() {
@@ -21,6 +22,7 @@ export default function DashboardEspecialistaPage() {
           Ver perfil público
         </Link>
       </AppHero>
+      <SpecialistTaxStatusCard />
       <SpecialistDashboard />
     </main>
   );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "react";
 import { AdminCreditLedgerPreview } from "@/components/AdminCreditLedgerPreview";
+import { AdminFinancePanel } from "@/components/AdminFinancePanel";
 import { AdminPricingPanel } from "@/components/AdminPricingPanel";
 import { defaultBookings, specialists } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -87,6 +88,7 @@ type AdminSection =
   | "leads-hogar"
   | "leads-empresas"
   | "pagos"
+  | "finanzas"
   | "negociacion"
   | "catalogo"
   | "comunas"
@@ -141,6 +143,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "leads-hogar", label: "Leads Club Hogar" },
   { id: "leads-empresas", label: "Leads Empresas" },
   { id: "pagos", label: "Pagos y créditos" },
+  { id: "finanzas", label: "Finanzas y tributación" },
   { id: "negociacion", label: "Tarifas, cotizaciones y negociación" },
   { id: "catalogo", label: "Catálogo de servicios" },
   { id: "comunas", label: "Comunas y cobertura" },
@@ -936,6 +939,8 @@ export function AdminPanel() {
             onExportPayments={() => exportPaymentRows("pagos-creditos.csv", payments, paymentSubscriptions, paymentTransactions)}
           />
         ) : null}
+
+        {activeSection === "finanzas" ? <AdminFinancePanel /> : null}
 
         {activeSection === "negociacion" ? (
           <NegotiationAdminPanel
