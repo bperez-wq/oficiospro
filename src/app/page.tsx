@@ -4,6 +4,8 @@ import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
+import { HowItWorksFlow } from "@/components/HowItWorksFlow";
+import { WorkProofGallery } from "@/components/WorkProofGallery";
 import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -230,40 +232,13 @@ export default function HomePage() {
           title="De buscar un especialista a cerrar el trabajo, sin perseguir presupuestos."
           text="OficiosPro ordena disponibilidad, reputación y créditos para que la decisión sea rápida y confiable."
         />
-        <div className="grid gap-4 md:grid-cols-4">
-          {[
-            ["1", "Busca el servicio", "Filtra por oficio, comuna y disponibilidad real en segundos.", "from-brand to-brand-dark"],
-            ["2", "Elige especialista", "Compara reputación, trabajos completados y precio en créditos.", "from-accent to-accent-dark"],
-            ["3", "Reserva o solicita visita", "Coordina con pago protegido: los créditos quedan retenidos.", "from-sun to-sun-dark"],
-            ["4", "Paga con créditos y evalúa", "Liberas el pago al finalizar y la reputación crece con tu reseña.", "from-brand to-brand-dark"],
-          ].map(([step, title, text, grad]) => (
-            <article key={step} className="panel card-hover">
-              <span className={`mb-5 grid h-12 w-12 place-items-center rounded-2xl bg-gradient-to-br ${grad} text-lg font-black text-white shadow-card`}>{step}</span>
-              <h3 className="text-xl font-black">{title}</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-muted">{text}</p>
-            </article>
-          ))}
-        </div>
+        <HowItWorksFlow />
       </section>
 
       <section className="section-compact">
         <div className="rounded-[32px] bg-slate-50 p-5 md:p-8">
           <SectionHeader eyebrow="Trabajos realizados" title="Evidencia visual antes de reservar." text="La confianza mejora cuando puedes ver trabajos, comunas, créditos usados y calificaciones." />
-          <div className="grid gap-5 md:grid-cols-4">
-            {workStories.map((work) => (
-              <article key={work.title} className="overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition hover:-translate-y-1 hover:shadow-card">
-                <img src={work.image} alt={work.title} className="h-48 w-full object-cover" />
-                <div className="p-4">
-                  <strong className="text-lg">{work.title}</strong>
-                  <span className="mt-1 block text-sm font-bold text-muted">{work.commune}</span>
-                  <div className="mt-4 flex items-center justify-between text-sm font-black">
-                    <span>{work.credits} créditos</span>
-                    <span className="text-gold">{work.rating.toFixed(1)}/5</span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
+          <WorkProofGallery stories={workStories} />
         </div>
       </section>
 

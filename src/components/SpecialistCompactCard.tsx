@@ -4,9 +4,23 @@ import Link from "next/link";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
-import { getSpecialistLevel } from "@/lib/trust";
+import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
 
 const defaultSourceSection = "featured_specialists_strip";
+
+export const levelChipStyles: Record<SpecialistLevel, string> = {
+  Platino: "bg-violet-100 text-violet-700",
+  Oro: "bg-gold/15 text-gold",
+  Plata: "bg-slate-100 text-slate-600",
+  Bronce: "bg-amber-100 text-amber-700",
+  Fundador: "bg-brand-soft text-brand-dark",
+};
+
+export const availabilityDotStyles: Record<Specialist["availability"], string> = {
+  now: "bg-emerald-500",
+  today: "bg-amber-400",
+  tomorrow: "bg-slate-300",
+};
 
 export function SpecialistCompactCard({
   specialist,
@@ -22,21 +36,32 @@ export function SpecialistCompactCard({
   const jobs = specialist.trabajosCompletados ?? specialist.jobs;
   const profileHref = `/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}&sourceSection=${sourceSection}`;
   const action = bookingPrimaryAction(service).includes("cotizacion") ? "Cotizar" : "Reservar";
+  const hasDistance = typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
+  const distanceLabel = hasDistance ? `a ${specialist.distance.toFixed(1).replace(".", ",")} km` : specialist.commune ?? specialist.zone;
 
   return (
-    <article className="group snap-start rounded-[18px] border border-line bg-white p-3 shadow-sm transition hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-card">
+    <article className="group snap-start rounded-[18px] border border-line bg-white p-3 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-card">
       <div className="flex gap-3">
-        <img src={specialist.image} alt={`${specialist.name}, ${specialist.specialty}`} className="h-16 w-16 shrink-0 rounded-2xl object-cover" />
-        <div className="min-w-0">
-          <strong className="block truncate text-sm text-ink">{specialist.name}</strong>
+        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
+          <img
+            src={specialist.image}
+            alt={`${specialist.name}, ${specialist.specialty}`}
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-1.5">
+            <strong className="truncate text-sm text-ink">{specialist.name}</strong>
+            <span className="shrink-0 text-xs font-black text-gold">★ {specialist.rating.toFixed(1)}</span>
+          </div>
           <span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-4 text-muted">{specialist.specialty}</span>
-          <span className="mt-1 inline-flex rounded-full bg-gold/15 px-2 py-1 text-[11px] font-black text-gold">Nivel {level}</span>
+          <span className={`mt-1 inline-flex rounded-full px-2 py-1 text-[11px] font-black ${levelChipStyles[level]}`}>Nivel {level}</span>
         </div>
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-black">
-        <span className="rounded-xl bg-slate-50 px-2 py-1.5 text-ink">Rating {specialist.rating.toFixed(1)}</span>
-        <span className="rounded-xl bg-slate-50 px-2 py-1.5 text-muted">{jobs} trabajos</span>
+        <span className="rounded-xl bg-slate-50 px-2 py-1.5 text-ink">{jobs} trabajos</span>
+        <span className="truncate rounded-xl bg-slate-50 px-2 py-1.5 text-muted">{distanceLabel}</span>
       </div>
 
       <div className="mt-3 min-h-14">
@@ -46,13 +71,16 @@ export function SpecialistCompactCard({
 
       <div className="mt-3 flex items-center justify-between gap-2 text-[11px] font-black text-muted">
         <span className="truncate">{specialist.commune ?? specialist.zone}</span>
-        <span className="shrink-0 text-brand-dark">{availabilityLabels[specialist.availability]}</span>
+        <span className="flex shrink-0 items-center gap-1.5 text-brand-dark">
+          <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />
+          {availabilityLabels[specialist.availability]}
+        </span>
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link
           href={profileHref}
-          className="inline-flex min-h-9 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition hover:border-brand hover:bg-brand-soft"
+          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
           onClick={() =>
             preserveSpecialistIntent({
               specialist,
@@ -66,7 +94,7 @@ export function SpecialistCompactCard({
           Ver perfil
         </Link>
         <button
-          className="inline-flex min-h-9 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition hover:bg-brand-dark"
+          className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
           type="button"
           data-event="specialist_compact_reserve"
           onClick={() => onReserve(specialist, service.id)}
@@ -75,5 +103,32 @@ export function SpecialistCompactCard({
         </button>
       </div>
     </article>
+  );
+}
+
+export function SpecialistCompactCardSkeleton() {
+  return (
+    <div aria-hidden className="snap-start rounded-[18px] border border-line bg-white p-3 shadow-sm">
+      <div className="flex gap-3">
+        <div className="h-16 w-16 shrink-0 animate-pulse rounded-2xl bg-slate-100" />
+        <div className="min-w-0 flex-1">
+          <div className="h-3.5 w-3/4 animate-pulse rounded-md bg-slate-100" />
+          <div className="mt-2 h-3 w-full animate-pulse rounded-md bg-slate-100" />
+          <div className="mt-2 h-5 w-16 animate-pulse rounded-full bg-slate-100" />
+        </div>
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="h-7 animate-pulse rounded-xl bg-slate-100" />
+        <div className="h-7 animate-pulse rounded-xl bg-slate-100" />
+      </div>
+      <div className="mt-3 min-h-14">
+        <div className="h-3 w-12 animate-pulse rounded-md bg-slate-100" />
+        <div className="mt-2 h-4 w-2/3 animate-pulse rounded-md bg-slate-100" />
+      </div>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
+        <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
+      </div>
+    </div>
   );
 }

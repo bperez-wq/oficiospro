@@ -9,7 +9,7 @@ import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
 import { useConversionModal } from "@/components/ConversionModal";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
-import { SpecialistCard } from "@/components/SpecialistCard";
+import { SpecialistGridCard } from "@/components/SpecialistGridCard";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import {
@@ -377,7 +377,7 @@ export function SpecialistsExplorer() {
         </button>
       </div>
 
-      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[260px_1fr]">
+      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[240px_1fr]">
         <aside className={`${filtersOpen ? "grid" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 lg:sticky lg:top-28 lg:grid`}>
           <div>
             <p className="eyebrow">Busca por confianza</p>
@@ -503,39 +503,12 @@ export function SpecialistsExplorer() {
               </div>
             </div>
           ) : null}
-          <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-black">Especialistas cerca de ti</h3>
-                <p className="text-sm font-bold text-muted">Vista de mapa referencial con cobertura y distancia aproximada.</p>
-              </div>
-              <span className="chip bg-brand-soft text-brand-dark">{visible.slice(0, 5).length} cercanos</span>
-            </div>
-            <div className="relative mt-4 min-h-56 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#e8f4f1_25%,#f8fbfa_25%,#f8fbfa_50%,#e8f4f1_50%,#e8f4f1_75%,#f8fbfa_75%)] bg-[length:34px_34px]">
-              <span className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-ink text-xs font-black text-white shadow-card">
-                Tú
-              </span>
-              {visible.slice(0, 5).map((specialist, index) => (
-                <span
-                  key={specialist.id}
-                  className="absolute grid h-12 w-12 place-items-center rounded-full border-2 border-white bg-brand text-xs font-black text-white shadow-card"
-                  style={{
-                    left: `${20 + (index * 14) % 58}%`,
-                    top: `${22 + (index * 19) % 52}%`,
-                  }}
-                  title={`${specialist.name} · ${specialist.distance} km`}
-                >
-                  {specialist.initials}
-                </span>
-              ))}
-            </div>
-          </section>
-          <div className="grid gap-5 xl:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visible.length ? (
               visible.map((specialist) => {
                 const matchedService = findMatchingService(specialist, activeSearchIntent);
                 return (
-                  <SpecialistCard
+                  <SpecialistGridCard
                     key={specialist.id}
                     specialist={specialist}
                     matchedService={matchedService}
@@ -546,7 +519,7 @@ export function SpecialistsExplorer() {
                 );
               })
             ) : (
-              <div className="xl:col-span-2">
+              <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                 <EmptyState
                   title="Estamos sumando especialistas para este servicio en tu zona."
                   text="Dejanos tu solicitud y te ayudamos a encontrar una alternativa verificada."
@@ -582,6 +555,33 @@ export function SpecialistsExplorer() {
               </div>
             )}
           </div>
+          <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-black">Especialistas cerca de ti</h3>
+                <p className="text-sm font-bold text-muted">Vista de mapa referencial con cobertura y distancia aproximada.</p>
+              </div>
+              <span className="chip bg-brand-soft text-brand-dark">{visible.slice(0, 5).length} cercanos</span>
+            </div>
+            <div className="relative mt-4 min-h-56 overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#e8f4f1_25%,#f8fbfa_25%,#f8fbfa_50%,#e8f4f1_50%,#e8f4f1_75%,#f8fbfa_75%)] bg-[length:34px_34px]">
+              <span className="absolute left-1/2 top-1/2 grid h-12 w-12 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-ink text-xs font-black text-white shadow-card">
+                Tú
+              </span>
+              {visible.slice(0, 5).map((specialist, index) => (
+                <span
+                  key={specialist.id}
+                  className="absolute grid h-12 w-12 place-items-center rounded-full border-2 border-white bg-brand text-xs font-black text-white shadow-card"
+                  style={{
+                    left: `${20 + (index * 14) % 58}%`,
+                    top: `${22 + (index * 19) % 52}%`,
+                  }}
+                  title={`${specialist.name} · ${specialist.distance} km`}
+                >
+                  {specialist.initials}
+                </span>
+              ))}
+            </div>
+          </section>
         </div>
       </section>
       <StickyMobileCTA>
