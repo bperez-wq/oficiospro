@@ -78,6 +78,9 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   const checkoutHref = checkoutUrlForItems(items);
   const hasItems = items.length > 0;
   const hasSubscription = items.some((item) => item.type === "subscription_plan");
+  /* Drawer = vista rápida; /bolsa = decisión final. Con varios especialistas, priorizamos comparar. */
+  const specialistItemCount = items.filter((item) => Boolean(item.specialistId)).length;
+  const prioritizeFullBag = specialistItemCount > 1;
 
   if (!open) return null;
 
@@ -215,9 +218,25 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               </div>
             </div>
             <div className="mt-4 grid gap-2">
-              <Link className="btn-primary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
-                Continuar al checkout
-              </Link>
+              {prioritizeFullBag ? (
+                <>
+                  <Link className="btn-primary w-full text-center" href="/bolsa" onClick={onClose} data-event="cart_drawer_view_bag">
+                    Ver bolsa completa
+                  </Link>
+                  <Link className="btn-secondary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
+                    Continuar al checkout
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link className="btn-primary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
+                    Continuar al checkout
+                  </Link>
+                  <Link className="btn-secondary w-full text-center" href="/bolsa" onClick={onClose} data-event="cart_drawer_view_bag">
+                    Ver bolsa completa
+                  </Link>
+                </>
+              )}
               <button
                 className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
                 type="button"
@@ -254,7 +273,7 @@ function cartTypeLabel(type: OficiosProCartItem["type"]) {
   return labels[type];
 }
 
-function checkoutUrlForItems(items: OficiosProCartItem[]) {
+export function checkoutUrlForItems(items: OficiosProCartItem[]) {
   const mode = checkoutModeForCart(items);
   if (mode.mode === "subscription_plan" && mode.planId) return `/checkout?plan=${encodeURIComponent(mode.planId)}&cartItem=subscription`;
   if (mode.mode === "credit_pack" && mode.creditPackId) return `/checkout?creditPack=${encodeURIComponent(mode.creditPackId)}&cartItem=credit_pack`;

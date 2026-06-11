@@ -145,9 +145,15 @@ export function BookingDrawer({
         amountCLP: initialCredits * 1000,
         specialistId: specialist.id,
         specialistName: specialist.name,
+        specialistSlug: specialist.slug,
+        specialistImage: specialist.image,
+        specialistRating: specialist.rating,
+        specialistCommune: specialist.commune ?? specialist.zone,
+        specialistDistance: specialist.distance,
         serviceId: selectedService.id,
         serviceName: selectedService.name,
         pricingMode: selectedService.pricingMode,
+        sourceSection,
       });
     }
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";

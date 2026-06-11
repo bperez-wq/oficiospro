@@ -75,6 +75,14 @@ export type CartItem = {
   serviceName?: string;
   pricingMode?: PricingMode | string;
   createdAt: string;
+  /* Campos opcionales para la página /bolsa (compatibles con ítems existentes). */
+  specialistSlug?: string;
+  specialistImage?: string;
+  specialistRating?: number;
+  specialistLevel?: string;
+  specialistCommune?: string;
+  specialistDistance?: number;
+  sourceSection?: string;
 };
 
 export type CreditWallet = {
