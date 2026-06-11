@@ -42,6 +42,25 @@ Origen: banco propio de 35 fotos realistas (1168×784, JPG, 150–450 KB). Se au
 
 Descartadas: poda mecánica (duplicada con agro-campo) y bodega con grúas (oscura).
 
+## Banco 2 — Mujeres en oficios (16 fotos, 14 incorporadas)
+
+Regla aplicada: **una foto con rostro solo puede ser foto de perfil si coincide género y oficio**.
+
+| Imagen | Uso | Asignación |
+|---|---|---|
+| perfiles/electricista-mujer-01.jpg | **Foto de perfil** | Carolina Méndez (Electricista SEC) |
+| perfiles/climatizacion-mujer-01.jpg | **Foto de perfil** | Daniela Fuentes (Refrigeración comercial) |
+| perfiles/jardinera-mujer-01.jpg | **Foto de perfil** | Sofía Vergara (Jardinera) |
+| perfiles/pintora-mujer-01.jpg | **Foto de perfil** | Valentina Rivas (Pintora profesional) |
+| perfiles/gasfiter-mujer-01.jpg | Registro especialista + reserva de perfil | Futura gasfíter |
+| perfiles/electricista-mujer-02.jpg | Reserva (tablero de control) | Futuro perfil / secciones |
+| perfiles/industrial-mujer-01/02.jpg | Reserva industria | Futuros perfiles / secciones |
+| equipo/equipo-mujeres-*.jpg (4) | Registro, impacto, comunidad | Secciones de equipo |
+| pintura/pintura-obra-mujer-01.jpg | Variante pintura en obra | Secciones |
+| carpinteria/instalacion-piso-mujer-01.jpg | Terminaciones/pisos | Secciones |
+
+No incorporadas: grupo pintando de espaldas (composición débil) y cuadrilla con cascos (redundante con equipo-mujeres-obra). **Pendiente**: foto de mujer en mantención de piscina para Elena Morales (mientras, imagen neutra de trabajo, sin rostro).
+
 ## Integraciones hechas en esta iteración
 
 1. **Constantes de `src/data/mock.ts`** (`bathroom/electrical/garden/hvac/home/enterprise`) → fotos reales. Esto propaga automáticamente a: proof gallery de la Home, casos de uso de Club Hogar, galerías/trabajos de especialistas y dashboard empresa.

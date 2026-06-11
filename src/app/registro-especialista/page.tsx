@@ -30,9 +30,9 @@ export default function SpecialistRegisterPage() {
           </div>
           <div className="grid grid-cols-3 gap-1.5 p-1.5">
             {[
-              ["/assets/oficios/electricidad/electricidad-instalacion-01.jpg", "Electricista instalando un enchufe en una remodelación"],
+              ["/assets/oficios/perfiles/gasfiter-mujer-01.jpg", "Gasfíter revisando la conexión de un lavamanos"],
+              ["/assets/oficios/equipo/equipo-mujeres-planos-01.jpg", "Equipo de especialistas revisando planos en obra"],
               ["/assets/oficios/industria/industria-soldadura-01.jpg", "Soldador trabajando con protección facial"],
-              ["/assets/oficios/gasfiteria/gasfiteria-medidor-01.jpg", "Técnico revisando un medidor exterior"],
             ].map(([src, alt]) => (
               <img key={src} src={src} alt={alt} loading="lazy" className="h-20 w-full rounded-xl object-cover" />
             ))}

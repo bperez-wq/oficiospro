@@ -97,6 +97,27 @@ export const businessUseCaseImages = {
   planta: `${base}/industria/industria-planta-01.jpg`,
 } as const;
 
+/** Fotos de perfil de especialistas mujeres (asignadas por oficio en mock.ts).
+ *  Regla: foto con rostro solo como perfil del género/oficio correcto. */
+export const femaleProfileImages = {
+  electricista: `${base}/perfiles/electricista-mujer-01.jpg`,
+  electricistaTablero: `${base}/perfiles/electricista-mujer-02.jpg`,
+  climatizacion: `${base}/perfiles/climatizacion-mujer-01.jpg`,
+  jardinera: `${base}/perfiles/jardinera-mujer-01.jpg`,
+  pintora: `${base}/perfiles/pintora-mujer-01.jpg`,
+  gasfiter: `${base}/perfiles/gasfiter-mujer-01.jpg`,
+  industrial: `${base}/perfiles/industrial-mujer-01.jpg`,
+  industrialPlanta: `${base}/perfiles/industrial-mujer-02.jpg`,
+} as const;
+
+/** Equipos de trabajadoras en obra (registro, impacto, comunidad). */
+export const teamImages = {
+  mujeresConstruccion: `${base}/equipo/equipo-mujeres-construccion-01.jpg`,
+  mujeresPlanos: `${base}/equipo/equipo-mujeres-planos-01.jpg`,
+  mujeresCascos: `${base}/equipo/equipo-mujeres-cascos-01.jpg`,
+  mujeresObra: `${base}/equipo/equipo-mujeres-obra-01.jpg`,
+} as const;
+
 /** Collage del hero de la Home (solo desktop). */
 export const heroCollageImages = [
   { src: serviceImages.filtracion, alt: "Gasfíter reparando una filtración bajo el lavaplatos" },
