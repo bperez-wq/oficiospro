@@ -124,13 +124,16 @@ export const availabilityLabels: Record<Availability, string> = {
   tomorrow: "Disponible mañana",
 };
 
-/* Banco propio de imágenes de oficios (ver src/data/visualAssets.ts). */
-const bathroom = "/assets/oficios/gasfiteria/gasfiteria-griferia-01.jpg";
-const electrical = "/assets/oficios/electricidad/electricidad-tablero-01.jpg";
-const garden = "/assets/oficios/jardineria/jardineria-poda-01.jpg";
-const hvac = "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg";
-const home = "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg";
-const enterprise = "/assets/oficios/industria/industria-planta-01.jpg";
+/* Imágenes neutras de trabajos para perfiles y galerías (sin rostros que
+ * puedan confundirse con la foto personal del especialista).
+ * Las fotos del banco de oficios (con personas) viven en visualAssets.ts y
+ * se usan solo en secciones de servicio, nunca como foto de perfil. */
+const bathroom = "/assets/work-bathroom.webp";
+const electrical = "/assets/work-electrical.webp";
+const garden = "/assets/work-garden.webp";
+const hvac = "/assets/work-hvac.webp";
+const home = "/assets/hero-hogar.webp";
+const enterprise = "/assets/club-empresas.webp";
 
 const baseSpecialists: Specialist[] = [
   {
@@ -1125,11 +1128,14 @@ export const homeBenefits = [
   "Garantía OficiosPro",
 ];
 
+/* La galería de trabajos realizados sí usa el banco de fotos reales:
+ * aquí la persona retratada es "el especialista haciendo el trabajo",
+ * no la foto de perfil de un especialista con nombre. */
 export const workStories: WorkHistory[] = [
-  { title: "Baño reparado", commune: "Ñuñoa", credits: 30, rating: 4.8, image: bathroom },
-  { title: "Tablero eléctrico renovado", commune: "Las Condes", credits: 38, rating: 4.9, image: electrical },
-  { title: "Aire acondicionado instalado", commune: "Providencia", credits: 50, rating: 4.9, image: hvac },
-  { title: "Jardín recuperado", commune: "La Reina", credits: 40, rating: 4.9, image: garden },
+  { title: "Baño reparado", commune: "Ñuñoa", credits: 30, rating: 4.8, image: "/assets/oficios/gasfiteria/gasfiteria-griferia-01.jpg" },
+  { title: "Tablero eléctrico renovado", commune: "Las Condes", credits: 38, rating: 4.9, image: "/assets/oficios/electricidad/electricidad-tablero-01.jpg" },
+  { title: "Aire acondicionado instalado", commune: "Providencia", credits: 50, rating: 4.9, image: "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg" },
+  { title: "Jardín recuperado", commune: "La Reina", credits: 40, rating: 4.9, image: "/assets/oficios/jardineria/jardineria-poda-01.jpg" },
 ];
 
 export const testimonials = [
