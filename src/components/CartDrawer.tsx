@@ -103,28 +103,30 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
             <h2 className="truncate text-2xl font-black text-ink">
               Tu bolsa {hasItems ? <span className="text-base font-black text-muted">· {items.length} {items.length === 1 ? "ítem" : "ítems"}</span> : null}
             </h2>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
             {hasItems ? (
               <Link
-                className="group mt-1 inline-flex items-center gap-1 text-sm font-black text-brand-dark transition hover:text-brand"
+                className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-brand px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:bg-brand-dark active:scale-[0.97]"
                 href="/bolsa"
                 onClick={onClose}
                 data-event="cart_drawer_header_view_bag"
               >
-                Ver bolsa completa
-                <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+                {items.length > 1 ? "Comparar en bolsa" : "Ver selección"}
+                <span aria-hidden>→</span>
               </Link>
             ) : null}
+            <button
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95"
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar bolsa"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
           </div>
-          <button
-            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95"
-            type="button"
-            onClick={onClose}
-            aria-label="Cerrar bolsa"
-          >
-            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
         </div>
 
         {/* Contenido con scroll interno */}
