@@ -125,6 +125,15 @@ export function Header() {
   const [categoryOpen, setCategoryOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+
+  /* Permite abrir la Bolsa desde cualquier componente (ej: al cotizar/reservar una card). */
+  useEffect(() => {
+    function openBag() {
+      setCartOpen(true);
+    }
+    window.addEventListener("oficiospro-open-bag", openBag);
+    return () => window.removeEventListener("oficiospro-open-bag", openBag);
+  }, []);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);

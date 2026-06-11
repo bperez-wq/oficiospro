@@ -274,7 +274,7 @@ function SpecialistBagCard({
         <div className="text-right">
           <span className="block text-sm font-black text-brand-dark">{pricingLabel(item)}</span>
           <span className={`text-[11px] font-black ${quote ? "text-accent-dark" : item.type === "visit" ? "text-sun-dark" : "text-emerald-700"}`}>
-            {quote ? "Listo para cotizar" : item.type === "visit" ? "Pendiente de confirmar" : "Listo para reservar"}
+            {quote ? "Pendiente de enviar solicitud" : item.type === "visit" ? "Pendiente de confirmar visita" : "Listo para reservar"}
           </span>
         </div>
       </div>
@@ -300,7 +300,7 @@ function SpecialistBagCard({
           onClick={quote ? onQuote : onReserve}
           data-event="bolsa_reserve_item"
         >
-          {quote ? "Pedir cotización" : "Reservar"}
+          {quote ? "Enviar solicitud" : item.type === "visit" ? "Solicitar visita" : "Reservar"}
         </button>
       </div>
     </article>

@@ -103,6 +103,17 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
             <h2 className="truncate text-2xl font-black text-ink">
               Tu bolsa {hasItems ? <span className="text-base font-black text-muted">· {items.length} {items.length === 1 ? "ítem" : "ítems"}</span> : null}
             </h2>
+            {hasItems ? (
+              <Link
+                className="group mt-1 inline-flex items-center gap-1 text-sm font-black text-brand-dark transition hover:text-brand"
+                href="/bolsa"
+                onClick={onClose}
+                data-event="cart_drawer_header_view_bag"
+              >
+                Ver bolsa completa
+                <span aria-hidden className="transition-transform duration-200 group-hover:translate-x-0.5">→</span>
+              </Link>
+            ) : null}
           </div>
           <button
             className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95"
@@ -146,15 +157,21 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 return (
                   <article key={item.id} className="rounded-2xl border border-line bg-white p-4 shadow-sm transition duration-200 hover:border-brand/30">
                     <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
+                      <Link
+                        className="min-w-0 flex-1"
+                        href="/bolsa"
+                        onClick={onClose}
+                        aria-label={`Revisar ${item.title} en la bolsa completa`}
+                        data-event="cart_drawer_item_view_bag"
+                      >
                         <span className="inline-flex rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-brand-dark">
                           {cartTypeLabel(item.type)}
                         </span>
-                        <strong className="mt-2 block text-base leading-snug text-ink">{item.title}</strong>
+                        <strong className="mt-2 block text-base leading-snug text-ink transition group-hover:text-brand-dark">{item.title}</strong>
                         <p className="mt-1 line-clamp-2 text-sm font-bold text-muted">
                           {[item.serviceName, item.specialistName].filter(Boolean).join(" · ") || "Listo para continuar al pago"}
                         </p>
-                      </div>
+                      </Link>
                       <button
                         className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
                         type="button"

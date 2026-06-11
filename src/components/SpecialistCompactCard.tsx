@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { availabilityLabels, type Specialist } from "@/data/mock";
-import { bookingPrimaryAction, getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
+import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
+import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
 
@@ -25,17 +26,17 @@ export const availabilityDotStyles: Record<Specialist["availability"], string> =
 export function SpecialistCompactCard({
   specialist,
   sourceSection = defaultSourceSection,
-  onReserve,
 }: {
   specialist: Specialist;
   sourceSection?: string;
-  onReserve: (specialist: Specialist, serviceId: string) => void;
+  /** Compatibilidad: ya no abre modal; el CTA agrega a la Bolsa (bag-first). */
+  onReserve?: (specialist: Specialist, serviceId: string) => void;
 }) {
   const service = getPrimaryFlexibleService(specialist);
   const level = getSpecialistLevel(specialist);
   const jobs = specialist.trabajosCompletados ?? specialist.jobs;
   const profileHref = `/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}&sourceSection=${sourceSection}`;
-  const action = bookingPrimaryAction(service).includes("cotizacion") ? "Cotizar" : "Reservar";
+  const action = bagActionLabel(service.pricingMode);
   const hasDistance = typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
   const distanceLabel = hasDistance ? `a ${specialist.distance.toFixed(1).replace(".", ",")} km` : specialist.commune ?? specialist.zone;
 
@@ -96,8 +97,8 @@ export function SpecialistCompactCard({
         <button
           className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
           type="button"
-          data-event="specialist_compact_reserve"
-          onClick={() => onReserve(specialist, service.id)}
+          data-event="specialist_compact_add_to_bag"
+          onClick={() => addSpecialistToBagAndProceed({ specialist, service, sourceSection })}
         >
           {action}
         </button>

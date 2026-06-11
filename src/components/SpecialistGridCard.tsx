@@ -5,7 +5,8 @@ import { useMemo } from "react";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
-import { bookingPrimaryAction, getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
+import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
+import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 
@@ -22,14 +23,14 @@ export function SpecialistGridCard({
   matchedService,
   searchIntent,
   highlightedCreditPrice,
-  onReserve,
   sourceSection = "specialists_explorer_grid",
 }: {
   specialist: Specialist;
   matchedService?: FlexibleService | null;
   searchIntent?: string;
   highlightedCreditPrice?: string;
-  onReserve: (id: string, service?: FlexibleService | null) => void;
+  /** Compatibilidad: ya no abre modal; el CTA agrega a la Bolsa (bag-first). */
+  onReserve?: (id: string, service?: FlexibleService | null) => void;
   sourceSection?: string;
 }) {
   const primaryService = useMemo(() => getPrimaryFlexibleService(specialist), [specialist]);
@@ -38,8 +39,12 @@ export function SpecialistGridCard({
   const jobs = specialist.trabajosCompletados ?? specialist.jobs;
   const badges = useMemo(() => getTrustBadges(specialist).slice(0, 2), [specialist]);
   const profileHref = `/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}&sourceSection=${sourceSection}`;
-  const action = bookingPrimaryAction(displayService).includes("cotizacion") ? "Cotizar" : "Reservar";
+  const action = bagActionLabel(displayService.pricingMode);
   const hasDistance = typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
+
+  function addToBag() {
+    addSpecialistToBagAndProceed({ specialist, service: displayService, sourceSection });
+  }
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-[20px] border border-line bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-card">
@@ -112,8 +117,8 @@ export function SpecialistGridCard({
           <button
             className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
             type="button"
-            data-event="specialist_grid_reserve"
-            onClick={() => onReserve(specialist.id, displayService)}
+            data-event="specialist_grid_add_to_bag"
+            onClick={addToBag}
           >
             {action}
           </button>

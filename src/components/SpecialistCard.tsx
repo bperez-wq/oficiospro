@@ -8,6 +8,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
+import { addSpecialistToBagAndProceed } from "@/lib/bag";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
@@ -65,6 +66,8 @@ export function SpecialistCard({
 
   const openBookingModal = useCallback(() => {
     preserveSpecialistIntent({ specialist, service: displayService, intendedAction: "reservar", source: "SpecialistCard" });
+    /* Bag-first: la selección queda guardada en la Bolsa aunque el usuario cierre el flujo. */
+    addSpecialistToBagAndProceed({ specialist, service: displayService, sourceSection: "specialist_card", proceed: "none" });
     setBookingModal({
       isOpen: true,
       specialistId: specialist.id,
