@@ -1,10 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCLP } from "@/data/marketplace";
 import { clearCart, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
 import { cartTotals, checkoutModeForCart, itemAmountCLP } from "@/lib/payments/cart";
+
+/**
+ * Naming oficial: la experiencia de usuario se llama "Bolsa" en todo OficiosPro
+ * (botón, panel, textos y aria-labels). Los nombres técnicos Cart* se mantienen
+ * para no romper integraciones existentes.
+ */
 
 export function CartButton({ onOpen }: { onOpen: () => void }) {
   const [count, setCount] = useState(0);
@@ -19,15 +25,16 @@ export function CartButton({ onOpen }: { onOpen: () => void }) {
 
   return (
     <button
-      className="relative grid h-11 min-w-11 place-items-center rounded-2xl border border-line bg-white px-3 text-sm font-black text-ink shadow-sm transition hover:border-brand hover:bg-brand-soft hover:text-brand-dark"
+      className="relative inline-flex h-11 items-center gap-1.5 rounded-2xl border border-line bg-white px-3 text-sm font-black text-ink shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-[0.97]"
       type="button"
       onClick={onOpen}
-      aria-label="Abrir carrito OficiosPro"
+      aria-label={count ? `Abrir bolsa, ${count} ${count === 1 ? "ítem" : "ítems"}` : "Abrir bolsa, vacía"}
     >
-      <span aria-hidden="true">Bolsa</span>
+      <BagIcon className="h-5 w-5" />
+      <span className="hidden sm:inline" aria-hidden="true">Bolsa</span>
       {count ? (
-        <span className="absolute -right-2 -top-2 grid h-6 min-w-6 place-items-center rounded-full bg-brand px-1 text-xs font-black text-white">
-          {count}
+        <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-black text-white shadow-sm ring-2 ring-white">
+          {count > 9 ? "9+" : count}
         </span>
       ) : null}
     </button>
@@ -36,105 +43,212 @@ export function CartButton({ onOpen }: { onOpen: () => void }) {
 
 export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [items, setItems] = useState<OficiosProCartItem[]>([]);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+
+  const refresh = useCallback(() => {
+    try {
+      setItems(getCartItems());
+      setStatus("ready");
+    } catch {
+      setStatus("error");
+    }
+  }, []);
 
   useEffect(() => {
-    function refresh() {
-      setItems(getCartItems());
-    }
     refresh();
     return onCartChange(refresh);
-  }, []);
+  }, [refresh]);
+
+  /* Bloquea el scroll del fondo y cierra con Escape mientras la bolsa está abierta. */
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open, onClose]);
 
   const totals = useMemo(() => cartTotals(items), [items]);
   const checkoutHref = checkoutUrlForItems(items);
+  const hasItems = items.length > 0;
+  const hasSubscription = items.some((item) => item.type === "subscription_plan");
 
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[120] bg-ink/60 p-3 backdrop-blur-sm md:p-6" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <aside className="ml-auto flex h-full max-w-lg flex-col overflow-hidden rounded-[30px] border border-white/20 bg-white shadow-card">
-        <div className="flex items-start justify-between gap-4 border-b border-line p-5">
-          <div>
-            <p className="eyebrow">Carrito</p>
-            <h2 className="text-3xl font-black text-ink">Tu carrito OficiosPro</h2>
-            <p className="mt-1 text-sm font-bold text-muted">Guarda creditos, planes y solicitudes antes de pagar.</p>
+    <div
+      className="fixed inset-0 z-[120] bg-ink/60 backdrop-blur-sm"
+      onMouseDown={(event) => event.target === event.currentTarget && onClose()}
+    >
+      <aside
+        className="animate-fade-up fixed inset-x-0 bottom-0 flex max-h-[92dvh] flex-col overflow-hidden rounded-t-[28px] border-t border-line bg-white shadow-lift md:inset-y-0 md:left-auto md:right-0 md:h-full md:max-h-none md:w-full md:max-w-md md:rounded-l-[28px] md:rounded-tr-none md:border-l md:border-t-0"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Tu bolsa OficiosPro"
+      >
+        {/* Header sticky: la X siempre visible y con área táctil de 44px */}
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-line bg-white px-5 pb-4 pt-3 md:pt-5">
+          <div className="min-w-0">
+            <span aria-hidden className="mx-auto mb-3 block h-1.5 w-12 rounded-full bg-slate-200 md:hidden" />
+            <p className="eyebrow mb-0.5">Bolsa</p>
+            <h2 className="truncate text-2xl font-black text-ink">
+              Tu bolsa {hasItems ? <span className="text-base font-black text-muted">· {items.length} {items.length === 1 ? "ítem" : "ítems"}</span> : null}
+            </h2>
           </div>
-          <button className="grid h-11 w-11 place-items-center rounded-full border border-line text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={onClose} aria-label="Cerrar carrito">
-            x
+          <button
+            className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95"
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar bolsa"
+          >
+            <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" aria-hidden>
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
           </button>
         </div>
 
-        <div className="grid flex-1 gap-4 overflow-y-auto p-5">
-          {items.length ? (
-            <>
-              <div className="grid gap-3">
-                {items.map((item) => (
-                  <article key={item.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+        {/* Contenido con scroll interno */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4">
+          {status === "loading" ? (
+            <div className="grid gap-3" aria-hidden>
+              {[0, 1, 2].map((index) => (
+                <div key={index} className="rounded-2xl border border-line bg-white p-4">
+                  <div className="h-3 w-20 animate-pulse rounded-md bg-slate-100" />
+                  <div className="mt-2 h-4 w-3/4 animate-pulse rounded-md bg-slate-100" />
+                  <div className="mt-3 flex gap-2">
+                    <div className="h-7 w-24 animate-pulse rounded-full bg-slate-100" />
+                    <div className="h-7 w-20 animate-pulse rounded-full bg-slate-100" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : status === "error" ? (
+            <div className="grid content-center gap-4 rounded-[24px] border border-rose-200 bg-rose-50 p-6 text-center">
+              <h3 className="text-xl font-black text-rose-700">No pudimos cargar tu bolsa</h3>
+              <p className="text-sm font-bold leading-6 text-rose-700/80">Reintenta en unos segundos. Tus ítems guardados no se pierden.</p>
+              <button className="btn-secondary mx-auto" type="button" onClick={refresh}>
+                Reintentar
+              </button>
+            </div>
+          ) : hasItems ? (
+            <div className="grid gap-3">
+              {items.map((item) => {
+                const amount = itemAmountCLP(item);
+                return (
+                  <article key={item.id} className="rounded-2xl border border-line bg-white p-4 shadow-sm transition duration-200 hover:border-brand/30">
                     <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <span className="text-xs font-black uppercase text-brand-dark">{cartTypeLabel(item.type)}</span>
-                        <strong className="mt-1 block text-lg text-ink">{item.title}</strong>
-                        <p className="mt-1 text-sm font-bold text-muted">
-                          {[item.serviceName, item.specialistName, item.pricingMode].filter(Boolean).join(" - ") || "Listo para continuar"}
+                      <div className="min-w-0">
+                        <span className="inline-flex rounded-full bg-brand-soft px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-brand-dark">
+                          {cartTypeLabel(item.type)}
+                        </span>
+                        <strong className="mt-2 block text-base leading-snug text-ink">{item.title}</strong>
+                        <p className="mt-1 line-clamp-2 text-sm font-bold text-muted">
+                          {[item.serviceName, item.specialistName].filter(Boolean).join(" · ") || "Listo para continuar al pago"}
                         </p>
                       </div>
-                      <button className="rounded-full border border-line px-3 py-1 text-xs font-black text-muted transition hover:border-rose-200 hover:text-rose-700" type="button" onClick={() => removeCartItem(item.id)}>
-                        Quitar
+                      <button
+                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+                        type="button"
+                        onClick={() => removeCartItem(item.id)}
+                        aria-label={`Quitar ${item.title} de la bolsa`}
+                      >
+                        <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
+                          <path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3" />
+                        </svg>
                       </button>
                     </div>
-                    <div className="mt-3 flex flex-wrap gap-2 text-sm font-black">
-                      {item.credits ? <span className="rounded-full bg-white px-3 py-1 text-brand-dark">{item.credits} creditos</span> : null}
-                      {itemAmountCLP(item) ? <span className="rounded-full bg-white px-3 py-1 text-ink">{formatCLP(itemAmountCLP(item))}</span> : null}
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-xs font-black text-muted">Cantidad: 1</span>
+                      <div className="flex flex-wrap gap-2 text-sm font-black">
+                        {item.credits ? <span className="rounded-full bg-brand-soft px-3 py-1 text-brand-dark">{item.credits} créditos</span> : null}
+                        <span className="rounded-full bg-slate-100 px-3 py-1 text-ink">{amount ? formatCLP(amount) : "Por confirmar"}</span>
+                      </div>
                     </div>
                   </article>
-                ))}
-              </div>
-              <div className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
-                <span className="text-xs font-black uppercase text-brand-dark">Resumen</span>
-                <div className="mt-2 grid gap-2 text-sm font-black text-brand-dark sm:grid-cols-2">
-                  <span>{totals.credits} creditos</span>
-                  <span>{totals.amountCLP ? formatCLP(totals.amountCLP) : "Precio por confirmar"}</span>
-                </div>
-              </div>
-            </>
+                );
+              })}
+            </div>
           ) : (
-            <div className="grid content-center gap-4 rounded-[24px] border border-line bg-slate-50 p-6 text-center">
-              <h3 className="text-2xl font-black">Tu carrito esta vacio</h3>
-              <p className="text-sm font-bold leading-6 text-muted">Explora especialistas, compra creditos o elige un plan para dejar tu intencion guardada.</p>
-              <div className="grid gap-2 sm:grid-cols-2">
+            <div className="grid h-full content-center gap-4 rounded-[24px] border border-dashed border-line bg-slate-50/70 p-6 text-center">
+              <BagIcon className="mx-auto h-10 w-10 text-muted/40" />
+              <h3 className="text-2xl font-black">Tu bolsa está vacía</h3>
+              <p className="text-sm font-bold leading-6 text-muted">Explora especialistas, compra créditos o elige un plan: lo que agregues queda guardado aquí.</p>
+              <div className="grid gap-2">
                 <Link className="btn-primary" href="/especialistas" onClick={onClose}>
                   Explorar especialistas
                 </Link>
                 <Link className="btn-secondary" href="/checkout" onClick={onClose}>
-                  Comprar creditos
+                  Comprar créditos
                 </Link>
               </div>
             </div>
           )}
         </div>
 
-        <div className="border-t border-line p-5">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Link className={`btn-primary text-center ${items.length ? "" : "pointer-events-none opacity-50"}`} href={checkoutHref} onClick={onClose}>
-              Continuar al checkout
-            </Link>
-            <button className="btn-secondary" type="button" disabled={!items.length} onClick={clearCart}>
-              Vaciar carrito
-            </button>
+        {/* Resumen + CTA sticky */}
+        {status === "ready" && hasItems ? (
+          <div className="shrink-0 border-t border-line bg-white px-5 pb-[max(1.25rem,env(safe-area-inset-bottom))] pt-4">
+            <div className="grid gap-1.5 text-sm font-bold text-muted">
+              <div className="flex items-center justify-between">
+                <span>Subtotal ({items.length} {items.length === 1 ? "ítem" : "ítems"})</span>
+                <span className="text-ink">{totals.amountCLP ? formatCLP(totals.amountCLP) : "Por confirmar"}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Créditos involucrados</span>
+                <span className="text-brand-dark">{totals.credits} créditos</span>
+              </div>
+              {hasSubscription ? (
+                <div className="flex items-center justify-between text-emerald-700">
+                  <span>Beneficio Club Hogar</span>
+                  <span>2 créditos de descuento por solicitud</span>
+                </div>
+              ) : null}
+              <div className="mt-1 flex items-center justify-between border-t border-line pt-2 text-base font-black text-ink">
+                <span>Total</span>
+                <span>{totals.amountCLP ? formatCLP(totals.amountCLP) : "Se confirma en checkout"}</span>
+              </div>
+            </div>
+            <div className="mt-4 grid gap-2">
+              <Link className="btn-primary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
+                Continuar al checkout
+              </Link>
+              <button
+                className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
+                type="button"
+                onClick={clearCart}
+              >
+                Vaciar bolsa
+              </button>
+            </div>
           </div>
-        </div>
+        ) : null}
       </aside>
     </div>
   );
 }
 
+function BagIcon({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M6 7h12l1.2 13a1.8 1.8 0 0 1-1.8 2H6.6a1.8 1.8 0 0 1-1.8-2L6 7Z" />
+      <path d="M9 10V6a3 3 0 0 1 6 0v4" />
+    </svg>
+  );
+}
+
 function cartTypeLabel(type: OficiosProCartItem["type"]) {
   const labels: Record<OficiosProCartItem["type"], string> = {
-    credit_pack: "Paquete de creditos",
+    credit_pack: "Paquete de créditos",
     subscription_plan: "Plan",
     service_request: "Solicitud",
-    quote_request: "Cotizacion",
-    visit: "Visita tecnica",
+    quote_request: "Cotización",
+    visit: "Visita técnica",
     additional_charge: "Adicional aprobado",
   };
   return labels[type];

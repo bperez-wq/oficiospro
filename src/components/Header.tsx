@@ -95,7 +95,7 @@ const roleMenu: Record<MockSession["role"], Array<{ href?: string; label: string
     { href: "/dashboard-cliente", label: "Mi dashboard" },
     { href: "/checkout", label: "Mis creditos" },
     { href: "/dashboard-cliente", label: "Mis solicitudes" },
-    { label: "Mi carrito", cart: true },
+    { label: "Mi bolsa", cart: true },
     { href: "/registro-cliente", label: "Mi perfil" },
   ],
   specialist: [
@@ -508,7 +508,7 @@ function MobileMenu({
         <MobileLink href="/registro-especialista" label="Trabaja con nosotros" pathname={pathname} onClick={onClose} />
         <MobileLink href="/soporte" label="Soporte" pathname={pathname} onClick={onClose} />
         <button className="btn-secondary" type="button" onClick={onOpenCart}>
-          Mi carrito
+          Mi bolsa
         </button>
         {session ? (
           <div className="grid gap-2 rounded-2xl border border-brand/15 bg-brand-soft p-3">

@@ -272,7 +272,7 @@ export default function CheckoutPage() {
           </div>
 
           <section className="mt-8 rounded-[24px] border border-line bg-white p-5">
-            <p className="eyebrow">Carrito global</p>
+            <p className="eyebrow">Bolsa</p>
             <h2 className="text-2xl font-black">{hasCartItems ? "Resumen de compra" : "Compra directa"}</h2>
             <div className="mt-4 grid gap-3">
               {hasCartItems ? (
