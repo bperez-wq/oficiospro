@@ -72,14 +72,19 @@ export function EmptyState({
   title,
   text,
   action,
+  visual,
+  className = "",
 }: {
   eyebrow?: string;
   title: string;
   text: string;
   action?: ReactNode;
+  visual?: ReactNode;
+  className?: string;
 }) {
   return (
-    <section className="rounded-[28px] border border-line bg-slate-50 p-6">
+    <section className={`rounded-[28px] border border-line bg-slate-50 p-6 ${className}`}>
+      {visual ? <div className="mb-4">{visual}</div> : null}
       <p className="eyebrow">{eyebrow}</p>
       <h3 className="text-2xl font-black text-ink">{title}</h3>
       <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-muted">{text}</p>

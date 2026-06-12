@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -245,9 +246,9 @@ export default function CheckoutPage() {
         });
       }
 
-      setStatus("Pago en preparación. Dejamos tu solicitud registrada y te avisaremos apenas el proveedor confirme.");
+      setStatus("Pago en preparacion. Los creditos se activaran cuando el pago sea confirmado.");
     } catch {
-      setStatus("Pago en preparación. Dejamos tu solicitud registrada para continuar la activación de forma segura.");
+      setStatus("Pago en preparacion. Dejamos tu solicitud registrada para revision operacional segura.");
     } finally {
       setIsSubmitting(false);
     }
@@ -271,6 +272,12 @@ export default function CheckoutPage() {
             <DashboardMetricCard label="Total CLP visible" value={formatCLP(checkoutAmountCLP)} />
           </div>
 
+          <div className="mt-6 grid gap-3 rounded-[24px] border border-brand/15 bg-brand-soft p-5 text-sm font-bold leading-6 text-brand-dark">
+            <strong className="text-base text-ink">Confirmacion de creditos</strong>
+            <span>Los creditos se activaran cuando el pago sea confirmado.</span>
+            <span>En etapa piloto algunos pagos pueden requerir confirmacion operacional antes de reflejarse en tu cuenta.</span>
+          </div>
+
           <section className="mt-8 rounded-[24px] border border-line bg-white p-5">
             <p className="eyebrow">Bolsa</p>
             <h2 className="text-2xl font-black">{hasCartItems ? "Resumen de compra" : "Compra directa"}</h2>
@@ -289,7 +296,12 @@ export default function CheckoutPage() {
                   </article>
                 ))
               ) : (
-                <EmptyState eyebrow="Checkout" title="Compra directa disponible" text="Puedes activar un plan o comprar creditos puntuales desde este checkout." />
+                <EmptyState
+                  eyebrow="Checkout"
+                  title="Compra directa disponible"
+                  text="Puedes activar un plan o comprar creditos puntuales. Si venias desde una reserva, vuelve a la bolsa para revisar tu seleccion antes de pagar."
+                  action={<Link className="btn-secondary" href="/bolsa">Ver bolsa</Link>}
+                />
               )}
             </div>
           </section>
@@ -389,7 +401,7 @@ export default function CheckoutPage() {
             </div>
 
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">
-              Renovación automática mensual. Los créditos se cargan cada mes y se acumulan hasta {plan.accumulatesMonths} meses.
+              Renovacion automatica mensual. Los creditos se activan cuando el pago mensual sea confirmado y se acumulan hasta {plan.accumulatesMonths} meses.
             </div>
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">
               Comercio: {oficiosProMerchant.tradeName} · RUT {oficiosProMerchant.rut}. Al continuar aceptas los terminos de compra, uso de creditos y conciliacion contra proveedor de pago.

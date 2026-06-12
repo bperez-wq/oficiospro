@@ -76,7 +76,7 @@ export default function BolsaPage() {
         <p className="eyebrow">Bolsa</p>
         <h1 className="text-3xl font-black text-ink md:text-5xl">Tu bolsa</h1>
         <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-muted">
-          Revisa especialistas, créditos y solicitudes antes de confirmar.
+          Guarda especialistas, creditos y solicitudes para compararlos con calma antes de confirmar.
         </p>
 
         {!loaded ? (
@@ -93,7 +93,7 @@ export default function BolsaPage() {
             <span aria-hidden className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-brand-soft text-3xl">🛍</span>
             <h2 className="text-3xl font-black">Tu bolsa está vacía</h2>
             <p className="mx-auto max-w-md text-sm font-bold leading-6 text-muted">
-              Agrega especialistas, créditos o un plan para comparar antes de confirmar.
+              Agrega especialistas para comparar perfiles, precios en creditos y disponibilidad. En etapa piloto, tambien puedes dejar una solicitud si no encuentras match exacto.
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <Link className="btn-primary" href="/especialistas?sourceSection=bolsa_empty">Buscar especialistas</Link>
@@ -181,6 +181,9 @@ export default function BolsaPage() {
               </div>
               <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
                 Pago protegido: al reservar, tus créditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.
+              </p>
+              <p className="rounded-2xl bg-brand-soft p-3 text-xs font-bold leading-5 text-brand-dark">
+                Piloto OficiosPro: tu seleccion queda guardada para comparar. Algunas solicitudes pueden requerir confirmacion operacional antes de cerrar agenda o pago.
               </p>
             </aside>
           </div>

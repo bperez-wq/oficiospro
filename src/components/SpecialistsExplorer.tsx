@@ -536,8 +536,10 @@ export function SpecialistsExplorer() {
             ) : (
               <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                 <EmptyState
+                  eyebrow="Piloto por comuna"
                   title="Estamos sumando especialistas para este servicio en tu zona."
-                  text="Dejanos tu solicitud y te ayudamos a encontrar una alternativa verificada."
+                  text="Dejanos tu solicitud y el equipo OficiosPro revisara alternativas disponibles. Si eres especialista de esta zona, tambien puedes crear tu perfil fundador."
+                  visual={<span aria-hidden className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-2xl font-black text-brand-dark">OP</span>}
                   action={
                     <>
                   <button

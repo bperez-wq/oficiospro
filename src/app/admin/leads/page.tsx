@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { ALL_COMMUNES_VALUE, ALL_REGIONS_VALUE, regionNameForCode } from "@/lib/catalog";
 import { estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
@@ -85,6 +86,7 @@ export default function AdminLeadsPage() {
   }, [token, statusFilter, typeFilter, regionFilter, communeFilter]);
 
   const selectedLead = useMemo(() => leads.find((lead) => lead.id === selectedId) ?? leads[0] ?? null, [leads, selectedId]);
+  const leadKpis = useMemo(() => buildLeadKpis(leads), [leads]);
 
   async function saveToken(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -235,6 +237,17 @@ export default function AdminLeadsPage() {
         </div>
       </section>
 
+      <section className="grid gap-3 md:grid-cols-5">
+        {leadKpis.map((metric) => (
+          <DashboardMetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} tone={metric.tone} />
+        ))}
+      </section>
+
+      <section className="rounded-[24px] border border-brand/15 bg-brand-soft p-4 text-sm font-bold leading-6 text-brand-dark">
+        <strong className="block text-base text-ink">Usa esta vista como fuente real del piloto.</strong>
+        Revisa nuevos leads todos los dias, cambia estados despues de contactar y exporta CSV para seguimiento operacional. No hay datos de relleno en esta vista.
+      </section>
+
       <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
         <div className="grid gap-4 lg:grid-cols-[0.8fr_0.8fr_1.2fr_auto_auto] lg:items-end">
           <label className="field">
@@ -296,7 +309,7 @@ export default function AdminLeadsPage() {
                 <span className="flex flex-wrap items-center gap-2">
                   <strong className="text-ink">{getLeadValue(lead, "full_name", "fullName") || getLeadValue(lead, "company_name", "companyName") || "Lead sin nombre"}</strong>
                   <span className="chip bg-white text-brand-dark">{getLeadValue(lead, "lead_type", "leadType")}</span>
-                  <span className="chip bg-white text-muted">{lead.status ?? "nuevo"}</span>
+                  <span className={`chip ${statusBadgeClass(lead.status)}`}>{lead.status ?? "nuevo"}</span>
                 </span>
                 <span className="text-sm font-bold text-muted">
                   {[lead.email, lead.phone, getLeadValue(lead, "commune_name", "communeName"), lead.service ?? lead.trade].filter(Boolean).join(" · ")}
@@ -305,7 +318,12 @@ export default function AdminLeadsPage() {
               </button>
             ))
           ) : (
-            <div className="rounded-2xl border border-dashed border-line p-6 text-sm font-bold text-muted">Sin leads cargados.</div>
+            <EmptyState
+              eyebrow="Sin datos"
+              title="Sin leads cargados."
+              text="Cuando D1 reciba formularios reales apareceran aqui. Si esperabas datos, revisa ADMIN_TOKEN, binding DB, migracion y filtros activos."
+              className="border-dashed"
+            />
           )}
         </div>
 
@@ -417,6 +435,32 @@ function Info({ label, value, large = false }: { label: string; value?: string; 
       <strong className="mt-1 block break-words text-sm text-ink">{value || "Sin dato"}</strong>
     </div>
   );
+}
+
+function buildLeadKpis(leads: AdminLead[]) {
+  const newStatuses = new Set(["nuevo", "pending", "postulado"]);
+  const reviewStatuses = new Set(["nuevo", "pending", "postulado", "en_revision", "more_info"]);
+  const newLeads = leads.filter((lead) => newStatuses.has((lead.status ?? "nuevo").toLowerCase())).length;
+  const specialistPending = leads.filter((lead) => getLeadValue(lead, "lead_type", "leadType") === "specialist_application" && reviewStatuses.has((lead.status ?? "nuevo").toLowerCase())).length;
+  const companies = leads.filter((lead) => getLeadValue(lead, "lead_type", "leadType") === "company_request").length;
+  const serviceRequests = leads.filter((lead) => ["customer_request", "booking_request", "contact_message"].includes(getLeadValue(lead, "lead_type", "leadType"))).length;
+  const failedEmails = leads.filter((lead) => !leadFlag(lead, "email_sent", "emailSent") && Boolean(getLeadValue(lead, "email_error", "emailError"))).length;
+
+  return [
+    { label: "Leads nuevos", value: newLeads.toString(), detail: "Pendientes de primera gestion", tone: "brand" as const },
+    { label: "Postulantes", value: specialistPending.toString(), detail: "Especialistas por revisar", tone: "light" as const },
+    { label: "Empresas", value: companies.toString(), detail: "Cuentas B2B interesadas", tone: "light" as const },
+    { label: "Solicitudes", value: serviceRequests.toString(), detail: "Clientes y reservas", tone: "light" as const },
+    { label: "Emails fallidos", value: failedEmails.toString(), detail: "Requieren revision", tone: failedEmails ? ("brand" as const) : ("light" as const) },
+  ];
+}
+
+function statusBadgeClass(status?: string) {
+  const normalized = (status ?? "nuevo").toLowerCase();
+  if (["approved", "convertido", "cerrado"].includes(normalized)) return "bg-emerald-50 text-emerald-700";
+  if (["rejected", "perdido"].includes(normalized)) return "bg-rose-50 text-rose-700";
+  if (["contactado", "en_revision", "more_info"].includes(normalized)) return "bg-amber-50 text-amber-800";
+  return "bg-white text-brand-dark";
 }
 
 function getLeadValue(lead: AdminLead | null | undefined, snake: keyof AdminLead, camel: keyof AdminLead) {

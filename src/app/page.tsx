@@ -30,13 +30,13 @@ export default function HomePage() {
           <div className="animate-fade-up">
             <span className="eyebrow-pill">
               <span className="h-2 w-2 rounded-full bg-brand" />
-              Empoderamos el oficio. Empoderamos al trabajador.
+              Piloto fundador OficiosPro
             </span>
             <h1 className="max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">
               Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
             </h1>
             <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-muted md:text-lg">
-              Explora sin registrarte, compara reputación y reserva o cotiza pagando con créditos.
+              Estamos abriendo OficiosPro de forma controlada: explora especialistas fundadores, compara reputacion y solicita contacto sin registrarte hasta que decidas avanzar.
             </p>
             <HeroSearchPanel />
             <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
@@ -44,7 +44,7 @@ export default function HomePage() {
                 Buscar especialista
               </Link>
               <ConversionButton type="registro_especialista" sourceButton="Postular como especialista hero" className="btn-sun">
-                Postular como especialista
+                Crear perfil fundador
               </ConversionButton>
               <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
                 ¿Cómo funcionan los créditos? →
@@ -52,10 +52,10 @@ export default function HomePage() {
             </div>
             <div className="mt-7 flex flex-wrap gap-2.5">
               {[
-                ["★", "4,9 promedio", "chip-sun"],
+                ["*", "Piloto fundador", "chip-sun"],
                 ["✓", "Pago protegido", "chip-brand"],
-                ["✓", "Técnicos verificados", "chip-emerald"],
-                ["◎", "Cobertura nacional", "chip-brand"],
+                ["✓", "Especialistas en revision", "chip-emerald"],
+                ["●", "Solicitudes con seguimiento", "chip-brand"],
               ].map(([icon, label, cls]) => (
                 <span key={label} className={`${cls} px-3.5 py-2 text-[13px]`}>
                   <span aria-hidden>{icon}</span> {label}
@@ -98,6 +98,8 @@ export default function HomePage() {
       </section>
 
       <FeaturedSpecialistsStrip specialists={specialists} />
+
+      <PilotLaunchStrip />
 
       <QuickProblemLinks />
 
@@ -272,9 +274,9 @@ export default function HomePage() {
           <CTA title="Soy empresa" text="Centraliza mantenciones, sucursales, reportes y facturación." type="contacto_empresa" label="Solicitar cuenta" />
           <CTA
             title="Soy especialista"
-            text="Crea tu perfil, muestra trabajos y construye reputación real."
+            text="Crea tu perfil fundador, muestra trabajos y construye reputacion real desde el piloto."
             type="registro_especialista"
-            label="Postular como especialista"
+            label="Crear perfil fundador"
             secondaryHref="/agenda-especialista"
             secondaryLabel="Ver cómo funcionará mi agenda"
           />
@@ -302,6 +304,42 @@ export default function HomePage() {
         </CollapsiblePanel>
       </section>
     </main>
+  );
+}
+
+function PilotLaunchStrip() {
+  return (
+    <section className="section-compact">
+      <div className="grid gap-5 rounded-[32px] border border-brand/15 bg-white p-5 shadow-soft md:grid-cols-[1fr_1.2fr] md:p-7">
+        <div>
+          <p className="eyebrow">Etapa piloto</p>
+          <h2 className="text-3xl font-black leading-tight text-ink">Estamos sumando especialistas fundadores por comuna.</h2>
+          <p className="mt-3 text-sm font-semibold leading-6 text-muted">
+            OficiosPro esta en apertura controlada. Si aun no hay match exacto para tu servicio o zona, puedes dejar tu solicitud y el equipo la revisara manualmente.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            ["Clientes", "Solicita contacto cuando no encuentres un especialista disponible."],
+            ["Especialistas", "Crea tu perfil fundador sin costo inicial y queda en revision."],
+            ["Operaciones", "Leads y postulaciones se revisan desde el panel interno."],
+          ].map(([title, text]) => (
+            <article key={title} className="rounded-2xl border border-line bg-slate-50 p-4">
+              <strong className="block text-ink">{title}</strong>
+              <span className="mt-2 block text-sm font-bold leading-6 text-muted">{text}</span>
+            </article>
+          ))}
+        </div>
+        <div className="flex flex-wrap gap-3 md:col-span-2">
+          <Link className="btn-primary" href="/piloto">
+            Ver etapa piloto
+          </Link>
+          <ConversionButton type="registro_especialista" sourceButton="Crear perfil fundador piloto home" className="btn-secondary">
+            Crear perfil fundador
+          </ConversionButton>
+        </div>
+      </div>
+    </section>
   );
 }
 

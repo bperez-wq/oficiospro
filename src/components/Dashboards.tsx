@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
-import { DashboardMetricCard } from "@/components/DesignSystem";
+import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -189,6 +189,14 @@ export function ClientDashboard() {
                 </div>
               </article>
             ))}
+            {!quoteAgreements.length ? (
+              <EmptyState
+                eyebrow="Piloto sin actividad"
+                title="Aun no tienes cotizaciones activas."
+                text="Cuando solicites un especialista o aceptes una propuesta, el seguimiento aparecera aqui."
+                action={<Link className="btn-secondary" href="/especialistas">Buscar especialistas</Link>}
+              />
+            ) : null}
           </div>
           <div className="grid gap-3">
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
@@ -224,6 +232,13 @@ export function ClientDashboard() {
                 </article>
               );
             })}
+            {!additionalRequests.length ? (
+              <EmptyState
+                eyebrow="Sin adicionales"
+                title="No hay cobros extra por aprobar."
+                text="En el piloto, cualquier adicional quedara visible aqui antes de que se retengan mas creditos."
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -246,7 +261,13 @@ export function ClientDashboard() {
               </button>
             </article>
           )) : (
-            <p className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">Cuando completes un servicio, podras calificarlo y ayudar a construir reputacion verificada.</p>
+            <div className="md:col-span-2">
+              <EmptyState
+                eyebrow="Sin actividad"
+                title="Aun no tienes servicios por calificar."
+                text="Cuando completes un servicio, podras calificarlo y ayudar a construir reputacion verificada."
+              />
+            </div>
           )}
         </div>
       </section>
@@ -482,6 +503,13 @@ export function SpecialistDashboard() {
                 </div>
               </article>
             ))}
+            {!quotes.length ? (
+              <EmptyState
+                eyebrow="Piloto sin solicitudes"
+                title="Aun no tienes propuestas pendientes."
+                text="Cuando llegue una solicitud real del piloto, podras preparar propuesta, pedir revision OficiosPro o marcar adicionales desde aqui."
+              />
+            ) : null}
           </div>
           <div className="grid gap-3">
             <article className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
@@ -525,6 +553,13 @@ export function SpecialistDashboard() {
                 </button>
               </article>
             ))}
+            {!additionals.length ? (
+              <EmptyState
+                eyebrow="Sin adicionales"
+                title="No hay adicionales solicitados."
+                text="Usa esta seccion cuando un trabajo requiera materiales, horas o repuestos aprobados por el cliente."
+              />
+            ) : null}
           </div>
         </div>
       </section>
@@ -592,6 +627,13 @@ export function CompanyDashboard() {
                 <strong>{service.credits} créditos</strong>
               </article>
             ))}
+            {!companyDashboard.services.length ? (
+              <EmptyState
+                eyebrow="Sin actividad"
+                title="Aun no hay servicios corporativos."
+                text="Las solicitudes de empresas piloto apareceran aqui cuando el equipo active la cuenta y cargue sus mantenciones."
+              />
+            ) : null}
           </div>
         </article>
         <article className="panel">
@@ -607,6 +649,11 @@ export function CompanyDashboard() {
               {branch}
             </span>
           ))}
+          {!companyDashboard.branches.length ? (
+            <div className="md:col-span-5">
+              <EmptyState eyebrow="Sin sucursales" title="Aun no hay sedes cargadas." text="Durante el piloto, OficiosPro puede ayudarte a ordenar sedes y centros de costo antes de activar solicitudes recurrentes." />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>

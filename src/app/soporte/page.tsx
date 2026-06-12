@@ -1,4 +1,5 @@
 import { ConversionButton } from "@/components/ConversionModal";
+import { EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { VisualFaqAccordion, type FaqItem } from "@/components/VisualFaqAccordion";
 
@@ -107,6 +108,28 @@ export default function SupportPage() {
         </div>
       </section>
 
+      <section className="grid gap-5 rounded-[28px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
+        <div>
+          <p className="eyebrow">Etapa piloto</p>
+          <h2 className="text-3xl font-black text-ink">La operacion se revisa con seguimiento humano.</h2>
+          <p className="mt-3 text-sm font-bold leading-6 text-brand-dark">
+            Estamos sumando especialistas fundadores y clientes reales de forma controlada. Si algo aun no esta automatizado, el equipo OficiosPro toma el caso y responde por el canal indicado.
+          </p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {[
+            ["Clientes", "Solicitudes sin match exacto se revisan manualmente."],
+            ["Especialistas", "Postulaciones quedan en revision antes de publicar."],
+            ["Empresas", "Cuentas piloto se coordinan con contacto operacional."],
+          ].map(([title, text]) => (
+            <article key={title} className="rounded-2xl border border-white/70 bg-white p-4">
+              <strong className="block text-ink">{title}</strong>
+              <span className="mt-2 block text-sm font-bold leading-6 text-muted">{text}</span>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="grid items-start gap-5 lg:grid-cols-3">
         {supportBlocks.map((block) => (
           <article key={block.title} className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
@@ -126,18 +149,16 @@ export default function SupportPage() {
         ))}
       </section>
 
-      <section className="grid gap-5 rounded-[28px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[1fr_auto] md:items-center">
-        <div>
-          <p className="eyebrow">Ayuda operativa</p>
-          <h2 className="text-3xl font-black text-ink">Si no encuentras tu caso, lo revisamos contigo.</h2>
-          <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
-            Soporte centralizado para clientes, especialistas, empresas y comunidades, sin exponer datos sensibles.
-          </p>
-        </div>
-        <ConversionButton type="consulta_general" sourceButton="Soporte final CTA" className="btn-primary">
-          Pedir ayuda
-        </ConversionButton>
-      </section>
+      <EmptyState
+        eyebrow="Ayuda operativa"
+        title="Si no encuentras tu caso, lo revisamos contigo."
+        text="Soporte centralizado para clientes, especialistas, empresas y comunidades, sin exponer datos sensibles. En piloto preferimos tomar el caso antes de prometer una respuesta automatica."
+        action={
+          <ConversionButton type="consulta_general" sourceButton="Soporte final CTA" className="btn-primary">
+            Pedir ayuda
+          </ConversionButton>
+        }
+      />
     </main>
   );
 }

@@ -690,8 +690,14 @@ export function SpecialistRegisterForm() {
         return false;
       }
     }
-    if (currentStep === 4 && completedReferences.length < 3) {
-      setStatus("Completa 3 referencias laborales antes de enviar tu postulación.");
+    if (
+      currentStep === 4 &&
+      references.some((reference) => {
+        const hasAnyData = reference.name || reference.company || reference.phone || reference.email || reference.work || reference.year;
+        return hasAnyData && (!reference.name || !reference.phone || !reference.work);
+      })
+    ) {
+      setStatus("Completa nombre, telefono y trabajo realizado en cada referencia iniciada, o dejala vacia para agregarla despues.");
       return false;
     }
     if (currentStep === 5 && (!consentContact || !consentVerification)) {
@@ -868,7 +874,7 @@ export function SpecialistRegisterForm() {
       regionName: regionNameForCode(baseRegion),
       communeName: baseCommune,
       sourceComponent: "SpecialistRegisterForm",
-      sourceButton: "Enviar perfil para revisión",
+      sourceButton: "Crear perfil fundador",
       consentContact,
       consentTerms: consentVerification,
       honeypot: websiteTrap,
@@ -900,7 +906,7 @@ export function SpecialistRegisterForm() {
         consentVerification,
         sourcePage: "/registro-especialista",
         sourceComponent: "SpecialistRegisterForm",
-        sourceButton: "Enviar perfil para revisión",
+        sourceButton: "Crear perfil fundador",
         createdAt: now,
         userAgent: window.navigator.userAgent,
         status: "postulado",
@@ -933,7 +939,7 @@ export function SpecialistRegisterForm() {
   }
 
   return (
-    <FormShell title="Postulación especialista" text="Tu oficio merece visibilidad, confianza y mejores oportunidades. Completa este onboarding para construir reputación desde el primer trabajo.">
+    <FormShell title="Crear perfil fundador" text="Completa lo esencial para que OficiosPro revise tu oficio, servicios y zona. Podras sumar mas antecedentes cuando el equipo te contacte.">
       <form className="grid gap-6" onSubmit={submit}>
         <label className="hidden" aria-hidden="true">
           Sitio web
@@ -962,9 +968,9 @@ export function SpecialistRegisterForm() {
           ))}
         </div>
         <div className="rounded-3xl border border-brand/15 bg-brand-soft p-5">
-          <p className="text-sm font-black uppercase text-brand">Empoderamos el oficio. Empoderamos al trabajador.</p>
+          <p className="text-sm font-black uppercase text-brand">Especialista fundador</p>
           <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark">
-            Cada trabajo bien hecho construye tu reputación. OficiosPro muestra tu experiencia, certificaciones y portafolio para que buenos especialistas sean encontrados y recomendados.
+            Cada trabajo bien hecho construye tu reputacion. En esta etapa piloto revisamos perfiles manualmente antes de publicarlos y te contactaremos si falta algun antecedente.
           </p>
         </div>
         {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
@@ -1010,7 +1016,7 @@ export function SpecialistRegisterForm() {
             <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
           </label>
           <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
-            Estos documentos se usan solo para validar tu identidad antes de publicar tu perfil. Tu cédula y selfie no serán visibles públicamente.
+            Estos documentos se usan solo para validar tu identidad antes de publicar tu perfil. Tu cedula y selfie no seran visibles publicamente; si falta algo, lo pediremos en la revision.
           </div>
           <label className="field">
             Dirección base
@@ -1075,7 +1081,7 @@ export function SpecialistRegisterForm() {
             />
             <div className="grid gap-2 text-sm font-bold leading-6 text-brand-dark">
               <span>Puedes aparecer en varias busquedas, pero tendras un solo perfil con toda tu reputacion.</span>
-              <span>Cada servicio puede tener su propio valor en creditos.</span>
+              <span>Tu ingresas tarifa esperada en CLP; OficiosPro calcula los creditos visibles para clientes.</span>
             </div>
           </div>
 
@@ -1087,8 +1093,8 @@ export function SpecialistRegisterForm() {
         <section className={step === 4 ? "grid gap-4" : "hidden"}>
           <div>
             <p className="eyebrow">Referencias laborales</p>
-            <h3 className="text-2xl font-black">Referencias opcionales para acelerar la revisión</h3>
-            <p className="mt-2 text-sm font-bold text-muted">Completa lo que tengas disponible. OficiosPro revisara tu informacion y podra solicitar antecedentes adicionales.</p>
+            <h3 className="text-2xl font-black">Referencias opcionales para acelerar la revision</h3>
+            <p className="mt-2 text-sm font-bold text-muted">Completa lo que tengas disponible. Puedes enviarlas vacias y OficiosPro podra pedir antecedentes adicionales antes de publicar.</p>
           </div>
           <div className="grid gap-4">
             {references.map((reference, index) => (
@@ -1179,7 +1185,7 @@ export function SpecialistRegisterForm() {
         </div>
 
         <button className="btn-primary" type="submit" disabled={isSubmitting || submitted} data-event="specialist_application_submit">
-          {isSubmitting ? "Enviando..." : "Enviar perfil para revisión"}
+          {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
         </button>
         {submitted ? (
           <Link className="btn-secondary text-center" href="/?postulacion=recibida">
