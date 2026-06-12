@@ -1110,7 +1110,7 @@ export function seedPaymentState() {
       },
       {
         id: "payout-op-002",
-        specialistName: "Carolina Méndez",
+        specialistName: "Carolina Poblete",
         serviceName: "Electricidad domiciliaria",
         customerCredits: 12,
         creditValueCLP: 1000,

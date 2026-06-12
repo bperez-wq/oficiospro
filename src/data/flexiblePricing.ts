@@ -228,7 +228,7 @@ export const defaultAdditionalRequests: AdditionalRequest[] = [
   {
     id: "additional-gas-001",
     serviceRequestId: "bk-1002",
-    specialistName: "Miguel Soto",
+    specialistName: "Francisco Soto",
     customerName: "Cliente OficiosPro",
     type: "materials",
     description: "Materiales gasfiteria para reemplazo de flexible y sello.",

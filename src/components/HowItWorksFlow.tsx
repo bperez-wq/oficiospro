@@ -53,7 +53,7 @@ const steps: Step[] = [
       <div className="flex items-center gap-2.5 rounded-xl border border-line bg-white p-2.5">
         <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-brand to-brand-dark text-xs font-black text-white">MS</span>
         <div className="min-w-0 flex-1">
-          <span className="block truncate text-xs font-black text-ink">Miguel S. · Gasfíter</span>
+          <span className="block truncate text-xs font-black text-ink">Francisco S. · Gasfíter</span>
           <span className="block text-[11px] font-bold text-muted">★ 4,8 · 221 trabajos</span>
         </div>
         <span className="shrink-0 rounded-full bg-gold/15 px-2 py-0.5 text-[10px] font-black text-gold">Oro</span>

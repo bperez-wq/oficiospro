@@ -171,7 +171,7 @@ function buildInitialFinanceState(): FinanceState {
   const taxProfile = {
     specialistId: "victor-araya",
     rut: "16.789.123-4",
-    legalName: "Víctor Araya Fuentes",
+    legalName: "Víctor Mendoza Fuentes",
     taxType: "persona_natural_honorarios" as const,
     canIssueFeeReceipt: true,
     canIssueInvoice: false,
