@@ -1,6 +1,7 @@
 "use client";
 
 import { defaultBookings, defaultTransactions, specialists as baseSpecialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import { allowOperationalLocalSeed } from "@/lib/demoData";
 import type { PaymentProvider } from "@/lib/payments/types";
 import {
   defaultAdditionalRequests,
@@ -482,6 +483,10 @@ function remove(key: string) {
 
 export function seedMockState() {
   if (typeof window === "undefined") return;
+  if (!allowOperationalLocalSeed()) {
+    if (!window.localStorage.getItem(keys.commercialConfig)) write(keys.commercialConfig, defaultCommercialConfig);
+    return;
+  }
   if (!window.localStorage.getItem(keys.wallet)) write(keys.wallet, { balance: 135, expiresInMonths: 24 });
   if (!window.localStorage.getItem(keys.bookings)) write(keys.bookings, defaultBookings);
   if (!window.localStorage.getItem(keys.transactions)) write(keys.transactions, defaultTransactions);

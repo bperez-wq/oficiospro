@@ -226,13 +226,16 @@ export default {
           return withCors(await createLead(request, env, "contact_message"));
         }
         if (url.pathname === "/api/specialists" && request.method === "GET") {
-          return withCors(await listPublicSpecialists(env));
+          return withCors(await listPublicSpecialists(request, env));
         }
         if (url.pathname === "/api/admin/leads" && request.method === "GET") {
           return withCors(await listAdminLeads(request, env));
         }
         if (url.pathname === "/api/admin/specialist-applications" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "specialist_applications"));
+        }
+        if (url.pathname === "/api/admin/specialists" && request.method === "GET") {
+          return withCors(await listAdminSpecialists(request, env));
         }
         if (url.pathname === "/api/admin/customer-leads" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "customer_leads"));
@@ -242,6 +245,18 @@ export default {
         }
         if (url.pathname === "/api/admin/service-requests" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "service_requests"));
+        }
+        if (url.pathname === "/api/admin/payments" && request.method === "GET") {
+          return withCors(await listAdminOperationalTable(request, env, "payment_intents", "paymentIntents"));
+        }
+        if (url.pathname === "/api/admin/credits" && request.method === "GET") {
+          return withCors(await listAdminOperationalTable(request, env, "credit_wallets", "wallets"));
+        }
+        if (url.pathname === "/api/admin/payouts" && request.method === "GET") {
+          return withCors(await listAdminOperationalTable(request, env, "specialist_payouts", "payouts"));
+        }
+        if (url.pathname === "/api/admin/security" && request.method === "GET") {
+          return withCors(await listAdminSecurityEvents(request, env));
         }
         if (url.pathname === "/api/admin/conversion-events" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "conversion_events"));
@@ -258,6 +273,10 @@ export default {
         if (specialistActionMatch && request.method === "POST") {
           return withCors(await updateSpecialistApplicationStatus(request, env, specialistActionMatch[1], specialistActionMatch[2]));
         }
+        const adminSpecialistActionMatch = url.pathname.match(/^\/api\/admin\/specialists\/([^/]+)\/(approve|reject|publish|suspend|request-more-info)$/);
+        if (adminSpecialistActionMatch && request.method === "POST") {
+          return withCors(await updateAdminSpecialistStatus(request, env, adminSpecialistActionMatch[1], adminSpecialistActionMatch[2]));
+        }
         if (url.pathname === "/api/payments/create-checkout" && request.method === "POST") {
           return withCors(await createCheckout(request, env));
         }
@@ -273,15 +292,15 @@ export default {
         if (url.pathname === "/api/credits/add" && request.method === "POST") {
           const auth = requireAdmin(request, env);
           if (auth) return withCors(auth);
-          return withCors(await addCredits(request));
+          return withCors(await addCredits(request, env));
         }
         if (url.pathname === "/api/credits/use" && request.method === "POST") {
           const auth = requireAdmin(request, env);
           if (auth) return withCors(auth);
-          return withCors(await useCredits(request));
+          return withCors(await useCredits(request, env));
         }
         if (url.pathname === "/api/credits/wallet" && request.method === "GET") {
-          return withCors(await getWallet(url));
+          return withCors(await getWallet(url, env));
         }
         if (url.pathname === "/api/admin/payments/reconcile" && request.method === "POST") {
           const auth = requireAdmin(request, env);
@@ -346,6 +365,14 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
     await env.DB.prepare("UPDATE lead_submissions SET email_sent = ?, email_error = ? WHERE id = ?")
       .bind(emailResult.sent ? 1 : 0, emailResult.error ?? null, lead.id)
       .run();
+    await bestEffortEmailDeliveryLog(env.DB, {
+      template: `lead_${lead.leadType}`,
+      recipient: env.NOTIFICATION_TO_EMAIL ?? env.LEADS_TO_EMAIL ?? "bperez@oficiospro.cl",
+      relatedEntityType: "lead_submission",
+      relatedEntityId: lead.id,
+      status: emailResult.sent ? "sent" : "failed",
+      error: emailResult.error,
+    });
     if (emailResult.error === "email_pending_configuration") {
       await insertConversionEventRecord(env.DB, {
         type: "email_pending_configuration",
@@ -456,6 +483,67 @@ async function listAdminTable(request: Request, env: Env, table: "specialist_app
   return json({ ok: true, [key]: result.results ?? [] });
 }
 
+async function listAdminOperationalTable(request: Request, env: Env, table: "payment_intents" | "credit_wallets" | "specialist_payouts", responseKey: string) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const status = sanitizeText(url.searchParams.get("status") ?? "", 40);
+  const q = sanitizeText(url.searchParams.get("q") ?? "", 120);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+  const values: unknown[] = [];
+  const filters: string[] = [];
+
+  if (status && table !== "credit_wallets") {
+    filters.push("status = ?");
+    values.push(status);
+  }
+  if (q) {
+    if (table === "payment_intents") filters.push("(id LIKE ? OR userId LIKE ? OR externalPaymentId LIKE ?)");
+    if (table === "credit_wallets") filters.push("(id LIKE ? OR userId LIKE ?)");
+    if (table === "specialist_payouts") filters.push("(id LIKE ? OR specialistId LIKE ? OR serviceRequestId LIKE ?)");
+    const pattern = `%${q}%`;
+    values.push(...(table === "credit_wallets" ? [pattern, pattern] : [pattern, pattern, pattern]));
+  }
+
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const orderColumn = table === "credit_wallets" ? "updatedAt" : "createdAt";
+  try {
+    const result = await env.DB.prepare(`SELECT * FROM ${table}${where} ORDER BY ${orderColumn} DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+    return json({ ok: true, [responseKey]: result.results ?? [], limit, offset });
+  } catch {
+    return json({ ok: false, error: "operational_tables_not_ready" }, 503);
+  }
+}
+
+async function listAdminSecurityEvents(request: Request, env: Env) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+  try {
+    const [webhooks, audits, rateLimits] = await Promise.all([
+      env.DB.prepare("SELECT * FROM webhook_events ORDER BY receivedAt DESC LIMIT ?").bind(limit).all(),
+      env.DB.prepare("SELECT * FROM admin_audit_log ORDER BY createdAt DESC LIMIT ?").bind(limit).all(),
+      env.DB.prepare("SELECT * FROM rate_limit_events ORDER BY createdAt DESC LIMIT ?").bind(limit).all(),
+    ]);
+    return json({
+      ok: true,
+      securityEvents: [...(webhooks.results ?? []), ...(audits.results ?? []), ...(rateLimits.results ?? [])],
+      webhookEvents: webhooks.results ?? [],
+      auditLog: audits.results ?? [],
+      rateLimitEvents: rateLimits.results ?? [],
+      limit,
+    });
+  } catch {
+    return json({ ok: false, error: "operational_tables_not_ready" }, 503);
+  }
+}
+
 async function updateSpecialistApplicationStatus(request: Request, env: Env, id: string, action: string) {
   const auth = authorizeAdmin(request, env);
   if (auth) return auth;
@@ -485,6 +573,84 @@ async function updateSpecialistApplicationStatus(request: Request, env: Env, id:
   return json({ ok: true, id, status });
 }
 
+async function listAdminSpecialists(request: Request, env: Env) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const status = sanitizeText(url.searchParams.get("status") ?? "", 40);
+  const q = sanitizeText(url.searchParams.get("q") ?? "", 120);
+  const commune = sanitizeText(url.searchParams.get("commune") ?? "", 120);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+  const values: unknown[] = [];
+  const filters: string[] = [];
+
+  if (status) {
+    filters.push("(status = ? OR publicationStatus = ?)");
+    values.push(status, status);
+  }
+  if (q) {
+    filters.push("(firstName LIKE ? OR lastName LIKE ? OR email LIKE ? OR serviceTypes LIKE ? OR specialties LIKE ?)");
+    const pattern = `%${q}%`;
+    values.push(pattern, pattern, pattern, pattern, pattern);
+  }
+  if (commune) {
+    filters.push("comuna LIKE ?");
+    values.push(`%${commune}%`);
+  }
+
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await env.DB.prepare(`SELECT * FROM specialist_applications${where} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, specialists: result.results ?? [], limit, offset });
+}
+
+async function updateAdminSpecialistStatus(request: Request, env: Env, id: string, action: string) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const current = await env.DB.prepare("SELECT * FROM specialist_applications WHERE id = ?").bind(id).first<Record<string, unknown>>();
+  if (!current) return json({ ok: false, error: "specialist_application_not_found" }, 404);
+
+  const now = new Date().toISOString();
+  const next = specialistStatusForAdminAction(action);
+  if (action === "publish") {
+    const missing = specialistWorkerMissingRequirements(current);
+    if (missing.length) return json({ ok: false, error: "specialist_publication_incomplete", missing }, 422);
+  }
+
+  await env.DB.prepare(
+    `UPDATE specialist_applications
+     SET status = ?, publicationStatus = ?, approvedAt = CASE WHEN ? = 'approved' THEN COALESCE(approvedAt, ?) ELSE approvedAt END,
+         publishedAt = CASE WHEN ? = 'published' THEN COALESCE(publishedAt, ?) ELSE publishedAt END,
+         suspendedAt = CASE WHEN ? = 'suspended' THEN ? ELSE suspendedAt END,
+         updatedAt = ?
+     WHERE id = ?`,
+  )
+    .bind(next.status, next.publicationStatus, next.status, now, next.publicationStatus, now, next.publicationStatus, now, now, id)
+    .run();
+
+  await bestEffortAdminAudit(env.DB, request, {
+    action: `specialist_${action}`,
+    entityType: "specialist_application",
+    entityId: id,
+    beforeJson: JSON.stringify(redactSensitive(current)),
+    afterJson: JSON.stringify({ status: next.status, publicationStatus: next.publicationStatus }),
+  });
+
+  return json({ ok: true, id, status: next.status, publicationStatus: next.publicationStatus });
+}
+
+function specialistStatusForAdminAction(action: string) {
+  if (action === "approve") return { status: "approved", publicationStatus: "approved" };
+  if (action === "publish") return { status: "published", publicationStatus: "published" };
+  if (action === "suspend") return { status: "suspended", publicationStatus: "suspended" };
+  if (action === "reject") return { status: "rejected", publicationStatus: "rejected" };
+  return { status: "more_info", publicationStatus: "more_info" };
+}
+
 async function createConversionEvent(request: Request, env: Env) {
   const body = await readJsonBody<Record<string, unknown>>(request);
   await enforceRateLimit(request, "conversion_event", { limit: 20, windowMs: 60 * 60 * 1000 });
@@ -500,10 +666,39 @@ async function createConversionEvent(request: Request, env: Env) {
   return json({ ok: true, id, stored: true });
 }
 
-async function listPublicSpecialists(env: Env) {
+async function listPublicSpecialists(request: Request, env: Env) {
   if (!env.DB) return json({ ok: true, specialists: [], stored: false, error: "database_not_configured" });
-  const result = await env.DB.prepare("SELECT * FROM specialist_applications WHERE publicationStatus = 'published' AND status NOT IN ('deleted', 'suspended', 'unpublished', 'rejected') ORDER BY updatedAt DESC LIMIT 100").all();
-  return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true });
+  const url = new URL(request.url);
+  const category = sanitizeText(url.searchParams.get("category") ?? "", 80);
+  const specialty = sanitizeText(url.searchParams.get("specialty") ?? "", 120);
+  const region = sanitizeText(url.searchParams.get("region") ?? url.searchParams.get("regionCode") ?? "", 120);
+  const commune = sanitizeText(url.searchParams.get("commune") ?? url.searchParams.get("communeName") ?? "", 120);
+  const status = sanitizeText(url.searchParams.get("status") ?? "published", 40) || "published";
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 100), 1), 100);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+  const values: unknown[] = [status];
+  const filters = ["publicationStatus = ?", "status NOT IN ('deleted', 'suspended', 'unpublished', 'rejected')"];
+
+  if (category) {
+    filters.push("(serviceTypes LIKE ? OR payloadJson LIKE ?)");
+    values.push(`%${category}%`, `%${category}%`);
+  }
+  if (specialty) {
+    filters.push("(specialties LIKE ? OR servicesOffered LIKE ? OR payloadJson LIKE ?)");
+    values.push(`%${specialty}%`, `%${specialty}%`, `%${specialty}%`);
+  }
+  if (region) {
+    filters.push("(region LIKE ? OR payloadJson LIKE ?)");
+    values.push(`%${region}%`, `%${region}%`);
+  }
+  if (commune) {
+    filters.push("(comuna LIKE ? OR payloadJson LIKE ?)");
+    values.push(`%${commune}%`, `%${commune}%`);
+  }
+
+  const query = `SELECT * FROM specialist_applications WHERE ${filters.join(" AND ")} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`;
+  const result = await env.DB.prepare(query).bind(...values, limit, offset).all();
+  return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true, limit, offset });
 }
 
 function authorizeAdmin(request: Request, env: Env) {
@@ -1121,6 +1316,7 @@ async function createCheckout(request: Request, env: Env) {
       paymentContext: sanitizeText(String((body as Record<string, unknown>).paymentContext ?? ""), 80),
     },
   });
+  await bestEffortPersistPaymentIntent(env, paymentIntent);
   const itemTitle = pack?.title ?? plan.name;
   const itemPrice = paymentIntent.amountCLP;
   const itemDescription = isCreditsPurchase
@@ -1165,6 +1361,7 @@ async function createCheckout(request: Request, env: Env) {
   };
 
   const response = await mercadoPagoFetch(env, "/checkout/preferences", preference);
+  await bestEffortUpdatePaymentExternalId(env, paymentIntent.id, textFrom(response.id));
   return json({
     ok: true,
     provider: "mercado_pago",
@@ -1195,6 +1392,7 @@ async function createSubscription(request: Request, env: Env) {
     type: "subscription_plan",
     metadata: { planId: plan.id, planName: plan.name },
   });
+  await bestEffortPersistPaymentIntent(env, paymentIntent);
 
   if (!env.MERCADOPAGO_ACCESS_TOKEN) {
     return paymentsPreparing(plan, "subscription", undefined, paymentIntent);
@@ -1225,6 +1423,7 @@ async function createSubscription(request: Request, env: Env) {
   };
 
   const response = await mercadoPagoFetch(env, "/preapproval", preapproval);
+  await bestEffortUpdatePaymentExternalId(env, paymentIntent.id, textFrom(response.id));
   return json({
     ok: true,
     provider: "mercado_pago",
@@ -1259,8 +1458,17 @@ async function processWebhook(request: Request, env: Env) {
   const topic = url.searchParams.get("type") ?? url.searchParams.get("topic") ?? payload?.type ?? payload?.topic ?? "unknown";
   const eventId = `mercado_pago:${topic}:${dataId ?? "sin-id"}`;
   const hasWebhookSecret = Boolean(env.MERCADOPAGO_WEBHOOK_SECRET);
-  const duplicate = processedWebhookEvents.has(eventId);
-  if (!duplicate) processedWebhookEvents.add(eventId);
+  const memoryDuplicate = processedWebhookEvents.has(eventId);
+  if (!memoryDuplicate) processedWebhookEvents.add(eventId);
+  const durableWebhook = await bestEffortRecordWebhookEvent(env, {
+    eventId,
+    topic,
+    dataId: dataId ? String(dataId) : "",
+    verified,
+    payload,
+    memoryDuplicate,
+  });
+  const duplicate = durableWebhook?.duplicate ?? memoryDuplicate;
 
   return json({
     ok: true,
@@ -1292,13 +1500,26 @@ async function paymentStatus(url: URL, env: Env) {
   return json({ ok: true, provider: "mercado_pago", type, data: response });
 }
 
-async function addCredits(request: Request) {
+async function addCredits(request: Request, env: Env) {
   const body = await readJsonBody<{ userId?: string; amount?: number; reason?: string; relatedPaymentId?: string }>(request);
   const amount = normalizeCredits(body.amount);
+  const userId = sanitizeText(body.userId, 160) ?? "current-user";
+  if (env.DB) {
+    const wallet = await bestEffortApplyCreditLedger(env.DB, {
+      userId,
+      amountCredits: amount,
+      type: "admin_adjustment",
+      relatedPaymentId: body.relatedPaymentId,
+      description: body.reason ?? "Ajuste administrativo de creditos",
+      idempotencyKey: `admin-add:${body.relatedPaymentId ?? crypto.randomUUID()}:${amount}`,
+    });
+    if (wallet) return json({ ok: true, wallet, stored: true });
+  }
   return json({
     ok: true,
+    stored: false,
     wallet: {
-      userId: body.userId ?? "current-user",
+      userId,
       added: amount,
       currentBalance: amount,
       availableCredits: amount,
@@ -1313,14 +1534,28 @@ async function addCredits(request: Request) {
   });
 }
 
-async function useCredits(request: Request) {
+async function useCredits(request: Request, env: Env) {
   const body = await readJsonBody<{ userId?: string; amount?: number; action?: "hold" | "capture" | "refund"; relatedServiceRequestId?: string }>(request);
   const amount = normalizeCredits(body.amount);
   const type = body.action === "refund" ? "refund" : body.action === "capture" ? "service_capture" : "service_hold";
+  const userId = sanitizeText(body.userId, 160) ?? "current-user";
+  if (env.DB) {
+    const signedAmount = type === "refund" ? amount : -amount;
+    const wallet = await bestEffortApplyCreditLedger(env.DB, {
+      userId,
+      amountCredits: signedAmount,
+      type,
+      relatedServiceRequestId: body.relatedServiceRequestId,
+      description: body.relatedServiceRequestId ?? "Movimiento de creditos",
+      idempotencyKey: `${type}:${body.relatedServiceRequestId ?? crypto.randomUUID()}:${amount}`,
+    });
+    if (wallet) return json({ ok: true, wallet, stored: true });
+  }
   return json({
     ok: true,
+    stored: false,
     wallet: {
-      userId: body.userId ?? "current-user",
+      userId,
       used: type === "refund" ? 0 : amount,
       returned: type === "refund" ? amount : 0,
       currentBalance: 0,
@@ -1338,10 +1573,15 @@ async function useCredits(request: Request) {
   });
 }
 
-async function getWallet(url: URL) {
+async function getWallet(url: URL, env: Env) {
   const userId = url.searchParams.get("userId") ?? "current-user";
+  if (env.DB) {
+    const wallet = await bestEffortReadCreditWallet(env.DB, userId);
+    if (wallet) return json({ ok: true, wallet, stored: true });
+  }
   return json({
     ok: true,
+    stored: false,
     wallet: {
       userId,
       currentBalance: 0,
@@ -1438,6 +1678,234 @@ function createWorkerPaymentIntent({
     createdAt: now,
     updatedAt: now,
   };
+}
+
+async function bestEffortPersistPaymentIntent(env: Env, intent: PaymentIntent) {
+  if (!env.DB) return;
+  try {
+    await env.DB
+      .prepare(
+        `INSERT OR REPLACE INTO payment_intents (
+          id, provider, externalPaymentId, userId, userRole, amountCLP, credits, currency, type, status, idempotencyKey, metadataJson, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        intent.id,
+        intent.provider,
+        intent.externalPaymentId ?? null,
+        intent.userId,
+        intent.userRole,
+        intent.amountCLP,
+        intent.credits,
+        intent.currency,
+        intent.type,
+        intent.status,
+        intent.id,
+        JSON.stringify(redactSensitive(intent.metadata)),
+        intent.createdAt,
+        intent.updatedAt,
+      )
+      .run();
+  } catch {
+    // Payment creation must keep working while the operational migration is being rolled out.
+  }
+}
+
+async function bestEffortUpdatePaymentExternalId(env: Env, paymentIntentId: string, externalId?: string) {
+  if (!env.DB || !externalId) return;
+  try {
+    await env.DB.prepare("UPDATE payment_intents SET externalPaymentId = ?, updatedAt = ? WHERE id = ?").bind(String(externalId), new Date().toISOString(), paymentIntentId).run();
+  } catch {
+    // Best effort only.
+  }
+}
+
+async function bestEffortRecordWebhookEvent(
+  env: Env,
+  input: { eventId: string; topic: string; dataId: string; verified: boolean; payload: unknown; memoryDuplicate: boolean },
+) {
+  if (!env.DB) return null;
+  try {
+    const existing = await env.DB.prepare("SELECT id FROM webhook_events WHERE provider = ? AND providerEventId = ?").bind("mercado_pago", input.eventId).first();
+    const duplicate = Boolean(existing) || input.memoryDuplicate;
+    await env.DB
+      .prepare(
+        `INSERT OR IGNORE INTO webhook_events (
+          id, provider, providerEventId, topic, dataId, verified, duplicate, processed, payloadJson, receivedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        `wh_${crypto.randomUUID()}`,
+        "mercado_pago",
+        input.eventId,
+        input.topic,
+        input.dataId,
+        input.verified ? 1 : 0,
+        duplicate ? 1 : 0,
+        0,
+        JSON.stringify(redactSensitive(input.payload)),
+        new Date().toISOString(),
+      )
+      .run();
+    return { duplicate };
+  } catch {
+    return null;
+  }
+}
+
+async function bestEffortReadCreditWallet(db: D1Database, userId: string) {
+  try {
+    const row = await db.prepare("SELECT * FROM credit_wallets WHERE userId = ?").bind(userId).first<Record<string, unknown>>();
+    return row ? publicWalletFromRow(row) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function bestEffortApplyCreditLedger(
+  db: D1Database,
+  input: {
+    userId: string;
+    amountCredits: number;
+    type: string;
+    relatedPaymentId?: string;
+    relatedServiceRequestId?: string;
+    description?: string;
+    idempotencyKey: string;
+  },
+) {
+  try {
+    const now = new Date().toISOString();
+    await db
+      .prepare("INSERT OR IGNORE INTO users (id, role, email, name, status, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
+      .bind(input.userId, "customer", isValidEmail(input.userId) ? input.userId : null, input.userId, "active", now, now)
+      .run();
+
+    const current =
+      (await db.prepare("SELECT * FROM credit_wallets WHERE userId = ?").bind(input.userId).first<Record<string, unknown>>()) ?? {
+        availableCredits: 0,
+        reservedCredits: 0,
+        expiringCredits: 0,
+        lifetimePurchased: 0,
+        lifetimeUsed: 0,
+      };
+    let available = numberFrom(current.availableCredits) + input.amountCredits;
+    let reserved = numberFrom(current.reservedCredits);
+    let lifetimePurchased = numberFrom(current.lifetimePurchased);
+    let lifetimeUsed = numberFrom(current.lifetimeUsed);
+
+    if (input.type === "service_hold") {
+      available = Math.max(0, numberFrom(current.availableCredits) + input.amountCredits);
+      reserved = numberFrom(current.reservedCredits) + Math.abs(input.amountCredits);
+    } else if (input.type === "service_capture") {
+      reserved = Math.max(0, numberFrom(current.reservedCredits) - Math.abs(input.amountCredits));
+      lifetimeUsed += Math.abs(input.amountCredits);
+    } else if (input.amountCredits > 0) {
+      lifetimePurchased += input.amountCredits;
+    }
+
+    await db
+      .prepare(
+        `INSERT INTO credit_wallets (id, userId, availableCredits, reservedCredits, expiringCredits, lifetimePurchased, lifetimeUsed, updatedAt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT(userId) DO UPDATE SET availableCredits = excluded.availableCredits, reservedCredits = excluded.reservedCredits,
+         expiringCredits = excluded.expiringCredits, lifetimePurchased = excluded.lifetimePurchased, lifetimeUsed = excluded.lifetimeUsed, updatedAt = excluded.updatedAt`,
+      )
+      .bind(`wallet_${input.userId}`, input.userId, Math.max(0, available), Math.max(0, reserved), numberFrom(current.expiringCredits), lifetimePurchased, lifetimeUsed, now)
+      .run();
+
+    await db
+      .prepare(
+        `INSERT OR IGNORE INTO credit_ledger_entries (
+          id, userId, userRole, type, amountCredits, balanceAfter, relatedPaymentId, relatedServiceRequestId, description, idempotencyKey, createdAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        `cle_${crypto.randomUUID()}`,
+        input.userId,
+        "customer",
+        input.type,
+        input.amountCredits,
+        Math.max(0, available),
+        input.relatedPaymentId ?? null,
+        input.relatedServiceRequestId ?? null,
+        input.description ?? "",
+        input.idempotencyKey,
+        now,
+      )
+      .run();
+
+    const row = await db.prepare("SELECT * FROM credit_wallets WHERE userId = ?").bind(input.userId).first<Record<string, unknown>>();
+    return row ? publicWalletFromRow(row) : null;
+  } catch {
+    return null;
+  }
+}
+
+function publicWalletFromRow(row: Record<string, unknown>) {
+  const availableCredits = numberFrom(row.availableCredits);
+  const reservedCredits = numberFrom(row.reservedCredits);
+  return {
+    ...row,
+    currentBalance: availableCredits,
+    availableCredits,
+    reservedCredits,
+    heldCredits: reservedCredits,
+    expiringCreditsTotal: numberFrom(row.expiringCredits),
+    expiringCredits: [],
+    lifetimePurchased: numberFrom(row.lifetimePurchased),
+    lifetimeUsed: numberFrom(row.lifetimeUsed),
+  };
+}
+
+async function bestEffortAdminAudit(
+  db: D1Database,
+  request: Request,
+  input: { action: string; entityType: string; entityId?: string; beforeJson?: string; afterJson?: string },
+) {
+  try {
+    await db
+      .prepare("INSERT INTO admin_audit_log (id, adminId, action, entityType, entityId, beforeJson, afterJson, ip, userAgent, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(
+        `audit_${crypto.randomUUID()}`,
+        "admin_token",
+        input.action,
+        input.entityType,
+        input.entityId ?? null,
+        input.beforeJson ?? null,
+        input.afterJson ?? null,
+        clientIp(request),
+        request.headers.get("user-agent") ?? "",
+        new Date().toISOString(),
+      )
+      .run();
+  } catch {
+    // Best effort only.
+  }
+}
+
+async function bestEffortEmailDeliveryLog(
+  db: D1Database,
+  input: { template: string; recipient?: string; relatedEntityType?: string; relatedEntityId?: string; status: string; error?: string },
+) {
+  try {
+    await db
+      .prepare("INSERT INTO email_delivery_log (id, template, recipient, relatedEntityType, relatedEntityId, provider, status, error, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(
+        `email_${crypto.randomUUID()}`,
+        input.template,
+        input.recipient ?? "",
+        input.relatedEntityType ?? "",
+        input.relatedEntityId ?? "",
+        "resend",
+        input.status,
+        input.error ?? null,
+        new Date().toISOString(),
+      )
+      .run();
+  } catch {
+    // Best effort only.
+  }
 }
 
 function validateCheckoutRequest(body: CheckoutRequest, mode: "checkout" | "subscription") {
