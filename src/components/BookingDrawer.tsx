@@ -7,6 +7,7 @@ import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";
 import type { FlexibleService } from "@/data/flexiblePricing";
+import { getSpecialistProfileImage } from "@/data/profileImages";
 import { formatDisplayDate, getAvailabilitySummary, getSlotsForDate, getWeekDates, type TimeSlot } from "@/lib/availability";
 import { createBookingRequest, getBookingRequests, getSpecialistAvailabilityProfile, type BookingRequest } from "@/lib/bookingStorage";
 import { createQuoteAgreement, getMockSession, getPaymentCreditWallet, usePaymentCredits } from "@/lib/storage";
@@ -138,6 +139,15 @@ export function BookingDrawer({
     preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer", sourceSection });
     if (!hasSession) {
       const initialCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
+      const specialistImage =
+        getSpecialistProfileImage({
+          name: specialist.name,
+          src: specialist.image,
+          serviceTypeId: specialist.serviceTypeId,
+          specialty: specialist.specialty,
+          category: specialist.category,
+          allowCategoryFallback: true,
+        }) ?? specialist.image;
       addCartItem({
         type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
         title: selectedService.name,
@@ -146,7 +156,7 @@ export function BookingDrawer({
         specialistId: specialist.id,
         specialistName: specialist.name,
         specialistSlug: specialist.slug,
-        specialistImage: specialist.image,
+        specialistImage,
         specialistRating: specialist.rating,
         specialistCommune: specialist.commune ?? specialist.zone,
         specialistDistance: specialist.distance,

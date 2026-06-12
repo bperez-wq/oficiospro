@@ -1,5 +1,6 @@
 import { getServiceTypeById, serviceTypes, type GeoPoint, type SpecialistRank } from "@/data/marketplace";
 import { defaultFlexibleServices, type FlexibleService, type PricingMode } from "@/data/flexiblePricing";
+import { getSpecialistProfileImage } from "@/data/profileImages";
 
 export type Availability = "now" | "today" | "tomorrow";
 
@@ -991,7 +992,15 @@ const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
   const jobs = 52 + index * 7;
   const rating = Number((4.55 + (index % 5) * 0.08).toFixed(1));
   const credits = 18 + (index % 8) * 6 + (serviceType.marginType === "company" ? 10 : 0);
-  const image = [bathroom, electrical, garden, hvac, enterprise][index % 5];
+  const workImage = [bathroom, electrical, garden, hvac, enterprise][index % 5];
+  const profileImage =
+    getSpecialistProfileImage({
+      name,
+      serviceTypeId: serviceType.id,
+      specialty: mainSpecialty,
+      category: serviceType.name,
+      allowCategoryFallback: true,
+    }) ?? "";
   const responseTime = `${(0.8 + (index % 7) * 0.35).toFixed(1)} h`;
 
   return {
@@ -1018,10 +1027,10 @@ const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
     years: 2 + (index % 7),
     top: index % 4 === 0,
     badges: ["Verificado", index % 4 === 0 ? "Top especialista" : "Certificado", serviceType.marginType === "company" ? "Empresas" : "Club Hogar"],
-    image,
-    foto: image,
+    image: profileImage,
+    foto: profileImage,
     gallery: [mainSpecialty, extraSpecialty, "Diagnóstico"],
-    galleryImages: [image, [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5], [bathroom, electrical, garden, hvac, enterprise][(index + 2) % 5]],
+    galleryImages: [workImage, [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5], [bathroom, electrical, garden, hvac, enterprise][(index + 2) % 5]],
     distance: 4 + (index % 10),
     verified: true,
     photos: true,
@@ -1050,7 +1059,7 @@ const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
       }),
     ],
     workHistory: [
-      { title: `${mainSpecialty} completado`, commune: location.commune, credits, rating, image },
+      { title: `${mainSpecialty} completado`, commune: location.commune, credits, rating, image: workImage },
       { title: `Mantención preventiva`, commune: location.commune, credits: credits + 8, rating: Math.min(5, rating + 0.1), image: [bathroom, electrical, garden, hvac, enterprise][(index + 1) % 5] },
     ],
     reviews: [
@@ -1082,9 +1091,20 @@ function normalizeBaseSpecialist(specialist: Specialist): Specialist {
   const geo = profile?.geo ?? specialist.geo;
   const coverageRadiusKm = profile?.coverageRadiusKm ?? specialist.coverageRadiusKm ?? (serviceType.marginType === "company" ? 35 : 16);
 
+  const profileImage =
+    getSpecialistProfileImage({
+      name: specialist.name,
+      src: specialist.image,
+      serviceTypeId: serviceType.id,
+      specialty: specialist.specialty,
+      category: serviceType.name,
+      allowCategoryFallback: true,
+    }) ?? specialist.image;
+
   return {
     ...specialist,
     ...profile,
+    image: profileImage,
     category: serviceType.name,
     serviceTypeId: serviceType.id,
     serviceType: serviceType.name,
@@ -1098,7 +1118,7 @@ function normalizeBaseSpecialist(specialist: Specialist): Specialist {
     radioCoberturaKm: coverageRadiusKm,
     trabajosCompletados: specialist.jobs,
     precioDesdeCreditos: specialist.credits,
-    foto: specialist.image,
+    foto: profileImage,
     servicePricing: flexibleServicesForSpecialist(specialist, serviceType.id, serviceMeta.specialties),
   };
 }

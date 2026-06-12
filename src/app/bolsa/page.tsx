@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { checkoutUrlForItems } from "@/components/CartDrawer";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, specialists as catalogSpecialists, type Specialist } from "@/data/mock";
 import { formatCLP } from "@/data/marketplace";
 import { getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
@@ -224,13 +225,15 @@ function SpecialistBagCard({
   return (
     <article className="rounded-[24px] border border-line bg-white p-4 shadow-sm transition duration-200 hover:border-brand/30 hover:shadow-card md:p-5">
       <div className="flex gap-4">
-        {image ? (
-          <img src={image} alt={item.specialistName ?? "Especialista"} className="h-20 w-20 shrink-0 rounded-2xl object-cover" />
-        ) : (
-          <span className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-brand to-brand-dark text-xl font-black text-white">
-            {(item.specialistName ?? "OP").split(" ").map((part) => part[0]).join("").slice(0, 2)}
-          </span>
-        )}
+        <SpecialistProfileImage
+          src={image}
+          name={item.specialistName ?? specialist?.name ?? "Especialista OficiosPro"}
+          specialty={specialist?.specialty ?? item.serviceName}
+          serviceTypeId={specialist?.serviceTypeId}
+          category={specialist?.category}
+          alt={item.specialistName ?? "Especialista OficiosPro"}
+          className="h-20 w-20 shrink-0 rounded-2xl"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">

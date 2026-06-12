@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, type Specialist } from "@/data/mock";
-import { fallbackSpecialistImage } from "@/data/visualAssets";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
@@ -44,14 +44,16 @@ export function SpecialistCompactCard({
   return (
     <article className="group snap-start rounded-[18px] border border-line bg-white p-3 shadow-sm transition duration-300 hover:-translate-y-0.5 hover:border-brand/30 hover:shadow-card">
       <div className="flex gap-3">
-        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-2xl">
-          <img
-            src={specialist.image || fallbackSpecialistImage(specialist.serviceTypeId, specialist.specialty)}
-            alt={`${specialist.name}, ${specialist.specialty}`}
-            loading="lazy"
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          />
-        </div>
+        <SpecialistProfileImage
+          src={specialist.image}
+          name={specialist.name}
+          specialty={specialist.specialty}
+          serviceTypeId={specialist.serviceTypeId}
+          category={specialist.category}
+          alt={`${specialist.name}, ${specialist.specialty}`}
+          className="h-16 w-16 shrink-0 rounded-2xl"
+          imageClassName="transition-transform duration-300 group-hover:scale-[1.015]"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5">
             <strong className="truncate text-sm text-ink">{specialist.name}</strong>

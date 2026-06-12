@@ -10,6 +10,7 @@
 
 import type { FlexibleService } from "@/data/flexiblePricing";
 import type { Specialist } from "@/data/mock";
+import { getSpecialistProfileImage } from "@/data/profileImages";
 import { addCartItem, getCartItems } from "@/lib/cart";
 import { creditsForInitialHold, getPrimaryFlexibleService } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
@@ -58,6 +59,15 @@ export function addSpecialistToBagAndProceed({
   const selectedService = service ?? getPrimaryFlexibleService(specialist);
   const intent = bagIntentFor(selectedService.pricingMode);
   const credits = creditsForInitialHold(selectedService, selectedService.minHours ?? 1, false);
+  const specialistImage =
+    getSpecialistProfileImage({
+      name: specialist.name,
+      src: specialist.image,
+      serviceTypeId: specialist.serviceTypeId,
+      specialty: specialist.specialty,
+      category: specialist.category,
+      allowCategoryFallback: true,
+    }) ?? specialist.image;
 
   const draft = {
     type:
@@ -72,7 +82,7 @@ export function addSpecialistToBagAndProceed({
     specialistId: specialist.id,
     specialistName: specialist.name,
     specialistSlug: specialist.slug,
-    specialistImage: specialist.image,
+    specialistImage,
     specialistRating: specialist.rating,
     specialistLevel: getSpecialistLevel(specialist),
     specialistCommune: specialist.commune ?? specialist.zone,

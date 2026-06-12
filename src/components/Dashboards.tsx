@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard } from "@/components/DesignSystem";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import { BookingList, TransactionList } from "@/components/Lists";
@@ -313,7 +314,15 @@ export function ClientDashboard() {
         <div className="grid gap-4 md:grid-cols-3">
           {favorites.map((specialist) => (
             <Link key={specialist.id} href={`/especialistas/${specialist.id}`} className="overflow-hidden rounded-2xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
-              <img src={specialist.image} alt={specialist.name} className="h-44 w-full object-cover" />
+              <SpecialistProfileImage
+                src={specialist.image}
+                name={specialist.name}
+                specialty={specialist.specialty}
+                serviceTypeId={specialist.serviceTypeId}
+                category={specialist.category}
+                alt={specialist.name}
+                className="h-44 w-full rounded-none"
+              />
               <div className="p-4">
                 <strong>{specialist.name}</strong>
                 <span className="block text-sm font-bold text-muted">
@@ -388,7 +397,16 @@ export function SpecialistDashboard() {
       </section>
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
-          <img src={specialist.image} alt={specialist.name} className="h-80 w-full object-cover" />
+          <SpecialistProfileImage
+            src={specialist.image}
+            name={specialist.name}
+            specialty={specialist.specialty}
+            serviceTypeId={specialist.serviceTypeId}
+            category={specialist.category}
+            alt={specialist.name}
+            className="h-80 w-full rounded-none"
+            fit="contain"
+          />
           <div className="p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>

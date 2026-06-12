@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard } from "@/components/DesignSystem";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { SpecialistProfileAvailability } from "@/components/SpecialistProfileAvailability";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { availabilityLabels, type Specialist } from "@/data/mock";
@@ -110,7 +111,17 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
     <section className="grid gap-6 lg:grid-cols-[1fr_390px]">
       <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
         <div className="relative h-[460px]">
-          <img src={specialist.image} alt={specialist.name} className="h-full w-full object-cover" />
+          <SpecialistProfileImage
+            src={specialist.image}
+            name={specialist.name}
+            specialty={specialist.specialty}
+            serviceTypeId={specialist.serviceTypeId}
+            category={specialist.category}
+            alt={specialist.name}
+            className="h-full w-full rounded-none"
+            fit="contain"
+            loading="eager"
+          />
           <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/75 to-transparent p-6 text-white">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div className="flex items-center gap-4">

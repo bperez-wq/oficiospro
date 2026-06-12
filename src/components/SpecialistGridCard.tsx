@@ -3,8 +3,8 @@
 import Link from "next/link";
 import { useMemo } from "react";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, type Specialist } from "@/data/mock";
-import { fallbackSpecialistImage } from "@/data/visualAssets";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
@@ -50,11 +50,16 @@ export function SpecialistGridCard({
   return (
     <article className="group flex flex-col overflow-hidden rounded-[20px] border border-line bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-card">
       <div className="relative h-32 overflow-hidden bg-brand-soft">
-        <img
-          src={specialist.image || fallbackSpecialistImage(specialist.serviceTypeId, specialist.specialty)}
+        <SpecialistProfileImage
+          src={specialist.image}
+          name={specialist.name}
+          specialty={specialist.specialty}
+          serviceTypeId={specialist.serviceTypeId}
+          category={specialist.category}
           alt={`${specialist.name}, ${specialist.specialty} en ${specialist.zone}`}
           loading="lazy"
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="h-full w-full rounded-none"
+          imageClassName="transition duration-500 group-hover:scale-[1.015]"
         />
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink/55 to-transparent" />
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-black text-brand-dark shadow-soft backdrop-blur">

@@ -6,6 +6,7 @@ import { AvailabilityBadge } from "@/components/AvailabilityBadge";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
+import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed } from "@/lib/bag";
@@ -88,10 +89,15 @@ export function SpecialistCard({
   return (
     <article className="group overflow-hidden rounded-card border border-line bg-white shadow-sm transition duration-200 hover:-translate-y-1.5 hover:border-brand/30 hover:shadow-lift">
       <div className="relative h-64 overflow-hidden bg-brand-soft">
-        <img
+        <SpecialistProfileImage
           src={specialist.image}
+          name={specialist.name}
+          specialty={specialist.specialty}
+          serviceTypeId={specialist.serviceTypeId}
+          category={specialist.category}
           alt={`${specialist.name}, ${specialist.specialty} en ${specialist.zone}`}
-          className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+          className="h-full w-full rounded-none"
+          imageClassName="transition duration-500 group-hover:scale-[1.015]"
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/75 to-transparent" />
         <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
