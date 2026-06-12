@@ -18,6 +18,7 @@ export const namedProfileImageSlugs = [
   "andres-flores",
   "andres-ibarra",
   "antonia-herrera",
+  "barbara-aguirre",
   "barbara-aguilera",
   "camila-arancibia",
   "carlos-navarro",
@@ -72,6 +73,7 @@ export const namedProfileImageSlugs = [
   "patricio-herrera",
   "paula-contreras",
   "paulina-salazar",
+  "pia-san-martin",
   "pilar-san-martin",
   "raul-contreras",
   "renato-prado",
@@ -84,6 +86,7 @@ export const namedProfileImageSlugs = [
   "sergio-ramirez",
   "sofia-vergara",
   "tamara-espinoza",
+  "valentina-riveras",
   "valentina-rivas",
   "victor-mendoza",
 ] as const;

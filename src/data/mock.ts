@@ -454,7 +454,7 @@ const baseSpecialists: Specialist[] = [
   },
   {
     id: "valentina-rivas",
-    name: "Valentina Rivas",
+    name: "Valentina Riveras",
     initials: "VR",
     specialty: "Pintora profesional",
     category: "Hogar",
@@ -469,7 +469,7 @@ const baseSpecialists: Specialist[] = [
     years: 4,
     top: false,
     badges: ["Verificado", "Terminaciones", "Garantía"],
-    image: "/assets/oficios/perfiles/valentina-rivas.jpg",
+    image: "/assets/oficios/perfiles/valentina-riveras.jpg",
     gallery: ["Muros", "Esmalte", "Reparación"],
     galleryImages: [home, bathroom, garden],
     distance: 4.8,
@@ -753,9 +753,9 @@ const generatedNames = [
 
 generatedNames.push(
   "Cristian Díaz",
-  "Pilar San Martin",
+  "Pia San Martin",
   "Oscar Sepulveda",
-  "Barbara Aguilera",
+  "Barbara Aguirre",
   "Daniel Contreras",
   "Romina Escobar",
   "Eduardo Cárdenias",
@@ -801,6 +801,8 @@ const generatedStableIdsByName: Record<string, string> = {
   "Carlos Navarro": "gonzalo-reyes",
   "Claudio Rojas": "felipe-alvarez",
   "Cristian Díaz": "raul-gutierrez",
+  "Pia San Martin": "pilar-san-martin",
+  "Barbara Aguirre": "barbara-aguilera",
   "Daniel Contreras": "luis-valenzuela",
   "Eduardo Cárdenias": "cristian-araya",
   "Esteban Navarro": "esteban-farias",
