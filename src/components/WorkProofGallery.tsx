@@ -73,7 +73,7 @@ function ProofCard({ story, featured = false }: { story: WorkHistory; featured?:
   return (
     <article
       className={`group relative snap-start overflow-hidden rounded-[24px] border border-line bg-ink shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lift ${
-        featured ? "lg:col-span-2 lg:row-span-2 min-h-72" : "min-h-72 lg:min-h-0"
+        featured ? "min-h-[28rem] lg:col-span-2 lg:row-span-2" : "min-h-[18rem]"
       }`}
     >
       <img
@@ -84,7 +84,7 @@ function ProofCard({ story, featured = false }: { story: WorkHistory; featured?:
       />
       <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/85 via-ink/25 to-ink/10" />
 
-      <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+      <div className="absolute left-4 right-4 top-4 z-10 flex flex-wrap gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-black text-brand-dark shadow-soft backdrop-blur">
           <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" /> Trabajo verificado
         </span>
@@ -93,7 +93,7 @@ function ProofCard({ story, featured = false }: { story: WorkHistory; featured?:
         </span>
       </div>
 
-      <div className={`relative flex h-full flex-col justify-end p-5 ${featured ? "lg:p-7" : ""}`}>
+      <div className={`absolute inset-0 flex flex-col justify-end p-5 pt-24 ${featured ? "lg:p-7 lg:pt-28" : ""}`}>
         <h3 className={`font-black leading-tight text-white ${featured ? "text-2xl lg:text-3xl" : "text-xl"}`}>{story.title}</h3>
         <p className="mt-1 text-sm font-bold text-white/85">
           {story.commune} · {meta.service}
