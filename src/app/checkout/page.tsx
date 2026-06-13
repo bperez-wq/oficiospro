@@ -11,7 +11,7 @@ import { formatCLP, getPlanById } from "@/data/marketplace";
 import { addCartItem, getCartItems, onCartChange, type OficiosProCartItem } from "@/lib/cart";
 import { DEFAULT_REGION_CODE, regionCodeForName, regionNameForCode } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
-import { cartTotals, itemAmountCLP } from "@/lib/payments/cart";
+import { cartTotals, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
 import { creditPacks as globalCreditPacks, defaultPaymentProvider, findCreditPack, oficiosProMerchant, paymentProviders } from "@/lib/payments/paymentProvider";
 import type { PaymentIntent, PaymentProvider } from "@/lib/payments/types";
 import {
@@ -76,6 +76,8 @@ export default function CheckoutPage() {
   });
   const plan = useMemo(() => getPlanById(planId), [planId]);
   const cartSummary = useMemo(() => cartTotals(cartItems), [cartItems]);
+  const checkoutReadyCartItems = useMemo(() => cartItems.filter(isCartItemCheckoutReady), [cartItems]);
+  const hasPendingQuoteItems = cartItems.some((item) => !isCartItemCheckoutReady(item));
   const selectedCreditPack = findCreditPack(selectedPack);
   const hasCartItems = cartItems.length > 0;
   const checkoutCredits = cartSummary.credits || selectedCreditPack?.credits || plan.monthlyCredits;
@@ -188,7 +190,7 @@ export default function CheckoutPage() {
           creditPackId: mode === "credits_purchase" ? catalogPack?.id : undefined,
           creditsPack: mode === "credits_purchase" ? creditsToBuy : undefined,
           paymentContext: paymentContext.id,
-          cart: cartItems.map((item) => ({ id: item.id, type: item.type, planId: item.planId, serviceId: item.serviceId, pricingMode: item.pricingMode })),
+          cart: checkoutReadyCartItems.map((item) => ({ id: item.id, type: item.type, planId: item.planId, serviceId: item.serviceId, pricingMode: item.pricingMode, status: item.status })),
         }),
       });
       const data = (await response.json()) as PaymentApiResponse;
@@ -281,6 +283,11 @@ export default function CheckoutPage() {
           <section className="mt-8 rounded-[24px] border border-line bg-white p-5">
             <p className="eyebrow">Bolsa</p>
             <h2 className="text-2xl font-black">{hasCartItems ? "Resumen de compra" : "Compra directa"}</h2>
+            {hasPendingQuoteItems ? (
+              <p className="mt-3 rounded-2xl bg-amber-50 p-3 text-sm font-black leading-6 text-amber-900">
+                Las cotizaciones pendientes quedan fuera del pago hasta que apruebes una propuesta en la bolsa.
+              </p>
+            ) : null}
             <div className="mt-4 grid gap-3">
               {hasCartItems ? (
                 cartItems.map((item) => (

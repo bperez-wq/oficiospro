@@ -1,16 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { checkoutUrlForItems } from "@/components/CartDrawer";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, specialists as catalogSpecialists, type Specialist } from "@/data/mock";
 import { formatCLP } from "@/data/marketplace";
-import { addCartItem, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
+import { addCartItem, getCartItems, getSpecialistProfileUrl, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
-import { cartTotals, itemAmountCLP } from "@/lib/payments/cart";
+import { cartTotals, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
 import { getPublishedSpecialists, seedMockState } from "@/lib/storage";
 import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
 import {
@@ -57,9 +57,11 @@ export default function BolsaPage() {
   const purchaseItems = items.filter((item) => !item.specialistId && (item.type === "credit_pack" || item.type === "subscription_plan"));
   const extraItems = items.filter((item) => !item.specialistId && item.type !== "credit_pack" && item.type !== "subscription_plan");
   const quoteItems = specialistItems.filter((item) => isQuoteItem(item));
+  const checkoutReadyItems = items.filter(isCartItemCheckoutReady);
+  const hasCheckoutReadyItems = checkoutReadyItems.length > 0;
   const reservableCredits = specialistItems.reduce((total, item) => total + (item.credits ?? 0), 0);
   const hasSubscription = items.some((item) => item.type === "subscription_plan");
-  const checkoutHref = checkoutUrlForItems(items);
+  const checkoutHref = checkoutUrlForItems(checkoutReadyItems);
 
   function findSpecialist(item: OficiosProCartItem) {
     return knownSpecialists.find((specialist) => specialist.id === item.specialistId || specialist.slug === item.specialistSlug);
@@ -83,7 +85,7 @@ export default function BolsaPage() {
 
   function approveVirtualQuote(item: OficiosProCartItem) {
     const quote = quoteForItem(item);
-    if (!quote?.offer) return;
+    if (!quote?.offer || isCartItemCheckoutReady(item)) return;
     const credits = Math.max(0, Number(quote.offer.creditPrice ?? quote.offer.maxCredits ?? quote.offer.minCredits ?? item.credits ?? 0));
     updateVirtualQuoteStatus(quote.id, "aprobada_cliente", "Cliente aprobo la cotizacion virtual. Los creditos se retendran al continuar al checkout.");
     void syncVirtualQuoteDecision(quote, "approve");
@@ -95,6 +97,9 @@ export default function BolsaPage() {
       amountCLP: credits * 1000,
       priceCLP: credits * 1000,
       title: `${item.serviceName ?? item.title} - cotizacion aprobada`,
+      intendedAction: item.intendedAction ?? "virtual_quote",
+      status: "quote_approved",
+      virtualQuoteId: quote.remoteId ?? quote.id,
       sourceSection,
     });
     refreshLocalState();
@@ -115,6 +120,7 @@ export default function BolsaPage() {
     const single = specialistItems[0];
     if (isQuoteItem(single)) {
       const quote = quoteForItem(single);
+      if (isCartItemCheckoutReady(single)) return { label: "Continuar al checkout", href: checkoutHref };
       return { label: quote?.offer ? "Revisar propuesta" : quote ? "Ver cotizacion virtual" : "Iniciar cotizacion virtual", onClick: () => setVirtualQuoteItem(single), href: undefined };
     }
     return { label: "Confirmar reserva", onClick: () => openBooking(single, "reservar"), href: findSpecialist(single) ? undefined : profileHref(single) };
@@ -224,10 +230,15 @@ export default function BolsaPage() {
                     </Link>
                   )
                 ) : null}
-                {specialistItems.length && primaryCta?.label !== "Continuar al checkout" ? (
+                {specialistItems.length && hasCheckoutReadyItems && primaryCta?.label !== "Continuar al checkout" ? (
                   <Link className="btn-secondary w-full text-center" href={checkoutHref} data-event="bolsa_checkout">
                     Continuar al checkout
                   </Link>
+                ) : null}
+                {quoteItems.length && !hasCheckoutReadyItems ? (
+                  <p className="rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-900">
+                    Las cotizaciones pendientes no pasan a checkout hasta que apruebes una propuesta.
+                  </p>
                 ) : null}
                 <Link className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-brand-dark transition hover:bg-brand-soft" href="/especialistas?sourceSection=bolsa">
                   Seguir explorando especialistas
@@ -458,6 +469,7 @@ function VirtualQuoteModal({
   const [customerPhone, setCustomerPhone] = useState(quote?.customerPhone ?? "");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const submitLockRef = useRef(false);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -474,6 +486,8 @@ function VirtualQuoteModal({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting || submitLockRef.current) return;
+    submitLockRef.current = true;
     setSubmitting(true);
     setError("");
     const payload: VirtualQuoteCreateInput = {
@@ -493,17 +507,22 @@ function VirtualQuoteModal({
     };
     if (!payload.problemTitle || !payload.description || !payload.commune) {
       setSubmitting(false);
+      submitLockRef.current = false;
       setError("Cuéntanos el problema, la comuna y una descripción para que el especialista pueda cotizar.");
       return;
     }
-    const result = await createVirtualQuote(payload);
-    setSubmitting(false);
-    if (!result.remote.ok && result.remote.error && result.remote.error !== "database_not_configured") {
-      setError("Guardamos tu solicitud localmente, pero no pudimos sincronizarla ahora. El equipo OficiosPro puede revisarla cuando vuelva la conexión.");
+    try {
+      const result = await createVirtualQuote(payload);
+      if (!result.remote.ok && result.remote.error && result.remote.error !== "database_not_configured") {
+        setError("Guardamos tu solicitud localmente, pero no pudimos sincronizarla ahora. El equipo OficiosPro puede revisarla cuando vuelva la conexión.");
+        onSaved();
+        return;
+      }
       onSaved();
-      return;
+    } finally {
+      setSubmitting(false);
+      submitLockRef.current = false;
     }
-    onSaved();
   }
 
   return (
@@ -746,8 +765,8 @@ function isQuoteItem(item: OficiosProCartItem) {
 }
 
 function profileHref(item: OficiosProCartItem) {
-  const id = item.specialistSlug ?? item.specialistId ?? "";
-  return `/especialistas/perfil?id=${encodeURIComponent(id)}&sourceSection=${sourceSection}`;
+  if (!item.specialistSlug && !item.specialistId) return `/especialistas?sourceSection=${sourceSection}`;
+  return `${getSpecialistProfileUrl(item)}&sourceSection=${sourceSection}`;
 }
 
 function pricingLabel(item: OficiosProCartItem) {

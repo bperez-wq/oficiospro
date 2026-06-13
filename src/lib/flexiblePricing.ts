@@ -112,8 +112,7 @@ export function creditsForInitialHold(service: FlexibleService, estimatedHours =
   if (service.pricingMode === "fixed") return Math.max(0, Number(service.fixedCredits ?? 0) - discount);
   if (service.pricingMode === "hourly") return Math.max(0, Number(service.hourlyCredits ?? 0) * Math.max(1, estimatedHours) - discount);
   if (service.pricingMode === "visit_then_quote") return Math.max(0, Number(service.visitCredits ?? 0) - discount);
-  if (service.pricingMode === "virtual_diagnosis") return Math.max(0, Number(service.minCredits ?? service.visitCredits ?? 0) - discount);
-  if (service.pricingMode === "range") return Math.max(0, Number(service.visitCredits ?? service.minCredits ?? 0) - discount);
+  if (service.pricingMode === "virtual_diagnosis" || service.pricingMode === "range" || service.pricingMode === "quote_required") return 0;
   return 0;
 }
 

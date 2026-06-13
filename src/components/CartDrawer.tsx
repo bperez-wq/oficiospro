@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCLP } from "@/data/marketplace";
 import { clearCart, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
-import { cartTotals, checkoutModeForCart, itemAmountCLP } from "@/lib/payments/cart";
+import { cartTotals, checkoutModeForCart, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
 
 /**
  * Naming oficial: la experiencia de usuario se llama "Bolsa" en todo OficiosPro
@@ -75,8 +75,10 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
   }, [open, onClose]);
 
   const totals = useMemo(() => cartTotals(items), [items]);
-  const checkoutHref = checkoutUrlForItems(items);
+  const checkoutReadyItems = useMemo(() => items.filter(isCartItemCheckoutReady), [items]);
+  const checkoutHref = checkoutUrlForItems(checkoutReadyItems);
   const hasItems = items.length > 0;
+  const hasCheckoutReadyItems = checkoutReadyItems.length > 0;
   const hasSubscription = items.some((item) => item.type === "subscription_plan");
   /* Drawer = vista rápida; /bolsa = decisión final. Con varios especialistas, priorizamos comparar. */
   const specialistItemCount = items.filter((item) => Boolean(item.specialistId)).length;
@@ -242,20 +244,29 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                   <Link className="btn-primary w-full text-center" href="/bolsa" onClick={onClose} data-event="cart_drawer_view_bag">
                     Ver bolsa completa
                   </Link>
-                  <Link className="btn-secondary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
-                    Continuar al checkout
-                  </Link>
+                  {hasCheckoutReadyItems ? (
+                    <Link className="btn-secondary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
+                      Continuar al checkout
+                    </Link>
+                  ) : null}
                 </>
               ) : (
                 <>
-                  <Link className="btn-primary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
-                    Continuar al checkout
-                  </Link>
+                  {hasCheckoutReadyItems ? (
+                    <Link className="btn-primary w-full text-center" href={checkoutHref} onClick={onClose} data-event="cart_drawer_checkout">
+                      Continuar al checkout
+                    </Link>
+                  ) : null}
                   <Link className="btn-secondary w-full text-center" href="/bolsa" onClick={onClose} data-event="cart_drawer_view_bag">
                     Ver bolsa completa
                   </Link>
                 </>
               )}
+              {!hasCheckoutReadyItems ? (
+                <p className="rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-900">
+                  Revisa la cotizacion en la bolsa antes de pasar a checkout.
+                </p>
+              ) : null}
               <button
                 className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
                 type="button"

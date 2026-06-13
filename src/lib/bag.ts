@@ -58,6 +58,12 @@ export function addSpecialistToBagAndProceed({
 }): AddToBagResult {
   const selectedService = service ?? getPrimaryFlexibleService(specialist);
   const intent = bagIntentFor(selectedService.pricingMode);
+  const intendedAction =
+    selectedService.pricingMode === "virtual_diagnosis"
+      ? ("virtual_quote" as const)
+      : intent === "reservar"
+        ? ("reserve" as const)
+        : ("quote" as const);
   const credits = creditsForInitialHold(selectedService, selectedService.minHours ?? 1, false);
   const specialistImage =
     getSpecialistProfileImage({
@@ -89,8 +95,16 @@ export function addSpecialistToBagAndProceed({
     specialistDistance: specialist.distance,
     serviceId: selectedService.id,
     serviceName: selectedService.name,
+    category: specialist.category,
+    categoryId: selectedService.categoryId ?? selectedService.serviceTypeId ?? specialist.serviceTypeId,
     pricingMode: selectedService.pricingMode,
+    intendedAction,
+    source: "specialist_cta",
     sourceSection,
+    status: intendedAction === "virtual_quote" ? "virtual_quote_pending" : intendedAction === "quote" ? "quote_pending" : "ready",
+    creditPrice: selectedService.creditPrice ?? selectedService.fixedCredits,
+    minCredits: selectedService.minCredits,
+    maxCredits: selectedService.maxCredits,
   };
 
   const stableId = cartItemStableId(draft);

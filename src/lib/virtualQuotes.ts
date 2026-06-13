@@ -111,6 +111,18 @@ export function getVirtualQuoteForCartItem(cartItemId: string) {
 }
 
 export async function createVirtualQuote(input: VirtualQuoteCreateInput) {
+  const existing = getVirtualQuoteForCartItem(input.cartItem.id);
+  if (existing && !["rechazada_cliente", "expirada"].includes(existing.status)) {
+    return {
+      quote: existing,
+      remote: {
+        ok: true,
+        id: existing.remoteId ?? existing.id,
+        stored: existing.stored,
+        error: undefined,
+      },
+    };
+  }
   const now = new Date().toISOString();
   const localId = `vq-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const base: VirtualQuoteRequest = {
@@ -226,5 +238,12 @@ export function saveVirtualQuote(quote: VirtualQuoteRequest) {
 
 function writeQuotes(items: VirtualQuoteRequest[]) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(storageKey, JSON.stringify(items.slice(0, 100)));
+  const seen = new Set<string>();
+  const unique = items.filter((item) => {
+    const key = item.cartItemId || item.id;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  window.localStorage.setItem(storageKey, JSON.stringify(unique.slice(0, 100)));
 }

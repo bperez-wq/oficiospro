@@ -36,6 +36,7 @@ export function BookingDrawer({
   const [success, setSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const dialogRef = useRef<HTMLDivElement | null>(null);
+  const submitLockRef = useRef(false);
   const services = useMemo(() => {
     const activeServices = specialist.servicePricing?.filter((service) => service.active !== false);
     return activeServices?.length ? activeServices : [getPrimaryFlexibleService(specialist)];
@@ -135,51 +136,72 @@ export function BookingDrawer({
   if (!open || !mounted) return null;
 
   async function reserve() {
-    if (submitting) return;
+    if (submitting || submitLockRef.current) return;
+    submitLockRef.current = true;
+    setSuccess("");
     preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer", sourceSection });
-    if (!hasSession) {
-      const initialCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
-      const specialistImage =
-        getSpecialistProfileImage({
-          name: specialist.name,
-          src: specialist.image,
-          serviceTypeId: specialist.serviceTypeId,
-          specialty: specialist.specialty,
-          category: specialist.category,
-          allowCategoryFallback: true,
-        }) ?? specialist.image;
-      addCartItem({
-        type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
-        title: selectedService.name,
-        credits: initialCredits,
-        amountCLP: initialCredits * 1000,
-        specialistId: specialist.id,
-        specialistName: specialist.name,
-        specialistSlug: specialist.slug,
-        specialistImage,
-        specialistRating: specialist.rating,
-        specialistCommune: specialist.commune ?? specialist.zone,
-        specialistDistance: specialist.distance,
-        serviceId: selectedService.id,
-        serviceName: selectedService.name,
-        pricingMode: selectedService.pricingMode,
-        sourceSection,
-      });
-    }
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
       setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");
+      submitLockRef.current = false;
       return;
     }
-    if (!needsQuoteOnly && !selectedSlot) return;
+    if (!needsQuoteOnly && !selectedSlot) {
+      setSuccess("Selecciona un horario disponible para continuar.");
+      submitLockRef.current = false;
+      return;
+    }
     if (!hasSession && !customerReady(customer)) {
       setSuccess("Completa tus datos minimos para continuar sin perder la reserva.");
+      submitLockRef.current = false;
       return;
     }
     setSubmitting(true);
     try {
       const heldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
       const customerName = hasSession ? getMockSession()?.name ?? "Cliente OficiosPro" : `${customer.names} ${customer.lastName}`.trim();
+      if (!hasSession) {
+        const specialistImage =
+          getSpecialistProfileImage({
+            name: specialist.name,
+            src: specialist.image,
+            serviceTypeId: specialist.serviceTypeId,
+            specialty: specialist.specialty,
+            category: specialist.category,
+            allowCategoryFallback: true,
+          }) ?? specialist.image;
+        const intendedAction =
+          selectedService.pricingMode === "virtual_diagnosis"
+            ? ("virtual_quote" as const)
+            : needsQuoteOnly
+              ? ("quote" as const)
+              : ("reserve" as const);
+        addCartItem({
+          type: selectedService.pricingMode === "visit_then_quote" ? "visit" : needsQuoteOnly ? "quote_request" : "service_request",
+          title: selectedService.name,
+          credits: heldCredits,
+          amountCLP: heldCredits * 1000,
+          specialistId: specialist.id,
+          specialistName: specialist.name,
+          specialistSlug: specialist.slug,
+          specialistImage,
+          specialistRating: specialist.rating,
+          specialistCommune: specialist.commune ?? specialist.zone,
+          specialistDistance: specialist.distance,
+          serviceId: selectedService.id,
+          serviceName: selectedService.name,
+          category: specialist.category,
+          categoryId: selectedService.categoryId ?? selectedService.serviceTypeId ?? specialist.serviceTypeId,
+          pricingMode: selectedService.pricingMode,
+          intendedAction,
+          source: "booking_drawer",
+          sourceSection,
+          status: intendedAction === "virtual_quote" ? "virtual_quote_pending" : intendedAction === "quote" ? "quote_pending" : "ready",
+          creditPrice: selectedService.creditPrice ?? selectedService.fixedCredits,
+          minCredits: selectedService.minCredits,
+          maxCredits: selectedService.maxCredits,
+        });
+      }
       if (needsQuoteOnly) {
         const quote = createQuoteAgreement({
           specialistId: specialist.id,
@@ -258,6 +280,7 @@ export function BookingDrawer({
       setSelectedSlot(null);
     } finally {
       setSubmitting(false);
+      submitLockRef.current = false;
     }
   }
 

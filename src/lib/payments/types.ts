@@ -61,6 +61,8 @@ export type CartItemType =
   | "visit"
   | "additional_charge";
 
+export type CartIntendedAction = "quote" | "reserve" | "virtual_quote" | "checkout";
+
 export type CartItem = {
   id: string;
   type: CartItemType;
@@ -73,8 +75,18 @@ export type CartItem = {
   specialistName?: string;
   serviceId?: string;
   serviceName?: string;
+  category?: string;
+  categoryId?: string;
   pricingMode?: PricingMode | string;
   createdAt: string;
+  updatedAt?: string;
+  intendedAction?: CartIntendedAction;
+  source?: string;
+  virtualQuoteId?: string;
+  status?: string;
+  creditPrice?: number;
+  minCredits?: number;
+  maxCredits?: number;
   /* Campos opcionales para la página /bolsa (compatibles con ítems existentes). */
   specialistSlug?: string;
   specialistImage?: string;
