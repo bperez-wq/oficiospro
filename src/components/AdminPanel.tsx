@@ -84,6 +84,7 @@ type AdminSection =
   | "pendientes"
   | "publicados"
   | "solicitudes"
+  | "cotizaciones-virtuales"
   | "reviews"
   | "leads-hogar"
   | "leads-empresas"
@@ -139,6 +140,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "pendientes", label: "Especialistas pendientes" },
   { id: "publicados", label: "Especialistas publicados" },
   { id: "solicitudes", label: "Solicitudes de clientes" },
+  { id: "cotizaciones-virtuales", label: "Cotizaciones virtuales" },
   { id: "reviews", label: "Reviews" },
   { id: "leads-hogar", label: "Leads Club Hogar" },
   { id: "leads-empresas", label: "Leads Empresas" },
@@ -285,6 +287,7 @@ export function AdminPanel() {
         "especialistas-pendientes": "pendientes",
         leads: "leads-hogar",
         "configuracion-comercial": "creditos",
+        "cotizaciones-virtuales": "cotizaciones-virtuales",
       };
       if (map[hash]) setActiveSection(map[hash]);
     }
@@ -805,6 +808,7 @@ export function AdminPanel() {
                 <div className="grid gap-3">
                   <SummaryRow label="Especialistas pendientes" value={pendingOnly.length} action={() => setActiveSection("pendientes")} />
                   <SummaryRow label="Solicitudes de clientes" value={serviceRequests.length} action={() => setActiveSection("solicitudes")} />
+                  <SummaryRow label="Cotizaciones virtuales" value={0} action={() => setActiveSection("cotizaciones-virtuales")} />
                   <SummaryRow label="Reviews nuevas" value={reviewRows.filter((review) => !review.reviewedByAdmin).length} action={() => setActiveSection("reviews")} />
                   <SummaryRow label="Leads comerciales" value={allLeads.length} action={() => setActiveSection("leads-hogar")} />
                 </div>
@@ -899,6 +903,30 @@ export function AdminPanel() {
                   onNote={(note) => saveNote(request.id, note)}
                 />
               )) : <EmptyState text="Aún no hay solicitudes de clientes." />}
+            </div>
+          </Panel>
+        ) : null}
+
+        {activeSection === "cotizaciones-virtuales" ? (
+          <Panel title="Cotizaciones virtuales" eyebrow="Diagnostico previo">
+            <div className="grid gap-4 rounded-2xl border border-brand/15 bg-brand-soft p-5">
+              <div>
+                <h3 className="text-xl font-black text-brand-dark">Panel interno OficiosPro</h3>
+                <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-brand-dark/80">
+                  Revisa solicitudes enviadas desde la bolsa, estados, urgencia, cantidad de referencias y seguimiento antes de convertirlas en reserva.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link className="btn-primary" href="/admin/virtual-quotes">
+                  Abrir cotizaciones virtuales
+                </Link>
+                <button className="btn-secondary" type="button" onClick={() => setActiveSection("solicitudes")}>
+                  Ver solicitudes de clientes
+                </button>
+              </div>
+              <p className="text-xs font-bold leading-5 text-brand-dark/70">
+                El listado real usa D1 y ADMIN_TOKEN. Este acceso no se enlaza desde navegacion publica.
+              </p>
             </div>
           </Panel>
         ) : null}

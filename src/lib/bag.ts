@@ -22,13 +22,13 @@ export const openBagEventName = "oficiospro-open-bag";
 
 /** Texto del CTA según modalidad de precio del servicio. */
 export function bagActionLabel(pricingMode: string | undefined) {
-  if (pricingMode === "quote_required" || pricingMode === "range" || pricingMode === "custom") return "Cotizar";
+  if (pricingMode === "quote_required" || pricingMode === "virtual_diagnosis" || pricingMode === "range" || pricingMode === "custom") return "Cotizar";
   if (pricingMode === "visit_then_quote") return "Solicitar visita";
   return "Reservar";
 }
 
 export function bagIntentFor(pricingMode: string | undefined): "cotizar" | "visita" | "reservar" {
-  if (pricingMode === "quote_required" || pricingMode === "range" || pricingMode === "custom") return "cotizar";
+  if (pricingMode === "quote_required" || pricingMode === "virtual_diagnosis" || pricingMode === "range" || pricingMode === "custom") return "cotizar";
   if (pricingMode === "visit_then_quote") return "visita";
   return "reservar";
 }
@@ -73,7 +73,7 @@ export function addSpecialistToBagAndProceed({
     type:
       selectedService.pricingMode === "visit_then_quote"
         ? ("visit" as const)
-        : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom"
+        : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom"
           ? ("quote_request" as const)
           : ("service_request" as const),
     title: selectedService.name,

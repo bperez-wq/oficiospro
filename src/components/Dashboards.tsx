@@ -35,6 +35,14 @@ import {
 import { distanceInKm } from "@/data/marketplace";
 import { additionalNeedsPayment, quoteTotalCredits } from "@/lib/flexiblePricing";
 import { canAccess } from "@/lib/security";
+import {
+  addVirtualQuoteOffer,
+  getVirtualQuoteRequests,
+  updateVirtualQuoteStatus,
+  virtualQuoteStatusLabels,
+  virtualQuoteUrgencyLabels,
+  type VirtualQuoteRequest,
+} from "@/lib/virtualQuotes";
 
 export function ClientDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
@@ -366,6 +374,7 @@ export function SpecialistDashboard() {
   const [submittedNotice, setSubmittedNotice] = useState(false);
   const [quotes, setQuotes] = useState<QuoteAgreement[]>([]);
   const [additionals, setAdditionals] = useState<AdditionalRequest[]>([]);
+  const [virtualQuotes, setVirtualQuotes] = useState<VirtualQuoteRequest[]>([]);
 
   useEffect(() => {
     const session = getMockSession();
@@ -379,6 +388,7 @@ export function SpecialistDashboard() {
     setReferrals(getReferralState());
     setQuotes(getQuoteAgreements());
     setAdditionals(getAdditionalRequests());
+    setVirtualQuotes(getVirtualQuoteRequests());
     setSubmittedNotice(new URLSearchParams(window.location.search).get("submitted") === "1");
   }, [specialist.id]);
 
@@ -400,6 +410,37 @@ export function SpecialistDashboard() {
   function sendAdditional(id: string) {
     updateAdditionalRequestStatus(id, "pending_customer_approval", "El especialista solicitó adicional pendiente de aprobación.");
     setAdditionals(getAdditionalRequests());
+  }
+
+  function askVirtualInfo(id: string) {
+    updateVirtualQuoteStatus(id, "necesita_mas_info", "El especialista pidio mas informacion antes de cotizar.");
+    setVirtualQuotes(getVirtualQuoteRequests());
+  }
+
+  function sendVirtualOffer(id: string) {
+    addVirtualQuoteOffer(id, {
+      pricingMode: "range",
+      minCredits: 18,
+      maxCredits: 36,
+      estimatedDuration: "Media jornada",
+      materialsExcluded: "Materiales y repuestos se confirman antes de ejecutar.",
+      conditions: "Cotizacion basada en los antecedentes enviados. Puede ajustarse si aparece una condicion no visible en fotos.",
+      comment: "Puedo resolverlo con diagnostico virtual. Si apruebas, coordinamos horario para ejecutar.",
+    });
+    setVirtualQuotes(getVirtualQuoteRequests());
+  }
+
+  function recommendVirtualVisit(id: string) {
+    addVirtualQuoteOffer(id, {
+      pricingMode: "visit_then_quote",
+      minCredits: 0,
+      maxCredits: 0,
+      estimatedDuration: "45 minutos",
+      requiresVisit: true,
+      conditions: "El caso requiere revisar en terreno antes de comprometer precio cerrado.",
+      comment: "Recomiendo una visita tecnica para evitar cotizar con informacion incompleta.",
+    });
+    setVirtualQuotes(getVirtualQuoteRequests());
   }
 
   return (
@@ -469,6 +510,56 @@ export function SpecialistDashboard() {
             ))}
           </div>
         </article>
+      </section>
+      <section className="panel">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="eyebrow">Diagnostico virtual</p>
+            <h2 className="text-2xl font-black">Cotizaciones virtuales pendientes</h2>
+            <p className="mt-2 text-sm font-semibold leading-6 text-muted">
+              Revisa antecedentes enviados por clientes, pide mas informacion o propone creditos antes de una visita presencial.
+            </p>
+          </div>
+          <span className="chip bg-brand-soft text-brand-dark">{virtualQuotes.length} solicitudes</span>
+        </div>
+        {virtualQuotes.length ? (
+          <div className="grid gap-3 lg:grid-cols-2">
+            {virtualQuotes.map((quote) => (
+              <article key={quote.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <strong className="text-ink">{quote.serviceName ?? quote.problemTitle}</strong>
+                    <p className="mt-1 text-sm font-bold text-muted">{quote.customerName ?? "Cliente OficiosPro"} · {quote.commune}</p>
+                  </div>
+                  <span className="chip bg-white text-brand-dark">{virtualQuoteStatusLabels[quote.status]}</span>
+                </div>
+                <p className="mt-3 text-sm font-semibold leading-6 text-muted">{quote.description}</p>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <MiniMetric label="Urgencia" value={virtualQuoteUrgencyLabels[quote.urgency]} />
+                  <MiniMetric label="Referencias" value={`${quote.attachmentCount}`} />
+                  <MiniMetric label="Propuesta" value={quote.offer ? "Enviada" : "Pendiente"} />
+                </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button className="btn-secondary" type="button" onClick={() => askVirtualInfo(quote.id)}>
+                    Pedir mas info
+                  </button>
+                  <button className="btn-secondary" type="button" onClick={() => recommendVirtualVisit(quote.id)}>
+                    Recomendar visita
+                  </button>
+                  <button className="btn-primary" type="button" onClick={() => sendVirtualOffer(quote.id)}>
+                    Enviar propuesta
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            eyebrow="Sin diagnosticos virtuales"
+            title="Aun no hay cotizaciones virtuales pendientes."
+            text="Cuando un cliente envie fotos o antecedentes desde la bolsa, apareceran aqui para responder antes de agendar visita."
+          />
+        )}
       </section>
       <section className="panel">
         <div className="mb-5">

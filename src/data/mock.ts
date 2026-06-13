@@ -882,9 +882,9 @@ function makeFlexibleService({
     hourlyCredits: pricingMode === "hourly" ? hourlyCredits : undefined,
     minHours: pricingMode === "hourly" ? minHours : undefined,
     maxHours: pricingMode === "hourly" ? maxHours : undefined,
-    minCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "visit_then_quote" ? Math.max(12, evenBase - 8) : undefined,
-    maxCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "visit_then_quote" ? evenBase + 28 + index * 2 : undefined,
-    visitCredits: pricingMode === "visit_then_quote" || pricingMode === "range" || pricingMode === "quote_required" ? Math.max(6, Math.min(20, Math.round(evenBase / 4) * 2)) : undefined,
+    minCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "virtual_diagnosis" || pricingMode === "visit_then_quote" ? Math.max(12, evenBase - 8) : undefined,
+    maxCredits: pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "virtual_diagnosis" || pricingMode === "visit_then_quote" ? evenBase + 28 + index * 2 : undefined,
+    visitCredits: pricingMode === "visit_then_quote" || pricingMode === "range" || pricingMode === "quote_required" || pricingMode === "virtual_diagnosis" ? Math.max(6, Math.min(20, Math.round(evenBase / 4) * 2)) : undefined,
     clubDiscountCredits: 2,
     estimatedDurationMinMinutes: 60 + (index % 3) * 30,
     estimatedDurationMaxMinutes: 120 + (index % 4) * 60,
@@ -892,10 +892,12 @@ function makeFlexibleService({
     materialsIncluded: pricingMode === "fixed" && index % 3 === 0,
     materialsChargedSeparately: pricingMode !== "fixed" || index % 3 !== 0,
     initialVisitFree: pricingMode === "fixed" && index % 2 === 0,
-    requiresPriorEvaluation: ["quote_required", "visit_then_quote", "range", "custom"].includes(pricingMode),
+    requiresPriorEvaluation: ["quote_required", "visit_then_quote", "virtual_diagnosis", "range", "custom"].includes(pricingMode),
     conditions:
       pricingMode === "quote_required"
         ? "Se solicita descripcion, comuna y fotos antes de enviar propuesta."
+        : pricingMode === "virtual_diagnosis"
+          ? "El cliente envia fotos y antecedentes para cotizar antes de ir, cuando sea posible."
         : pricingMode === "visit_then_quote"
           ? "La visita tecnica permite cerrar alcance y puede descontarse segun condiciones."
           : "Materiales o alcance adicional se aprueban antes de cualquier cobro extra.",
@@ -909,7 +911,7 @@ function flexibleServicesForSpecialist(specialist: Specialist, serviceTypeId: st
   const credits = specialist.credits || specialist.precioDesdeCreditos || 20;
   const specific = specificFlexibleServices[specialist.id];
   if (specific) return specific;
-  const modes: PricingMode[] = ["fixed", "hourly", "quote_required", "visit_then_quote", "range"];
+  const modes: PricingMode[] = ["fixed", "hourly", "quote_required", "visit_then_quote", "virtual_diagnosis", "range"];
   const primaryMode = modes[specialist.id.length % modes.length];
   const secondaryMode = primaryMode === "fixed" ? "quote_required" : "fixed";
 
@@ -1075,7 +1077,7 @@ const generatedSpecialists: Specialist[] = generatedNames.map((name, index) => {
         specialty: mainSpecialty,
         name: mainSpecialty,
         description: `${mainSpecialty} con condiciones claras antes de reservar.`,
-        pricingMode: (["fixed", "hourly", "quote_required", "visit_then_quote", "range"] as PricingMode[])[index % 5],
+        pricingMode: (["fixed", "hourly", "quote_required", "visit_then_quote", "virtual_diagnosis", "range"] as PricingMode[])[index % 6],
         credits,
         index,
       }),

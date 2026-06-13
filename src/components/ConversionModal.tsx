@@ -403,6 +403,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     const selectedFlexibleService = specialist ? getPrimaryFlexibleService(specialist) : null;
     const quoteMode =
       selectedFlexibleService?.pricingMode === "quote_required" ||
+      selectedFlexibleService?.pricingMode === "virtual_diagnosis" ||
       selectedFlexibleService?.pricingMode === "range" ||
       selectedFlexibleService?.pricingMode === "custom";
     const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;

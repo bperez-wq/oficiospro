@@ -222,6 +222,9 @@ export default {
         if (url.pathname === "/api/conversion-events/create" && request.method === "POST") {
           return withCors(await createConversionEvent(request, env));
         }
+        if (url.pathname === "/api/quotes/virtual/create" && request.method === "POST") {
+          return withCors(await createVirtualQuoteRequest(request, env));
+        }
         if (url.pathname === "/api/contact" && request.method === "POST") {
           return withCors(await createLead(request, env, "contact_message"));
         }
@@ -245,6 +248,9 @@ export default {
         }
         if (url.pathname === "/api/admin/service-requests" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "service_requests"));
+        }
+        if (url.pathname === "/api/admin/virtual-quotes" && request.method === "GET") {
+          return withCors(await listAdminVirtualQuotes(request, env));
         }
         if (url.pathname === "/api/admin/payments" && request.method === "GET") {
           return withCors(await listAdminOperationalTable(request, env, "payment_intents", "paymentIntents"));
@@ -276,6 +282,18 @@ export default {
         const adminSpecialistActionMatch = url.pathname.match(/^\/api\/admin\/specialists\/([^/]+)\/(approve|reject|publish|suspend|request-more-info)$/);
         if (adminSpecialistActionMatch && request.method === "POST") {
           return withCors(await updateAdminSpecialistStatus(request, env, adminSpecialistActionMatch[1], adminSpecialistActionMatch[2]));
+        }
+        const adminVirtualQuoteStatusMatch = url.pathname.match(/^\/api\/admin\/virtual-quotes\/([^/]+)\/update-status$/);
+        if (adminVirtualQuoteStatusMatch && (request.method === "POST" || request.method === "PATCH")) {
+          return withCors(await updateVirtualQuoteStatus(request, env, adminVirtualQuoteStatusMatch[1], "admin"));
+        }
+        const virtualQuoteDetailMatch = url.pathname.match(/^\/api\/quotes\/virtual\/([^/]+)$/);
+        if (virtualQuoteDetailMatch && request.method === "GET") {
+          return withCors(await getVirtualQuoteRequest(env, virtualQuoteDetailMatch[1]));
+        }
+        const virtualQuoteActionMatch = url.pathname.match(/^\/api\/quotes\/virtual\/([^/]+)\/(message|offer|approve|reject|request-more-info)$/);
+        if (virtualQuoteActionMatch && request.method === "POST") {
+          return withCors(await handleVirtualQuoteAction(request, env, virtualQuoteActionMatch[1], virtualQuoteActionMatch[2]));
         }
         if (url.pathname === "/api/payments/create-checkout" && request.method === "POST") {
           return withCors(await createCheckout(request, env));
@@ -664,6 +682,188 @@ async function createConversionEvent(request: Request, env: Env) {
   };
   const id = await insertConversionEventRecord(env.DB, event);
   return json({ ok: true, id, stored: true });
+}
+
+async function createVirtualQuoteRequest(request: Request, env: Env) {
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  await enforceRateLimit(request, "virtual_quote:create", { email: textFrom(body.customerEmail), phone: textFrom(body.customerPhone), limit: 8, windowMs: 60 * 60 * 1000 });
+  if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
+
+  const description = sanitizeText(body.description, 3000);
+  const commune = sanitizeText(body.commune, 140);
+  if (!description || !commune) throw new SafeHttpError(400, "missing_required_fields");
+
+  const now = new Date().toISOString();
+  const id = `vq_${crypto.randomUUID()}`;
+  const status = "pendiente_revision";
+  const payloadJson = JSON.stringify(redactSensitive(sanitizePayloadObject(body)));
+  await env.DB
+    .prepare(
+      `INSERT INTO virtual_quote_requests (
+        id, customerId, customerName, customerEmail, customerPhone, specialistId, specialistName, serviceId, cartItemId,
+        categoryId, specialty, serviceName, problemTitle, description, locationDetail, commune, region, urgency, status,
+        attachmentCount, videoReference, additionalComments, payloadJson, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      id,
+      sanitizeText(body.customerId, 160),
+      sanitizeText(body.customerName, 180),
+      sanitizeEmail(textFrom(body.customerEmail)) ?? null,
+      sanitizeText(body.customerPhone, 60),
+      sanitizeText(body.specialistId, 140),
+      sanitizeText(body.specialistName, 180),
+      sanitizeText(body.serviceId, 140),
+      sanitizeText(body.cartItemId, 220),
+      sanitizeText(body.categoryId, 120),
+      sanitizeText(body.specialty, 180),
+      sanitizeText(body.serviceName, 220),
+      sanitizeText(body.problemTitle, 220),
+      description,
+      sanitizeText(body.locationDetail, 400),
+      commune,
+      sanitizeText(body.region, 140),
+      sanitizeText(body.urgency, 40) || "flexible",
+      status,
+      numberFrom(body.attachmentCount),
+      sanitizeText(body.videoReference, 400),
+      sanitizeText(body.additionalComments, 1200),
+      payloadJson,
+      now,
+      now,
+    )
+    .run();
+
+  await insertVirtualQuoteMessage(env.DB, id, "customer", sanitizeText(body.customerId, 160) ?? "", description);
+  await insertConversionEventRecord(env.DB, {
+    type: "virtual_quote_created",
+    source: "bolsa",
+    page: "/bolsa",
+    payloadJson: JSON.stringify({ id, specialistId: sanitizeText(body.specialistId, 140), serviceId: sanitizeText(body.serviceId, 140), commune }),
+  });
+  return json({ ok: true, id, status, stored: true });
+}
+
+async function getVirtualQuoteRequest(env: Env, id: string) {
+  if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
+  const quote = await env.DB.prepare("SELECT * FROM virtual_quote_requests WHERE id = ?").bind(id).first<Record<string, unknown>>();
+  if (!quote) return json({ ok: false, error: "virtual_quote_not_found" }, 404);
+  const messages = await env.DB.prepare("SELECT * FROM virtual_quote_messages WHERE quoteRequestId = ? ORDER BY createdAt DESC").bind(id).all();
+  const offers = await env.DB.prepare("SELECT * FROM virtual_quote_offers WHERE quoteRequestId = ? ORDER BY createdAt DESC").bind(id).all();
+  return json({ ok: true, quote, messages: messages.results ?? [], offers: offers.results ?? [], stored: true });
+}
+
+async function listAdminVirtualQuotes(request: Request, env: Env) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  const url = new URL(request.url);
+  const q = sanitizeText(url.searchParams.get("q") ?? "", 180);
+  const status = sanitizeText(url.searchParams.get("status") ?? "", 60);
+  const commune = sanitizeText(url.searchParams.get("commune") ?? "", 140);
+  const specialist = sanitizeText(url.searchParams.get("specialist") ?? "", 160);
+  const urgency = sanitizeText(url.searchParams.get("urgency") ?? "", 60);
+  const limit = Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100);
+  const offset = Math.max(Number(url.searchParams.get("offset") ?? 0), 0);
+  const values: unknown[] = [];
+  const filters: string[] = [];
+  if (q) {
+    filters.push("(id LIKE ? OR customerName LIKE ? OR customerEmail LIKE ? OR serviceName LIKE ? OR description LIKE ?)");
+    values.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+  }
+  if (status) {
+    filters.push("status = ?");
+    values.push(status);
+  }
+  if (commune) {
+    filters.push("commune LIKE ?");
+    values.push(`%${commune}%`);
+  }
+  if (specialist) {
+    filters.push("(specialistId LIKE ? OR specialistName LIKE ?)");
+    values.push(`%${specialist}%`, `%${specialist}%`);
+  }
+  if (urgency) {
+    filters.push("urgency = ?");
+    values.push(urgency);
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await env.DB.prepare(`SELECT * FROM virtual_quote_requests${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, virtualQuotes: result.results ?? [], limit, offset });
+}
+
+async function handleVirtualQuoteAction(request: Request, env: Env, id: string, action: string) {
+  if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
+  if (action === "message") {
+    const body = await readJsonBody<Record<string, unknown>>(request);
+    const message = sanitizeText(body.message, 2000);
+    if (!message) throw new SafeHttpError(400, "missing_required_fields");
+    await insertVirtualQuoteMessage(env.DB, id, sanitizeText(body.senderRole, 40) || "customer", sanitizeText(body.senderId, 160) ?? "", message);
+    return json({ ok: true, id, stored: true });
+  }
+  if (action === "offer") return createVirtualQuoteOffer(request, env, id);
+  if (action === "approve") return updateVirtualQuoteStatus(request, env, id, "aprobada_cliente");
+  if (action === "reject") return updateVirtualQuoteStatus(request, env, id, "rechazada_cliente");
+  if (action === "request-more-info") return updateVirtualQuoteStatus(request, env, id, "necesita_mas_info");
+  return json({ ok: false, error: "invalid_virtual_quote_action" }, 400);
+}
+
+async function createVirtualQuoteOffer(request: Request, env: Env, id: string) {
+  if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const pricingMode = sanitizeText(body.pricingMode, 60) || "fixed";
+  const now = new Date().toISOString();
+  const offerId = `vqo_${crypto.randomUUID()}`;
+  await env.DB
+    .prepare(
+      `INSERT INTO virtual_quote_offers (
+        id, quoteRequestId, specialistId, pricingMode, creditPrice, minCredits, maxCredits, estimatedDuration,
+        materialsIncluded, materialsExcluded, conditions, requiresVisit, comment, status, expiresAt, createdAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      offerId,
+      id,
+      sanitizeText(body.specialistId, 140),
+      pricingMode,
+      numberFrom(body.creditPrice),
+      numberFrom(body.minCredits),
+      numberFrom(body.maxCredits),
+      sanitizeText(body.estimatedDuration, 180),
+      sanitizeText(body.materialsIncluded, 1000),
+      sanitizeText(body.materialsExcluded, 1000),
+      sanitizeText(body.conditions, 1200),
+      body.requiresVisit ? 1 : 0,
+      sanitizeText(body.comment, 1500),
+      pricingMode === "visit_then_quote" ? "visita_recomendada" : "cotizacion_enviada",
+      sanitizeText(body.expiresAt, 80),
+      now,
+    )
+    .run();
+  const status = pricingMode === "visit_then_quote" ? "visita_recomendada" : "cotizacion_enviada";
+  await env.DB.prepare("UPDATE virtual_quote_requests SET status = ?, updatedAt = ? WHERE id = ?").bind(status, now, id).run();
+  await insertVirtualQuoteMessage(env.DB, id, "specialist", sanitizeText(body.specialistId, 140) ?? "", sanitizeText(body.comment, 1500) || "Propuesta enviada.");
+  return json({ ok: true, id, offerId, status, stored: true });
+}
+
+async function updateVirtualQuoteStatus(request: Request, env: Env, id: string, statusOrSource: string) {
+  if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
+  const body = request.method === "GET" ? {} : await readJsonBody<Record<string, unknown>>(request).catch(() => ({}));
+  const status = statusOrSource === "admin" ? sanitizeText(body.status, 80) : statusOrSource;
+  if (!status) throw new SafeHttpError(400, "missing_status");
+  const now = new Date().toISOString();
+  await env.DB.prepare("UPDATE virtual_quote_requests SET status = ?, updatedAt = ? WHERE id = ?").bind(status, now, id).run();
+  const message = sanitizeText(body.message, 1200);
+  if (message) await insertVirtualQuoteMessage(env.DB, id, statusOrSource === "admin" ? "admin" : "customer", sanitizeText(body.senderId, 160) ?? "", message);
+  return json({ ok: true, id, status, stored: true });
+}
+
+async function insertVirtualQuoteMessage(db: D1Database, quoteRequestId: string, senderRole: string, senderId: string, message: string) {
+  await db
+    .prepare("INSERT INTO virtual_quote_messages (id, quoteRequestId, senderRole, senderId, message, createdAt) VALUES (?, ?, ?, ?, ?, ?)")
+    .bind(`vqm_${crypto.randomUUID()}`, quoteRequestId, senderRole, senderId, message, new Date().toISOString())
+    .run();
 }
 
 async function listPublicSpecialists(request: Request, env: Env) {

@@ -20,7 +20,7 @@ export function checkoutModeForCart(items: CartItem[]) {
   if (!service) return { mode: "empty" as const };
   if (service.type === "additional_charge") return { mode: "additional_charge" as const, cartItemId: service.id };
   if (service.pricingMode === "visit_then_quote" || service.type === "visit") return { mode: "visit_fee" as const, cartItemId: service.id };
-  if (service.pricingMode === "quote_required" || service.pricingMode === "range" || service.type === "quote_request") {
+  if (service.pricingMode === "quote_required" || service.pricingMode === "virtual_diagnosis" || service.pricingMode === "range" || service.type === "quote_request") {
     return { mode: "quote_acceptance" as const, cartItemId: service.id };
   }
   return { mode: "service_reservation" as const, cartItemId: service.id };

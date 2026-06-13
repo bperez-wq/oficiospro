@@ -45,6 +45,9 @@ export function pricingSummary(service: FlexibleService | undefined, isSubscribe
   if (service.pricingMode === "range") {
     return `Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;
   }
+  if (service.pricingMode === "virtual_diagnosis") {
+    return "Cotiza con fotos antes de la visita";
+  }
   if (service.pricingMode === "visit_then_quote") {
     return `Visita desde ${service.visitCredits ?? 0} creditos y luego cotizacion`;
   }
@@ -64,6 +67,7 @@ export function pricingDetail(service: FlexibleService | undefined) {
     return `Este trabajo podria costar entre ${min * hourly} y ${max * hourly} creditos.`;
   }
   if (service.pricingMode === "range") return "Puedes solicitar cotizacion o reservar visita para cerrar alcance.";
+  if (service.pricingMode === "virtual_diagnosis") return "Envias antecedentes y fotos para que el especialista cotice antes de ir, cuando sea posible.";
   if (service.pricingMode === "visit_then_quote") return "Primero se paga diagnostico. Luego recibes propuesta formal.";
   if (service.pricingMode === "quote_required") return "Puedes solicitar evaluacion sin compromiso antes del pago final.";
   return "Un administrador revisara el caso antes de confirmar condiciones.";
@@ -71,7 +75,7 @@ export function pricingDetail(service: FlexibleService | undefined) {
 
 export function bookingPrimaryAction(service: FlexibleService | undefined) {
   if (!service) return "Solicitar servicio";
-  if (service.pricingMode === "quote_required" || service.pricingMode === "range") return "Solicitar cotizacion";
+  if (service.pricingMode === "quote_required" || service.pricingMode === "virtual_diagnosis" || service.pricingMode === "range") return "Solicitar cotizacion";
   if (service.pricingMode === "visit_then_quote") return "Reservar visita tecnica";
   return "Reservar horario";
 }
@@ -108,6 +112,7 @@ export function creditsForInitialHold(service: FlexibleService, estimatedHours =
   if (service.pricingMode === "fixed") return Math.max(0, Number(service.fixedCredits ?? 0) - discount);
   if (service.pricingMode === "hourly") return Math.max(0, Number(service.hourlyCredits ?? 0) * Math.max(1, estimatedHours) - discount);
   if (service.pricingMode === "visit_then_quote") return Math.max(0, Number(service.visitCredits ?? 0) - discount);
+  if (service.pricingMode === "virtual_diagnosis") return Math.max(0, Number(service.minCredits ?? service.visitCredits ?? 0) - discount);
   if (service.pricingMode === "range") return Math.max(0, Number(service.visitCredits ?? service.minCredits ?? 0) - discount);
   return 0;
 }

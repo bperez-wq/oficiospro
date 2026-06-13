@@ -1,4 +1,4 @@
-export type PricingMode = "fixed" | "hourly" | "quote_required" | "visit_then_quote" | "range" | "custom";
+export type PricingMode = "fixed" | "hourly" | "quote_required" | "visit_then_quote" | "virtual_diagnosis" | "range" | "custom";
 
 export type QuoteStatus =
   | "quote_requested"
@@ -113,6 +113,7 @@ export const pricingModeLabels: Record<PricingMode, string> = {
   hourly: "Por hora",
   quote_required: "Requiere cotizacion",
   visit_then_quote: "Visita tecnica + cotizacion",
+  virtual_diagnosis: "Diagnostico virtual",
   range: "Rango estimado",
   custom: "Revision especial",
 };
@@ -122,6 +123,7 @@ export const pricingModeOptions: { value: PricingMode; label: string; helper: st
   { value: "hourly", label: "Por hora", helper: "El cliente confirma horas iniciales o solicita evaluacion." },
   { value: "quote_required", label: "Requiere cotizacion", helper: "Se crea solicitud y propuesta antes del pago final." },
   { value: "visit_then_quote", label: "Visita + cotizacion", helper: "Se cobra diagnostico y luego se envia propuesta." },
+  { value: "virtual_diagnosis", label: "Diagnostico virtual", helper: "El cliente envia antecedentes y fotos antes de una visita presencial." },
   { value: "range", label: "Rango estimado", helper: "El cliente ve un rango y puede pedir ajuste." },
   { value: "custom", label: "Revision especial", helper: "OficiosPro revisa el caso antes de publicarlo." },
 ];

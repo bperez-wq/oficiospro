@@ -149,7 +149,7 @@ export function BookingDrawer({
           allowCategoryFallback: true,
         }) ?? specialist.image;
       addCartItem({
-        type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
+        type: selectedService.pricingMode === "visit_then_quote" ? "visit" : selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" ? "quote_request" : "service_request",
         title: selectedService.name,
         credits: initialCredits,
         amountCLP: initialCredits * 1000,
@@ -166,7 +166,7 @@ export function BookingDrawer({
         sourceSection,
       });
     }
-    const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
+    const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
       setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");
       return;
@@ -261,7 +261,7 @@ export function BookingDrawer({
     }
   }
 
-  const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
+  const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
   const currentHoldCredits = creditsForInitialHold(selectedService, estimatedHours, isSubscriber);
   const wallet = getPaymentCreditWallet();
   const missingCredits = Math.max(0, currentHoldCredits - wallet.currentBalance);

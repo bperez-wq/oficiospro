@@ -3,7 +3,7 @@
  *
  * Reutiliza la lógica existente de src/lib/payments/ledger.ts (no la reemplaza)
  * y agrega las reglas financieras:
- * - quote_required no retiene créditos completos (solo lo cotizado/aceptado).
+ * - quote_required / virtual_diagnosis no retienen créditos completos (solo lo cotizado/aceptado).
  * - visit_then_quote retiene solo los créditos de visita.
  * - Los adicionales requieren aprobación previa del cliente.
  * - Nunca se libera más crédito que el reservado.
@@ -87,7 +87,7 @@ export function issueSubscriptionCredits(wallet: FinanceCreditWallet, input: Ope
  * Retiene créditos para una solicitud según el modo de precio:
  * - fixed / hourly / quote aceptada: retiene los créditos solicitados.
  * - visit_then_quote: retiene solo visitCredits.
- * - quote_required (sin cotización aceptada): retiene 0 hasta aceptar.
+ * - quote_required / virtual_diagnosis (sin cotización aceptada): retiene 0 hasta aceptar.
  */
 export function reserveCreditsForService(
   wallet: FinanceCreditWallet,
@@ -100,7 +100,7 @@ export function reserveCreditsForService(
   let toReserve = clean(input.credits);
   if (input.pricingMode === "visit_then_quote") {
     toReserve = clean(input.visitCredits ?? defaultCommercialConfig.initialVisitFeeCredits);
-  } else if (input.pricingMode === "quote_required" && !input.quoteAccepted) {
+  } else if ((input.pricingMode === "quote_required" || input.pricingMode === "virtual_diagnosis") && !input.quoteAccepted) {
     toReserve = 0;
   }
   const credits = Math.min(toReserve, wallet.availableCredits);

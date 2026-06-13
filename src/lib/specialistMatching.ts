@@ -365,6 +365,7 @@ export function serviceCreditValue(service: FlexibleService | undefined, fallbac
   if (service.pricingMode === "fixed") return Number(service.fixedCredits ?? fallbackCredits);
   if (service.pricingMode === "hourly") return Number(service.hourlyCredits ?? fallbackCredits);
   if (service.pricingMode === "range") return Number(service.minCredits ?? service.visitCredits ?? fallbackCredits);
+  if (service.pricingMode === "virtual_diagnosis") return Number(service.minCredits ?? service.visitCredits ?? fallbackCredits);
   if (service.pricingMode === "visit_then_quote") return Number(service.visitCredits ?? fallbackCredits);
   return Number(service.minCredits ?? fallbackCredits);
 }
@@ -374,6 +375,7 @@ export function matchedServiceSummary(service: FlexibleService | undefined, gene
   if (generic) return pricingSummary(service);
   if (service.emergency && service.emergencyCredits) return `${service.name} - Emergencia desde ${service.emergencyCredits} creditos`;
   if (service.pricingMode === "quote_required") return `${service.name} - Requiere cotizacion`;
+  if (service.pricingMode === "virtual_diagnosis") return `${service.name} - Cotiza con fotos`;
   if (service.pricingMode === "visit_then_quote") return `${service.name} - Visita desde ${service.visitCredits ?? 0} creditos`;
   if (service.pricingMode === "hourly") return `${service.name} - ${service.hourlyCredits ?? 0} creditos/hora`;
   if (service.pricingMode === "range") return `${service.name} - Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;

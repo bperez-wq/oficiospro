@@ -1,18 +1,28 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { BookingDrawer } from "@/components/BookingDrawer";
 import { checkoutUrlForItems } from "@/components/CartDrawer";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { availabilityLabels, specialists as catalogSpecialists, type Specialist } from "@/data/mock";
 import { formatCLP } from "@/data/marketplace";
-import { getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
+import { addCartItem, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { cartTotals, itemAmountCLP } from "@/lib/payments/cart";
 import { getPublishedSpecialists, seedMockState } from "@/lib/storage";
 import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
+import {
+  createVirtualQuote,
+  getVirtualQuoteRequests,
+  updateVirtualQuoteStatus,
+  virtualQuoteStatusLabels,
+  virtualQuoteUrgencyLabels,
+  type VirtualQuoteCreateInput,
+  type VirtualQuoteRequest,
+  type VirtualQuoteUrgency,
+} from "@/lib/virtualQuotes";
 
 const sourceSection = "bolsa_page";
 
@@ -21,6 +31,8 @@ export default function BolsaPage() {
   const [loaded, setLoaded] = useState(false);
   const [knownSpecialists, setKnownSpecialists] = useState<Specialist[]>(catalogSpecialists);
   const [booking, setBooking] = useState<{ specialist: Specialist; serviceId?: string } | null>(null);
+  const [virtualQuotes, setVirtualQuotes] = useState<VirtualQuoteRequest[]>([]);
+  const [virtualQuoteItem, setVirtualQuoteItem] = useState<OficiosProCartItem | null>(null);
 
   useEffect(() => {
     seedMockState();
@@ -33,6 +45,7 @@ export default function BolsaPage() {
     }
     function refresh() {
       setItems(getCartItems());
+      setVirtualQuotes(getVirtualQuoteRequests());
       setLoaded(true);
     }
     refresh();
@@ -59,13 +72,50 @@ export default function BolsaPage() {
     setBooking({ specialist, serviceId: item.serviceId });
   }
 
+  function quoteForItem(item: OficiosProCartItem) {
+    return virtualQuotes.find((quote) => quote.cartItemId === item.id) ?? null;
+  }
+
+  function refreshLocalState() {
+    setItems(getCartItems());
+    setVirtualQuotes(getVirtualQuoteRequests());
+  }
+
+  function approveVirtualQuote(item: OficiosProCartItem) {
+    const quote = quoteForItem(item);
+    if (!quote?.offer) return;
+    const credits = Math.max(0, Number(quote.offer.creditPrice ?? quote.offer.maxCredits ?? quote.offer.minCredits ?? item.credits ?? 0));
+    updateVirtualQuoteStatus(quote.id, "aprobada_cliente", "Cliente aprobo la cotizacion virtual. Los creditos se retendran al continuar al checkout.");
+    void syncVirtualQuoteDecision(quote, "approve");
+    addCartItem({
+      ...item,
+      type: "quote_request",
+      pricingMode: "quote_required",
+      credits,
+      amountCLP: credits * 1000,
+      priceCLP: credits * 1000,
+      title: `${item.serviceName ?? item.title} - cotizacion aprobada`,
+      sourceSection,
+    });
+    refreshLocalState();
+  }
+
+  function rejectVirtualQuote(item: OficiosProCartItem) {
+    const quote = quoteForItem(item);
+    if (!quote) return;
+    updateVirtualQuoteStatus(quote.id, "rechazada_cliente", "Cliente rechazo la cotizacion virtual.");
+    void syncVirtualQuoteDecision(quote, "reject");
+    refreshLocalState();
+  }
+
   const primaryCta: { label: string; href?: string; onClick?: () => void } | null = (() => {
     if (!items.length) return null;
     if (!specialistItems.length) return { label: "Continuar al checkout", href: checkoutHref };
     if (specialistItems.length > 1) return { label: "Elegir especialista", href: "#bolsa-especialistas" };
     const single = specialistItems[0];
     if (isQuoteItem(single)) {
-      return { label: "Enviar solicitud de cotización", onClick: () => openBooking(single, "solicitar"), href: findSpecialist(single) ? undefined : profileHref(single) };
+      const quote = quoteForItem(single);
+      return { label: quote?.offer ? "Revisar propuesta" : quote ? "Ver cotizacion virtual" : "Iniciar cotizacion virtual", onClick: () => setVirtualQuoteItem(single), href: undefined };
     }
     return { label: "Confirmar reserva", onClick: () => openBooking(single, "reservar"), href: findSpecialist(single) ? undefined : profileHref(single) };
   })();
@@ -118,8 +168,12 @@ export default function BolsaPage() {
                       key={item.id}
                       item={item}
                       specialist={findSpecialist(item)}
+                      virtualQuote={quoteForItem(item)}
                       onReserve={() => openBooking(item, "reservar")}
                       onQuote={() => openBooking(item, "solicitar")}
+                      onVirtualQuote={() => setVirtualQuoteItem(item)}
+                      onApproveOffer={() => approveVirtualQuote(item)}
+                      onRejectOffer={() => rejectVirtualQuote(item)}
                     />
                   ))}
                 </section>
@@ -199,6 +253,19 @@ export default function BolsaPage() {
           onClose={() => setBooking(null)}
         />
       ) : null}
+      {virtualQuoteItem ? (
+        <VirtualQuoteModal
+          item={virtualQuoteItem}
+          quote={quoteForItem(virtualQuoteItem)}
+          onClose={() => setVirtualQuoteItem(null)}
+          onSaved={() => {
+            refreshLocalState();
+            setVirtualQuoteItem(null);
+          }}
+          onApprove={() => approveVirtualQuote(virtualQuoteItem)}
+          onReject={() => rejectVirtualQuote(virtualQuoteItem)}
+        />
+      ) : null}
     </main>
   );
 }
@@ -208,13 +275,21 @@ export default function BolsaPage() {
 function SpecialistBagCard({
   item,
   specialist,
+  virtualQuote,
   onReserve,
   onQuote,
+  onVirtualQuote,
+  onApproveOffer,
+  onRejectOffer,
 }: {
   item: OficiosProCartItem;
   specialist?: Specialist;
+  virtualQuote?: VirtualQuoteRequest | null;
   onReserve: () => void;
   onQuote: () => void;
+  onVirtualQuote: () => void;
+  onApproveOffer: () => void;
+  onRejectOffer: () => void;
 }) {
   const quote = isQuoteItem(item);
   const image = item.specialistImage ?? specialist?.image;
@@ -280,10 +355,51 @@ function SpecialistBagCard({
         <div className="text-right">
           <span className="block text-sm font-black text-brand-dark">{pricingLabel(item)}</span>
           <span className={`text-[11px] font-black ${quote ? "text-accent-dark" : item.type === "visit" ? "text-sun-dark" : "text-emerald-700"}`}>
-            {quote ? "Pendiente de enviar solicitud" : item.type === "visit" ? "Pendiente de confirmar visita" : "Listo para reservar"}
+            {quote ? virtualQuote ? virtualQuoteStatusLabels[virtualQuote.status] : "Enviar fotos para cotizar" : item.type === "visit" ? "Pendiente de confirmar visita" : "Listo para reservar"}
           </span>
         </div>
       </div>
+
+      {quote ? (
+        <div className="mt-3 rounded-2xl border border-brand/15 bg-brand-soft p-3">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <strong className="text-sm text-brand-dark">Cotiza con fotos antes de la visita.</strong>
+            <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-brand-dark">
+              {virtualQuote ? virtualQuoteStatusLabels[virtualQuote.status] : "Cotizacion virtual pendiente"}
+            </span>
+          </div>
+          <p className="mt-1 text-xs font-bold leading-5 text-brand-dark/80">
+            Evita visitas innecesarias. Cuando sea posible, el especialista llegara directo a ejecutar.
+          </p>
+          {virtualQuote ? (
+            <div className="mt-3 grid gap-2 sm:grid-cols-3">
+              <MiniInfo label="Urgencia" value={virtualQuoteUrgencyLabels[virtualQuote.urgency]} />
+              <MiniInfo label="Archivos" value={`${virtualQuote.attachmentCount} referencia${virtualQuote.attachmentCount === 1 ? "" : "s"}`} />
+              <MiniInfo label="Estado" value={virtualQuoteStatusLabels[virtualQuote.status]} />
+            </div>
+          ) : null}
+          {virtualQuote?.offer ? (
+            <div className="mt-3 rounded-2xl bg-white p-3">
+              <div className="flex flex-wrap items-start justify-between gap-2">
+                <div>
+                  <span className="block text-[11px] font-black uppercase text-muted">Propuesta del especialista</span>
+                  <strong className="text-base text-ink">{offerCreditsLabel(virtualQuote.offer)}</strong>
+                </div>
+                {virtualQuote.offer.requiresVisit ? <span className="chip bg-amber-50 text-amber-800">Recomienda visita</span> : null}
+              </div>
+              {virtualQuote.offer.comment ? <p className="mt-2 text-xs font-bold leading-5 text-muted">{virtualQuote.offer.comment}</p> : null}
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button className="btn-primary min-h-10 px-4 text-xs" type="button" onClick={onApproveOffer}>
+                  Aprobar cotizacion
+                </button>
+                <button className="btn-secondary min-h-10 px-4 text-xs" type="button" onClick={onRejectOffer}>
+                  Rechazar
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
       <div className="mt-3 grid grid-cols-3 gap-2">
         <Link
@@ -295,21 +411,246 @@ function SpecialistBagCard({
         <button
           className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
           type="button"
-          onClick={onQuote}
+          onClick={quote ? onVirtualQuote : onQuote}
           data-event="bolsa_quote_item"
         >
-          Cotizar
+          {quote ? virtualQuote ? "Ver cotizacion" : "Iniciar cotizacion" : "Cotizar"}
         </button>
         <button
           className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
           type="button"
-          onClick={quote ? onQuote : onReserve}
+          onClick={quote ? onVirtualQuote : onReserve}
           data-event="bolsa_reserve_item"
         >
-          {quote ? "Enviar solicitud" : item.type === "visit" ? "Solicitar visita" : "Reservar"}
+          {quote ? virtualQuote?.offer ? "Revisar propuesta" : "Enviar fotos" : item.type === "visit" ? "Solicitar visita" : "Reservar"}
         </button>
       </div>
     </article>
+  );
+}
+
+function VirtualQuoteModal({
+  item,
+  quote,
+  onClose,
+  onSaved,
+  onApprove,
+  onReject,
+}: {
+  item: OficiosProCartItem;
+  quote: VirtualQuoteRequest | null;
+  onClose: () => void;
+  onSaved: () => void;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  const [problemTitle, setProblemTitle] = useState(quote?.problemTitle ?? item.serviceName ?? item.title);
+  const [description, setDescription] = useState(quote?.description ?? "");
+  const [locationDetail, setLocationDetail] = useState(quote?.locationDetail ?? "");
+  const [commune, setCommune] = useState(quote?.commune ?? item.specialistCommune ?? "");
+  const [region, setRegion] = useState(quote?.region ?? "");
+  const [urgency, setUrgency] = useState<VirtualQuoteUrgency>(quote?.urgency ?? "esta_semana");
+  const [attachmentCount, setAttachmentCount] = useState(quote?.attachmentCount ?? 0);
+  const [videoReference, setVideoReference] = useState(quote?.videoReference ?? "");
+  const [additionalComments, setAdditionalComments] = useState(quote?.additionalComments ?? "");
+  const [customerName, setCustomerName] = useState(quote?.customerName ?? "");
+  const [customerEmail, setCustomerEmail] = useState(quote?.customerEmail ?? "");
+  const [customerPhone, setCustomerPhone] = useState(quote?.customerPhone ?? "");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [onClose]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setSubmitting(true);
+    setError("");
+    const payload: VirtualQuoteCreateInput = {
+      cartItem: item,
+      problemTitle: problemTitle.trim(),
+      description: description.trim(),
+      locationDetail: locationDetail.trim(),
+      commune: commune.trim(),
+      region: region.trim() || undefined,
+      urgency,
+      attachmentCount,
+      videoReference: videoReference.trim() || undefined,
+      additionalComments: additionalComments.trim() || undefined,
+      customerName: customerName.trim() || undefined,
+      customerEmail: customerEmail.trim() || undefined,
+      customerPhone: customerPhone.trim() || undefined,
+    };
+    if (!payload.problemTitle || !payload.description || !payload.commune) {
+      setSubmitting(false);
+      setError("Cuéntanos el problema, la comuna y una descripción para que el especialista pueda cotizar.");
+      return;
+    }
+    const result = await createVirtualQuote(payload);
+    setSubmitting(false);
+    if (!result.remote.ok && result.remote.error && result.remote.error !== "database_not_configured") {
+      setError("Guardamos tu solicitud localmente, pero no pudimos sincronizarla ahora. El equipo OficiosPro puede revisarla cuando vuelva la conexión.");
+      onSaved();
+      return;
+    }
+    onSaved();
+  }
+
+  return (
+    <div className="fixed inset-0 z-[130] grid place-items-center bg-ink/65 px-4 py-6 backdrop-blur-sm" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
+      <section className="max-h-[92dvh] w-full max-w-2xl overflow-y-auto rounded-[28px] border border-line bg-white p-5 shadow-lift md:p-6" role="dialog" aria-modal="true" aria-labelledby="virtual-quote-title">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="eyebrow">Diagnostico virtual</p>
+            <h2 id="virtual-quote-title" className="text-2xl font-black text-ink">Cotiza con fotos antes de la visita</h2>
+            <p className="mt-2 text-sm font-bold leading-6 text-muted">
+              Los creditos solo se retienen cuando apruebas la cotizacion. Si el caso requiere revision presencial, el especialista podra recomendar una visita tecnica.
+            </p>
+          </div>
+          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted transition hover:border-brand hover:bg-brand-soft hover:text-brand-dark" type="button" onClick={onClose} aria-label="Cerrar cotizacion virtual">
+            <span aria-hidden className="text-2xl leading-none">×</span>
+          </button>
+        </div>
+
+        {quote ? (
+          <div className="mt-5 grid gap-4">
+            <div className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <strong className="text-brand-dark">{quote.problemTitle}</strong>
+                <span className="chip bg-white text-brand-dark">{virtualQuoteStatusLabels[quote.status]}</span>
+              </div>
+              <p className="mt-2 text-sm font-bold leading-6 text-brand-dark/80">{quote.description}</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <MiniInfo label="Comuna" value={quote.commune} />
+                <MiniInfo label="Urgencia" value={virtualQuoteUrgencyLabels[quote.urgency]} />
+                <MiniInfo label="Referencias" value={`${quote.attachmentCount} archivo${quote.attachmentCount === 1 ? "" : "s"}`} />
+              </div>
+            </div>
+
+            {quote.offer ? (
+              <div className="rounded-2xl border border-line bg-white p-4 shadow-sm">
+                <span className="block text-[11px] font-black uppercase text-muted">Propuesta recibida</span>
+                <h3 className="mt-1 text-xl font-black text-ink">{offerCreditsLabel(quote.offer)}</h3>
+                {quote.offer.estimatedDuration ? <p className="mt-1 text-sm font-bold text-muted">Duracion estimada: {quote.offer.estimatedDuration}</p> : null}
+                {quote.offer.comment ? <p className="mt-3 text-sm font-semibold leading-6 text-muted">{quote.offer.comment}</p> : null}
+                {quote.offer.conditions ? <p className="mt-2 rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">{quote.offer.conditions}</p> : null}
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <button
+                    className="btn-primary"
+                    type="button"
+                    onClick={() => {
+                      onApprove();
+                      onClose();
+                    }}
+                  >
+                    Aprobar cotizacion
+                  </button>
+                  <button
+                    className="btn-secondary"
+                    type="button"
+                    onClick={() => {
+                      onReject();
+                      onClose();
+                    }}
+                  >
+                    Rechazar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold leading-6 text-muted">
+                Tu solicitud quedo lista para revision. El especialista podra pedir mas informacion, enviar una propuesta en creditos o recomendar visita tecnica.
+              </div>
+            )}
+          </div>
+        ) : (
+          <form className="mt-5 grid gap-4" onSubmit={submit}>
+            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900">
+              En piloto, si aun no hay almacenamiento privado configurado, no guardamos fotos ni videos en el navegador. Te pediremos esas referencias por un canal seguro despues de recibir la solicitud.
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="field sm:col-span-2">
+                Problema principal
+                <input value={problemTitle} onChange={(event) => setProblemTitle(event.target.value)} placeholder="Ej: fuga bajo lavaplatos" />
+              </label>
+              <label className="field sm:col-span-2">
+                Descripcion
+                <textarea value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Describe que ocurre, desde cuando y que ya intentaste." rows={4} />
+              </label>
+              <label className="field">
+                Comuna
+                <input value={commune} onChange={(event) => setCommune(event.target.value)} placeholder="Ej: Las Condes" />
+              </label>
+              <label className="field">
+                Region
+                <input value={region} onChange={(event) => setRegion(event.target.value)} placeholder="Ej: Metropolitana" />
+              </label>
+              <label className="field sm:col-span-2">
+                Direccion o referencia
+                <input value={locationDetail} onChange={(event) => setLocationDetail(event.target.value)} placeholder="Sector, edificio, casa, acceso o referencia" />
+              </label>
+              <label className="field">
+                Urgencia
+                <select value={urgency} onChange={(event) => setUrgency(event.target.value as VirtualQuoteUrgency)}>
+                  <option value="hoy">Hoy</option>
+                  <option value="esta_semana">Esta semana</option>
+                  <option value="flexible">Flexible</option>
+                </select>
+              </label>
+              <label className="field">
+                Fotos o videos
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  multiple
+                  onChange={(event) => setAttachmentCount(event.currentTarget.files?.length ?? 0)}
+                />
+              </label>
+              <label className="field sm:col-span-2">
+                Link opcional
+                <input value={videoReference} onChange={(event) => setVideoReference(event.target.value)} placeholder="Link privado a fotos/video si ya lo tienes" />
+              </label>
+              <label className="field">
+                Nombre
+                <input value={customerName} onChange={(event) => setCustomerName(event.target.value)} placeholder="Tu nombre" />
+              </label>
+              <label className="field">
+                Telefono
+                <input value={customerPhone} onChange={(event) => setCustomerPhone(event.target.value)} placeholder="+56 9..." />
+              </label>
+              <label className="field sm:col-span-2">
+                Email
+                <input type="email" value={customerEmail} onChange={(event) => setCustomerEmail(event.target.value)} placeholder="tu@email.cl" />
+              </label>
+              <label className="field sm:col-span-2">
+                Comentarios adicionales
+                <textarea value={additionalComments} onChange={(event) => setAdditionalComments(event.target.value)} placeholder="Horarios, restricciones, materiales o detalles relevantes." rows={3} />
+              </label>
+            </div>
+            {attachmentCount ? <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold text-muted">Referencias seleccionadas: {attachmentCount}. Guardamos solo el conteo; los archivos no quedan guardados en este navegador.</p> : null}
+            {error ? <p className="rounded-2xl bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p> : null}
+            <div className="flex flex-wrap justify-end gap-2">
+              <button className="btn-secondary" type="button" onClick={onClose}>
+                Cancelar
+              </button>
+              <button className="btn-primary" type="submit" disabled={submitting}>
+                {submitting ? "Enviando..." : "Enviar fotos para cotizar"}
+              </button>
+            </div>
+          </form>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -360,6 +701,38 @@ function Row({ label, value, accent, emerald }: { label: string; value: string; 
   );
 }
 
+function MiniInfo({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/80 p-3">
+      <span className="block text-[10px] font-black uppercase text-muted">{label}</span>
+      <strong className="text-xs text-ink">{value}</strong>
+    </div>
+  );
+}
+
+function offerCreditsLabel(offer: NonNullable<VirtualQuoteRequest["offer"]>) {
+  if (offer.pricingMode === "fixed" && offer.creditPrice) return `${offer.creditPrice} creditos`;
+  if (offer.pricingMode === "range") return `${offer.minCredits ?? 0}-${offer.maxCredits ?? 0} creditos`;
+  if (offer.pricingMode === "visit_then_quote") return "Recomienda visita tecnica";
+  return "Requiere mas informacion";
+}
+
+async function syncVirtualQuoteDecision(quote: VirtualQuoteRequest, action: "approve" | "reject") {
+  const id = quote.remoteId ?? quote.id;
+  if (!id || typeof window === "undefined") return;
+  try {
+    await fetch(`/api/quotes/virtual/${encodeURIComponent(id)}/${action}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: action === "approve" ? "Cliente aprobo cotizacion virtual." : "Cliente rechazo cotizacion virtual.",
+      }),
+    });
+  } catch {
+    // La bolsa mantiene respaldo local si el Worker o D1 aun no estan disponibles.
+  }
+}
+
 function TrashIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden>
@@ -369,7 +742,7 @@ function TrashIcon() {
 }
 
 function isQuoteItem(item: OficiosProCartItem) {
-  return item.type === "quote_request" || item.pricingMode === "quote_required" || item.pricingMode === "range" || item.pricingMode === "custom";
+  return item.type === "quote_request" || item.pricingMode === "quote_required" || item.pricingMode === "virtual_diagnosis" || item.pricingMode === "range" || item.pricingMode === "custom";
 }
 
 function profileHref(item: OficiosProCartItem) {
@@ -385,6 +758,7 @@ function pricingLabel(item: OficiosProCartItem) {
     case "range":
       return `Desde ${credits} créditos`;
     case "quote_required":
+    case "virtual_diagnosis":
     case "custom":
       return "Requiere cotización";
     case "visit_then_quote":

@@ -8,6 +8,7 @@ type AdminRow = Record<string, unknown>;
 type AdminAction = {
   label: string;
   path: (row: AdminRow) => string;
+  body?: (row: AdminRow) => Record<string, unknown>;
   tone?: "primary" | "secondary" | "danger";
 };
 
@@ -94,7 +95,12 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
     if (!token) return;
     setNotice("Actualizando registro...");
     try {
-      const response = await fetch(action.path(row), { method: "POST", headers: { Authorization: `Bearer ${token}` } });
+      const body = action.body?.(row);
+      const response = await fetch(action.path(row), {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) },
+        body: body ? JSON.stringify(body) : undefined,
+      });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
       if (!response.ok || !data.ok) {
         setNotice(adminNotice(data.error ?? `http_${response.status}`));

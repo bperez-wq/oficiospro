@@ -55,6 +55,7 @@ function serviceCreditPrice(service?: FlexibleService | null) {
   if (service.pricingMode === "fixed") return service.fixedCredits;
   if (service.pricingMode === "hourly") return service.hourlyCredits;
   if (service.pricingMode === "range") return service.minCredits;
+  if (service.pricingMode === "virtual_diagnosis") return service.minCredits ?? service.visitCredits;
   if (service.pricingMode === "visit_then_quote") return service.visitCredits;
   return service.minCredits;
 }

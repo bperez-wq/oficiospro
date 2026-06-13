@@ -133,7 +133,7 @@ function normalizeSpecialistCLPInput(value: string | number) {
 
 function serviceHasPricingBasis(service: ServiceDraft) {
   if (service.pricingMode === "hourly") return Number(service.minHours) > 0 && Number(service.maxHours) >= Number(service.minHours);
-  if (service.pricingMode === "quote_required") return true;
+  if (service.pricingMode === "quote_required" || service.pricingMode === "virtual_diagnosis") return true;
   return true;
 }
 
@@ -677,7 +677,7 @@ export function SpecialistRegisterForm() {
         setStatus("Completa nombre, descripcion breve y duracion estimada de cada servicio.");
         return false;
       }
-      if (services.some((service) => service.pricingMode !== "quote_required" && Number(service.specialistExpectedPayoutCLP) <= 0)) {
+      if (services.some((service) => service.pricingMode !== "quote_required" && service.pricingMode !== "virtual_diagnosis" && Number(service.specialistExpectedPayoutCLP) <= 0)) {
         setStatus("Completa el monto esperado en CLP cuando el servicio tenga precio fijo, por hora, rango o visita tecnica.");
         return false;
       }
@@ -768,9 +768,9 @@ export function SpecialistRegisterForm() {
         hourlyCredits: service.pricingMode === "hourly" ? calculatedClientCredits : 0,
         minHours: Number(service.minHours || 0),
         maxHours: Number(service.maxHours || 0),
-        minCredits: ["range", "custom", "quote_required"].includes(service.pricingMode) ? calculatedClientCredits : 0,
-        maxCredits: ["range", "custom", "quote_required"].includes(service.pricingMode) ? rangeMaxCredits : 0,
-        visitCredits: ["visit_then_quote", "quote_required"].includes(service.pricingMode) ? calculatedClientCredits : 0,
+        minCredits: ["range", "custom", "quote_required", "virtual_diagnosis"].includes(service.pricingMode) ? calculatedClientCredits : 0,
+        maxCredits: ["range", "custom", "quote_required", "virtual_diagnosis"].includes(service.pricingMode) ? rangeMaxCredits : 0,
+        visitCredits: ["visit_then_quote", "quote_required", "virtual_diagnosis"].includes(service.pricingMode) ? calculatedClientCredits : 0,
         clientCredits: service.pricingMode === "fixed" ? calculatedClientCredits : 0,
         pricingStatus: marginWarningForService(service) ? "pending_review" as const : "approved" as const,
         pricingNotesInternal: marginWarningForService(service)
