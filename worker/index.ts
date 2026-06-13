@@ -234,6 +234,10 @@ export default {
         if (url.pathname === "/api/admin/leads" && request.method === "GET") {
           return withCors(await listAdminLeads(request, env));
         }
+        const crmRoute = matchAdminCrmRoute(url.pathname, request.method);
+        if (crmRoute) {
+          return withCors(await handleAdminCrmRoute(request, env, crmRoute));
+        }
         if (url.pathname === "/api/admin/specialist-applications" && request.method === "GET") {
           return withCors(await listAdminTable(request, env, "specialist_applications"));
         }
@@ -903,6 +907,711 @@ async function listPublicSpecialists(request: Request, env: Env) {
 
 function authorizeAdmin(request: Request, env: Env) {
   return requireAdmin(request, env);
+}
+
+type AdminCrmRoute = {
+  resource: "overview" | "opportunities" | "tasks" | "notes" | "activity" | "contacts" | "companies" | "sync-leads" | "sync-specialists" | "sync-virtual-quotes";
+  method: string;
+  id?: string;
+};
+
+function matchAdminCrmRoute(pathname: string, method: string): AdminCrmRoute | null {
+  const base = "/api/admin/crm";
+  if (!pathname.startsWith(base)) return null;
+  const rest = pathname.slice(base.length).replace(/^\/+/, "");
+  if (!rest) return { resource: "overview", method };
+  const parts = rest.split("/");
+  const resource = parts[0] as AdminCrmRoute["resource"];
+  if (!["overview", "opportunities", "tasks", "notes", "activity", "contacts", "companies", "sync-leads", "sync-specialists", "sync-virtual-quotes"].includes(resource)) return null;
+  return { resource, method, id: parts[1] ? decodeURIComponent(parts[1]) : undefined };
+}
+
+async function handleAdminCrmRoute(request: Request, env: Env, route: AdminCrmRoute) {
+  const auth = authorizeAdmin(request, env);
+  if (auth) return auth;
+  if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
+
+  try {
+    if (route.resource === "overview" && route.method === "GET") return listCrmOverview(request, env.DB);
+    if (route.resource === "opportunities" && route.method === "GET" && !route.id) return listCrmOpportunities(request, env.DB);
+    if (route.resource === "opportunities" && route.method === "POST" && !route.id) return createCrmOpportunity(request, env.DB);
+    if (route.resource === "opportunities" && route.method === "GET" && route.id) return getCrmOpportunity(request, env.DB, route.id);
+    if (route.resource === "opportunities" && route.method === "PATCH" && route.id) return patchCrmOpportunity(request, env.DB, route.id);
+    if (route.resource === "tasks" && route.method === "GET" && !route.id) return listCrmTasks(request, env.DB);
+    if (route.resource === "tasks" && route.method === "POST" && !route.id) return createCrmTask(request, env.DB);
+    if (route.resource === "tasks" && route.method === "PATCH" && route.id) return patchCrmTask(request, env.DB, route.id);
+    if (route.resource === "notes" && route.method === "GET") return listCrmNotes(request, env.DB);
+    if (route.resource === "notes" && route.method === "POST") return createCrmNote(request, env.DB);
+    if (route.resource === "activity" && route.method === "GET") return listCrmActivity(request, env.DB);
+    if (route.resource === "contacts" && route.method === "GET") return listCrmContacts(request, env.DB);
+    if (route.resource === "companies" && route.method === "GET") return listCrmCompanies(request, env.DB);
+    if (route.resource === "sync-leads" && route.method === "POST") return syncCrmLeads(request, env.DB);
+    if (route.resource === "sync-specialists" && route.method === "POST") return syncCrmSpecialists(request, env.DB);
+    if (route.resource === "sync-virtual-quotes" && route.method === "POST") return syncCrmVirtualQuotes(request, env.DB);
+    return json({ ok: false, error: "endpoint_not_found" }, 404);
+  } catch (error) {
+    if (String(error).includes("no such table: crm_")) return json({ ok: false, error: "crm_tables_not_ready" }, 503);
+    throw error;
+  }
+}
+
+async function listCrmOverview(request: Request, db: D1Database) {
+  const now = new Date().toISOString();
+  const [
+    newLeads,
+    pendingSpecialists,
+    pendingVirtualQuotes,
+    overdueTasks,
+    newCompanies,
+    paymentIssues,
+    openOpportunities,
+    pipelineRows,
+    savedViews,
+  ] = await Promise.all([
+    countCrm(db, "crm_opportunities", "pipeline = ? AND stage = ? AND status != ?", ["clientes", "nuevo", "closed"]),
+    countCrm(db, "crm_opportunities", "pipeline = ? AND status != ?", ["especialistas", "closed"]),
+    countCrm(db, "crm_opportunities", "pipeline = ? AND status != ?", ["cotizaciones_virtuales", "closed"]),
+    countCrm(db, "crm_tasks", "status IN ('pending', 'in_progress') AND dueAt IS NOT NULL AND dueAt < ?", [now]),
+    countCrm(db, "crm_companies", "status IN ('new', 'nuevo')", []),
+    countCrm(db, "crm_opportunities", "pipeline = ? AND status != ?", ["pagos_creditos", "closed"]),
+    countCrm(db, "crm_opportunities", "status != ?", ["closed"]),
+    db.prepare("SELECT pipeline, COUNT(*) AS count FROM crm_opportunities WHERE status != 'closed' GROUP BY pipeline ORDER BY count DESC").all(),
+    db.prepare("SELECT * FROM crm_saved_views ORDER BY name ASC").all(),
+  ]);
+
+  await crmActivity(db, request, { entityType: "crm", entityId: "overview", action: "crm_overview_viewed" });
+  return json({
+    ok: true,
+    overview: {
+      newLeads,
+      pendingSpecialists,
+      pendingVirtualQuotes,
+      overdueTasks,
+      newCompanies,
+      paymentIssues,
+      openOpportunities,
+      opportunitiesByPipeline: pipelineRows.results ?? [],
+      savedViews: savedViews.results ?? [],
+    },
+  });
+}
+
+async function listCrmOpportunities(request: Request, db: D1Database) {
+  const url = new URL(request.url);
+  const { limit, offset } = crmPagination(url);
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  addCrmFilter(filters, values, "pipeline", url.searchParams.get("pipeline"));
+  addCrmFilter(filters, values, "stage", url.searchParams.get("stage"));
+  addCrmFilter(filters, values, "status", url.searchParams.get("status"));
+  addCrmFilter(filters, values, "assignedTo", url.searchParams.get("assignedTo"));
+  addCrmFilter(filters, values, "type", url.searchParams.get("type"));
+  const search = sanitizeText(url.searchParams.get("search") ?? url.searchParams.get("q") ?? "", 120);
+  if (search) {
+    filters.push("(title LIKE ? OR assignedTo LIKE ? OR sourceEntityId LIKE ?)");
+    values.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
+  const dateFrom = sanitizeText(url.searchParams.get("dateFrom") ?? "", 40);
+  const dateTo = sanitizeText(url.searchParams.get("dateTo") ?? "", 40);
+  if (dateFrom) {
+    filters.push("createdAt >= ?");
+    values.push(dateFrom);
+  }
+  if (dateTo) {
+    filters.push("createdAt <= ?");
+    values.push(dateTo);
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await db.prepare(`SELECT * FROM crm_opportunities${where} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, opportunities: result.results ?? [], limit, offset });
+}
+
+async function createCrmOpportunity(request: Request, db: D1Database) {
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const now = new Date().toISOString();
+  const id = sanitizeText(body.id, 120) ?? `crm_opp_${crypto.randomUUID()}`;
+  const title = sanitizeText(body.title, 180);
+  if (!title) return json({ ok: false, error: "missing_title" }, 400);
+  const type = crmOpportunityType(body.type);
+  const pipeline = sanitizeText(body.pipeline, 80) ?? defaultPipelineForOpportunityType(type);
+  const stage = sanitizeText(body.stage, 80) ?? defaultStageForPipeline(pipeline);
+  const status = sanitizeText(body.status, 40) ?? "open";
+
+  await db
+    .prepare(
+      `INSERT INTO crm_opportunities (
+        id, contactId, companyId, specialistId, serviceRequestId, virtualQuoteId, title, type, pipeline, stage,
+        priority, estimatedCredits, estimatedAmountCLP, assignedTo, nextActionAt, status, sourceEntityType, sourceEntityId, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      id,
+      sanitizeText(body.contactId, 120) ?? null,
+      sanitizeText(body.companyId, 120) ?? null,
+      sanitizeText(body.specialistId, 120) ?? null,
+      sanitizeText(body.serviceRequestId, 120) ?? null,
+      sanitizeText(body.virtualQuoteId, 120) ?? null,
+      title,
+      type,
+      pipeline,
+      stage,
+      sanitizeText(body.priority, 20) ?? "media",
+      numberFrom(body.estimatedCredits),
+      numberFrom(body.estimatedAmountCLP),
+      sanitizeText(body.assignedTo, 120) ?? null,
+      sanitizeText(body.nextActionAt, 60) ?? null,
+      status,
+      sanitizeText(body.sourceEntityType, 80) ?? "admin",
+      sanitizeText(body.sourceEntityId, 120) ?? id,
+      now,
+      now,
+    )
+    .run();
+  await crmActivity(db, request, { entityType: "opportunity", entityId: id, action: "opportunity_created", metadata: { pipeline, stage, type } });
+  return json({ ok: true, id });
+}
+
+async function getCrmOpportunity(request: Request, db: D1Database, id: string) {
+  const opportunity = await db.prepare("SELECT * FROM crm_opportunities WHERE id = ?").bind(id).first();
+  if (!opportunity) return json({ ok: false, error: "opportunity_not_found" }, 404);
+  const [tasks, notes, activity, statusHistory] = await Promise.all([
+    db.prepare("SELECT * FROM crm_tasks WHERE opportunityId = ? ORDER BY dueAt ASC, createdAt DESC").bind(id).all(),
+    db.prepare("SELECT * FROM crm_notes WHERE entityType = ? AND entityId = ? ORDER BY createdAt DESC").bind("opportunity", id).all(),
+    db.prepare("SELECT * FROM crm_activity_log WHERE entityType = ? AND entityId = ? ORDER BY createdAt DESC LIMIT 100").bind("opportunity", id).all(),
+    db.prepare("SELECT * FROM crm_status_history WHERE entityType = ? AND entityId = ? ORDER BY createdAt DESC").bind("opportunity", id).all(),
+  ]);
+  await crmActivity(db, request, { entityType: "opportunity", entityId: id, action: "opportunity_viewed" });
+  return json({ ok: true, opportunity, tasks: tasks.results ?? [], notes: notes.results ?? [], activity: activity.results ?? [], statusHistory: statusHistory.results ?? [] });
+}
+
+async function patchCrmOpportunity(request: Request, db: D1Database, id: string) {
+  const current = await db.prepare("SELECT * FROM crm_opportunities WHERE id = ?").bind(id).first<Record<string, unknown>>();
+  if (!current) return json({ ok: false, error: "opportunity_not_found" }, 404);
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const allowed = ["stage", "priority", "assignedTo", "nextActionAt", "status", "pipeline"] as const;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const field of allowed) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      sets.push(`${field} = ?`);
+      values.push(sanitizeText(body[field], field === "assignedTo" ? 120 : 80) ?? null);
+    }
+  }
+  if (!sets.length) return json({ ok: false, error: "missing_update_fields" }, 400);
+  sets.push("updatedAt = ?");
+  values.push(new Date().toISOString(), id);
+  await db.prepare(`UPDATE crm_opportunities SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+  const nextStatus = sanitizeText(body.status, 80) ?? sanitizeText(body.stage, 80);
+  const previousStatus = String(current.status ?? current.stage ?? "");
+  if (nextStatus && nextStatus !== previousStatus) {
+    await crmStatusHistory(db, request, { entityType: "opportunity", entityId: id, fromStatus: previousStatus, toStatus: nextStatus, reason: sanitizeText(body.reason, 240) });
+  }
+  await crmActivity(db, request, { entityType: "opportunity", entityId: id, action: "opportunity_updated", metadata: redactSensitive(body) });
+  return json({ ok: true, id });
+}
+
+async function listCrmTasks(request: Request, db: D1Database) {
+  const url = new URL(request.url);
+  const { limit, offset } = crmPagination(url);
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  addCrmFilter(filters, values, "status", url.searchParams.get("status"));
+  addCrmFilter(filters, values, "assignedTo", url.searchParams.get("assignedTo"));
+  addCrmFilter(filters, values, "priority", url.searchParams.get("priority"));
+  addCrmFilter(filters, values, "opportunityId", url.searchParams.get("opportunityId"));
+  const due = sanitizeText(url.searchParams.get("due") ?? "", 40);
+  if (due === "overdue") {
+    filters.push("status IN ('pending', 'in_progress') AND dueAt IS NOT NULL AND dueAt < ?");
+    values.push(new Date().toISOString());
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await db.prepare(`SELECT * FROM crm_tasks${where} ORDER BY CASE status WHEN 'pending' THEN 0 WHEN 'in_progress' THEN 1 ELSE 2 END, dueAt ASC, createdAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, tasks: result.results ?? [], limit, offset });
+}
+
+async function createCrmTask(request: Request, db: D1Database) {
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const title = sanitizeText(body.title, 180);
+  if (!title) return json({ ok: false, error: "missing_title" }, 400);
+  const id = sanitizeText(body.id, 120) ?? `crm_task_${crypto.randomUUID()}`;
+  const now = new Date().toISOString();
+  await db
+    .prepare(
+      `INSERT INTO crm_tasks (
+        id, opportunityId, contactId, specialistId, title, description, taskType, status, priority, assignedTo, dueAt, completedAt, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      id,
+      sanitizeText(body.opportunityId, 120) ?? null,
+      sanitizeText(body.contactId, 120) ?? null,
+      sanitizeText(body.specialistId, 120) ?? null,
+      title,
+      sanitizeText(body.description, 1200) ?? null,
+      crmTaskType(body.taskType),
+      sanitizeText(body.status, 40) ?? "pending",
+      sanitizeText(body.priority, 20) ?? "media",
+      sanitizeText(body.assignedTo, 120) ?? null,
+      sanitizeText(body.dueAt, 60) ?? null,
+      sanitizeText(body.completedAt, 60) ?? null,
+      now,
+      now,
+    )
+    .run();
+  await crmActivity(db, request, { entityType: "task", entityId: id, action: "task_created", metadata: { opportunityId: sanitizeText(body.opportunityId, 120) } });
+  return json({ ok: true, id });
+}
+
+async function patchCrmTask(request: Request, db: D1Database, id: string) {
+  const current = await db.prepare("SELECT * FROM crm_tasks WHERE id = ?").bind(id).first<Record<string, unknown>>();
+  if (!current) return json({ ok: false, error: "task_not_found" }, 404);
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const fields = ["title", "description", "taskType", "status", "priority", "assignedTo", "dueAt", "completedAt"] as const;
+  const sets: string[] = [];
+  const values: unknown[] = [];
+  for (const field of fields) {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      sets.push(`${field} = ?`);
+      values.push(field === "taskType" ? crmTaskType(body[field]) : sanitizeText(body[field], field === "description" ? 1200 : 180) ?? null);
+    }
+  }
+  if (body.status === "done" && !body.completedAt) {
+    sets.push("completedAt = ?");
+    values.push(new Date().toISOString());
+  }
+  if (!sets.length) return json({ ok: false, error: "missing_update_fields" }, 400);
+  sets.push("updatedAt = ?");
+  values.push(new Date().toISOString(), id);
+  await db.prepare(`UPDATE crm_tasks SET ${sets.join(", ")} WHERE id = ?`).bind(...values).run();
+  const nextStatus = sanitizeText(body.status, 40);
+  if (nextStatus && nextStatus !== String(current.status ?? "")) {
+    await crmStatusHistory(db, request, { entityType: "task", entityId: id, fromStatus: String(current.status ?? ""), toStatus: nextStatus, reason: sanitizeText(body.reason, 240) });
+  }
+  await crmActivity(db, request, { entityType: "task", entityId: id, action: nextStatus === "done" ? "task_completed" : "task_updated", metadata: redactSensitive(body) });
+  return json({ ok: true, id });
+}
+
+async function listCrmNotes(request: Request, db: D1Database) {
+  const url = new URL(request.url);
+  const { limit, offset } = crmPagination(url);
+  const entityType = sanitizeText(url.searchParams.get("entityType") ?? "", 80);
+  const entityId = sanitizeText(url.searchParams.get("entityId") ?? "", 120);
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  if (entityType) {
+    filters.push("entityType = ?");
+    values.push(entityType);
+  }
+  if (entityId) {
+    filters.push("entityId = ?");
+    values.push(entityId);
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await db.prepare(`SELECT * FROM crm_notes${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, notes: result.results ?? [], limit, offset });
+}
+
+async function createCrmNote(request: Request, db: D1Database) {
+  const body = await readJsonBody<Record<string, unknown>>(request);
+  const entityType = sanitizeText(body.entityType, 80);
+  const entityId = sanitizeText(body.entityId, 120);
+  const bodyText = sanitizeText(body.body, 4000);
+  if (!entityType || !entityId || !bodyText) return json({ ok: false, error: "missing_note_fields" }, 400);
+  const id = `crm_note_${crypto.randomUUID()}`;
+  const author = sanitizeText(body.author, 120) ?? "admin";
+  await db.prepare("INSERT INTO crm_notes (id, entityType, entityId, author, body, visibility, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .bind(id, entityType, entityId, author, bodyText, "internal", new Date().toISOString())
+    .run();
+  await crmActivity(db, request, { entityType, entityId, action: "note_created", metadata: { noteId: id } });
+  return json({ ok: true, id });
+}
+
+async function listCrmActivity(request: Request, db: D1Database) {
+  const url = new URL(request.url);
+  const { limit, offset } = crmPagination(url);
+  const entityType = sanitizeText(url.searchParams.get("entityType") ?? "", 80);
+  const entityId = sanitizeText(url.searchParams.get("entityId") ?? "", 120);
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  if (entityType) {
+    filters.push("entityType = ?");
+    values.push(entityType);
+  }
+  if (entityId) {
+    filters.push("entityId = ?");
+    values.push(entityId);
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await db.prepare(`SELECT * FROM crm_activity_log${where} ORDER BY createdAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, activity: result.results ?? [], limit, offset });
+}
+
+async function listCrmContacts(request: Request, db: D1Database) {
+  return listCrmDirectory(request, db, "crm_contacts", "contacts", ["name", "email", "phone", "commune", "region", "contactType", "status"]);
+}
+
+async function listCrmCompanies(request: Request, db: D1Database) {
+  return listCrmDirectory(request, db, "crm_companies", "companies", ["companyName", "rut", "contactName", "email", "phone", "commune", "region", "status"]);
+}
+
+async function listCrmDirectory(request: Request, db: D1Database, table: "crm_contacts" | "crm_companies", key: "contacts" | "companies", searchColumns: string[]) {
+  const url = new URL(request.url);
+  const { limit, offset } = crmPagination(url);
+  const filters: string[] = [];
+  const values: unknown[] = [];
+  addCrmFilter(filters, values, "status", url.searchParams.get("status"));
+  const q = sanitizeText(url.searchParams.get("search") ?? url.searchParams.get("q") ?? "", 120);
+  if (q) {
+    filters.push(`(${searchColumns.map((column) => `${column} LIKE ?`).join(" OR ")})`);
+    values.push(...searchColumns.map(() => `%${q}%`));
+  }
+  const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
+  const result = await db.prepare(`SELECT * FROM ${table}${where} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
+  return json({ ok: true, [key]: result.results ?? [], limit, offset });
+}
+
+async function syncCrmLeads(request: Request, db: D1Database) {
+  const rows = await db.prepare("SELECT * FROM lead_submissions ORDER BY created_at DESC LIMIT 500").all<Record<string, unknown>>();
+  let contacts = 0;
+  let companies = 0;
+  let opportunities = 0;
+  for (const row of rows.results ?? []) {
+    const id = String(row.id ?? "");
+    if (!id) continue;
+    const leadType = String(row.lead_type ?? "customer_request");
+    const contactId = `crm_contact_lead_${id}`;
+    const companyId = row.company_name ? `crm_company_lead_${id}` : null;
+    const now = new Date().toISOString();
+    await upsertCrmContact(db, {
+      id: contactId,
+      name: String(row.full_name ?? row.company_name ?? "Contacto OficiosPro"),
+      email: String(row.email ?? ""),
+      phone: String(row.phone ?? ""),
+      contactType: leadType === "specialist_application" ? "specialist" : row.company_name ? "company_contact" : "customer",
+      source: sourceFromRow(row),
+      commune: String(row.commune_name ?? row.commune_code ?? ""),
+      region: String(row.region_name ?? row.region_code ?? ""),
+      status: String(row.status ?? "new"),
+      createdAt: String(row.created_at ?? now),
+      updatedAt: now,
+    });
+    contacts += 1;
+    if (companyId) {
+      await db.prepare("INSERT OR IGNORE INTO crm_companies (id, companyName, rut, industry, contactName, email, phone, commune, region, status, source, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        .bind(companyId, row.company_name, null, null, row.full_name ?? null, row.email ?? null, row.phone ?? null, row.commune_name ?? row.commune_code ?? null, row.region_name ?? row.region_code ?? null, "new", sourceFromRow(row), row.created_at ?? now, now)
+        .run();
+      companies += 1;
+    }
+    const oppType = opportunityTypeFromLeadType(leadType);
+    const pipeline = defaultPipelineForOpportunityType(oppType);
+    const stage = stageFromLead(leadType, String(row.status ?? "nuevo"));
+    await insertCrmOpportunityIfMissing(db, {
+      id: `crm_opp_lead_${id}`,
+      contactId,
+      companyId,
+      specialistId: row.specialist_id ? String(row.specialist_id) : null,
+      serviceRequestId: ["booking_request", "customer_request"].includes(leadType) ? id : null,
+      virtualQuoteId: null,
+      title: String(row.service ?? row.trade ?? row.company_name ?? row.full_name ?? "Lead OficiosPro"),
+      type: oppType,
+      pipeline,
+      stage,
+      priority: priorityFor(String(row.urgency ?? "")) === "alta" ? "alta" : "media",
+      estimatedCredits: numberFrom(row.credits_estimate),
+      estimatedAmountCLP: numberFrom(row.credits_estimate) * 1000,
+      assignedTo: null,
+      nextActionAt: null,
+      status: ["cerrado", "convertido", "perdido"].includes(String(row.status ?? "")) ? "closed" : "open",
+      sourceEntityType: "lead_submission",
+      sourceEntityId: id,
+      createdAt: String(row.created_at ?? now),
+      updatedAt: now,
+    });
+    opportunities += 1;
+  }
+  await crmActivity(db, request, { entityType: "crm", entityId: "sync-leads", action: "crm_sync_leads", metadata: { contacts, companies, opportunities } });
+  return json({ ok: true, synced: { contacts, companies, opportunities } });
+}
+
+async function syncCrmSpecialists(request: Request, db: D1Database) {
+  const rows = await db.prepare("SELECT * FROM specialist_applications ORDER BY createdAt DESC LIMIT 500").all<Record<string, unknown>>();
+  let contacts = 0;
+  let opportunities = 0;
+  for (const row of rows.results ?? []) {
+    const id = String(row.id ?? "");
+    if (!id) continue;
+    const now = new Date().toISOString();
+    const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || String(row.email ?? "Especialista OficiosPro");
+    const contactId = `crm_contact_specialist_${id}`;
+    await upsertCrmContact(db, {
+      id: contactId,
+      name,
+      email: String(row.email ?? ""),
+      phone: String(row.whatsapp ?? ""),
+      rut: String(row.rut ?? ""),
+      contactType: "specialist",
+      source: String(row.source ?? "specialist_application"),
+      commune: String(row.comuna ?? ""),
+      region: String(row.region ?? ""),
+      status: String(row.status ?? row.publicationStatus ?? "pending"),
+      createdAt: String(row.createdAt ?? now),
+      updatedAt: now,
+    });
+    contacts += 1;
+    await insertCrmOpportunityIfMissing(db, {
+      id: `crm_opp_specialist_${id}`,
+      contactId,
+      companyId: null,
+      specialistId: id,
+      serviceRequestId: null,
+      virtualQuoteId: null,
+      title: `Onboarding especialista: ${name}`,
+      type: "specialist_onboarding",
+      pipeline: "especialistas",
+      stage: stageFromSpecialist(String(row.status ?? ""), String(row.publicationStatus ?? "")),
+      priority: "media",
+      estimatedCredits: numberFrom(row.credits),
+      estimatedAmountCLP: numberFrom(row.providerChargeCLP),
+      assignedTo: null,
+      nextActionAt: null,
+      status: ["rejected", "published", "suspended"].includes(String(row.publicationStatus ?? row.status ?? "")) ? "closed" : "open",
+      sourceEntityType: "specialist_application",
+      sourceEntityId: id,
+      createdAt: String(row.createdAt ?? now),
+      updatedAt: now,
+    });
+    opportunities += 1;
+  }
+  await crmActivity(db, request, { entityType: "crm", entityId: "sync-specialists", action: "crm_sync_specialists", metadata: { contacts, opportunities } });
+  return json({ ok: true, synced: { contacts, opportunities } });
+}
+
+async function syncCrmVirtualQuotes(request: Request, db: D1Database) {
+  const rows = await db.prepare("SELECT * FROM virtual_quote_requests ORDER BY createdAt DESC LIMIT 500").all<Record<string, unknown>>();
+  let contacts = 0;
+  let opportunities = 0;
+  for (const row of rows.results ?? []) {
+    const id = String(row.id ?? "");
+    if (!id) continue;
+    const now = new Date().toISOString();
+    const contactId = `crm_contact_virtual_quote_${id}`;
+    await upsertCrmContact(db, {
+      id: contactId,
+      name: String(row.customerName ?? "Cliente cotizacion virtual"),
+      email: String(row.customerEmail ?? ""),
+      phone: String(row.customerPhone ?? ""),
+      contactType: "customer",
+      source: "virtual_quote",
+      commune: String(row.commune ?? ""),
+      region: String(row.region ?? ""),
+      status: String(row.status ?? "pendiente_revision"),
+      createdAt: String(row.createdAt ?? now),
+      updatedAt: now,
+    });
+    contacts += 1;
+    const status = String(row.status ?? "pendiente_revision");
+    await insertCrmOpportunityIfMissing(db, {
+      id: `crm_opp_virtual_quote_${id}`,
+      contactId,
+      companyId: null,
+      specialistId: row.specialistId ? String(row.specialistId) : null,
+      serviceRequestId: null,
+      virtualQuoteId: id,
+      title: String(row.problemTitle ?? row.serviceName ?? "Cotizacion virtual"),
+      type: "quote_followup",
+      pipeline: "cotizaciones_virtuales",
+      stage: stageFromVirtualQuote(status),
+      priority: String(row.urgency ?? "").includes("hoy") ? "alta" : "media",
+      estimatedCredits: 0,
+      estimatedAmountCLP: 0,
+      assignedTo: null,
+      nextActionAt: null,
+      status: ["rechazada_cliente", "convertida_a_reserva", "expirada"].includes(status) ? "closed" : "open",
+      sourceEntityType: "virtual_quote_request",
+      sourceEntityId: id,
+      createdAt: String(row.createdAt ?? now),
+      updatedAt: now,
+    });
+    opportunities += 1;
+  }
+  await crmActivity(db, request, { entityType: "crm", entityId: "sync-virtual-quotes", action: "crm_sync_virtual_quotes", metadata: { contacts, opportunities } });
+  return json({ ok: true, synced: { contacts, opportunities } });
+}
+
+async function countCrm(db: D1Database, table: string, where: string, values: unknown[]) {
+  const row = await db.prepare(`SELECT COUNT(*) AS count FROM ${table}${where ? ` WHERE ${where}` : ""}`).bind(...values).first<{ count?: number }>();
+  return Number(row?.count ?? 0);
+}
+
+function crmPagination(url: URL) {
+  return {
+    limit: Math.min(Math.max(Number(url.searchParams.get("limit") ?? 50), 1), 100),
+    offset: Math.max(Number(url.searchParams.get("offset") ?? 0), 0),
+  };
+}
+
+function addCrmFilter(filters: string[], values: unknown[], column: string, value: unknown) {
+  const text = sanitizeText(value, 120);
+  if (!text) return;
+  filters.push(`${column} = ?`);
+  values.push(text);
+}
+
+function crmOpportunityType(value: unknown): "customer_request" | "company_request" | "club_hogar" | "specialist_onboarding" | "payment_issue" | "quote_followup" {
+  const text = sanitizeText(value, 80);
+  if (text === "company_request" || text === "club_hogar" || text === "specialist_onboarding" || text === "payment_issue" || text === "quote_followup") return text;
+  return "customer_request";
+}
+
+function crmTaskType(value: unknown) {
+  const text = sanitizeText(value, 80);
+  if (["call", "whatsapp", "email", "review", "approve", "collect_docs", "followup", "payment_check", "quote_review"].includes(text ?? "")) return text;
+  return "followup";
+}
+
+function defaultPipelineForOpportunityType(type: string) {
+  if (type === "company_request") return "empresas";
+  if (type === "club_hogar") return "clientes";
+  if (type === "specialist_onboarding") return "especialistas";
+  if (type === "payment_issue") return "pagos_creditos";
+  if (type === "quote_followup") return "cotizaciones_virtuales";
+  return "clientes";
+}
+
+function defaultStageForPipeline(pipeline: string) {
+  if (pipeline === "especialistas") return "postulacion_recibida";
+  if (pipeline === "empresas") return "nuevo";
+  if (pipeline === "pagos_creditos") return "pendiente";
+  if (pipeline === "cotizaciones_virtuales") return "recibido";
+  return "nuevo";
+}
+
+function opportunityTypeFromLeadType(leadType: string): "customer_request" | "company_request" | "club_hogar" | "specialist_onboarding" | "payment_issue" | "quote_followup" {
+  if (leadType === "company_request") return "company_request";
+  if (leadType === "club_hogar_interest") return "club_hogar";
+  if (leadType === "specialist_application") return "specialist_onboarding";
+  if (leadType === "payment_interest") return "payment_issue";
+  return "customer_request";
+}
+
+function stageFromLead(leadType: string, status: string) {
+  const normalized = status.toLowerCase();
+  if (leadType === "specialist_application") return stageFromSpecialist(normalized, normalized);
+  if (leadType === "company_request") {
+    if (normalized.includes("contact")) return "contactado";
+    if (normalized.includes("convert")) return "ganado";
+    if (normalized.includes("perd")) return "perdido";
+    return "nuevo";
+  }
+  if (normalized.includes("contact")) return "contactado";
+  if (normalized.includes("cotiz")) return "cotizacion_enviada";
+  if (normalized.includes("cerr") || normalized.includes("convert")) return "completado";
+  if (normalized.includes("perd") || normalized.includes("reject")) return "perdido";
+  return "nuevo";
+}
+
+function stageFromSpecialist(status: string, publicationStatus: string) {
+  const value = `${status} ${publicationStatus}`.toLowerCase();
+  if (value.includes("published")) return "publicado";
+  if (value.includes("approved")) return "aprobado";
+  if (value.includes("reject")) return "rechazado";
+  if (value.includes("more") || value.includes("info")) return "falta_informacion";
+  if (value.includes("review")) return "revision_inicial";
+  if (value.includes("valid")) return "validacion";
+  return "postulacion_recibida";
+}
+
+function stageFromVirtualQuote(status: string) {
+  if (status === "necesita_mas_info") return "falta_info";
+  if (status === "cotizacion_enviada") return "propuesta_enviada";
+  if (status === "aprobada_cliente") return "aprobado_cliente";
+  if (status === "rechazada_cliente") return "rechazado_cliente";
+  if (status === "convertida_a_reserva") return "convertido_checkout";
+  return "recibido";
+}
+
+function sourceFromRow(row: Record<string, unknown>) {
+  return [row.source_page, row.source_component, row.source_button].filter(Boolean).join(" / ") || "lead_submission";
+}
+
+async function upsertCrmContact(db: D1Database, input: Record<string, unknown>) {
+  await db
+    .prepare(
+      `INSERT INTO crm_contacts (id, name, email, phone, rut, contactType, source, commune, region, addressSummary, tags, status, createdAt, updatedAt)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET name = excluded.name, email = excluded.email, phone = excluded.phone, rut = excluded.rut,
+       contactType = excluded.contactType, source = excluded.source, commune = excluded.commune, region = excluded.region,
+       addressSummary = excluded.addressSummary, tags = excluded.tags, status = excluded.status, updatedAt = excluded.updatedAt`,
+    )
+    .bind(
+      input.id,
+      sanitizeText(input.name, 180) ?? "Contacto OficiosPro",
+      sanitizeEmail(input.email) ?? null,
+      sanitizeText(input.phone, 40) ?? null,
+      sanitizeText(input.rut, 30) ?? null,
+      sanitizeText(input.contactType, 40) ?? "customer",
+      sanitizeText(input.source, 180) ?? null,
+      sanitizeText(input.commune, 120) ?? null,
+      sanitizeText(input.region, 120) ?? null,
+      sanitizeText(input.addressSummary, 240) ?? null,
+      sanitizeText(input.tags, 600) ?? null,
+      sanitizeText(input.status, 40) ?? "new",
+      input.createdAt,
+      input.updatedAt,
+    )
+    .run();
+}
+
+async function insertCrmOpportunityIfMissing(db: D1Database, input: Record<string, unknown>) {
+  await db
+    .prepare(
+      `INSERT OR IGNORE INTO crm_opportunities (
+        id, contactId, companyId, specialistId, serviceRequestId, virtualQuoteId, title, type, pipeline, stage,
+        priority, estimatedCredits, estimatedAmountCLP, assignedTo, nextActionAt, status, sourceEntityType, sourceEntityId, createdAt, updatedAt
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      input.id,
+      input.contactId ?? null,
+      input.companyId ?? null,
+      input.specialistId ?? null,
+      input.serviceRequestId ?? null,
+      input.virtualQuoteId ?? null,
+      sanitizeText(input.title, 180) ?? "Oportunidad OficiosPro",
+      input.type,
+      input.pipeline,
+      input.stage,
+      input.priority ?? "media",
+      input.estimatedCredits ?? 0,
+      input.estimatedAmountCLP ?? 0,
+      input.assignedTo ?? null,
+      input.nextActionAt ?? null,
+      input.status ?? "open",
+      input.sourceEntityType,
+      input.sourceEntityId,
+      input.createdAt,
+      input.updatedAt,
+    )
+    .run();
+}
+
+async function crmActivity(db: D1Database, request: Request, input: { entityType: string; entityId: string; action: string; metadata?: unknown }) {
+  await db
+    .prepare("INSERT INTO crm_activity_log (id, entityType, entityId, action, actor, metadataJson, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?)")
+    .bind(`crm_act_${crypto.randomUUID()}`, input.entityType, input.entityId, input.action, adminActor(request), JSON.stringify(redactSensitive(input.metadata ?? {})), new Date().toISOString())
+    .run();
+}
+
+async function crmStatusHistory(db: D1Database, request: Request, input: { entityType: string; entityId: string; fromStatus?: string; toStatus: string; reason?: string }) {
+  await db
+    .prepare("INSERT INTO crm_status_history (id, entityType, entityId, fromStatus, toStatus, reason, actor, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
+    .bind(`crm_status_${crypto.randomUUID()}`, input.entityType, input.entityId, input.fromStatus ?? null, input.toStatus, input.reason ?? null, adminActor(request), new Date().toISOString())
+    .run();
+}
+
+function adminActor(request: Request) {
+  const actor = request.headers.get("x-admin-actor");
+  return sanitizeText(actor, 120) ?? "admin_token";
 }
 
 function requireAdmin(request: Request, env: Env) {
