@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { DashboardMetricCard } from "@/components/DesignSystem";
 import { formatCLP } from "@/data/marketplace";
+import { shouldShowDemoData } from "@/lib/demoData";
 import {
   applySubscriberDiscount,
   blockSpecialistPayout,
@@ -268,7 +269,7 @@ function buildInitialFinanceState(): FinanceState {
 
 export function AdminFinancePanel() {
   const [tab, setTab] = useState<FinanceTab>("pagos");
-  const [state, setState] = useState<FinanceState>(buildInitialFinanceState);
+  const [state, setState] = useState<FinanceState>(() => (shouldShowDemoData() ? buildInitialFinanceState() : emptyFinanceState()));
   const [feedback, setFeedback] = useState("");
   const [adjustment, setAdjustment] = useState({ userId: "", credits: 0, reason: "" });
 

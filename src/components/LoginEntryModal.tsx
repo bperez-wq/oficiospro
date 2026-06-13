@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { demoAuthEnabled } from "@/lib/auth/session";
 import { setMockSession, type MockSession } from "@/lib/storage";
 
 type LoginMode = "login" | "client" | "specialist" | "company";
@@ -83,6 +84,10 @@ export function LoginEntryModal({
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!demoAuthEnabled()) {
+      setStatus("El acceso demo no esta habilitado en produccion. Usa el acceso real de administracion cuando este configurado.");
+      return;
+    }
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim().toLowerCase();
     const password = String(data.get("password") ?? "");

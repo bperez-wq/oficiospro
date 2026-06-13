@@ -10,6 +10,7 @@ import { VisualFaqAccordion } from "@/components/VisualFaqAccordion";
 import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { defaultTransactions, workStories } from "@/data/mock";
 import { formatCLP, subscriptionPlans } from "@/data/marketplace";
+import { shouldShowDemoData } from "@/lib/demoData";
 
 const comparisonExamples: [string, number, string][] = [
   ["Mantención calefont", 25, "/assets/oficios/calefont/calefont-mantencion-01.jpg"],
@@ -44,6 +45,7 @@ const clubFaq = [
 export default function ClubHogarPage() {
   const clientPlans = subscriptionPlans.filter((plan) => plan.audience === "cliente");
   const featuredPlan = clientPlans.find((plan) => plan.id === "plus") ?? clientPlans[0];
+  const visibleTransactions = shouldShowDemoData() ? defaultTransactions : [];
 
   return (
     <main className="section grid gap-8">
@@ -208,7 +210,7 @@ export default function ClubHogarPage() {
           <p className="mb-5 text-sm font-bold leading-6 text-muted">
             El historial separa cargas, usos, retenciones y devoluciones para que el saldo se entienda antes y después de cada servicio.
           </p>
-          <TransactionList transactions={defaultTransactions} />
+          <TransactionList transactions={visibleTransactions} />
         </article>
       </section>
 

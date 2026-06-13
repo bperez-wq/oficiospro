@@ -7,9 +7,10 @@ import {
   calculateReservedCredits,
 } from "@/lib/creditLedger";
 import { formatCLP } from "@/lib/pricing";
+import { shouldShowDemoData } from "@/lib/demoData";
 
 export function AdminCreditLedgerPreview() {
-  const events = demoCreditLedgerEvents;
+  const events = shouldShowDemoData() ? demoCreditLedgerEvents : [];
   const purchased = events.filter((event) => event.type === "credit_purchased").reduce((sum, event) => sum + event.credits, 0);
   const available = calculateAvailableCredits(events);
   const reserved = calculateReservedCredits(events);

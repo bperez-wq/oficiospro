@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "
 import { AdminCreditLedgerPreview } from "@/components/AdminCreditLedgerPreview";
 import { AdminFinancePanel } from "@/components/AdminFinancePanel";
 import { AdminPricingPanel } from "@/components/AdminPricingPanel";
-import { defaultBookings, specialists } from "@/data/mock";
+import { specialists } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import {
   calculateServiceEconomics,
@@ -23,6 +23,7 @@ import { getSpecialistReviews, type SpecialistReview } from "@/lib/trust";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
 import { canAccess } from "@/lib/security";
+import { shouldShowDemoData } from "@/lib/demoData";
 import {
   addPaymentCredits,
   approveAndPublishSpecialist,
@@ -316,7 +317,8 @@ export function AdminPanel() {
     setConfig(getCommercialConfig());
   }
 
-  const approvedBase = specialists.filter((specialist) => specialist.verified !== false);
+  const demoDataEnabled = shouldShowDemoData();
+  const approvedBase = demoDataEnabled ? specialists.filter((specialist) => specialist.verified !== false) : [];
   const managedPublished = publishedSpecialists.filter((specialist) =>
     publishedFilter === "all"
       ? (specialist.publicationStatus ?? specialist.status) !== "deleted"
@@ -328,7 +330,7 @@ export function AdminPanel() {
   const estimatedMargin = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * 0.35, 0);
   const reviewRows = useMemo<AdminReviewRow[]>(
     () =>
-      [...specialists, ...publishedSpecialists].flatMap((specialist) =>
+      [...(demoDataEnabled ? specialists : []), ...publishedSpecialists].flatMap((specialist) =>
         getSpecialistReviews(specialist).map((review) => ({
           ...review,
           specialistName: specialist.name,
@@ -336,7 +338,7 @@ export function AdminPanel() {
           reviewedByAdmin: Boolean(reviewedReviewIds[review.id] ?? review.reviewedByAdmin),
         })),
       ),
-    [hiddenReviewIds, publishedSpecialists, reviewedReviewIds],
+    [demoDataEnabled, hiddenReviewIds, publishedSpecialists, reviewedReviewIds],
   );
   const filteredReviewRows = reviewRows.filter((review) => reviewRatingFilter === "all" || Math.round(review.ratingGeneral).toString() === reviewRatingFilter);
   const kpis = [
@@ -350,7 +352,7 @@ export function AdminPanel() {
     { label: "Adicionales pendientes", value: additionalRequests.filter((item) => item.status === "pending_customer_approval" || item.status === "clarification_requested").length.toString() },
     { label: "Reviews nuevas", value: reviewRows.filter((review) => !review.reviewedByAdmin).length.toString() },
     { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
-    { label: "Créditos vendidos", value: String(defaultBookings.reduce((sum, booking) => sum + booking.credits, 0)) },
+    { label: "Créditos vendidos", value: String(paymentTransactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0)) },
     { label: "Margen estimado", value: formatCLP(Math.round(estimatedMargin)) },
     { label: "Comunas cubiertas", value: coverage.filter((item) => item.active).length.toString() },
   ];
@@ -837,7 +839,7 @@ export function AdminPanel() {
                   onReject={() => rejectRequest(request.id)}
                   onMoreInfo={() => requestMoreInfo(request.id)}
                 />
-              )) : <EmptyState text="No hay especialistas pendientes por revisar." />}
+              )) : <EmptyState text="Aún no hay especialistas pendientes reales. Las postulaciones aparecerán aquí cuando lleguen desde el formulario real." />}
               {rejectedOnly.length ? (
                 <div className="mt-4 rounded-3xl border border-rose-100 bg-rose-50 p-4">
                   <h3 className="text-lg font-black text-rose-900">Rechazados</h3>

@@ -1,7 +1,7 @@
 "use client";
 
 import { defaultBookings, defaultTransactions, specialists as baseSpecialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
-import { allowOperationalLocalSeed } from "@/lib/demoData";
+import { allowOperationalLocalSeed, shouldShowDemoData } from "@/lib/demoData";
 import type { PaymentProvider } from "@/lib/payments/types";
 import {
   defaultAdditionalRequests,
@@ -484,7 +484,7 @@ function remove(key: string) {
 export function seedMockState() {
   if (typeof window === "undefined") return;
   if (!allowOperationalLocalSeed()) {
-    if (!window.localStorage.getItem(keys.commercialConfig)) write(keys.commercialConfig, defaultCommercialConfig);
+    purgeKnownDemoOperationalData();
     return;
   }
   if (!window.localStorage.getItem(keys.wallet)) write(keys.wallet, { balance: 135, expiresInMonths: 24 });
@@ -505,6 +505,45 @@ export function seedMockState() {
       specialistBenefit: "Badge Fundador disponible al aprobar referidos",
     });
   }
+}
+
+function purgeKnownDemoOperationalData() {
+  removeDemoRows<PendingSpecialistProfile>(keys.pendingSpecialists, isSeedPendingSpecialist);
+  removeDemoRows<PendingSpecialistProfile>(keys.specialists, isSeedPendingSpecialist);
+  removeDemoRows<Booking>(keys.bookings, (item) => ["bk-1001", "bk-1002", "bk-2001", "bk-2002"].includes(String(item.id ?? "")));
+  removeDemoRows<CreditTransaction>(keys.transactions, (item) => ["tx-001", "tx-002", "tx-003", "tx-004"].includes(String(item.id ?? "")));
+  removeDemoRows<QuickSearchLead>(keys.quickSearches, (item) => /^other-service-\d+$/.test(String(item.id ?? "")));
+  removeDemoRows<PaymentRecord>(keys.payments, (item) => ["pay-op-plus-001", "pay-op-credits-001"].includes(String(item.id ?? "")));
+  removeDemoRows<PaymentSubscriptionRecord>(keys.paymentSubscriptions, (item) => String(item.id ?? "") === "sub-op-plus-001");
+  removeDemoRows<PaymentCreditTransaction>(keys.paymentCreditTransactions, (item) => ["ctx-sub-001", "ctx-hold-001", "ctx-quote-hold-001", "ctx-additional-hold-001"].includes(String(item.id ?? "")));
+  removeDemoRows<SpecialistPayout>(keys.specialistPayouts, (item) => ["payout-op-001", "payout-op-002"].includes(String(item.id ?? "")));
+  removeDemoRows<QuoteAgreement>(keys.quoteAgreements, (item) => ["quote-electrical-001", "quote-gate-accepted", "quote-irrigation-visit"].includes(String(item.id ?? "")));
+  removeDemoRows<AdditionalRequest>(keys.additionalRequests, (item) => ["additional-gas-001", "additional-hours-001"].includes(String(item.id ?? "")));
+  const wallet = read<PaymentCreditWallet | null>(keys.paymentWallet, null);
+  if (wallet?.userId === "cliente@oficiospro.cl" && wallet.currentBalance === 135) remove(keys.paymentWallet);
+  const simpleWallet = read<Wallet | null>(keys.wallet, null);
+  if (simpleWallet?.balance === 135) remove(keys.wallet);
+}
+
+function removeDemoRows<T>(key: string, isDemo: (item: T) => boolean) {
+  const current = read<T[] | null>(key, null);
+  if (!Array.isArray(current)) return;
+  const next = current.filter((item) => !isDemo(item));
+  if (next.length === current.length) return;
+  if (next.length) write(key, next);
+  else remove(key);
+}
+
+function isSeedPendingSpecialist(item: PendingSpecialistProfile) {
+  const normalizedName = normalizeIdentityValue(item.name);
+  const normalizedEmail = normalizeIdentityValue(item.email);
+  return (
+    String(item.id ?? "").startsWith("seed-specialist-") ||
+    normalizedName === "mauriciopena" ||
+    normalizedName === "paulacortes" ||
+    normalizedEmail === "mauricio.pena@oficiospro.cl" ||
+    normalizedEmail === "paula.cortes@oficiospro.cl"
+  );
 }
 
 function seedNegotiationState() {
@@ -712,7 +751,7 @@ export function updateConversionLeadStatus(kind: ConversionLeadKind, id: string,
 }
 
 export function getWallet() {
-  return read<Wallet>(keys.wallet, { balance: 135, expiresInMonths: 24 });
+  return read<Wallet>(keys.wallet, { balance: 0, expiresInMonths: 24 });
 }
 
 export function saveWallet(wallet: Wallet) {
@@ -720,7 +759,7 @@ export function saveWallet(wallet: Wallet) {
 }
 
 export function getBookings() {
-  return read<Booking[]>(keys.bookings, defaultBookings);
+  return read<Booking[]>(keys.bookings, shouldShowDemoData() ? defaultBookings : []);
 }
 
 export function saveBookings(bookings: Booking[]) {
@@ -728,7 +767,7 @@ export function saveBookings(bookings: Booking[]) {
 }
 
 export function getTransactions() {
-  return read<CreditTransaction[]>(keys.transactions, defaultTransactions);
+  return read<CreditTransaction[]>(keys.transactions, shouldShowDemoData() ? defaultTransactions : []);
 }
 
 export function saveTransactions(transactions: CreditTransaction[]) {
@@ -1332,7 +1371,7 @@ export function saveSpecialistPayouts(items: SpecialistPayout[]) {
 }
 
 export function getQuoteAgreements() {
-  return read<QuoteAgreement[]>(keys.quoteAgreements, defaultQuoteAgreements);
+  return read<QuoteAgreement[]>(keys.quoteAgreements, shouldShowDemoData() ? defaultQuoteAgreements : []);
 }
 
 export function saveQuoteAgreements(items: QuoteAgreement[]) {
@@ -1373,7 +1412,7 @@ export function updateQuoteAgreementStatus(id: string, status: QuoteStatus, hist
 }
 
 export function getAdditionalRequests() {
-  return read<AdditionalRequest[]>(keys.additionalRequests, defaultAdditionalRequests);
+  return read<AdditionalRequest[]>(keys.additionalRequests, shouldShowDemoData() ? defaultAdditionalRequests : []);
 }
 
 export function saveAdditionalRequests(items: AdditionalRequest[]) {

@@ -1,13 +1,19 @@
+export function shouldShowDemoData() {
+  return process.env.NODE_ENV !== "production" && process.env.NEXT_PUBLIC_SHOW_DEMO_DATA === "true";
+}
+
+export function isDemoDataEnabled() {
+  return shouldShowDemoData();
+}
+
 export function showDemoData() {
-  if (process.env.NEXT_PUBLIC_SHOW_DEMO_DATA === "true") return true;
-  if (process.env.NEXT_PUBLIC_SHOW_DEMO_DATA === "false") return false;
-  return process.env.NODE_ENV !== "production";
+  return shouldShowDemoData();
 }
 
 export function allowOperationalLocalSeed() {
-  return showDemoData() || process.env.NEXT_PUBLIC_ALLOW_LOCAL_OPERATIONAL_SEED === "true";
+  return shouldShowDemoData();
 }
 
 export function demoDataMode() {
-  return showDemoData() ? "demo_enabled" : "real_or_empty_state";
+  return shouldShowDemoData() ? "demo_enabled" : "real_or_empty_state";
 }

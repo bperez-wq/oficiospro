@@ -35,6 +35,7 @@ import {
 import { distanceInKm } from "@/data/marketplace";
 import { additionalNeedsPayment, quoteTotalCredits } from "@/lib/flexiblePricing";
 import { canAccess } from "@/lib/security";
+import { shouldShowDemoData } from "@/lib/demoData";
 import {
   addVirtualQuoteOffer,
   getVirtualQuoteRequests,
@@ -46,7 +47,7 @@ import {
 
 export function ClientDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const [balance, setBalance] = useState(135);
+  const [balance, setBalance] = useState(0);
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [subscription, setSubscription] = useState<MockSubscription | null>(null);
@@ -92,14 +93,15 @@ export function ClientDashboard() {
   if (authorized === false) return <RoleGuardMessage />;
   if (authorized === null) return <RoleGuardMessage checking />;
 
+  const demoDataEnabled = shouldShowDemoData();
   const upcoming = bookings.filter((booking) => booking.status !== "Finalizada");
   const completed = bookings.filter((booking) => booking.status === "Finalizada");
-  const favorites = specialists.filter((specialist) => specialist.top).slice(0, 3);
+  const favorites = demoDataEnabled ? specialists.filter((specialist) => specialist.top).slice(0, 3) : [];
   const clientLocation =
     clientProfile?.lat !== null && clientProfile?.lat !== undefined && clientProfile?.lng !== null && clientProfile?.lng !== undefined
       ? { lat: clientProfile.lat, lng: clientProfile.lng }
       : null;
-  const nearbySpecialists = [...specialists, ...publishedSpecialists]
+  const nearbySpecialists = [...(demoDataEnabled ? specialists : []), ...publishedSpecialists]
     .map((specialist) => ({
       ...specialist,
       distance:
@@ -296,17 +298,19 @@ export function ClientDashboard() {
           <p className="mt-3 text-sm font-semibold leading-6 text-muted">
             Invitaciones aceptadas: {referrals?.clientInvitations ?? 0}. Créditos ganados: {referrals?.clientCreditsEarned ?? 0}.
           </p>
-          <button
-            className="btn-secondary mt-4"
-            type="button"
-            onClick={() => {
-              setReferrals(simulateAcceptedClientReferral());
-              setBalance(getWallet().balance);
-              setTransactions(getTransactions());
-            }}
-          >
-            Registrar referido aceptado
-          </button>
+          {demoDataEnabled ? (
+            <button
+              className="btn-secondary mt-4"
+              type="button"
+              onClick={() => {
+                setReferrals(simulateAcceptedClientReferral());
+                setBalance(getWallet().balance);
+                setTransactions(getTransactions());
+              }}
+            >
+              Registrar referido aceptado
+            </button>
+          ) : null}
         </article>
       </section>
 
@@ -324,6 +328,11 @@ export function ClientDashboard() {
               </span>
             </Link>
           ))}
+          {!nearbySpecialists.length ? (
+            <div className="md:col-span-3">
+              <EmptyState eyebrow="Sin especialistas reales" title="Aun no hay especialistas cercanos guardados." text="Cuando se publiquen perfiles reales, apareceran aqui ordenados por comuna y distancia." />
+            </div>
+          ) : null}
         </div>
       </section>
 
@@ -360,6 +369,11 @@ export function ClientDashboard() {
               </div>
             </Link>
           ))}
+          {!favorites.length ? (
+            <div className="md:col-span-3">
+              <EmptyState eyebrow="Sin favoritos reales" title="Aun no hay tecnicos favoritos." text="Tus favoritos apareceran aqui cuando guardes especialistas reales." />
+            </div>
+          ) : null}
         </div>
       </section>
     </div>
@@ -368,7 +382,8 @@ export function ClientDashboard() {
 
 export function SpecialistDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const specialist = specialists[0];
+  const demoDataEnabled = shouldShowDemoData();
+  const specialist = demoDataEnabled ? specialists[0] : null;
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [referrals, setReferrals] = useState<ReferralState | null>(null);
   const [submittedNotice, setSubmittedNotice] = useState(false);
@@ -384,16 +399,25 @@ export function SpecialistDashboard() {
     }
     setAuthorized(true);
     seedMockState();
-    setBookings(getBookings().filter((booking) => booking.specialistId === specialist.id));
+    setBookings(specialist ? getBookings().filter((booking) => booking.specialistId === specialist.id) : []);
     setReferrals(getReferralState());
     setQuotes(getQuoteAgreements());
     setAdditionals(getAdditionalRequests());
     setVirtualQuotes(getVirtualQuoteRequests());
     setSubmittedNotice(new URLSearchParams(window.location.search).get("submitted") === "1");
-  }, [specialist.id]);
+  }, [specialist]);
 
   if (authorized === false) return <RoleGuardMessage />;
   if (authorized === null) return <RoleGuardMessage checking />;
+  if (!specialist) {
+    return (
+      <EmptyState
+        eyebrow="Sin perfil real"
+        title="Aun no hay perfil especialista activo para esta sesion."
+        text="Las reservas y cotizaciones apareceran aqui cuando el especialista tenga un perfil real publicado."
+      />
+    );
+  }
 
   const earnedCredits = bookings.reduce((sum, booking) => sum + booking.credits, 0);
 
@@ -663,9 +687,11 @@ export function SpecialistDashboard() {
               Invitaciones aprobadas: {referrals?.specialistInvitations ?? 0}. Beneficio: {referrals?.specialistBenefit ?? "Badge Fundador o créditos de reputación"}.
             </p>
           </div>
-          <button className="btn-secondary" type="button" onClick={() => setReferrals(simulateAcceptedSpecialistReferral())}>
-            Marcar referido aprobado
-          </button>
+          {demoDataEnabled ? (
+            <button className="btn-secondary" type="button" onClick={() => setReferrals(simulateAcceptedSpecialistReferral())}>
+              Marcar referido aprobado
+            </button>
+          ) : null}
         </div>
       </section>
     </div>
@@ -674,11 +700,25 @@ export function SpecialistDashboard() {
 
 export function CompanyDashboard() {
   const [authorized, setAuthorized] = useState<boolean | null>(null);
-  const corporateTransactions = [
+  const demoDataEnabled = shouldShowDemoData();
+  const corporateTransactions = demoDataEnabled ? [
     { id: "ctx-001", type: "Carga corporativa", detail: "Plan Empresa mensual", amount: 200, date: "2026-06-01" },
     { id: "ctx-002", type: "Servicio", detail: "Técnico HVAC Quilicura", amount: -55, date: "2026-06-02" },
     { id: "ctx-003", type: "Servicio", detail: "Electricista Vitacura", amount: -42, date: "2026-06-01" },
-  ];
+  ] : [];
+  const companyMetrics = demoDataEnabled
+    ? companyDashboard
+    : {
+        creditsAvailable: 0,
+        creditsUsed: 0,
+        responseTime: "Sin datos",
+        activeBranches: 0,
+        monthlyBilling: "$0",
+        suppliers: 0,
+        openRequests: 0,
+        services: [],
+        branches: [],
+      };
 
   useEffect(() => {
     const session = getMockSession();
@@ -692,22 +732,22 @@ export function CompanyDashboard() {
     <div className="grid gap-6">
       <section className="enterprise-shell p-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <MetricDark label="Créditos corporativos" value={companyDashboard.creditsAvailable.toString()} />
-          <MetricDark label="Usados este mes" value={companyDashboard.creditsUsed.toString()} />
-          <MetricDark label="Respuesta promedio" value={companyDashboard.responseTime} />
-          <MetricDark label="Sucursales activas" value={companyDashboard.activeBranches.toString()} />
+          <MetricDark label="Créditos corporativos" value={companyMetrics.creditsAvailable.toString()} />
+          <MetricDark label="Usados este mes" value={companyMetrics.creditsUsed.toString()} />
+          <MetricDark label="Respuesta promedio" value={companyMetrics.responseTime} />
+          <MetricDark label="Sucursales activas" value={companyMetrics.activeBranches.toString()} />
         </div>
       </section>
       <section className="grid gap-5 lg:grid-cols-3">
-        <StatCard label="Gasto mensual" value={companyDashboard.monthlyBilling} />
-        <StatCard label="Solicitudes abiertas" value={companyDashboard.openRequests.toString()} />
-        <StatCard label="Proveedores frecuentes" value={companyDashboard.suppliers.toString()} />
+        <StatCard label="Gasto mensual" value={companyMetrics.monthlyBilling} />
+        <StatCard label="Solicitudes abiertas" value={companyMetrics.openRequests.toString()} />
+        <StatCard label="Proveedores frecuentes" value={companyMetrics.suppliers.toString()} />
       </section>
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
           <h2 className="mb-4 text-2xl font-black">Servicios solicitados</h2>
           <div className="grid gap-3">
-            {companyDashboard.services.map((service) => (
+            {companyMetrics.services.map((service) => (
               <article key={`${service.service}-${service.branch}`} className="flex justify-between rounded-2xl border border-line bg-slate-50 p-4">
                 <div>
                   <strong>{service.service}</strong>
@@ -718,7 +758,7 @@ export function CompanyDashboard() {
                 <strong>{service.credits} créditos</strong>
               </article>
             ))}
-            {!companyDashboard.services.length ? (
+            {!companyMetrics.services.length ? (
               <EmptyState
                 eyebrow="Sin actividad"
                 title="Aun no hay servicios corporativos."
@@ -735,12 +775,12 @@ export function CompanyDashboard() {
       <section className="panel">
         <h2 className="mb-4 text-2xl font-black">Sucursales</h2>
         <div className="grid gap-3 md:grid-cols-5">
-          {companyDashboard.branches.map((branch) => (
+          {companyMetrics.branches.map((branch) => (
             <span key={branch} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
               {branch}
             </span>
           ))}
-          {!companyDashboard.branches.length ? (
+          {!companyMetrics.branches.length ? (
             <div className="md:col-span-5">
               <EmptyState eyebrow="Sin sucursales" title="Aun no hay sedes cargadas." text="Durante el piloto, OficiosPro puede ayudarte a ordenar sedes y centros de costo antes de activar solicitudes recurrentes." />
             </div>
