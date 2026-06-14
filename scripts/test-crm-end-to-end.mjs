@@ -116,6 +116,22 @@ let failures = 0;
 console.log(`Testing CRM end-to-end against ${baseUrl}`);
 console.log("");
 
+if (process.env.ADMIN_LOGIN_EMAIL && process.env.ADMIN_LOGIN_SECRET) {
+  await requestJson(
+    {
+      label: "validar login admin real",
+      method: "POST",
+      endpoint: "/api/auth/admin-login",
+      body: {
+        email: process.env.ADMIN_LOGIN_EMAIL,
+        password: process.env.ADMIN_LOGIN_SECRET,
+      },
+    },
+    "",
+    { countFailure: false },
+  );
+}
+
 const preflight = await requestJson({ label: "validar token admin", method: "GET", endpoint: "/api/admin/leads?limit=1" }, adminToken, { countFailure: false });
 if (!preflight.ok) {
   console.error("");
@@ -146,7 +162,10 @@ console.log("CRM E2E finished successfully.");
 
 async function requestJson({ label, method, endpoint, body }, token = "", options = {}) {
   const headers = body ? { "Content-Type": "application/json" } : {};
-  if (token) headers.Authorization = `Bearer ${token}`;
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+    headers["x-admin-token"] = token;
+  }
 
   try {
     const response = await fetch(`${baseUrl}${endpoint}`, {

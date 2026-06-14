@@ -1,6 +1,7 @@
 "use client";
 
 import { defaultBookings, defaultTransactions, specialists as baseSpecialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
+import { demoAuthEnabled } from "@/lib/auth/session";
 import { allowOperationalLocalSeed, shouldShowDemoData } from "@/lib/demoData";
 import type { PaymentProvider } from "@/lib/payments/types";
 import {
@@ -56,6 +57,7 @@ export type MockSession = {
   planId?: string;
   createdAt: string;
   expiresAt?: string;
+  provider?: "mock" | "admin_session";
 };
 
 export type MockSubscription = {
@@ -989,6 +991,10 @@ export function saveCommercialConfig(config: CommercialConfig) {
 export function getMockSession() {
   const session = read<MockSession | null>(keys.session, null);
   if (!session) return null;
+  if (session.role === "admin" && (session.provider ?? "mock") === "mock" && !demoAuthEnabled()) {
+    remove(keys.session);
+    return null;
+  }
   if (session.expiresAt && new Date(session.expiresAt).getTime() <= Date.now()) {
     remove(keys.session);
     return null;
@@ -1000,6 +1006,7 @@ export function setMockSession(session: MockSession) {
   const maxAgeMs = session.role === "admin" ? 60 * 60 * 1000 : 12 * 60 * 60 * 1000;
   write(keys.session, {
     ...session,
+    provider: session.provider ?? "mock",
     expiresAt: session.expiresAt ?? new Date(Date.now() + maxAgeMs).toISOString(),
   });
 }

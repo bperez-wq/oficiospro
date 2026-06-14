@@ -25,6 +25,9 @@ type Env = {
   APP_BASE_URL?: string;
   ADMIN_API_TOKEN?: string;
   ADMIN_TOKEN?: string;
+  ADMIN_LOGIN_EMAIL?: string;
+  ADMIN_LOGIN_SECRET?: string;
+  ADMIN_SESSION_SECRET?: string;
   EMAIL_PROVIDER_API_KEY?: string;
   NOTIFICATION_TO_EMAIL?: string;
   NOTIFICATION_CC_EMAIL?: string;
@@ -33,6 +36,7 @@ type Env = {
   LEADS_TO_EMAIL?: string;
   LEADS_FROM_EMAIL?: string;
   LEADS_REPLY_TO_EMAIL?: string;
+  CRM_AUTO_SYNC?: string;
 };
 
 type Plan = {
@@ -168,6 +172,7 @@ const legacySpecialistEmailSubject = "Nueva postulación de especialista en Ofic
 const maxJsonBodyBytes = 32_000;
 const memoryRateLimits = new Map<string, { count: number; resetAt: number }>();
 const processedWebhookEvents = new Set<string>();
+const adminSessionCookieName = "oficiospro_admin_session";
 
 class SafeHttpError extends Error {
   constructor(
@@ -201,6 +206,9 @@ export default {
       if (request.method === "OPTIONS") return withCors(new Response(null, { status: 204 }));
 
       try {
+        if ((url.pathname === "/api/auth/admin-login" || url.pathname === "/api/admin/auth/login") && request.method === "POST") {
+          return withCors(await loginAdmin(request, env));
+        }
         if (url.pathname === "/api/leads" && request.method === "POST") {
           return withCors(await createLead(request, env));
         }
@@ -312,12 +320,12 @@ export default {
           return withCors(await paymentStatus(url, env));
         }
         if (url.pathname === "/api/credits/add" && request.method === "POST") {
-          const auth = requireAdmin(request, env);
+          const auth = await requireAdmin(request, env);
           if (auth) return withCors(auth);
           return withCors(await addCredits(request, env));
         }
         if (url.pathname === "/api/credits/use" && request.method === "POST") {
-          const auth = requireAdmin(request, env);
+          const auth = await requireAdmin(request, env);
           if (auth) return withCors(auth);
           return withCors(await useCredits(request, env));
         }
@@ -325,7 +333,7 @@ export default {
           return withCors(await getWallet(url, env));
         }
         if (url.pathname === "/api/admin/payments/reconcile" && request.method === "POST") {
-          const auth = requireAdmin(request, env);
+          const auth = await requireAdmin(request, env);
           if (auth) return withCors(auth);
           return withCors(await reconcilePayments(request));
         }
@@ -355,6 +363,46 @@ export default {
     return withSecurityHeaders(assetResponse);
   },
 };
+
+async function loginAdmin(request: Request, env: Env) {
+  const body = await readJsonBody<{ email?: string; password?: string }>(request);
+  const email = sanitizeEmail(body.email);
+  const password = sanitizeText(body.password, 400) ?? "";
+  await enforceRateLimit(request, "admin_login", { email, limit: 8, windowMs: 60 * 60 * 1000 });
+
+  const configuredEmail = sanitizeEmail(env.ADMIN_LOGIN_EMAIL);
+  const configuredSecret = env.ADMIN_LOGIN_SECRET ?? "";
+  const sessionSecret = env.ADMIN_SESSION_SECRET ?? env.ADMIN_TOKEN ?? env.ADMIN_API_TOKEN ?? "";
+
+  if (!configuredEmail || !configuredSecret || !sessionSecret) {
+    return json({ ok: false, error: "admin_login_not_configured" }, 503);
+  }
+  if (!email || !password) return json({ ok: false, error: "missing_credentials" }, 400);
+  if (!timingSafeEqual(email, configuredEmail) || !timingSafeEqual(password, configuredSecret)) {
+    return json({ ok: false, error: "unauthorized" }, 401);
+  }
+
+  const issuedAt = new Date();
+  const expiresAt = new Date(issuedAt.getTime() + 8 * 60 * 60 * 1000);
+  const cookie = await createAdminSessionCookie(
+    {
+      role: "admin",
+      email: configuredEmail,
+      iat: Math.floor(issuedAt.getTime() / 1000),
+      exp: Math.floor(expiresAt.getTime() / 1000),
+    },
+    sessionSecret,
+  );
+  const response = json({
+    ok: true,
+    role: "admin",
+    email: configuredEmail,
+    name: "Administrador OficiosPro",
+    expiresAt: expiresAt.toISOString(),
+  });
+  response.headers.append("Set-Cookie", cookie);
+  return response;
+}
 
 async function createLead(request: Request, env: Env, forcedType?: LeadType) {
   const body = await readLeadPayload(request);
@@ -416,7 +464,7 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
 }
 
 async function listAdminLeads(request: Request, env: Env) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -460,7 +508,7 @@ async function listAdminLeads(request: Request, env: Env) {
 }
 
 async function updateAdminLeadStatus(request: Request, env: Env, leadId: string) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -484,7 +532,7 @@ async function updateAdminLeadStatus(request: Request, env: Env, leadId: string)
 }
 
 async function listAdminTable(request: Request, env: Env, table: "specialist_applications" | "customer_leads" | "company_leads" | "service_requests" | "conversion_events") {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -506,7 +554,7 @@ async function listAdminTable(request: Request, env: Env, table: "specialist_app
 }
 
 async function listAdminOperationalTable(request: Request, env: Env, table: "payment_intents" | "credit_wallets" | "specialist_payouts", responseKey: string) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -541,7 +589,7 @@ async function listAdminOperationalTable(request: Request, env: Env, table: "pay
 }
 
 async function listAdminSecurityEvents(request: Request, env: Env) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -567,7 +615,7 @@ async function listAdminSecurityEvents(request: Request, env: Env) {
 }
 
 async function updateSpecialistApplicationStatus(request: Request, env: Env, id: string, action: string) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -596,7 +644,7 @@ async function updateSpecialistApplicationStatus(request: Request, env: Env, id:
 }
 
 async function listAdminSpecialists(request: Request, env: Env) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -629,7 +677,7 @@ async function listAdminSpecialists(request: Request, env: Env) {
 }
 
 async function updateAdminSpecialistStatus(request: Request, env: Env, id: string, action: string) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -695,56 +743,64 @@ async function createVirtualQuoteRequest(request: Request, env: Env) {
 
   const description = sanitizeText(body.description, 3000);
   const commune = sanitizeText(body.commune, 140);
-  if (!description || !commune) throw new SafeHttpError(400, "missing_required_fields");
+  if (!description || !commune) throw new SafeHttpError(400, "validation_error");
 
   const now = new Date().toISOString();
   const id = `vq_${crypto.randomUUID()}`;
   const status = "pendiente_revision";
   const payloadJson = JSON.stringify(redactSensitive(sanitizePayloadObject(body)));
-  await env.DB
-    .prepare(
-      `INSERT INTO virtual_quote_requests (
-        id, customerId, customerName, customerEmail, customerPhone, specialistId, specialistName, serviceId, cartItemId,
-        categoryId, specialty, serviceName, problemTitle, description, locationDetail, commune, region, urgency, status,
-        attachmentCount, videoReference, additionalComments, payloadJson, createdAt, updatedAt
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-    )
-    .bind(
-      id,
-      sanitizeText(body.customerId, 160),
-      sanitizeText(body.customerName, 180),
-      sanitizeEmail(textFrom(body.customerEmail)) ?? null,
-      sanitizeText(body.customerPhone, 60),
-      sanitizeText(body.specialistId, 140),
-      sanitizeText(body.specialistName, 180),
-      sanitizeText(body.serviceId, 140),
-      sanitizeText(body.cartItemId, 220),
-      sanitizeText(body.categoryId, 120),
-      sanitizeText(body.specialty, 180),
-      sanitizeText(body.serviceName, 220),
-      sanitizeText(body.problemTitle, 220),
-      description,
-      sanitizeText(body.locationDetail, 400),
-      commune,
-      sanitizeText(body.region, 140),
-      sanitizeText(body.urgency, 40) || "flexible",
-      status,
-      numberFrom(body.attachmentCount),
-      sanitizeText(body.videoReference, 400),
-      sanitizeText(body.additionalComments, 1200),
-      payloadJson,
-      now,
-      now,
-    )
-    .run();
+  try {
+    await env.DB
+      .prepare(
+        `INSERT INTO virtual_quote_requests (
+          id, customerId, customerName, customerEmail, customerPhone, specialistId, specialistName, serviceId, cartItemId,
+          categoryId, specialty, serviceName, problemTitle, description, locationDetail, commune, region, urgency, status,
+          attachmentCount, videoReference, additionalComments, payloadJson, createdAt, updatedAt
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(
+        id,
+        sanitizeText(body.customerId, 160) ?? null,
+        sanitizeText(body.customerName, 180) ?? null,
+        sanitizeEmail(textFrom(body.customerEmail)) ?? null,
+        sanitizeText(body.customerPhone, 60) ?? null,
+        sanitizeText(body.specialistId, 140) ?? null,
+        sanitizeText(body.specialistName, 180) ?? null,
+        sanitizeText(body.serviceId, 140) ?? null,
+        sanitizeText(body.cartItemId, 220) ?? null,
+        sanitizeText(body.categoryId, 120) ?? null,
+        sanitizeText(body.specialty, 180) ?? null,
+        sanitizeText(body.serviceName, 220) ?? null,
+        sanitizeText(body.problemTitle, 220) ?? null,
+        description,
+        sanitizeText(body.locationDetail, 400) ?? null,
+        commune,
+        sanitizeText(body.region, 140) ?? null,
+        sanitizeText(body.urgency, 40) || "flexible",
+        status,
+        numberFrom(body.attachmentCount),
+        sanitizeText(body.videoReference, 400) ?? null,
+        sanitizeText(body.additionalComments, 1200) ?? null,
+        payloadJson,
+        now,
+        now,
+      )
+      .run();
 
-  await insertVirtualQuoteMessage(env.DB, id, "customer", sanitizeText(body.customerId, 160) ?? "", description);
-  await insertConversionEventRecord(env.DB, {
-    type: "virtual_quote_created",
-    source: "bolsa",
-    page: "/bolsa",
-    payloadJson: JSON.stringify({ id, specialistId: sanitizeText(body.specialistId, 140), serviceId: sanitizeText(body.serviceId, 140), commune }),
-  });
+    await insertVirtualQuoteMessage(env.DB, id, "customer", sanitizeText(body.customerId, 160) ?? "", description);
+    await insertConversionEventRecord(env.DB, {
+      type: "virtual_quote_created",
+      source: "bolsa",
+      page: "/bolsa",
+      payloadJson: JSON.stringify({ id, specialistId: sanitizeText(body.specialistId, 140), serviceId: sanitizeText(body.serviceId, 140), commune }),
+    });
+  } catch (error) {
+    const message = String(error);
+    if (message.includes("no such table") || message.includes("no such column")) {
+      return json({ ok: false, stored: false, error: "virtual_quote_schema_not_ready" }, 503);
+    }
+    throw error;
+  }
   return json({ ok: true, id, status, stored: true });
 }
 
@@ -758,7 +814,7 @@ async function getVirtualQuoteRequest(env: Env, id: string) {
 }
 
 async function listAdminVirtualQuotes(request: Request, env: Env) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
@@ -905,12 +961,12 @@ async function listPublicSpecialists(request: Request, env: Env) {
   return json({ ok: true, specialists: (result.results ?? []).map(toPublicSpecialist), stored: true, limit, offset });
 }
 
-function authorizeAdmin(request: Request, env: Env) {
+async function authorizeAdmin(request: Request, env: Env) {
   return requireAdmin(request, env);
 }
 
 type AdminCrmRoute = {
-  resource: "overview" | "opportunities" | "tasks" | "notes" | "activity" | "contacts" | "companies" | "sync-leads" | "sync-specialists" | "sync-virtual-quotes";
+  resource: "overview" | "work-queue" | "reports" | "opportunities" | "tasks" | "notes" | "activity" | "contacts" | "companies" | "sync-leads" | "sync-specialists" | "sync-virtual-quotes";
   method: string;
   id?: string;
 };
@@ -922,17 +978,19 @@ function matchAdminCrmRoute(pathname: string, method: string): AdminCrmRoute | n
   if (!rest) return { resource: "overview", method };
   const parts = rest.split("/");
   const resource = parts[0] as AdminCrmRoute["resource"];
-  if (!["overview", "opportunities", "tasks", "notes", "activity", "contacts", "companies", "sync-leads", "sync-specialists", "sync-virtual-quotes"].includes(resource)) return null;
+  if (!["overview", "work-queue", "reports", "opportunities", "tasks", "notes", "activity", "contacts", "companies", "sync-leads", "sync-specialists", "sync-virtual-quotes"].includes(resource)) return null;
   return { resource, method, id: parts[1] ? decodeURIComponent(parts[1]) : undefined };
 }
 
 async function handleAdminCrmRoute(request: Request, env: Env, route: AdminCrmRoute) {
-  const auth = authorizeAdmin(request, env);
+  const auth = await authorizeAdmin(request, env);
   if (auth) return auth;
   if (!env.DB) return json({ ok: false, error: "database_not_configured" }, 503);
 
   try {
     if (route.resource === "overview" && route.method === "GET") return listCrmOverview(request, env.DB);
+    if (route.resource === "work-queue" && route.method === "GET") return listCrmWorkQueue(request, env.DB);
+    if (route.resource === "reports" && route.method === "GET") return listCrmReports(request, env.DB);
     if (route.resource === "opportunities" && route.method === "GET" && !route.id) return listCrmOpportunities(request, env.DB);
     if (route.resource === "opportunities" && route.method === "POST" && !route.id) return createCrmOpportunity(request, env.DB);
     if (route.resource === "opportunities" && route.method === "GET" && route.id) return getCrmOpportunity(request, env.DB, route.id);
@@ -950,7 +1008,9 @@ async function handleAdminCrmRoute(request: Request, env: Env, route: AdminCrmRo
     if (route.resource === "sync-virtual-quotes" && route.method === "POST") return syncCrmVirtualQuotes(request, env.DB);
     return json({ ok: false, error: "endpoint_not_found" }, 404);
   } catch (error) {
-    if (String(error).includes("no such table: crm_")) return json({ ok: false, error: "crm_tables_not_ready" }, 503);
+    const message = String(error);
+    if (message.includes("no such table")) return json({ ok: false, error: "crm_tables_not_ready" }, 503);
+    if (message.includes("no such column")) return json({ ok: false, error: "crm_schema_not_ready" }, 503);
     throw error;
   }
 }
@@ -992,6 +1052,78 @@ async function listCrmOverview(request: Request, db: D1Database) {
       openOpportunities,
       opportunitiesByPipeline: pipelineRows.results ?? [],
       savedViews: savedViews.results ?? [],
+    },
+  });
+}
+
+async function listCrmWorkQueue(request: Request, db: D1Database) {
+  const now = new Date();
+  const nowIso = now.toISOString();
+  const todayEnd = new Date(now);
+  todayEnd.setHours(23, 59, 59, 999);
+  const todayEndIso = todayEnd.toISOString();
+  const limit = Math.min(Math.max(Number(new URL(request.url).searchParams.get("limit") ?? 20), 1), 100);
+  const [overdueTasks, dueTodayTasks, pendingQuotes, pendingSpecialists, newLeads, paymentIssues] = await Promise.all([
+    db.prepare("SELECT * FROM crm_tasks WHERE status IN ('pending', 'in_progress') AND dueAt IS NOT NULL AND dueAt < ? ORDER BY dueAt ASC LIMIT ?").bind(nowIso, limit).all(),
+    db.prepare("SELECT * FROM crm_tasks WHERE status IN ('pending', 'in_progress') AND dueAt IS NOT NULL AND dueAt >= ? AND dueAt <= ? ORDER BY dueAt ASC LIMIT ?").bind(nowIso, todayEndIso, limit).all(),
+    db.prepare("SELECT * FROM crm_opportunities WHERE pipeline = ? AND status != ? ORDER BY updatedAt DESC LIMIT ?").bind("cotizaciones_virtuales", "closed", limit).all(),
+    db.prepare("SELECT * FROM crm_opportunities WHERE pipeline = ? AND status != ? ORDER BY updatedAt DESC LIMIT ?").bind("especialistas", "closed", limit).all(),
+    db.prepare("SELECT * FROM crm_opportunities WHERE pipeline = ? AND stage = ? AND status != ? ORDER BY createdAt DESC LIMIT ?").bind("clientes", "nuevo", "closed", limit).all(),
+    db.prepare("SELECT * FROM crm_opportunities WHERE pipeline = ? AND status != ? ORDER BY updatedAt DESC LIMIT ?").bind("pagos_creditos", "closed", limit).all(),
+  ]);
+  const queue = [
+    ...(overdueTasks.results ?? []).map((item) => ({ ...item, queueType: "overdue_task", recommendedAction: "Resolver tarea vencida" })),
+    ...(pendingQuotes.results ?? []).map((item) => ({ ...item, queueType: "pending_quote", recommendedAction: "Revisar cotizacion virtual" })),
+    ...(pendingSpecialists.results ?? []).map((item) => ({ ...item, queueType: "pending_specialist", recommendedAction: "Avanzar revision especialista" })),
+    ...(newLeads.results ?? []).map((item) => ({ ...item, queueType: "new_lead", recommendedAction: "Contactar lead nuevo" })),
+    ...(paymentIssues.results ?? []).map((item) => ({ ...item, queueType: "payment_issue", recommendedAction: "Revisar pago o creditos" })),
+    ...(dueTodayTasks.results ?? []).map((item) => ({ ...item, queueType: "due_today_task", recommendedAction: "Completar tarea de hoy" })),
+  ].slice(0, limit);
+  await crmActivity(db, request, { entityType: "crm", entityId: "work-queue", action: "crm_work_queue_viewed" });
+  return json({
+    ok: true,
+    queue,
+    workQueue: queue,
+    overdueTasks: overdueTasks.results ?? [],
+    dueTodayTasks: dueTodayTasks.results ?? [],
+    pendingQuotes: pendingQuotes.results ?? [],
+    pendingSpecialists: pendingSpecialists.results ?? [],
+    newLeads: newLeads.results ?? [],
+    paymentIssues: paymentIssues.results ?? [],
+    recommendedActions: queue.map((item) => ({ id: String((item as Record<string, unknown>).id ?? ""), action: String((item as Record<string, unknown>).recommendedAction ?? "") })),
+  });
+}
+
+async function listCrmReports(request: Request, db: D1Database) {
+  const [
+    leadsByDay,
+    opportunitiesByPipeline,
+    tasksByStatus,
+    quotesByStatus,
+    specialistsByStage,
+    openOpportunities,
+    wonLostSummary,
+  ] = await Promise.all([
+    db.prepare("SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS count FROM lead_submissions GROUP BY day ORDER BY day DESC LIMIT 30").all(),
+    db.prepare("SELECT pipeline, stage, COUNT(*) AS count FROM crm_opportunities GROUP BY pipeline, stage ORDER BY count DESC").all(),
+    db.prepare("SELECT status, COUNT(*) AS count FROM crm_tasks GROUP BY status ORDER BY count DESC").all(),
+    db.prepare("SELECT status, COUNT(*) AS count FROM virtual_quote_requests GROUP BY status ORDER BY count DESC").all(),
+    db.prepare("SELECT stage, COUNT(*) AS count FROM crm_opportunities WHERE pipeline = ? GROUP BY stage ORDER BY count DESC").bind("especialistas").all(),
+    countCrm(db, "crm_opportunities", "status != ?", ["closed"]),
+    db.prepare("SELECT status, COUNT(*) AS count FROM crm_opportunities WHERE status IN ('closed', 'open') GROUP BY status").all(),
+  ]);
+  await crmActivity(db, request, { entityType: "crm", entityId: "reports", action: "crm_reports_viewed" });
+  return json({
+    ok: true,
+    reports: {
+      leadsByDay: leadsByDay.results ?? [],
+      opportunitiesByPipeline: opportunitiesByPipeline.results ?? [],
+      tasksByStatus: tasksByStatus.results ?? [],
+      quotesByStatus: quotesByStatus.results ?? [],
+      specialistsByStage: specialistsByStage.results ?? [],
+      responseTimeMetrics: { averageFirstResponseHours: null, source: "pending_instrumentation" },
+      openOpportunities,
+      wonLostSummary: wonLostSummary.results ?? [],
     },
   });
 }
@@ -1614,13 +1746,80 @@ function adminActor(request: Request) {
   return sanitizeText(actor, 120) ?? "admin_token";
 }
 
-function requireAdmin(request: Request, env: Env) {
-  const configuredToken = env.ADMIN_API_TOKEN ?? env.ADMIN_TOKEN;
-  if (!configuredToken) return json({ ok: false, error: "admin_token_not_configured" }, 503);
+async function requireAdmin(request: Request, env: Env) {
+  const configuredToken = adminApiToken(env);
+  const sessionSecret = adminSessionSecret(env);
+  if (!configuredToken && !sessionSecret) return json({ ok: false, error: "admin_token_not_configured" }, 503);
+
+  const token = adminTokenFromRequest(request);
+  if (configuredToken && token && timingSafeEqual(token, configuredToken)) return null;
+  if (sessionSecret && await verifyAdminSessionCookie(request, sessionSecret)) return null;
+
+  return json({ ok: false, error: "unauthorized" }, 401);
+}
+
+function adminApiToken(env: Env) {
+  return env.ADMIN_API_TOKEN ?? env.ADMIN_TOKEN ?? "";
+}
+
+function adminSessionSecret(env: Env) {
+  return env.ADMIN_SESSION_SECRET ?? env.ADMIN_TOKEN ?? env.ADMIN_API_TOKEN ?? "";
+}
+
+function adminTokenFromRequest(request: Request) {
   const header = request.headers.get("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
-  if (!token || !timingSafeEqual(token, configuredToken)) return json({ ok: false, error: "unauthorized" }, 401);
-  return null;
+  const bearer = header.startsWith("Bearer ") ? header.slice("Bearer ".length).trim() : "";
+  return bearer || request.headers.get("x-admin-token")?.trim() || "";
+}
+
+async function createAdminSessionCookie(session: { role: "admin"; email: string; iat: number; exp: number }, secret: string) {
+  const payload = base64UrlEncode(JSON.stringify(session));
+  const signature = await hmacSha256Hex(payload, secret);
+  const maxAge = Math.max(session.exp - Math.floor(Date.now() / 1000), 0);
+  return `${adminSessionCookieName}=${payload}.${signature}; Max-Age=${maxAge}; Path=/; HttpOnly; Secure; SameSite=Lax`;
+}
+
+async function verifyAdminSessionCookie(request: Request, secret: string) {
+  const raw = cookieValue(request, adminSessionCookieName);
+  if (!raw) return false;
+  const [payload, signature] = raw.split(".");
+  if (!payload || !signature) return false;
+  const expected = await hmacSha256Hex(payload, secret);
+  if (!timingSafeEqual(signature, expected)) return false;
+  try {
+    const session = safeJson(base64UrlDecode(payload)) as { role?: string; exp?: number } | null;
+    if (!session || session.role !== "admin") return false;
+    if (!session.exp || session.exp <= Math.floor(Date.now() / 1000)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function cookieValue(request: Request, name: string) {
+  const cookie = request.headers.get("cookie") ?? "";
+  const prefix = `${name}=`;
+  return cookie
+    .split(";")
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+    ?.slice(prefix.length) ?? "";
+}
+
+async function hmacSha256Hex(value: string, secret: string) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey("raw", encoder.encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
+  return [...new Uint8Array(signature)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function base64UrlEncode(value: string) {
+  return btoa(unescape(encodeURIComponent(value))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64UrlDecode(value: string) {
+  const padded = value.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(value.length / 4) * 4, "=");
+  return decodeURIComponent(escape(atob(padded)));
 }
 
 async function readLeadPayload(request: Request) {
@@ -3125,7 +3324,7 @@ function withCors(response: Response) {
   const headers = new Headers(response.headers);
   headers.set("Access-Control-Allow-Origin", "*");
   headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
-  headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-signature,x-request-id");
+  headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-admin-token,x-signature,x-request-id");
   return withSecurityHeaders(new Response(response.body, { status: response.status, statusText: response.statusText, headers }));
 }
 

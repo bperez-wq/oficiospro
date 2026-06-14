@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { formatCLP } from "@/data/marketplace";
+import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 
 type CrmView = "overview" | "opportunities" | "tasks" | "contacts" | "companies" | "pipeline" | "activity";
 type CrmRow = Record<string, unknown>;
@@ -52,10 +53,10 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   const [newNote, setNewNote] = useState("");
 
   useEffect(() => {
-    const stored = window.sessionStorage.getItem(tokenStorageKey) ?? "";
-    setToken(stored);
-    setTokenDraft(stored);
-    if (stored) void loadView(stored);
+    const initial = initialAdminToken(tokenStorageKey);
+    setToken(initial);
+    setTokenDraft(initial === adminSessionToken ? "" : initial);
+    if (initial) void loadView(initial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
@@ -66,10 +67,11 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   async function saveToken(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = tokenDraft.trim();
-    window.sessionStorage.setItem(tokenStorageKey, next);
-    setToken(next);
-    setNotice(next ? "Token guardado para esta sesion. Cargando CRM..." : "Ingresa un token admin valido.");
-    if (next) await loadView(next);
+    persistAdminToken(tokenStorageKey, next);
+    const active = next || (hasAdminBrowserSession() ? adminSessionToken : "");
+    setToken(active);
+    setNotice(active ? "Acceso admin activo. Cargando CRM..." : "Ingresa un token admin valido o inicia sesion como administrador.");
+    if (active) await loadView(active);
   }
 
   async function loadView(activeToken = token) {
@@ -485,7 +487,8 @@ function RowsView({ title, rows, columns, onRefresh, onExport, onRowClick, actio
 async function adminFetch(token: string, endpoint: string, options: { method?: string; body?: unknown } = {}) {
   const response = await fetch(endpoint, {
     method: options.method ?? "GET",
-    headers: { Authorization: `Bearer ${token}`, ...(options.body ? { "Content-Type": "application/json" } : {}) },
+    credentials: "include",
+    headers: adminRequestHeaders(token, options.body ? { "Content-Type": "application/json" } : {}),
     body: options.body ? JSON.stringify(options.body) : undefined,
   });
   const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;

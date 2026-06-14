@@ -231,7 +231,7 @@ export function Header() {
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-teal-300 px-3 py-1 text-xs font-black uppercase text-teal-950">Administrador</span>
-              <span className="text-sm font-bold text-white/85">{session.email ?? "admin@oficiospro.cl"}</span>
+              <span className="text-sm font-bold text-white/85">{session.email ?? "Administrador OficiosPro"}</span>
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {adminQuickLinks.map((item) => (

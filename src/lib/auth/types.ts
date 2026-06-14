@@ -2,7 +2,7 @@ export type AuthRole = "guest" | "customer" | "client" | "specialist" | "company
 
 export type OperationalRole = "guest" | "customer" | "specialist" | "company" | "admin";
 
-export type AuthProvider = "supabase" | "clerk" | "auth0" | "custom_jwt" | "mock";
+export type AuthProvider = "supabase" | "clerk" | "auth0" | "custom_jwt" | "mock" | "admin_session";
 
 export type AuthSession = {
   userId: string;

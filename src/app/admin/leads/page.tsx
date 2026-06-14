@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
+import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 import { ALL_COMMUNES_VALUE, ALL_REGIONS_VALUE, regionNameForCode } from "@/lib/catalog";
 import { estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
 
@@ -75,9 +76,10 @@ export default function AdminLeadsPage() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const stored = window.sessionStorage.getItem(tokenStorageKey) ?? "";
-    setToken(stored);
-    setTokenDraft(stored);
+    const initial = initialAdminToken(tokenStorageKey);
+    setToken(initial);
+    setTokenDraft(initial === adminSessionToken ? "" : initial);
+    if (initial === adminSessionToken) setNotice("Sesion admin activa. Consultando leads reales desde D1...");
   }, []);
 
   useEffect(() => {
@@ -91,14 +93,15 @@ export default function AdminLeadsPage() {
   async function saveToken(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextToken = tokenDraft.trim();
-    window.sessionStorage.setItem(tokenStorageKey, nextToken);
-    setToken(nextToken);
+    persistAdminToken(tokenStorageKey, nextToken);
+    const next = nextToken || (hasAdminBrowserSession() ? adminSessionToken : "");
+    setToken(next);
     setNotice(nextToken ? "Token guardado en esta sesión. Cargando leads..." : "Ingresa un token admin válido.");
   }
 
   function clearToken() {
     window.sessionStorage.removeItem(tokenStorageKey);
-    setToken("");
+    setToken(hasAdminBrowserSession() ? adminSessionToken : "");
     setTokenDraft("");
     setLeads([]);
     setSelectedId("");
@@ -117,7 +120,8 @@ export default function AdminLeadsPage() {
 
     try {
       const response = await fetch(`/api/admin/leads?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${activeToken}` },
+        credentials: "include",
+        headers: adminRequestHeaders(activeToken),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; leads?: AdminLead[]; error?: string };
       if (!response.ok || !data.ok) {
@@ -144,10 +148,8 @@ export default function AdminLeadsPage() {
     try {
       const response = await fetch(`/api/admin/leads/${encodeURIComponent(leadId)}/status`, {
         method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+        credentials: "include",
+        headers: adminRequestHeaders(token, { "Content-Type": "application/json" }),
         body: JSON.stringify({ status }),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };
@@ -168,7 +170,8 @@ export default function AdminLeadsPage() {
     try {
       const response = await fetch(`/api/admin/specialist-applications/${encodeURIComponent(leadId)}/${action}`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
+        credentials: "include",
+        headers: adminRequestHeaders(token),
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; status?: string; error?: string };
       if (!response.ok || !data.ok) {

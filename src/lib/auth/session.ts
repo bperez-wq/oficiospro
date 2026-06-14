@@ -16,14 +16,15 @@ export function readBrowserSession(): AuthSession | null {
   try {
     const parsed = JSON.parse(raw) as Partial<AuthSession> & { role?: string; createdAt?: string };
     const role = normalizeAuthRole(parsed.role);
-    if (parsed.provider === "mock" && !demoAuthEnabled()) return null;
+    const provider = parsed.provider ?? "mock";
+    if (role === "admin" && provider === "mock" && !demoAuthEnabled()) return null;
     return {
       userId: parsed.userId ?? parsed.email ?? "browser-session",
       role,
       email: parsed.email,
       phone: parsed.phone,
       name: parsed.name,
-      provider: parsed.provider ?? "mock",
+      provider,
       issuedAt: parsed.issuedAt ?? parsed.createdAt,
       expiresAt: parsed.expiresAt,
       token: parsed.token,

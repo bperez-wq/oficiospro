@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
+import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 
 type AdminRow = Record<string, unknown>;
 
@@ -38,10 +39,10 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = window.sessionStorage.getItem(tokenStorageKey) ?? "";
-    setToken(stored);
-    setTokenDraft(stored);
-    if (stored) void loadRows(stored, 0);
+    const initial = initialAdminToken(tokenStorageKey);
+    setToken(initial);
+    setTokenDraft(initial === adminSessionToken ? "" : initial);
+    if (initial) void loadRows(initial, 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -58,10 +59,11 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
   function saveToken(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const next = tokenDraft.trim();
-    window.sessionStorage.setItem(tokenStorageKey, next);
-    setToken(next);
-    setNotice(next ? "Token guardado en esta sesion. Consultando..." : "Ingresa ADMIN_TOKEN.");
-    if (next) void loadRows(next, 0);
+    persistAdminToken(tokenStorageKey, next);
+    const active = next || (hasAdminBrowserSession() ? adminSessionToken : "");
+    setToken(active);
+    setNotice(active ? "Acceso admin activo. Consultando..." : "Ingresa ADMIN_TOKEN o inicia sesion como administrador.");
+    if (active) void loadRows(active, 0);
   }
 
   async function loadRows(activeToken = token, nextOffset = offset) {
@@ -71,7 +73,7 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
     if (q) params.set("q", q);
     if (status) params.set("status", status);
     try {
-      const response = await fetch(`${endpoint}?${params.toString()}`, { headers: { Authorization: `Bearer ${activeToken}` } });
+      const response = await fetch(`${endpoint}?${params.toString()}`, { credentials: "include", headers: adminRequestHeaders(activeToken) });
       const data = (await response.json().catch(() => ({}))) as Record<string, unknown>;
       if (!response.ok || !data.ok) {
         setRows([]);
@@ -98,7 +100,8 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
       const body = action.body?.(row);
       const response = await fetch(action.path(row), {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, ...(body ? { "Content-Type": "application/json" } : {}) },
+        credentials: "include",
+        headers: adminRequestHeaders(token, body ? { "Content-Type": "application/json" } : {}),
         body: body ? JSON.stringify(body) : undefined,
       });
       const data = (await response.json().catch(() => ({}))) as { ok?: boolean; error?: string };

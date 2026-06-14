@@ -5,6 +5,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { adminLoginErrorMessage, loginRealAdmin } from "@/lib/adminAuth";
+import { demoAuthEnabled } from "@/lib/auth/session";
 import {
   formatCLP,
   getPlanById,
@@ -214,8 +216,22 @@ export function LoginForm() {
       setStatus("Demasiados intentos. Espera un minuto y vuelve a probar.");
       return;
     }
+    if (!demoAuthEnabled()) {
+      try {
+        await loginRealAdmin(email, password);
+        clearLoginAttempts();
+        setStatus("Acceso admin correcto. Redirigiendo...");
+        window.setTimeout(() => {
+          window.location.href = "/admin";
+        }, 500);
+      } catch (error) {
+        recordFailedLoginAttempt();
+        setStatus(`${adminLoginErrorMessage(error)} El acceso demo no esta habilitado en produccion. Configura ADMIN_LOGIN_EMAIL y ADMIN_LOGIN_SECRET en Cloudflare.`);
+      }
+      return;
+    }
+
     const credentials = {
-      "admin@oficiospro.cl": { password: "Admin1234!", role: "admin" as const, name: "Administrador OficiosPro", path: "/admin" },
       "cliente@oficiospro.cl": { password: "Cliente1234!", role: "client" as const, name: "Cliente OficiosPro", path: "/dashboard-cliente" },
       "especialista@oficiospro.cl": { password: "Especialista1234!", role: "specialist" as const, name: "Especialista OficiosPro", path: "/dashboard-especialista" },
       "empresa@oficiospro.cl": { password: "Empresa1234!", role: "company" as const, name: "Empresa OficiosPro", path: "/dashboard-empresa" },
@@ -271,11 +287,10 @@ export function LoginForm() {
           </Link>
         </div>
         {status ? <SuccessMessage>{status}</SuccessMessage> : null}
-        {isLocal ? (
+        {isLocal && demoAuthEnabled() ? (
           <details className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
             <summary className="cursor-pointer font-black text-ink">Accesos internos</summary>
             <div className="mt-3 grid gap-2">
-              <span>admin@oficiospro.cl / Admin1234!</span>
               <span>cliente@oficiospro.cl / Cliente1234!</span>
               <span>especialista@oficiospro.cl / Especialista1234!</span>
               <span>empresa@oficiospro.cl / Empresa1234!</span>

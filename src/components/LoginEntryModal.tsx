@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
+import { adminLoginErrorMessage, loginRealAdmin } from "@/lib/adminAuth";
 import { demoAuthEnabled } from "@/lib/auth/session";
 import { setMockSession, type MockSession } from "@/lib/storage";
 
 type LoginMode = "login" | "client" | "specialist" | "company";
 
 const loginAccounts = {
-  "admin@oficiospro.cl": { password: "Admin1234!", role: "admin" as const, name: "Administrador OficiosPro", path: "/admin" },
   "cliente@oficiospro.cl": { password: "Cliente1234!", role: "client" as const, name: "Cliente OficiosPro", path: "/dashboard-cliente" },
   "especialista@oficiospro.cl": { password: "Especialista1234!", role: "specialist" as const, name: "Especialista OficiosPro", path: "/dashboard-especialista" },
   "empresa@oficiospro.cl": { password: "Empresa1234!", role: "company" as const, name: "Empresa OficiosPro", path: "/dashboard-empresa" },
@@ -82,23 +82,36 @@ export function LoginEntryModal({
 
   if (!open) return null;
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!demoAuthEnabled()) {
-      setStatus("El acceso demo no esta habilitado en produccion. Usa el acceso real de administracion cuando este configurado.");
-      return;
-    }
     const data = new FormData(event.currentTarget);
     const email = String(data.get("email") ?? "").trim().toLowerCase();
     const password = String(data.get("password") ?? "");
+
+    setSubmitting(true);
+    if (!demoAuthEnabled()) {
+      try {
+        const session = await loginRealAdmin(email, password);
+        onLogin(session);
+        setStatus("Acceso admin correcto. Continuando...");
+        window.setTimeout(() => {
+          window.location.href = "/admin";
+        }, 350);
+      } catch (error) {
+        setStatus(`${adminLoginErrorMessage(error)} El acceso demo no esta habilitado en produccion. Configura ADMIN_LOGIN_EMAIL y ADMIN_LOGIN_SECRET en Cloudflare para habilitar acceso real.`);
+        setSubmitting(false);
+      }
+      return;
+    }
+
     const account = loginAccounts[email as keyof typeof loginAccounts];
 
     if (!account || account.password !== password) {
       setStatus("Email o contrasena incorrectos.");
+      setSubmitting(false);
       return;
     }
 
-    setSubmitting(true);
     const session: MockSession = { role: account.role, name: account.name, email, createdAt: new Date().toISOString() };
     setMockSession(session);
     onLogin(session);

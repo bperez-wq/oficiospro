@@ -418,7 +418,7 @@ export function AdminPanel() {
     if (!selectedSpecialist?.id) return;
     const updated = updatePendingSpecialistIdentity(selectedSpecialist.id, {
       verificationStatus: status,
-      reviewedBy: adminSession?.email ?? "admin@oficiospro.cl",
+      reviewedBy: adminSession?.email ?? "admin",
       notes: note ?? selectedSpecialist.identityVerification?.notes ?? "",
     });
     refresh();
@@ -754,7 +754,7 @@ export function AdminPanel() {
             <span className="rounded-full bg-teal-300 px-3 py-1 text-xs font-black uppercase text-teal-950">Administrador</span>
             <h2 className="mt-4 text-2xl font-black">Backoffice OficiosPro</h2>
             <p className="mt-2 text-sm font-bold text-white/70">Panel admin</p>
-            <p className="mt-1 text-sm font-black text-white">{adminSession?.email ?? "admin@oficiospro.cl"}</p>
+            <p className="mt-1 text-sm font-black text-white">{adminSession?.email ?? "Administrador OficiosPro"}</p>
           </div>
           <nav className="mt-4 grid gap-1">
             {adminSections.map((section) => (
