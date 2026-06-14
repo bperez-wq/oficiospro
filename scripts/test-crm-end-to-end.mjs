@@ -1,7 +1,7 @@
 import readline from "node:readline";
 
 const baseUrl = (process.env.TEST_BASE_URL ?? "https://www.oficiospro.cl").replace(/\/$/, "");
-const adminToken = process.env.ADMIN_TOKEN || process.env.TEST_ADMIN_TOKEN || (await promptSecret("ADMIN_TOKEN: "));
+const adminToken = validateAdminToken(process.env.ADMIN_TOKEN || process.env.TEST_ADMIN_TOKEN || (await promptSecret("ADMIN_TOKEN: ")));
 
 const safePerson = {
   fullName: "Juan Perez",
@@ -116,6 +116,18 @@ let failures = 0;
 console.log(`Testing CRM end-to-end against ${baseUrl}`);
 console.log("");
 
+const preflight = await requestJson({ label: "validar token admin", method: "GET", endpoint: "/api/admin/leads?limit=1" }, adminToken, { countFailure: false });
+if (!preflight.ok) {
+  console.error("");
+  console.error("ADMIN_TOKEN no fue aceptado. No se crearan datos de prueba.");
+  if (preflight.error === "unauthorized") {
+    console.error("Si Cloudflare tiene ADMIN_API_TOKEN, usa ese mismo valor o actualiza ADMIN_API_TOKEN y ADMIN_TOKEN con el mismo secreto.");
+  }
+  process.exit(1);
+}
+
+console.log("");
+
 for (const item of createRequests) {
   await requestJson(item);
 }
@@ -132,7 +144,7 @@ if (failures) {
 
 console.log("CRM E2E finished successfully.");
 
-async function requestJson({ label, method, endpoint, body }, token = "") {
+async function requestJson({ label, method, endpoint, body }, token = "", options = {}) {
   const headers = body ? { "Content-Type": "application/json" } : {};
   if (token) headers.Authorization = `Bearer ${token}`;
 
@@ -144,19 +156,22 @@ async function requestJson({ label, method, endpoint, body }, token = "") {
     });
     const data = await response.json().catch(() => ({}));
     const ok = response.ok && data.ok !== false;
-    if (!ok) failures += 1;
+    if (!ok && options.countFailure !== false) failures += 1;
     console.log(formatSummary({ label, endpoint, status: response.status, ok, data }));
+    return { ok, status: response.status, error: data.error ?? "" };
   } catch (error) {
-    failures += 1;
+    if (options.countFailure !== false) failures += 1;
+    const errorMessage = error instanceof Error ? error.message : "network_error";
     console.log(
       formatSummary({
         label,
         endpoint,
         status: "network",
         ok: false,
-        data: { error: error instanceof Error ? error.message : "network_error" },
+        data: { error: errorMessage },
       }),
     );
+    return { ok: false, status: "network", error: errorMessage };
   }
 }
 
@@ -172,6 +187,18 @@ function formatSummary({ label, endpoint, status, ok, data }) {
   ]
     .filter(Boolean)
     .join(" | ");
+}
+
+function validateAdminToken(value) {
+  const token = String(value ?? "").trim();
+  const normalized = token.toLowerCase();
+  const placeholderSignals = ["el_mismo_token", "valor_real", "admin_api_token", "tu_token", "pega_", "xxxx", "token_real"];
+  if (!token || placeholderSignals.some((signal) => normalized.includes(signal))) {
+    console.error("ADMIN_TOKEN debe ser el valor real del secreto, no un texto de ejemplo.");
+    console.error("Ejemplo PowerShell: $env:ADMIN_TOKEN=\"pega_aqui_el_valor_real\"");
+    process.exit(1);
+  }
+  return token;
 }
 
 async function promptSecret(prompt) {
