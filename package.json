@@ -11,6 +11,7 @@
     "start": "next start",
     "validate": "node scripts/validate-project.mjs",
     "test:leads": "node scripts/test-lead-endpoints.mjs",
+    "test:payout-calculator": "node scripts/test-specialist-payout-calculator.mjs",
     "seo:sitemap": "node scripts/generate-sitemap.mjs",
     "seo:audit": "node scripts/seo-audit.mjs",
     "seo:live-audit": "node scripts/seo-live-audit.mjs"

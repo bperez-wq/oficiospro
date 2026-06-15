@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
+import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayoutPanel";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -519,6 +520,7 @@ export function SpecialistDashboard() {
           <StatCard label="Créditos ganados" value={earnedCredits.toString()} />
         </aside>
       </section>
+      <FormalizationAndPayoutPanel variant="specialist" />
       <section className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
         <article className="panel">
           <h2 className="mb-4 text-2xl font-black">Reservas recibidas</h2>

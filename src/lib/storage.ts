@@ -313,6 +313,15 @@ export type PendingSpecialistProfile = {
   certifications: string[];
   hasNoFormalCertifications?: boolean;
   otherCertificationText?: string;
+  taxProfile?: {
+    taxType?: string;
+    legalName?: string;
+    businessRut?: string;
+    siiActivity?: string;
+    canIssueFeeReceipt?: boolean;
+    canIssueInvoice?: boolean;
+    status?: string;
+  };
   reviewStatus?: "pendiente_revision" | "info_solicitada" | "aprobado" | "rechazado";
   certificationStatus?: "sin_certificacion_declarada" | "certificacion_declarada_pendiente_revision";
   submittedAt: string;

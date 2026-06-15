@@ -49,8 +49,9 @@ export default function SpecialistRegisterPage() {
             {[
               ["1", "Completa identidad y contacto"],
               ["2", "Define comuna, radio y servicios"],
-              ["3", "Agrega referencias o portafolio si ya los tienes"],
-              ["4", "OficiosPro revisa y te contacta antes de publicar"],
+              ["3", "Declara como documentas tus servicios"],
+              ["4", "Agrega referencias o portafolio si ya los tienes"],
+              ["5", "OficiosPro revisa y te contacta antes de publicar"],
             ].map(([step, text]) => (
               <article key={step} className="rounded-2xl border border-line bg-slate-50 p-4">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-sm font-black text-white">{step}</span>

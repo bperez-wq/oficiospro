@@ -14,15 +14,16 @@ import type {
   TaxDocumentType,
   UserRole,
 } from "@/lib/finance/types";
+import { chileTaxConfig2026 } from "@/config/taxConfig";
 
 /** IVA vigente en Chile. VALIDAR: tasa y aplicabilidad por tipo de ingreso. */
-export const IVA_RATE = 0.19;
+export const IVA_RATE = chileTaxConfig2026.ivaRate;
 
 /**
  * Retención boleta de honorarios. La tasa sube gradualmente por ley 21.133
  * hasta llegar a 17%. VALIDAR con contador la tasa vigente del año comercial.
  */
-export const HONORARIOS_RETENTION_RATE = 0.1525;
+export const HONORARIOS_RETENTION_RATE = chileTaxConfig2026.honorariosRetentionRate;
 
 export const OP_SPA = {
   legalName: "OP SpA",

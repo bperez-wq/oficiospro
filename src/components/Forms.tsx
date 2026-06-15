@@ -15,6 +15,7 @@ import {
   subscriptionPlans,
 } from "@/data/marketplace";
 import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/flexiblePricing";
+import { specialistTaxTypeLabels, type SpecialistFormalizationTaxType } from "@/data/specialistFormalization";
 import {
   appendPendingSpecialist,
   appendStoredItem,
@@ -503,6 +504,14 @@ export function SpecialistRegisterForm() {
     whatsapp: "",
     email: "",
   });
+  const [formalization, setFormalization] = useState({
+    taxType: "unknown" as SpecialistFormalizationTaxType,
+    legalName: "",
+    businessRut: "",
+    siiActivity: "",
+    canIssueFeeReceipt: false,
+    canIssueInvoice: false,
+  });
   const [primaryTradeId, setPrimaryTradeId] = useState(createEmptyService().serviceTypeId);
   const [services, setServices] = useState<ServiceDraft[]>([createEmptyService()]);
   const [references, setReferences] = useState<ReferenceDraft[]>([{ ...emptyReference }, { ...emptyReference }, { ...emptyReference }]);
@@ -706,7 +715,7 @@ export function SpecialistRegisterForm() {
       }
     }
     if (
-      currentStep === 4 &&
+      currentStep === 5 &&
       references.some((reference) => {
         const hasAnyData = reference.name || reference.company || reference.phone || reference.email || reference.work || reference.year;
         return hasAnyData && (!reference.name || !reference.phone || !reference.work);
@@ -715,7 +724,7 @@ export function SpecialistRegisterForm() {
       setStatus("Completa nombre, telefono y trabajo realizado en cada referencia iniciada, o dejala vacia para agregarla despues.");
       return false;
     }
-    if (currentStep === 5 && (!consentContact || !consentVerification)) {
+    if (currentStep === 6 && (!consentContact || !consentVerification)) {
       setStatus("Autoriza el contacto y la revision de antecedentes para enviar tu postulacion.");
       return false;
     }
@@ -725,7 +734,7 @@ export function SpecialistRegisterForm() {
 
   function nextStep() {
     if (!validateStep(step)) return;
-    setStep((current) => Math.min(5, current + 1));
+    setStep((current) => Math.min(6, current + 1));
   }
 
   function previousStep() {
@@ -755,7 +764,7 @@ export function SpecialistRegisterForm() {
       setStatus("No pudimos completar el envio ahora. Escribenos a bperez@oficiospro.cl y revisaremos tu postulacion.");
       return;
     }
-    for (const currentStep of [1, 2, 3, 4, 5]) {
+    for (const currentStep of [1, 2, 3, 4, 5, 6]) {
       if (!validateStep(currentStep)) {
         setStep(currentStep);
         return;
@@ -839,6 +848,10 @@ export function SpecialistRegisterForm() {
       certifications: selectedCertifications,
       hasNoFormalCertifications,
       otherCertificationText,
+      taxProfile: {
+        ...formalization,
+        status: formalization.taxType === "unknown" ? "pending_formalization" : "pending_accountant_sii_review",
+      },
       submittedAt: now,
     } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
@@ -912,6 +925,10 @@ export function SpecialistRegisterForm() {
         certifications: selectedCertifications,
         otherCertificationText,
         hasNoFormalCertifications,
+        taxProfile: {
+          ...formalization,
+          status: formalization.taxType === "unknown" ? "pending_formalization" : "pending_accountant_sii_review",
+        },
         identityVerification: privateIdentityVerification,
         identityStatus: privateIdentityVerification.identityStorageStatus,
         referencesText: completedReferences.map((reference) => `${reference.name} - ${reference.phone} - ${reference.work}`).join("\n"),
@@ -960,11 +977,12 @@ export function SpecialistRegisterForm() {
           Sitio web
           <input value={websiteTrap} onChange={(event) => setWebsiteTrap(event.target.value)} tabIndex={-1} autoComplete="off" />
         </label>
-        <div className="grid gap-3 md:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-6">
           {[
             ["Identidad", "Datos y contacto"],
             ["Cobertura", "Comuna y radio"],
             ["Servicios", "Tarifa esperada"],
+            ["Formalizacion", "Documento de cobro"],
             ["Referencias", "Opcional"],
             ["Revision", "Envio final"],
           ].map(([title, text], index) => (
@@ -1105,7 +1123,51 @@ export function SpecialistRegisterForm() {
           ))}
         </section>
 
-        <section className={step === 4 ? "grid gap-4" : "hidden"}>
+        <section className={step === 4 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="md:col-span-2">
+            <p className="eyebrow">Formalizacion y cobro</p>
+            <h3 className="text-2xl font-black">Como documentas tus servicios</h3>
+            <p className="mt-2 text-sm font-bold text-muted">
+              Esto ayuda a OficiosPro a preparar tu revision de pagos. Es referencial y puede quedar pendiente hasta validacion de contador/SII.
+            </p>
+          </div>
+          <label className="field">
+            Documento que puedes emitir
+            <select value={formalization.taxType} onChange={(event) => setFormalization({ ...formalization, taxType: event.target.value as SpecialistFormalizationTaxType })}>
+              <option value="unknown">{specialistTaxTypeLabels.unknown}</option>
+              <option value="boleta_honorarios">{specialistTaxTypeLabels.boleta_honorarios}</option>
+              <option value="factura_afecta">{specialistTaxTypeLabels.factura_afecta}</option>
+              <option value="factura_exenta">{specialistTaxTypeLabels.factura_exenta}</option>
+            </select>
+          </label>
+          <label className="field">
+            Nombre o razon social para cobro
+            <input value={formalization.legalName} onChange={(event) => setFormalization({ ...formalization, legalName: event.target.value })} placeholder="Puede ser tu nombre legal o razon social" />
+          </label>
+          <label className="field">
+            RUT de emisor
+            <input value={formalization.businessRut} onChange={(event) => setFormalization({ ...formalization, businessRut: event.target.value })} placeholder="Mismo RUT o RUT empresa" />
+          </label>
+          <label className="field">
+            Giro o actividad SII
+            <input value={formalization.siiActivity} onChange={(event) => setFormalization({ ...formalization, siiActivity: event.target.value })} placeholder="Ej: servicios tecnicos, mantenimiento, instalaciones" />
+          </label>
+          <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
+            <label className="flex items-start gap-3 text-sm font-bold text-muted">
+              <input type="checkbox" checked={formalization.canIssueFeeReceipt} onChange={(event) => setFormalization({ ...formalization, canIssueFeeReceipt: event.target.checked })} />
+              Puedo emitir boleta de honorarios electronica a OP SpA.
+            </label>
+            <label className="flex items-start gap-3 text-sm font-bold text-muted">
+              <input type="checkbox" checked={formalization.canIssueInvoice} onChange={(event) => setFormalization({ ...formalization, canIssueInvoice: event.target.checked })} />
+              Puedo emitir factura a OP SpA.
+            </label>
+            <p className="text-xs font-bold leading-5 text-muted">
+              Esta declaracion no habilita pagos por si sola. OficiosPro debe validar datos tributarios, documento emitido y cuenta bancaria antes de liquidar.
+            </p>
+          </div>
+        </section>
+
+        <section className={step === 5 ? "grid gap-4" : "hidden"}>
           <div>
             <p className="eyebrow">Referencias laborales</p>
             <h3 className="text-2xl font-black">Referencias opcionales para acelerar la revision</h3>
@@ -1143,7 +1205,7 @@ export function SpecialistRegisterForm() {
           </div>
         </section>
 
-        <section className={step === 5 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <section className={step === 6 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <label className="field">
             Portafolio fotográfico
             <input
@@ -1193,8 +1255,8 @@ export function SpecialistRegisterForm() {
           <button className="btn-secondary" type="button" onClick={previousStep} disabled={step === 1 || isSubmitting}>
             Volver
           </button>
-          <span className="text-sm font-black text-muted">Paso {step} de 5 · completa lo que tengas disponible.</span>
-          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 5 || isSubmitting}>
+          <span className="text-sm font-black text-muted">Paso {step} de 6 · completa lo que tengas disponible.</span>
+          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
             Continuar paso
           </button>
         </div>
