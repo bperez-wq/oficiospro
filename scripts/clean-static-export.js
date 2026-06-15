@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 
 const targets = [
-  "public/sitemap.xml",
   "src/app/sitemap.ts",
   "src/app/sitemap.tsx",
   "src/app/sitemap.js",

@@ -1,0 +1,567 @@
+{
+  "seoCommunes": [
+    {
+      "slug": "nunoa",
+      "name": "Nunoa",
+      "region": "Region Metropolitana",
+      "nearby": ["providencia", "la-reina", "santiago"],
+      "demandSignal": "Leads de mantencion hogar y edificios en el sector oriente-centro."
+    },
+    {
+      "slug": "las-condes",
+      "name": "Las Condes",
+      "region": "Region Metropolitana",
+      "nearby": ["vitacura", "providencia", "la-reina"],
+      "demandSignal": "Alta demanda de hogar, oficinas, comunidades y comercio."
+    },
+    {
+      "slug": "providencia",
+      "name": "Providencia",
+      "region": "Region Metropolitana",
+      "nearby": ["nunoa", "las-condes", "santiago"],
+      "demandSignal": "Demanda recurrente de departamentos, oficinas y locales."
+    },
+    {
+      "slug": "vitacura",
+      "name": "Vitacura",
+      "region": "Region Metropolitana",
+      "nearby": ["las-condes", "providencia", "lo-barnechea"],
+      "demandSignal": "Servicios de respuesta rapida y mantencion preventiva."
+    },
+    {
+      "slug": "la-florida",
+      "name": "La Florida",
+      "region": "Region Metropolitana",
+      "nearby": ["macul", "penalolen", "puente-alto"],
+      "demandSignal": "Cobertura residencial en expansion."
+    },
+    {
+      "slug": "la-reina",
+      "name": "La Reina",
+      "region": "Region Metropolitana",
+      "nearby": ["nunoa", "las-condes", "penalolen"],
+      "demandSignal": "Demanda de jardin, gasfiteria y electricidad domiciliaria."
+    },
+    {
+      "slug": "santiago",
+      "name": "Santiago",
+      "region": "Region Metropolitana",
+      "nearby": ["providencia", "nunoa", "estacion-central"],
+      "demandSignal": "Demanda amplia de departamentos, comercio y oficinas."
+    }
+  ],
+  "seoServices": [
+    {
+      "slug": "gasfiteria",
+      "title": "Gasfiteres verificados para filtraciones, calefont y redes de agua",
+      "shortTitle": "Gasfiteria",
+      "description": "Encuentra especialistas para filtraciones, calefont, destapes, redes de agua y reparaciones sanitarias con cotizacion clara en creditos.",
+      "categoryId": "hogar",
+      "specialty": "gasfiteria",
+      "searchParams": { "categoria": "hogar", "especialidad": "gasfiteria" },
+      "includedServices": ["Filtraciones visibles y ocultas", "Calefont y conexiones de agua", "Destapes y griferia", "Redes sanitarias menores"],
+      "creditRange": "Visitas y diagnosticos desde creditos de entrada; trabajos mayores se cotizan segun alcance.",
+      "relatedProblems": ["filtracion-de-agua", "calefont-no-enciende"],
+      "popularCommunes": ["nunoa", "providencia", "las-condes", "la-reina"],
+      "localPages": [
+        { "communeSlug": "nunoa", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 92, "hasEnoughSpecialists": true, "hasEnoughDemand": true },
+        { "communeSlug": "providencia", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 89, "hasEnoughSpecialists": true, "hasEnoughDemand": true },
+        { "communeSlug": "la-florida", "editorialStatus": "noindex", "indexPolicy": "noindex", "contentScore": 70, "hasEnoughSpecialists": false, "hasEnoughDemand": false }
+      ],
+      "faqs": [
+        { "question": "Cuando conviene pedir un gasfiter?", "answer": "Cuando hay humedad, baja presion, goteos persistentes, problemas de calefont o una reparacion que requiere revisar conexiones de agua o gas." },
+        { "question": "OficiosPro publica precios exactos?", "answer": "Mostramos creditos de referencia y el especialista confirma el alcance antes de avanzar, especialmente si hay materiales o una visita tecnica." },
+        { "question": "Que informacion preparo antes de solicitar ayuda?", "answer": "Fotos del problema, comuna, urgencia, tipo de artefacto y si la filtracion afecta muros, vecinos o espacios comunes." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 92,
+      "indexPolicy": "index",
+      "priority": 0.9,
+      "image": "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "electricidad",
+      "title": "Electricistas verificados para tableros, enchufes y fallas domiciliarias",
+      "shortTitle": "Electricidad",
+      "description": "Busca electricistas para diagnostico, tableros, enchufes, luminarias y normalizacion segura en hogares, locales y comunidades.",
+      "categoryId": "hogar",
+      "specialty": "electricidad",
+      "searchParams": { "categoria": "hogar", "especialidad": "electricidad" },
+      "includedServices": ["Revision de tableros", "Cambio de enchufes y luminarias", "Diagnostico de cortes", "Normalizacion electrica menor"],
+      "creditRange": "Servicios simples pueden partir con creditos base; fallas complejas requieren diagnostico y cotizacion.",
+      "relatedProblems": ["corte-electrico"],
+      "popularCommunes": ["las-condes", "providencia", "vitacura", "santiago"],
+      "localPages": [
+        { "communeSlug": "las-condes", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 90, "hasEnoughSpecialists": true, "hasEnoughDemand": true },
+        { "communeSlug": "vitacura", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 84, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Puedo reparar una falla electrica por mi cuenta?", "answer": "No recomendamos intervenir tableros ni cableado. Si hay olor a quemado, chispas o cortes repetidos, corta el suministro y contacta a un especialista." },
+        { "question": "Que significa electricista SEC?", "answer": "La certificacion SEC aplica a instalaciones y trabajos que requieren cumplimiento normativo. OficiosPro permite revisar credenciales cuando el servicio lo exige." },
+        { "question": "Que datos ayudan a diagnosticar?", "answer": "Describe si el corte afecta toda la vivienda, un circuito, enchufes especificos o un artefacto puntual." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 90,
+      "indexPolicy": "index",
+      "priority": 0.88,
+      "image": "/assets/oficios/electricidad/electricidad-tablero-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "calefont",
+      "title": "Tecnicos para revision y mantencion de calefont",
+      "shortTitle": "Calefont",
+      "description": "Solicita especialistas para diagnosticar calefont que no encienden, baja temperatura, mantencion preventiva y conexiones seguras.",
+      "categoryId": "hogar",
+      "specialty": "calefont",
+      "searchParams": { "categoria": "hogar", "especialidad": "calefont" },
+      "includedServices": ["Diagnostico de encendido", "Mantencion preventiva", "Revision de agua caliente", "Derivacion a tecnico autorizado cuando aplique gas"],
+      "creditRange": "Diagnostico y mantencion se cotizan segun tipo de equipo y acceso.",
+      "relatedProblems": ["calefont-no-enciende"],
+      "popularCommunes": ["providencia", "nunoa", "santiago"],
+      "localPages": [
+        { "communeSlug": "providencia", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 86, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Que hago si siento olor a gas?", "answer": "Corta el suministro si es seguro hacerlo, ventila, no enciendas interruptores y contacta emergencia o un profesional autorizado." },
+        { "question": "El tecnico puede traer repuestos?", "answer": "Depende del modelo. Lo ideal es enviar fotos de la placa, marca y sintomas antes de la visita." },
+        { "question": "La pagina reemplaza una inspeccion?", "answer": "No. La informacion orienta, pero el diagnostico real depende de una revision profesional." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 86,
+      "indexPolicy": "index",
+      "priority": 0.82,
+      "image": "/assets/oficios/calefont/calefont-mantencion-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "jardineria",
+      "title": "Jardineros para mantencion, poda y riego",
+      "shortTitle": "Jardineria",
+      "description": "Encuentra especialistas para poda, mantencion de jardines, riego, recuperacion de areas verdes y trabajos de temporada.",
+      "categoryId": "hogar",
+      "specialty": "jardineria",
+      "searchParams": { "categoria": "hogar", "especialidad": "jardineria" },
+      "includedServices": ["Poda y limpieza", "Mantencion periodica", "Riego y pasto", "Recuperacion de jardines"],
+      "creditRange": "La mantencion se puede estimar por tamano, frecuencia y retiro de residuos.",
+      "relatedProblems": [],
+      "popularCommunes": ["la-reina", "nunoa", "las-condes"],
+      "localPages": [
+        { "communeSlug": "la-reina", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 84, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Puedo pedir mantencion recurrente?", "answer": "Si. OficiosPro permite coordinar solicitudes periodicas y ordenar el pago por creditos segun alcance." },
+        { "question": "Que cambia entre poda y mantencion?", "answer": "La poda suele requerir herramientas y retiro de ramas; la mantencion incluye limpieza, pasto, riego y orden general." },
+        { "question": "Conviene enviar fotos?", "answer": "Si, ayudan a estimar tamano, acceso, estado del jardin y volumen de residuos." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 84,
+      "indexPolicy": "index",
+      "priority": 0.78,
+      "image": "/assets/oficios/jardineria/jardineria-poda-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "pintura",
+      "title": "Pintores para interior, fachadas y terminaciones",
+      "shortTitle": "Pintura",
+      "description": "Compara especialistas para pintura interior, cielos, fachadas, retoques y terminaciones con presupuesto por alcance.",
+      "categoryId": "hogar",
+      "specialty": "pintura",
+      "searchParams": { "categoria": "hogar", "especialidad": "pintura" },
+      "includedServices": ["Pintura interior", "Fachadas y muros", "Preparacion de superficies", "Retoques y terminaciones"],
+      "creditRange": "El costo depende de metros, estado de muros, materiales y preparacion.",
+      "relatedProblems": [],
+      "popularCommunes": ["la-florida", "santiago", "providencia"],
+      "localPages": [],
+      "faqs": [
+        { "question": "El especialista incluye materiales?", "answer": "Puede incluirlos o cotizarlos aparte. La pagina debe dejar claro el alcance antes de reservar." },
+        { "question": "Como se estima un trabajo de pintura?", "answer": "Se revisan metros, numero de manos, estado de superficie, altura y preparacion necesaria." },
+        { "question": "Puedo pedir solo retoques?", "answer": "Si, pero conviene enviar fotos para validar si el color y terminacion son replicables." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 82,
+      "indexPolicy": "index",
+      "priority": 0.72,
+      "image": "/assets/oficios/pintura/pintura-interior-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "climatizacion",
+      "title": "Tecnicos HVAC para aire acondicionado y climatizacion",
+      "shortTitle": "Climatizacion",
+      "description": "Agenda especialistas para mantencion, instalacion y diagnostico de aire acondicionado residencial y comercial.",
+      "categoryId": "empresas-industria",
+      "specialty": "climatizacion",
+      "searchParams": { "categoria": "empresas-industria", "especialidad": "climatizacion" },
+      "includedServices": ["Mantencion de equipos", "Instalacion split", "Limpieza de filtros", "Diagnostico de fallas"],
+      "creditRange": "Visitas tecnicas y mantenciones tienen referencia en creditos; instalaciones se cotizan por equipo y complejidad.",
+      "relatedProblems": [],
+      "popularCommunes": ["providencia", "las-condes", "santiago"],
+      "localPages": [],
+      "faqs": [
+        { "question": "Cada cuanto hacer mantencion?", "answer": "Depende del uso y ambiente. En hogares suele ser preventiva; en locales y oficinas puede requerir agenda recurrente." },
+        { "question": "Puedo cotizar instalacion?", "answer": "Si. Se revisa potencia, ubicacion, distancia de tuberias, acceso electrico y drenaje." },
+        { "question": "Sirve para empresas?", "answer": "Si, especialmente para oficinas, comercio y mantenciones programadas." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 85,
+      "indexPolicy": "index",
+      "priority": 0.76,
+      "image": "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "cerrajeria",
+      "title": "Cerrajeros para cerraduras y accesos",
+      "shortTitle": "Cerrajeria",
+      "description": "Pagina en preparacion editorial para servicios de cerraduras, accesos y seguridad residencial.",
+      "categoryId": "emergencias",
+      "specialty": "cerrajeria",
+      "searchParams": { "categoria": "emergencias", "especialidad": "cerrajeria" },
+      "includedServices": ["Cerraduras", "Puertas", "Accesos"],
+      "creditRange": "Por revisar editorialmente.",
+      "relatedProblems": [],
+      "popularCommunes": [],
+      "localPages": [],
+      "faqs": [],
+      "minimumContentScore": 80,
+      "contentScore": 45,
+      "indexPolicy": "noindex",
+      "priority": 0.2,
+      "image": "/assets/oficios/cerrajeria/cerrajeria-cerradura-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "draft"
+    }
+  ],
+  "seoProblems": [
+    {
+      "slug": "filtracion-de-agua",
+      "title": "Filtracion de agua: diagnostico y reparacion segura",
+      "shortTitle": "Filtracion de agua",
+      "description": "Guia para reconocer filtraciones, preparar informacion y solicitar un especialista sin intervenir redes de agua a ciegas.",
+      "serviceSlug": "gasfiteria",
+      "categoryId": "hogar",
+      "specialty": "gasfiteria",
+      "searchParams": { "categoria": "hogar", "especialidad": "gasfiteria" },
+      "warning": "Si la filtracion afecta electricidad, corta energia del circuito si es seguro y evita manipular enchufes mojados.",
+      "steps": ["Toma fotos del origen visible", "Indica si afecta muros, cielo o vecinos", "Cierra llaves de paso si corresponde", "Solicita diagnostico antes de romper superficies"],
+      "localPages": [
+        { "communeSlug": "nunoa", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 90, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Una filtracion siempre requiere romper?", "answer": "No siempre. Primero conviene diagnosticar origen, presion, artefactos cercanos y humedad visible." },
+        { "question": "Que datos envio?", "answer": "Fotos, video corto, comuna, si hay vecino afectado y ubicacion aproximada de llaves de paso." },
+        { "question": "Es urgente?", "answer": "Si hay avance rapido, riesgo electrico o dano a terceros, tratalo como urgente." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 90,
+      "indexPolicy": "index",
+      "priority": 0.78,
+      "image": "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "calefont-no-enciende",
+      "title": "Calefont no enciende: cuando pedir revision tecnica",
+      "shortTitle": "Calefont no enciende",
+      "description": "Orientacion segura para problemas de encendido, agua caliente y mantencion de calefont sin dar instrucciones peligrosas.",
+      "serviceSlug": "calefont",
+      "categoryId": "hogar",
+      "specialty": "calefont",
+      "searchParams": { "categoria": "hogar", "especialidad": "calefont" },
+      "warning": "Si hay olor a gas, corta suministro si es seguro, ventila y contacta emergencia o profesional autorizado.",
+      "steps": ["No manipules conexiones de gas", "Identifica marca y modelo", "Registra sintomas y codigos de error", "Solicita revision profesional"],
+      "localPages": [
+        { "communeSlug": "providencia", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 86, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Puedo prenderlo manualmente?", "answer": "No recomendamos forzar encendido ni intervenir gas. La revision debe ser profesional." },
+        { "question": "Que informacion ayuda?", "answer": "Fotos del equipo, marca, modelo, sintomas, si hay chispa y si otros artefactos tienen gas." },
+        { "question": "La mantencion evita fallas?", "answer": "La mantencion preventiva ayuda, pero cada equipo requiere revision segun uso y antiguedad." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 86,
+      "indexPolicy": "index",
+      "priority": 0.74,
+      "image": "/assets/oficios/calefont/calefont-revision-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "corte-electrico",
+      "title": "Corte electrico o tablero con falla",
+      "shortTitle": "Corte electrico",
+      "description": "Como describir una falla electrica y cuando llamar a un electricista verificado sin exponerse a riesgo.",
+      "serviceSlug": "electricidad",
+      "categoryId": "hogar",
+      "specialty": "electricidad",
+      "searchParams": { "categoria": "hogar", "especialidad": "electricidad" },
+      "warning": "Si hay chispas, olor a quemado o tablero caliente, no manipules el sistema y corta suministro solo si es seguro.",
+      "steps": ["Identifica si afecta toda la vivienda o un circuito", "Desconecta artefactos sospechosos", "Evita abrir tableros", "Solicita diagnostico tecnico"],
+      "localPages": [
+        { "communeSlug": "las-condes", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 88, "hasEnoughSpecialists": true, "hasEnoughDemand": true },
+        { "communeSlug": "vitacura", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 82, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Debo subir el automatico?", "answer": "Solo si no hay olor, chispas ni calor en el tablero. Si vuelve a caer, requiere diagnostico." },
+        { "question": "Que datos envio al electricista?", "answer": "Foto del tablero cerrado, zonas afectadas y que estaba conectado al momento del corte." },
+        { "question": "Puede ser problema externo?", "answer": "Si afecta a vecinos o edificio completo, puede requerir coordinacion con administracion o distribuidora." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 88,
+      "indexPolicy": "index",
+      "priority": 0.76,
+      "image": "/assets/oficios/electricidad/electricidad-tablero-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "porton-no-funciona",
+      "title": "Porton no funciona: diagnostico para accesos de comunidades",
+      "shortTitle": "Porton no funciona",
+      "description": "Guia para describir fallas de portones, accesos y motores sin manipular equipos electricos ni mecanismos de riesgo.",
+      "serviceSlug": "portones",
+      "categoryId": "comunidades-edificios",
+      "specialty": "portones",
+      "searchParams": { "categoria": "comunidades-edificios", "especialidad": "portones" },
+      "warning": "No fuerces motores, brazos ni tableros. Si el porton queda abierto o trabado, coordina seguridad y solicita diagnostico profesional.",
+      "steps": ["Indica si el porton no abre, no cierra o se detiene", "Toma fotos del motor y control sin abrir tableros", "Registra horarios y frecuencia de la falla", "Coordina acceso para diagnostico con administracion"],
+      "localPages": [
+        { "communeSlug": "vitacura", "editorialStatus": "approved", "indexPolicy": "index", "contentScore": 84, "hasEnoughSpecialists": true, "hasEnoughDemand": true }
+      ],
+      "faqs": [
+        { "question": "Puede ser falla electrica?", "answer": "Si. Por seguridad no se deben abrir tableros ni intervenir conexiones sin especialista." },
+        { "question": "Que informacion necesita el tecnico?", "answer": "Tipo de porton, sintomas, fotos externas, marca visible del motor y si afecta entrada o salida de residentes." },
+        { "question": "Sirve para comunidades?", "answer": "Si, la pagina esta pensada para administraciones que requieren continuidad de acceso y registro de mantenciones." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 84,
+      "indexPolicy": "index",
+      "priority": 0.7,
+      "image": "/assets/oficios/cerrajeria/cerrajeria-puerta-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    }
+  ],
+  "seoWorkerAcquisitionPages": [
+    {
+      "slug": "gasfiter",
+      "title": "Trabaja como gasfiter en OficiosPro",
+      "shortTitle": "Gasfiter",
+      "description": "Crea un perfil fundador para ofrecer servicios de gasfiteria, filtraciones, calefont y reparaciones sanitarias sin promesas de ingresos garantizados.",
+      "categoryId": "hogar",
+      "specialty": "gasfiteria",
+      "searchParams": { "categoria": "hogar", "especialidad": "gasfiteria" },
+      "benefits": ["Perfil verificado", "Visibilidad por servicio y comuna", "Solicitudes ordenadas", "Reputacion y trabajos completados"],
+      "requirements": ["Identidad verificable", "Servicios claros", "Cobertura declarada", "Tarifa esperada en CLP"],
+      "relatedProblems": ["filtracion-de-agua", "calefont-no-enciende"],
+      "faqs": [
+        { "question": "Tiene costo inicial?", "answer": "La invitacion fundadora puede operar sin costo inicial segun etapa del piloto. OficiosPro comunicara cambios con anticipacion." },
+        { "question": "OficiosPro garantiza trabajos?", "answer": "No. La plataforma da visibilidad y ordena solicitudes, pero no promete volumen ni ingresos garantizados." },
+        { "question": "Que documentos se piden?", "answer": "Datos de contacto, servicios, cobertura y documentos de verificacion cuando aplique, tratados como informacion privada." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 88,
+      "indexPolicy": "index",
+      "priority": 0.75,
+      "image": "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "electricista",
+      "title": "Trabaja como electricista en OficiosPro",
+      "shortTitle": "Electricista",
+      "description": "Postula como especialista electrico, declara tus servicios, cobertura y credenciales sin promesas de ingresos garantizados.",
+      "categoryId": "hogar",
+      "specialty": "electricidad",
+      "searchParams": { "categoria": "hogar", "especialidad": "electricidad" },
+      "benefits": ["Servicios multiservicio", "Perfil publico", "Solicitudes con contexto", "Historial de reputacion"],
+      "requirements": ["Identidad verificable", "Experiencia declarada", "Certificacion cuando el servicio lo exija", "Cobertura y tarifa esperada"],
+      "relatedProblems": ["corte-electrico"],
+      "faqs": [
+        { "question": "Debo tener certificacion SEC?", "answer": "Depende del tipo de servicio. Si un trabajo exige credencial, OficiosPro puede pedirla para revisar el perfil." },
+        { "question": "Como se define el precio?", "answer": "El especialista declara tarifa esperada en CLP y OficiosPro revisa creditos cliente antes de publicar servicios." },
+        { "question": "Puedo ofrecer varios servicios?", "answer": "Si, puedes declarar servicios principales y especialidades relacionadas." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 86,
+      "indexPolicy": "index",
+      "priority": 0.74,
+      "image": "/assets/oficios/electricidad/electricidad-tablero-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "jardinero",
+      "title": "Ofrece servicios de jardineria en OficiosPro",
+      "shortTitle": "Jardinero",
+      "description": "Crea un perfil para trabajos de mantencion, poda, riego y jardines con cobertura declarada y reputacion visible.",
+      "categoryId": "hogar",
+      "specialty": "jardineria",
+      "searchParams": { "categoria": "hogar", "especialidad": "jardineria" },
+      "benefits": ["Perfil fundador", "Solicitudes por comuna", "Servicios recurrentes", "Reputacion por trabajos"],
+      "requirements": ["Experiencia declarada", "Cobertura", "Fotos de trabajos si tienes", "Tarifa esperada"],
+      "relatedProblems": [],
+      "faqs": [
+        { "question": "Puedo ofrecer mantenciones recurrentes?", "answer": "Si, declara frecuencia y comunas donde puedes trabajar." },
+        { "question": "Necesito certificaciones?", "answer": "No siempre. Referencias, fotos y experiencia ayudan a validar el perfil." },
+        { "question": "Me pagan directamente?", "answer": "OficiosPro estructura pagos y creditos segun el modelo operacional vigente; se informa antes de publicar." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 84,
+      "indexPolicy": "index",
+      "priority": 0.68,
+      "image": "/assets/oficios/jardineria/jardineria-poda-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "pintor",
+      "title": "Ofrece servicios de pintura en OficiosPro",
+      "shortTitle": "Pintor",
+      "description": "Crea un perfil fundador para pintura interior, fachadas, retoques y terminaciones con servicios claros y cobertura declarada.",
+      "categoryId": "hogar",
+      "specialty": "pintura",
+      "searchParams": { "categoria": "hogar", "especialidad": "pintura" },
+      "benefits": ["Perfil publico", "Solicitudes con fotos y contexto", "Servicios por comuna", "Reputacion por trabajos completados"],
+      "requirements": ["Experiencia declarada", "Cobertura", "Fotos de trabajos si tienes", "Tarifa esperada en CLP"],
+      "relatedProblems": [],
+      "faqs": [
+        { "question": "Puedo ofrecer pintura y terminaciones?", "answer": "Si, puedes declarar varios servicios relacionados siempre que el alcance quede claro para el cliente." },
+        { "question": "OficiosPro promete trabajos?", "answer": "No. La plataforma entrega visibilidad y ordena solicitudes, pero no garantiza volumen ni ingresos." },
+        { "question": "Necesito subir galeria?", "answer": "No es obligatoria para iniciar, aunque fotos de trabajos ayudan a revisar y fortalecer el perfil." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 83,
+      "indexPolicy": "index",
+      "priority": 0.66,
+      "image": "/assets/oficios/pintura/pintura-interior-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    }
+  ],
+  "seoBusinessSegments": [
+    {
+      "slug": "mantencion-oficinas",
+      "title": "Mantencion tecnica para oficinas y locales",
+      "shortTitle": "Mantencion oficinas",
+      "description": "Organiza solicitudes de electricidad, climatizacion, pintura, gasfiteria y reparaciones menores para equipos de operaciones.",
+      "categoryId": "empresas",
+      "specialty": "mantencion-oficinas",
+      "searchParams": { "segmento": "mantencion-oficinas" },
+      "includedServices": ["Solicitudes multi-sede", "Creditos empresa", "Historial de trabajos", "Coordinacion con especialistas"],
+      "faqs": [
+        { "question": "Sirve para varias sucursales?", "answer": "Si, la propuesta empresas considera control de solicitudes y creditos para distintos puntos de atencion." },
+        { "question": "Hay facturacion?", "answer": "El modelo contempla documentacion tributaria y conciliacion de creditos segun la operacion de OficiosPro." },
+        { "question": "Tiene SLA?", "answer": "Los SLA formales son parte de una fase futura; hoy se comunica disponibilidad real y prioridad operativa." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 86,
+      "indexPolicy": "index",
+      "priority": 0.7,
+      "image": "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "refrigeracion-comercial",
+      "title": "Refrigeracion comercial para empresas",
+      "shortTitle": "Refrigeracion comercial",
+      "description": "Pagina editorial para negocios que requieren diagnostico, mantencion y continuidad operacional en frio comercial.",
+      "categoryId": "empresas-industria",
+      "specialty": "refrigeracion-comercial",
+      "searchParams": { "categoria": "empresas-industria", "especialidad": "refrigeracion-comercial" },
+      "includedServices": ["Diagnostico", "Mantencion preventiva", "Coordinacion de urgencias", "Historial por equipo"],
+      "faqs": [
+        { "question": "Atiende restaurantes y comercio?", "answer": "La pagina esta orientada a comercios que dependen de continuidad en frio y requieren especialistas verificados." },
+        { "question": "Puedo centralizar solicitudes?", "answer": "Si, Club Empresas busca centralizar solicitudes, creditos y seguimiento." },
+        { "question": "Se publica como urgencia?", "answer": "Las urgencias se deben declarar con informacion precisa para priorizar respuesta." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 82,
+      "indexPolicy": "index",
+      "priority": 0.68,
+      "image": "/assets/oficios/agro/agro-camara-frio-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    }
+  ],
+  "seoCommunityServices": [
+    {
+      "slug": "portones",
+      "title": "Mantencion y diagnostico de portones para comunidades",
+      "shortTitle": "Portones",
+      "description": "Coordina especialistas para portones, accesos y fallas recurrentes en comunidades y edificios.",
+      "categoryId": "comunidades-edificios",
+      "specialty": "portones",
+      "searchParams": { "categoria": "comunidades-edificios", "especialidad": "portones" },
+      "includedServices": ["Diagnostico de falla", "Revision de motor y acceso", "Coordinacion con administracion", "Historial de mantenciones"],
+      "faqs": [
+        { "question": "Puede solicitarlo una administracion?", "answer": "Si, la pagina esta pensada para administradores, comites y equipos de mantencion." },
+        { "question": "Que informacion preparar?", "answer": "Fotos del porton, tipo de falla, marca del motor si existe y frecuencia del problema." },
+        { "question": "Se puede pedir mantencion preventiva?", "answer": "Si, especialmente en comunidades con alto flujo vehicular." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 84,
+      "indexPolicy": "index",
+      "priority": 0.66,
+      "image": "/assets/oficios/cerrajeria/cerrajeria-puerta-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "salas-de-bombas",
+      "title": "Especialistas para salas de bombas en comunidades",
+      "shortTitle": "Salas de bombas",
+      "description": "Pagina de comunidades para diagnostico, continuidad operacional y mantencion preventiva de salas de bombas.",
+      "categoryId": "comunidades-edificios",
+      "specialty": "salas-de-bombas",
+      "searchParams": { "categoria": "comunidades-edificios", "especialidad": "salas-de-bombas" },
+      "includedServices": ["Revision de equipos", "Diagnostico de presion", "Agenda preventiva", "Registro de intervenciones"],
+      "faqs": [
+        { "question": "Que comunidades deberian revisar bombas?", "answer": "Edificios con fallas de presion, ruidos, cortes o mantenciones vencidas deberian coordinar revision profesional." },
+        { "question": "Puede haber urgencia?", "answer": "Si, una falla puede afectar suministro. La solicitud debe incluir sintomas y fotos del tablero/equipo sin manipularlo." },
+        { "question": "OficiosPro reemplaza proveedor fijo?", "answer": "No necesariamente. Puede apoyar diagnosticos, mantenciones y continuidad segun disponibilidad." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 83,
+      "indexPolicy": "index",
+      "priority": 0.64,
+      "image": "/assets/oficios/industria/industria-bombas-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    },
+    {
+      "slug": "camaras",
+      "title": "Camaras y seguridad tecnica para comunidades",
+      "shortTitle": "Camaras",
+      "description": "Coordina revision, diagnostico y mantencion de camaras, redes y puntos de seguridad en edificios y condominios.",
+      "categoryId": "comunidades-edificios",
+      "specialty": "camaras",
+      "searchParams": { "categoria": "comunidades-edificios", "especialidad": "camaras" },
+      "includedServices": ["Revision de camaras", "Diagnostico de red", "Coordinacion con administracion", "Registro de fallas recurrentes"],
+      "faqs": [
+        { "question": "Sirve para edificios con varias camaras?", "answer": "Si, la solicitud puede indicar cantidad de puntos, sintomas, ubicacion y prioridad operativa." },
+        { "question": "Se manipulan grabadores o redes?", "answer": "Solo especialistas con alcance definido deben intervenir equipos. La pagina orienta a preparar informacion, no a reparar por cuenta propia." },
+        { "question": "Puede ser mantencion preventiva?", "answer": "Si, especialmente cuando hay fallas recurrentes, baja visibilidad o perdida de grabaciones." }
+      ],
+      "minimumContentScore": 80,
+      "contentScore": 82,
+      "indexPolicy": "index",
+      "priority": 0.62,
+      "image": "/assets/oficios/electricidad/electricidad-instalacion-01.jpg",
+      "lastReviewedAt": "2026-06-15",
+      "editorialStatus": "approved"
+    }
+  ]
+}

@@ -1,2 +1,13 @@
 User-agent: *
 Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /bolsa/
+Disallow: /checkout/
+Disallow: /login/
+Disallow: /dashboard-cliente/
+Disallow: /dashboard-empresa/
+Disallow: /dashboard-especialista/
+Disallow: /agenda-especialista/
+
+Sitemap: https://www.oficiospro.cl/sitemap.xml
