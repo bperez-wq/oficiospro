@@ -23,7 +23,7 @@ Servicios completados, payout bruto, comisión, retención, neto, documento requ
 Columnas: `payoutId; especialista; solicitud; brutoCLP; comisionCLP; payoutCLP; retencionCLP; netoCLP; documentoRequerido; estadoDocumento; estadoPago; pagadoEl`
 
 ### D. Comisiones (`commissionsReport`) — mensual
-Comisión por servicio y mes, margen por categoría y por especialista (agrupaciones `byCategory`, `bySpecialist`; margen por comuna se habilita al persistir comuna en `service_requests`).
+Comisión OficiosPro por servicio y mes, agrupada por categoría y por especialista (agrupaciones `byCategory`, `bySpecialist`; comuna se habilita al persistir comuna en `service_requests`).
 
 Columnas: `id; solicitud; especialista; cliente; comisionCLP; comisionCreditos; tasa; ivaCLP; fecha`
 
@@ -33,7 +33,7 @@ Boletas/facturas OP SpA, documentos de especialistas y notas de crédito, con fo
 Columnas: `id; emisor; rutEmisor; rutReceptor; tipo; folio; montoCLP; netoCLP; ivaCLP; retencionCLP; estado; emitidoEl`
 
 ### F. Reporte tributario consolidado (`generateTaxReport`) — mensual
-IVA débito estimado, retenciones de honorarios a declarar, ventas, costos de especialistas y margen bruto. Cifras de apoyo al contador; **no constituye declaración**.
+IVA débito estimado, retenciones de honorarios a declarar, ventas, costos de especialistas y Comisión OficiosPro registrada. Cifras de apoyo al contador; **no constituye declaración**.
 
 ## 2. Conciliación (`reconciliationReport` / pestaña Alertas)
 

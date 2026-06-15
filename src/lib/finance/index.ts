@@ -5,6 +5,7 @@ export * from "@/lib/finance/creditOperations";
 export * from "@/lib/finance/specialistPayouts";
 export {
   calculateCustomerPriceFromSpecialistTarget,
+  calculateCustomerPriceWithPlatformCommission,
   calculateExemptInvoiceScenario,
   calculateFeeReceiptScenario,
   calculateInvoiceAfectaScenario,
@@ -17,5 +18,6 @@ export {
   roundCredits,
 } from "@/lib/finance/specialistPayoutCalculator";
 export * from "@/lib/finance/taxDocuments";
+export * from "@/lib/finance/taxDocumentControls";
 export * from "@/lib/finance/taxDocumentProviders";
 export * from "@/lib/finance/accountingReports";

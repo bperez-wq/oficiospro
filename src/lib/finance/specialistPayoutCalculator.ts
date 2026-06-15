@@ -70,6 +70,10 @@ export function calculateCustomerPriceFromSpecialistTarget(input: SpecialistPayo
   return calculatePayoutFromTarget(input);
 }
 
+export function calculateCustomerPriceWithPlatformCommission(input: SpecialistPayoutCalculationInput) {
+  return calculatePayoutFromTarget(input);
+}
+
 export function calculatePayoutFromTarget(input: SpecialistPayoutCalculationInput): SpecialistPayoutCalculationResult {
   const taxConfig = input.taxConfig ?? chileTaxConfig2026;
   const rule = input.commissionRule;

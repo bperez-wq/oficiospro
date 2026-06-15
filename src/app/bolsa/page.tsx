@@ -6,6 +6,7 @@ import { BookingDrawer } from "@/components/BookingDrawer";
 import { checkoutUrlForItems } from "@/components/CartDrawer";
 import { availabilityDotStyles, levelChipStyles } from "@/components/SpecialistCompactCard";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
+import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { availabilityLabels, specialists as catalogSpecialists, type Specialist } from "@/data/mock";
 import { formatCLP } from "@/data/marketplace";
 import { addCartItem, getCartItems, getSpecialistProfileUrl, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
@@ -87,6 +88,7 @@ export default function BolsaPage() {
     const quote = quoteForItem(item);
     if (!quote?.offer || isCartItemCheckoutReady(item)) return;
     const credits = Math.max(0, Number(quote.offer.creditPrice ?? quote.offer.maxCredits ?? quote.offer.minCredits ?? item.credits ?? 0));
+    const amountCLP = credits * defaultCommercialConfig.customerCreditValueCLP;
     updateVirtualQuoteStatus(quote.id, "aprobada_cliente", "Cliente aprobo la cotizacion virtual. Los creditos se retendran al continuar al checkout.");
     void syncVirtualQuoteDecision(quote, "approve");
     addCartItem({
@@ -94,8 +96,8 @@ export default function BolsaPage() {
       type: "quote_request",
       pricingMode: "quote_required",
       credits,
-      amountCLP: credits * 1000,
-      priceCLP: credits * 1000,
+      amountCLP,
+      priceCLP: amountCLP,
       title: `${item.serviceName ?? item.title} - cotizacion aprobada`,
       intendedAction: item.intendedAction ?? "virtual_quote",
       status: "quote_approved",
@@ -245,7 +247,7 @@ export default function BolsaPage() {
                 </Link>
               </div>
               <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-                Pago protegido: al reservar, tus créditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.
+                Precio total en creditos. Incluye gestion de plataforma y pago protegido: al reservar, tus creditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.
               </p>
               <p className="rounded-2xl bg-brand-soft p-3 text-xs font-bold leading-5 text-brand-dark">
                 Piloto OficiosPro: tu seleccion queda guardada para comparar. Algunas solicitudes pueden requerir confirmacion operacional antes de cerrar agenda o pago.

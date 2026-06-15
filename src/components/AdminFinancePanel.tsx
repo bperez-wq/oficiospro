@@ -333,7 +333,7 @@ export function AdminFinancePanel() {
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <DashboardMetricCard label="Pagos aprobados del mes" value={approvedThisMonth.length.toString()} detail={formatCLP(approvedThisMonth.reduce((total, item) => total + item.amountCLP, 0))} tone="brand" />
         <DashboardMetricCard label="Créditos emitidos" value={issuedCredits.toString()} detail={`${reservedCredits} retenidos por pago protegido`} />
-        <DashboardMetricCard label="Comisión estimada" value={formatCLP(state.commissions.reduce((total, item) => total + item.commissionCLP, 0))} detail={`Margen bruto ${formatCLP(taxSummary.grossMarginCLP)}`} />
+        <DashboardMetricCard label="Comisión OficiosPro" value={formatCLP(state.commissions.reduce((total, item) => total + item.commissionCLP, 0))} detail={`Comisión registrada ${formatCLP(taxSummary.grossMarginCLP)}`} />
         <DashboardMetricCard label="Payouts pendientes" value={pendingPayouts.length.toString()} detail={`${pendingDocs.length} documentos pendientes · ${alerts.length} alertas`} />
       </div>
 
@@ -429,7 +429,7 @@ export function AdminFinancePanel() {
             formatCLP(item.commissionCLP),
             formatCLP(item.ivaAmount),
           ])}
-          footnote="En el modelo A la comisión es margen interno (no se documenta por separado). Tratamiento de IVA por validar con contador."
+          footnote="La Comisión OficiosPro estándar es 9,5% + IVA en el modelo de formalización. Tratamiento tributario final por validar con contador."
         />
       ) : null}
 
@@ -506,7 +506,7 @@ export function AdminFinancePanel() {
             <span>Ventas: {formatCLP(taxSummary.salesTotalCLP)}</span>
             <span>IVA débito estimado: {formatCLP(taxSummary.ivaDebitEstimatedCLP)}</span>
             <span>Retenciones honorarios: {formatCLP(taxSummary.honorariosRetentionToDeclareCLP)}</span>
-            <span className="text-ink">Margen bruto: {formatCLP(taxSummary.grossMarginCLP)}</span>
+            <span className="text-ink">Comisión registrada: {formatCLP(taxSummary.grossMarginCLP)}</span>
           </div>
           <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs font-bold text-muted">{taxSummary.note}</p>
           <div className="mt-4 flex flex-wrap gap-2">

@@ -6,6 +6,7 @@ import type { Specialist } from "@/data/mock";
 import { AvailabilityCalendar } from "@/components/AvailabilityCalendar";
 import { InstantContactPanel } from "@/components/InstantContactPanel";
 import { TimeSlotPicker } from "@/components/TimeSlotPicker";
+import { defaultCommercialConfig } from "@/data/commercialConfig";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { getSpecialistProfileImage } from "@/data/profileImages";
 import { formatDisplayDate, getAvailabilitySummary, getSlotsForDate, getWeekDates, type TimeSlot } from "@/lib/availability";
@@ -180,7 +181,7 @@ export function BookingDrawer({
           type: selectedService.pricingMode === "visit_then_quote" ? "visit" : needsQuoteOnly ? "quote_request" : "service_request",
           title: selectedService.name,
           credits: heldCredits,
-          amountCLP: heldCredits * 1000,
+          amountCLP: heldCredits * defaultCommercialConfig.customerCreditValueCLP,
           specialistId: specialist.id,
           specialistName: specialist.name,
           specialistSlug: specialist.slug,

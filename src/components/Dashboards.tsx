@@ -608,7 +608,7 @@ export function SpecialistDashboard() {
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   <MiniMetric label="Total cliente" value={`${quoteTotalCredits(quote) || "por definir"} cr`} />
                   <MiniMetric label="Pago estimado" value={`${quote.proposal?.specialistPayoutCredits ?? "pendiente"} cr`} />
-                  <MiniMetric label="Margen" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
+                  <MiniMetric label="Comision OficiosPro" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button className="btn-secondary" type="button" onClick={() => sendProposal(quote.id)}>

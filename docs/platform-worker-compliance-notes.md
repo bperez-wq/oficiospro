@@ -23,7 +23,7 @@ El cliente puede ver créditos para simplificar la experiencia. Internamente, Of
 
 - Tarifa esperada del especialista.
 - Precio cliente estimado.
-- Margen de plataforma.
+- Comision OficiosPro.
 - Payout especialista.
 - Devoluciones, retenciones y ajustes.
 

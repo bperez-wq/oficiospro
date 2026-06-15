@@ -322,6 +322,9 @@ export type PendingSpecialistProfile = {
     canIssueInvoice?: boolean;
     status?: string;
   };
+  documentPolicyAccepted?: boolean;
+  documentPolicyAcceptedAt?: string;
+  documentPolicyVersion?: string;
   reviewStatus?: "pendiente_revision" | "info_solicitada" | "aprobado" | "rechazado";
   certificationStatus?: "sin_certificacion_declarada" | "certificacion_declarada_pendiente_revision";
   submittedAt: string;
@@ -1725,7 +1728,7 @@ function pendingServiceToFlexibleService(service: PendingSpecialistService, requ
     estimatedDurationMaxMinutes: service.estimatedDurationMaxMinutes ?? service.estimatedDurationMinutes,
     specialistPayoutCLP: Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0),
     specialistExpectedPayoutCLP: Number(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP ?? 0),
-    platformMarginCredits: Math.max(0, clientCredits - Math.round(Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0) / 1000)),
+    platformMarginCredits: Math.max(0, clientCredits - Math.round(Number(service.specialistApprovedPayoutCLP ?? service.specialistPayoutCLP ?? service.specialistExpectedPayoutCLP ?? 0) / defaultCommercialConfig.creditValueCLP)),
     materialsIncluded: service.materialsIncludedBoolean ?? String(service.materialsIncluded ?? "").toLowerCase().includes("incl"),
     materialsChargedSeparately: service.materialsChargedSeparately ?? String(service.materialsIncluded ?? "").toLowerCase().includes("aparte"),
     initialVisitFree: Boolean(service.initialVisitFree),

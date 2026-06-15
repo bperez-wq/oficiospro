@@ -220,7 +220,7 @@ export function AdminOperationalTablePage({ title, eyebrow, description, endpoin
               ) : null}
               <div className="mt-5 grid gap-3">
                 {columns.map((column) => (
-                  <Info key={column} label={column} value={selected[column]} />
+                  <Info key={column} label={friendlyColumnLabel(column)} value={selected[column]} />
                 ))}
               </div>
               <details className="mt-4 rounded-2xl border border-line bg-slate-50 p-4">
@@ -244,6 +244,14 @@ function Info({ label, value }: { label: string; value: unknown }) {
       <strong className="mt-1 block break-words text-sm text-ink">{formatValue(value)}</strong>
     </div>
   );
+}
+
+function friendlyColumnLabel(column: string) {
+  const labels: Record<string, string> = {
+    platformMarginCLP: "Comision OficiosPro CLP",
+    platformMarginCredits: "Comision OficiosPro creditos",
+  };
+  return labels[column] ?? column;
 }
 
 function rowTitle(row: AdminRow) {

@@ -69,6 +69,36 @@ customerGrossPriceCLP =
 
 Luego se convierte a creditos con `creditValueCLP` y `creditRoundingStep`.
 
+## Helper central
+
+Para servicios, cotizaciones aprobadas y formalizacion se debe usar:
+
+`calculateCustomerPriceWithPlatformCommission()`
+
+Este helper vive en:
+
+`src/lib/finance/specialistPayoutCalculator.ts`
+
+Y queda reutilizado por:
+
+- formalizacion,
+- calculo preliminar de creditos del especialista,
+- cotizaciones/precio cliente cuando parten desde tarifa especialista,
+- vistas admin que necesitan ver CLP + creditos + comision.
+
+## Planes, packs y Club Hogar
+
+Los planes, packs de creditos y Club Hogar son precios comerciales independientes.
+
+La regla **Comision OficiosPro 9,5% + IVA** aplica a servicios/cotizaciones cuando se calcula el precio cliente desde el documento o tarifa del especialista. No se usa para recalcular:
+
+- precio mensual de Club Hogar,
+- packs de creditos,
+- beneficios promocionales,
+- compra directa de creditos.
+
+Cada cobro de plan/pack debe documentarse al cliente segun la regla tributaria validada por contador.
+
 ## UI
 
 Especialista:
@@ -93,7 +123,13 @@ Checkout/Bolsa:
 
 - no se cambia logica de pago real.
 - si se muestra desglose avanzado, usar "Comision OficiosPro" o "Incluye gestion de plataforma y pago protegido".
-- no mostrar lenguaje de margen al cliente.
+- no mostrar lenguaje de comision interna al cliente.
+
+## Anti-factoring y documentos no autorizados
+
+La comision no habilita al especialista a emitir documentos libremente. Todo documento emitido a OP SpA debe tener autorizacion interna previa.
+
+Si llega un documento sin autorizacion, duplicado, con monto/emisor distinto o cedido/factorizado sin autorizacion escrita, el payout queda bloqueado y debe revisarse en `Documentos tributarios`.
 
 ## Riesgos y validaciones
 

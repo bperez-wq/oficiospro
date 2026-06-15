@@ -188,10 +188,10 @@ export const defaultQuoteAgreements: QuoteAgreement[] = [
       platformMarginCredits: 14,
     },
     customerComment: "Aceptado por administracion de comunidad.",
-    platformNote: "Margen revisado y propuesta aprobada.",
+    platformNote: "Comision revisada y propuesta aprobada.",
     history: [
       "El especialista envio una propuesta.",
-      "OficiosPro reviso margen y condiciones.",
+      "OficiosPro reviso comision y condiciones.",
       "Propuesta aceptada. Se retendran los creditos.",
     ],
     createdAt: "2026-06-04T10:00:00.000Z",

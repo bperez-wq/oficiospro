@@ -55,7 +55,7 @@ LEADS_REPLY_TO_EMAIL=bperez@oficiospro.cl
 - Las certificaciones son declarativas y opcionales.
 - El especialista puede marcar `No tengo certificaciones formales`.
 - OficiosPro guarda la postulacion con `status = postulado`, `reviewStatus = pendiente_revision` y `certificationStatus` segun lo declarado.
-- El especialista declara `specialistExpectedPayoutCLP`; no controla creditos cliente, margen ni valor del credito.
+- El especialista declara `specialistExpectedPayoutCLP`; no controla creditos cliente, Comision OficiosPro ni valor del credito.
 - El Worker calcula `calculatedClientCredits` internamente desde la tarifa CLP declarada antes de guardar/enviar el payload.
 - Si `DB` no esta configurada, el Worker responde sin romper la UI, intenta email si `RESEND_API_KEY` existe y el frontend conserva respaldo en localStorage.
 - Si `RESEND_API_KEY` no esta configurada, el lead puede quedar guardado y la UI informa recepcion sin prometer correo.

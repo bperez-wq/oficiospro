@@ -19,6 +19,9 @@ Antes de abrir pagos reales a especialistas, validar y documentar:
 - Si factura afecta o exenta aplica por giro del especialista.
 - Datos reales de receptor OP SpA: razon social, RUT, giro, direccion y email.
 - Requisitos de respaldo para materiales y repuestos.
+- Procedimiento para autorizar documentos antes de que el especialista los emita.
+- Procedimiento para reclamar/rechazar documentos recibidos sin autorizacion previa.
+- Validar si y como OP SpA debe revisar cesion/factoring de DTE antes de pagar.
 
 ## Comision OficiosPro
 
@@ -35,6 +38,8 @@ Antes de abrir pagos reales a especialistas, validar y documentar:
 - Documento requerido antes de liberar pago.
 - Cuenta bancaria validada.
 - Politica de documentos rechazados.
+- Politica de documentos duplicados, emitidos por RUT distinto o con monto distinto.
+- Politica contractual que prohiba ceder/factorizar documentos a OP SpA sin autorizacion escrita.
 - Politica de pagos bloqueados.
 - Reporte mensual de retenciones y documentos.
 
@@ -47,6 +52,7 @@ Antes de abrir pagos reales a especialistas, validar y documentar:
 ## Sistemas futuros
 
 - Integracion DTE/boletas electronicas.
+- Integracion o revision manual de estado SII y registro de cesion/factoring.
 - Export contable mensual.
 - Conciliacion Mercado Pago.
 - Idempotencia ante webhooks duplicados.

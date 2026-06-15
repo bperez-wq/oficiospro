@@ -13,8 +13,9 @@ Estado: operativo referencial, pendiente de validacion contador/SII antes de pag
    - boleta de honorarios,
    - factura afecta,
    - o factura exenta.
-7. Admin valida documento, perfil tributario, cuenta bancaria y revision contador/SII.
-8. Solo con documento validado el payout puede pasar a listo para pago.
+7. Admin valida que el documento tenga autorizacion interna previa, calce con el monto/emisor/receptor y no tenga cesion/factoring no autorizado.
+8. Admin valida documento, perfil tributario, cuenta bancaria y revision contador/SII.
+9. Solo con documento validado el payout puede pasar a listo para pago.
 
 ## Comision OficiosPro
 
@@ -43,6 +44,17 @@ Calculo referencial sujeto a validacion contable/SII.
 - `pending_sii_validation`: falta validar capacidad SII.
 - `verified`: perfil tributario validado para operar.
 
+## Politica documental OP SpA
+
+El especialista no debe emitir boleta/factura a OP SpA hasta que OficiosPro genere una autorizacion interna.
+
+Ademas:
+
+- No se permite ceder, factorizar o transferir documentos emitidos a OP SpA sin autorizacion previa y por escrito.
+- Documentos sin autorizacion pueden ser reclamados, rechazados y bloquear el payout.
+- Diferencias de monto, emisor, receptor o folio duplicado requieren revision manual.
+- Esta politica debe respaldarse en contrato/terminos revisados por abogado y contador.
+
 ## Vistas agregadas
 
 - Registro especialista: paso "Formalizacion" para declarar documento posible.
@@ -56,3 +68,4 @@ Calculo referencial sujeto a validacion contable/SII.
 - No se liberan pagos reales desde estas pantallas.
 - No se almacenan archivos sensibles si no existe storage privado.
 - Los calculos son referenciales y deben validarse antes de operar.
+- La prohibicion de cesion/factoring no reemplaza una clausula legal formal.

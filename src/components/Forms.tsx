@@ -532,6 +532,7 @@ export function SpecialistRegisterForm() {
   const [otherCertificationText, setOtherCertificationText] = useState("");
   const [consentContact, setConsentContact] = useState(false);
   const [consentVerification, setConsentVerification] = useState(false);
+  const [consentDocumentPolicy, setConsentDocumentPolicy] = useState(false);
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -724,8 +725,8 @@ export function SpecialistRegisterForm() {
       setStatus("Completa nombre, telefono y trabajo realizado en cada referencia iniciada, o dejala vacia para agregarla despues.");
       return false;
     }
-    if (currentStep === 6 && (!consentContact || !consentVerification)) {
-      setStatus("Autoriza el contacto y la revision de antecedentes para enviar tu postulacion.");
+    if (currentStep === 6 && (!consentContact || !consentVerification || !consentDocumentPolicy)) {
+      setStatus("Autoriza el contacto, la revision de antecedentes y la politica documental para enviar tu postulacion.");
       return false;
     }
     setStatus("");
@@ -798,8 +799,8 @@ export function SpecialistRegisterForm() {
         clientCredits: service.pricingMode === "fixed" ? calculatedClientCredits : 0,
         pricingStatus: marginWarningForService(service) ? "pending_review" as const : "approved" as const,
         pricingNotesInternal: marginWarningForService(service)
-          ? "Margen bajo detectado. OficiosPro debe revisar antes de publicar."
-          : "Tarifa declarada por especialista. OficiosPro calcula creditos cliente antes de publicar.",
+          ? "Comision OficiosPro baja para el monto declarado. Revisar antes de publicar."
+          : "Tarifa declarada por especialista. OficiosPro calcula creditos cliente y comision antes de publicar.",
         emergencyAvailable: service.emergency,
         active: true,
         creditPrice: calculatedClientCredits,
@@ -852,6 +853,9 @@ export function SpecialistRegisterForm() {
         ...formalization,
         status: formalization.taxType === "unknown" ? "pending_formalization" : "pending_accountant_sii_review",
       },
+      documentPolicyAccepted: consentDocumentPolicy,
+      documentPolicyAcceptedAt: now,
+      documentPolicyVersion: "op-spa-document-authorization-v1",
       submittedAt: now,
     } satisfies Omit<PendingSpecialistProfile, "id">);
     setMockSession({
@@ -936,6 +940,8 @@ export function SpecialistRegisterForm() {
         notes: services.map((service) => service.specialistComments).filter(Boolean).join("\n"),
         consentContact,
         consentVerification,
+        consentDocumentPolicy,
+        documentPolicyVersion: "op-spa-document-authorization-v1",
         sourcePage: "/registro-especialista",
         sourceComponent: "SpecialistRegisterForm",
         sourceButton: "Crear perfil fundador",
@@ -1248,6 +1254,13 @@ export function SpecialistRegisterForm() {
               <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} required />
               Acepto que OficiosPro revise la informacion enviada y pueda solicitar antecedentes adicionales.
             </label>
+            <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
+              <input type="checkbox" checked={consentDocumentPolicy} onChange={(event) => setConsentDocumentPolicy(event.target.checked)} required />
+              Acepto emitir documentos tributarios a OP SpA solo cuando exista autorizacion interna previa, y no cederlos, factorizarlos ni transferirlos sin autorizacion escrita de OficiosPro.
+            </label>
+            <p className="text-xs font-bold leading-5 text-brand-dark/80">
+              Los documentos no autorizados, duplicados o con cesion no autorizada pueden ser reclamados, rechazados y bloquear la liquidacion hasta revision contable/legal. Esta politica no reemplaza contrato, asesoria legal ni validacion de contador.
+            </p>
           </fieldset>
         </section>
 

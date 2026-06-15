@@ -79,13 +79,13 @@ El especialista emite **siempre a OP SpA**, nunca al cliente final:
 | Empresa exenta | Factura exenta | No | No |
 | Pendiente de formalización | **Ninguno posible → payout bloqueado** | — | — |
 
-### E. Comisión/margen de OficiosPro
-- En el Modelo A la comisión es **margen interno**: OP SpA documenta el total al cliente y registra el costo del especialista contra su documento. No se emite documento separado por comisión (el riesgo de documentarla aparte es duplicar ingreso). **[VALIDAR]**
+### E. Comisión OficiosPro
+- En el Modelo A OP SpA documenta el total al cliente y registra el costo del especialista contra su documento. No se emite documento separado por comisión sin validación, para evitar duplicar ingreso. **[VALIDAR]**
 - Cálculo formalización: `calculatePlatformCommission` usa la regla estándar configurable **Comisión OficiosPro = 9,5% + IVA** desde `taxConfig.platformCommission`, con base por defecto `specialist_gross_document`. Cualquier mínimo futuro debe quedar explícito en config y validado con contador/SII.
 
 ### F. Materiales y adicionales
 - Adicional (materiales, repuestos, mano de obra extra, urgencia, horas): requiere **aprobación del cliente** antes de retener créditos (`reserveApprovedAdditional` rechaza sin aprobación).
-- Comisión diferenciada: materiales 8%, mano de obra adicional 12%, urgencia con multiplicador (config).
+- Comisión estándar: adicionales/materiales deben revisarse contra la regla 9,5% + IVA salvo excepción futura versionada y validada.
 - Materiales con respaldo: boleta/factura del proveedor **[VALIDAR]** si conviene compra por OP SpA (crédito IVA) o reembolso al especialista.
 - Cotizaciones: `quote_required` no retiene créditos hasta aceptar; `visit_then_quote` retiene solo los créditos de visita.
 
@@ -137,7 +137,7 @@ El especialista emite **siempre a OP SpA**, nunca al cliente final:
 | Webhooks duplicados | Créditos duplicados | Idempotencia por eventId/paymentId | Alerta `duplicated_webhook` | — |
 | Reembolso sin nota de crédito | IVA pagado de más | `credit_note_required` + alerta crítica | Cierre mensual revisa alertas | Contador |
 | Materiales sin respaldo | Gasto rechazado | Adicional aprobado + documento por definir | Política de materiales | Contador |
-| Comisión vs margen confundidos | Reporte erróneo | `platform_commissions` separado del ingreso total | Definición contable escrita | Contador |
+| Comisión mal clasificada | Reporte erróneo | `platform_commissions` separado del ingreso total | Definición contable escrita | Contador |
 | OficiosPro como empleador | Contingencia laboral | Especialista define precios/horarios; multi-cliente | Contrato de servicios independiente | Abogado laboral |
 | Responsabilidad por calidad | Garantías/reclamos | Pago protegido + evidencia de cierre | Política de garantía y disputas | Abogado |
 

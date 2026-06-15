@@ -59,7 +59,7 @@ export function AdminPricingPanel() {
   };
   const calculatedCredits = calculateClientCreditsFromSpecialistPayout(sample);
   const estimatedClientPrice = estimateClientPriceCLP(sample);
-  const estimatedMargin = estimatePlatformMarginCLP(sample);
+  const estimatedCommission = estimatePlatformMarginCLP(sample);
 
   return (
     <section className="grid gap-5 rounded-[24px] border border-line bg-white p-5">
@@ -67,25 +67,25 @@ export function AdminPricingPanel() {
         <p className="eyebrow">Pricing interno</p>
         <h3 className="text-2xl font-black">Configuracion comercial interna</h3>
         <p className="mt-2 text-sm font-bold text-muted">
-          El especialista declara CLP. OficiosPro convierte esa tarifa a creditos cliente, margen y payout aprobado desde reglas internas.
+          El especialista declara CLP. OficiosPro convierte esa tarifa a creditos cliente usando Comision OficiosPro 9,5% + IVA. Los planes y packs mantienen precios comerciales independientes.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <PricingNumber label="Valor credito cliente CLP" value={config.customerCreditValueCLP} onChange={(value) => updateNumber("customerCreditValueCLP", value)} />
-        <PricingNumber label="Fee plataforma %" value={config.platformFeePercent * 100} onChange={(value) => updateNumber("platformFeePercent", value / 100)} />
-        <PricingNumber label="Costo pago %" value={config.paymentFeePercent * 100} onChange={(value) => updateNumber("paymentFeePercent", value / 100)} />
-        <PricingNumber label="Buffer riesgo %" value={config.riskBufferPercent * 100} onChange={(value) => updateNumber("riskBufferPercent", value / 100)} />
-        <PricingNumber label="Fee fijo servicio CLP" value={config.fixedServiceFeeCLP} onChange={(value) => updateNumber("fixedServiceFeeCLP", value)} />
+        <PricingNumber label="Comision referencia %" value={config.platformFeePercent * 100} onChange={(value) => updateNumber("platformFeePercent", value / 100)} />
+        <PricingNumber label="Costo pago legacy %" value={config.paymentFeePercent * 100} onChange={(value) => updateNumber("paymentFeePercent", value / 100)} />
+        <PricingNumber label="Buffer riesgo legacy %" value={config.riskBufferPercent * 100} onChange={(value) => updateNumber("riskBufferPercent", value / 100)} />
+        <PricingNumber label="Fee fijo legacy CLP" value={config.fixedServiceFeeCLP} onChange={(value) => updateNumber("fixedServiceFeeCLP", value)} />
         <PricingNumber label="Multiplicador urgencia" value={config.emergencyMultiplier} step="0.05" onChange={(value) => updateNumber("emergencyMultiplier", value)} />
         <PricingNumber label="Minimo creditos cliente" value={config.minimumClientCredits} onChange={(value) => updateNumber("minimumClientCredits", value)} />
         <PricingNumber label="Redondeo creditos" value={config.creditRoundingStep} onChange={(value) => updateNumber("creditRoundingStep", value)} />
         <PricingNumber label="Payout minimo especialista" value={config.minimumSpecialistPayoutCLP} onChange={(value) => updateNumber("minimumSpecialistPayoutCLP", value)} />
         <PricingNumber label="Payout maximo especialista" value={config.maximumSpecialistPayoutCLP} onChange={(value) => updateNumber("maximumSpecialistPayoutCLP", value)} />
-        <PricingNumber label="Margen minimo hogar" value={config.minimumHomeMarginCLP} onChange={(value) => updateNumber("minimumHomeMarginCLP", value)} />
-        <PricingNumber label="Margen minimo empresa" value={config.minimumCompanyMarginCLP} onChange={(value) => updateNumber("minimumCompanyMarginCLP", value)} />
-        <PricingNumber label="Margen minimo agricola" value={config.minimumAgriculturalMarginCLP} onChange={(value) => updateNumber("minimumAgriculturalMarginCLP", value)} />
-        <PricingNumber label="Margen minimo industrial" value={config.minimumIndustrialMarginCLP} onChange={(value) => updateNumber("minimumIndustrialMarginCLP", value)} />
+        <PricingNumber label="Comision minima hogar futura" value={config.minimumHomeMarginCLP} onChange={(value) => updateNumber("minimumHomeMarginCLP", value)} />
+        <PricingNumber label="Comision minima empresa futura" value={config.minimumCompanyMarginCLP} onChange={(value) => updateNumber("minimumCompanyMarginCLP", value)} />
+        <PricingNumber label="Comision minima agricola futura" value={config.minimumAgriculturalMarginCLP} onChange={(value) => updateNumber("minimumAgriculturalMarginCLP", value)} />
+        <PricingNumber label="Comision minima industrial futura" value={config.minimumIndustrialMarginCLP} onChange={(value) => updateNumber("minimumIndustrialMarginCLP", value)} />
         <PricingNumber label="Descuento suscriptor por solicitud" value={config.subscriberDiscountCredits} onChange={(value) => updateNumber("subscriberDiscountCredits", value)} />
         <PricingNumber label="Creditos visita inicial" value={config.initialVisitCredits} onChange={(value) => updateNumber("initialVisitCredits", value)} />
         <PricingNumber label="Fee visita inicial creditos" value={config.initialVisitFeeCredits} onChange={(value) => updateNumber("initialVisitFeeCredits", value)} />
@@ -118,7 +118,7 @@ export function AdminPricingPanel() {
         <Metric label="Tarifa esperada especialista CLP" value={formatCLP(samplePayout)} />
         <Metric label="Creditos cliente calculados" value={`${calculatedCredits} creditos`} />
         <Metric label="Precio cliente CLP estimado interno" value={formatCLP(estimatedClientPrice)} />
-        <Metric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+        <Metric label="Comision OficiosPro estimada" value={formatCLP(estimatedCommission)} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -145,7 +145,7 @@ export function AdminPricingPanel() {
       </div>
 
       <p className="text-xs font-bold text-muted">
-        Nota: esta configuracion es una base local para administracion. En produccion, los margenes sensibles deben resolverse en Worker/env antes de publicar precios.
+        Nota: esta configuracion es una base local para administracion. En produccion, la comision vigente para servicios debe venir de taxConfig/Worker y mantenerse en 9,5% + IVA hasta nueva version validada.
       </p>
     </section>
   );

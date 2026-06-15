@@ -6,8 +6,8 @@ import {
   calculateRedeemedCredits,
   calculateReservedCredits,
 } from "@/lib/creditLedger";
-import { formatCLP } from "@/lib/pricing";
 import { shouldShowDemoData } from "@/lib/demoData";
+import { formatCLP } from "@/lib/pricing";
 
 export function AdminCreditLedgerPreview() {
   const events = shouldShowDemoData() ? demoCreditLedgerEvents : [];
@@ -16,7 +16,7 @@ export function AdminCreditLedgerPreview() {
   const reserved = calculateReservedCredits(events);
   const redeemed = calculateRedeemedCredits(events);
   const payoutPending = events.filter((event) => event.type === "credit_redeemed").reduce((sum, event) => sum + (event.specialistPayoutCLP ?? 0), 0);
-  const estimatedMargin = events
+  const estimatedCommission = events
     .filter((event) => event.type === "credit_redeemed")
     .reduce((sum, event) => sum + calculatePlatformFeeEstimate({ credits: event.credits, specialistPayoutCLP: event.specialistPayoutCLP ?? 0 }), 0);
   const pendingDocuments = events.filter((event) => event.taxDocumentStatus === "boleta_pending" || event.taxDocumentStatus === "invoice_pending").length;
@@ -26,22 +26,22 @@ export function AdminCreditLedgerPreview() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="eyebrow">Ledger interno</p>
-          <h3 className="text-xl font-black text-ink">Vista preliminar de créditos, margen y documentos.</h3>
+          <h3 className="text-xl font-black text-ink">Vista preliminar de creditos, comision y documentos.</h3>
           <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
-            El cliente ve créditos. El admin revisa CLP, payout especialista, margen estimado y documentación tributaria pendiente.
+            El cliente ve créditos. El admin revisa CLP, payout especialista, Comisión OficiosPro estimada y documentación tributaria pendiente.
           </p>
         </div>
-        <span className="chip bg-white text-brand-dark">No público</span>
+        <span className="chip bg-white text-brand-dark">No publico</span>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Metric label="Créditos comprados" value={`${purchased}`} />
-        <Metric label="Créditos disponibles" value={`${available}`} />
-        <Metric label="Créditos reservados" value={`${reserved}`} />
-        <Metric label="Créditos usados" value={`${redeemed}`} />
+        <Metric label="Creditos comprados" value={`${purchased}`} />
+        <Metric label="Creditos disponibles" value={`${available}`} />
+        <Metric label="Creditos reservados" value={`${reserved}`} />
+        <Metric label="Creditos usados" value={`${redeemed}`} />
         <Metric label="Payout pendiente" value={formatCLP(payoutPending)} />
-        <Metric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+        <Metric label="Comision OficiosPro" value={formatCLP(estimatedCommission)} />
         <Metric label="Documentos pendientes" value={`${pendingDocuments}`} />
-        <Metric label="Saldo no utilizado" value={`${calculateOutstandingLiability(events)} créditos`} />
+        <Metric label="Saldo no utilizado" value={`${calculateOutstandingLiability(events)} creditos`} />
       </div>
     </article>
   );

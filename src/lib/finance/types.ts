@@ -194,7 +194,7 @@ export type PlatformCommission = {
   commissionCLP: number;
   commissionCredits: number;
   commissionRate: number;
-  /** IVA débito asociado al margen, si el tratamiento lo requiere (validar con contador). */
+  /** IVA asociado a la Comision OficiosPro, si el tratamiento lo requiere (validar con contador). */
   ivaAmount: number;
   documentStatus: DocumentIssueStatus;
   createdAt: string;

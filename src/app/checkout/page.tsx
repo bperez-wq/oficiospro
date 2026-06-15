@@ -7,6 +7,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
+import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { formatCLP, getPlanById } from "@/data/marketplace";
 import { addCartItem, getCartItems, onCartChange, type OficiosProCartItem } from "@/lib/cart";
 import { DEFAULT_REGION_CODE, regionCodeForName, regionNameForCode } from "@/lib/catalog";
@@ -78,6 +79,7 @@ export default function CheckoutPage() {
   const cartSummary = useMemo(() => cartTotals(cartItems), [cartItems]);
   const checkoutReadyCartItems = useMemo(() => cartItems.filter(isCartItemCheckoutReady), [cartItems]);
   const hasPendingQuoteItems = cartItems.some((item) => !isCartItemCheckoutReady(item));
+  const hasServiceCheckoutItems = checkoutReadyCartItems.some((item) => ["service_request", "quote_request", "visit", "additional_charge"].includes(item.type));
   const selectedCreditPack = findCreditPack(selectedPack);
   const hasCartItems = cartItems.length > 0;
   const checkoutCredits = cartSummary.credits || selectedCreditPack?.credits || plan.monthlyCredits;
@@ -277,6 +279,7 @@ export default function CheckoutPage() {
           <div className="mt-6 grid gap-3 rounded-[24px] border border-brand/15 bg-brand-soft p-5 text-sm font-bold leading-6 text-brand-dark">
             <strong className="text-base text-ink">Confirmacion de creditos</strong>
             <span>Los creditos se activaran cuando el pago sea confirmado.</span>
+            {hasServiceCheckoutItems ? <span>Precio total en creditos. Incluye gestion de plataforma y pago protegido.</span> : null}
             <span>En etapa piloto algunos pagos pueden requerir confirmacion operacional antes de reflejarse en tu cuenta.</span>
           </div>
 
@@ -473,7 +476,7 @@ export default function CheckoutPage() {
                 >
                   <strong className="block text-lg font-black text-ink">{context.label}</strong>
                   <span className="text-sm font-bold text-muted">{context.detail}</span>
-                  <span className="mt-2 block text-sm font-black text-brand">{context.credits} créditos · {formatCLP(context.credits * 1000)}</span>
+                  <span className="mt-2 block text-sm font-black text-brand">{context.credits} creditos - {formatCLP(context.credits * defaultCommercialConfig.customerCreditValueCLP)}</span>
                 </button>
               ))}
             </div>

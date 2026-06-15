@@ -1,3 +1,4 @@
+import { chileTaxConfig2026, roundTaxCLP } from "@/config/taxConfig";
 import { chileCommunes } from "@/data/chileCommunes";
 import { nationalServiceTypes, type NationalSpecialty, type ServiceAudience } from "@/data/serviceCatalog";
 
@@ -69,8 +70,8 @@ export const validationRequirements = [
 
 export const defaultCommercialConfig: CommercialConfig = {
   creditValueCLP: 1000,
-  minHomeMarginCLP: 5000,
-  minCompanyMarginCLP: 10000,
+  minHomeMarginCLP: 0,
+  minCompanyMarginCLP: 0,
   homeVisitFeeCLP: 0,
   companyVisitFeeCLP: 12000,
   creditExpirationMonths: 24,
@@ -437,7 +438,12 @@ export function calculateServiceEconomics({
   const serviceType = getServiceTypeById(serviceTypeId);
   const incomeCLP = clientCredits * config.creditValueCLP;
   const marginCLP = incomeCLP - specialistPayoutCLP;
-  const minMarginCLP = serviceType?.marginType === "company" ? config.minCompanyMarginCLP : config.minHomeMarginCLP;
+  const commissionNetCLP = roundTaxCLP(specialistPayoutCLP * chileTaxConfig2026.platformCommission.standardRate, chileTaxConfig2026);
+  const commissionIvaCLP = chileTaxConfig2026.platformCommission.ivaApplies
+    ? roundTaxCLP(commissionNetCLP * chileTaxConfig2026.ivaRate, chileTaxConfig2026)
+    : 0;
+  const segmentFloorCLP = serviceType?.marginType === "company" ? config.minCompanyMarginCLP : config.minHomeMarginCLP;
+  const minMarginCLP = Math.max(segmentFloorCLP, commissionNetCLP + commissionIvaCLP);
 
   return {
     incomeCLP,

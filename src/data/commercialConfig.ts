@@ -33,22 +33,24 @@ export type CommercialPricingConfig = {
   certificationRequiredByCategory: Record<string, boolean>;
 };
 
-// Configuracion interna inicial. En produccion, margenes y reglas sensibles deben venir del Worker/env o de un panel admin privado.
+// Configuracion interna inicial. La comision activa de servicios vive en taxConfig.ts:
+// Comision OficiosPro 9,5% + IVA. Estos campos se mantienen para compatibilidad
+// de UI/admin y reglas futuras, no para sobreescribir la comision estandar.
 export const defaultCommercialConfig: CommercialPricingConfig = {
   customerCreditValueCLP: 1000,
-  platformFeePercent: 0.18,
-  paymentFeePercent: 0.035,
-  riskBufferPercent: 0.04,
-  fixedServiceFeeCLP: 2500,
+  platformFeePercent: 0.095,
+  paymentFeePercent: 0,
+  riskBufferPercent: 0,
+  fixedServiceFeeCLP: 0,
   emergencyMultiplier: 1.35,
   minimumClientCredits: 12,
   creditRoundingStep: 2,
   minimumSpecialistPayoutCLP: 5000,
   maximumSpecialistPayoutCLP: 500000,
-  minimumHomeMarginCLP: 5000,
-  minimumCompanyMarginCLP: 10000,
-  minimumAgriculturalMarginCLP: 12000,
-  minimumIndustrialMarginCLP: 15000,
+  minimumHomeMarginCLP: 0,
+  minimumCompanyMarginCLP: 0,
+  minimumAgriculturalMarginCLP: 0,
+  minimumIndustrialMarginCLP: 0,
   subscriberDiscountCredits: 2,
   subscriberDiscountAppliesTo: {
     fixed: true,
@@ -59,8 +61,8 @@ export const defaultCommercialConfig: CommercialPricingConfig = {
   freeInitialVisitEnabled: true,
   initialVisitCredits: 0,
   initialVisitFeeCredits: 6,
-  materialCommissionPercent: 0.08,
-  additionalLaborCommissionPercent: 0.12,
+  materialCommissionPercent: 0.095,
+  additionalLaborCommissionPercent: 0.095,
   quoteExpirationDays: 7,
   maxAdditionalsPerRequest: 3,
   adminApprovalCreditThreshold: 80,

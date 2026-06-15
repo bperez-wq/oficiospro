@@ -73,6 +73,9 @@ export function FormalizationAndPayoutPanel({
             <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
               Calculo referencial sujeto a validacion contable/SII. El especialista no debe definir impuestos manualmente: declara su situacion y OficiosPro prepara el flujo.
             </p>
+            <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
+              Los documentos tributarios solo deben emitirse cuando exista autorizacion interna de OP SpA. No se permite ceder, factorizar o transferir documentos emitidos a OP SpA sin autorizacion previa y por escrito.
+            </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm">
             <strong className="text-sm font-black text-ink">Regla operacional</strong>
@@ -153,7 +156,7 @@ export function FormalizationAndPayoutPanel({
             <p className="eyebrow">Emitir documento a OP SpA</p>
             <h3 className="text-2xl font-black text-ink">Datos del receptor</h3>
             <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-muted">
-              Estos datos deben validarse antes de emitir documentos reales. Cuando el documento este emitido, OficiosPro lo revisa y recien ahi puede liberar la liquidacion.
+              Estos datos deben validarse antes de emitir documentos reales. El especialista debe esperar una autorizacion interna con codigo antes de emitir. Si llega un documento no autorizado, con monto distinto, duplicado o cedido/factorizado sin autorizacion escrita, OficiosPro puede reclamarlo, rechazarlo y bloquear la liquidacion hasta revision contable/legal.
             </p>
           </div>
           <span className="chip bg-slate-100 text-muted">No emite documentos reales</span>

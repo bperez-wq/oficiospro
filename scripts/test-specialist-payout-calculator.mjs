@@ -16,6 +16,7 @@ for (const exportedName of [
   "calculateExemptInvoiceScenario",
   "calculateUnknownTaxScenario",
   "calculateCustomerPriceFromSpecialistTarget",
+  "calculateCustomerPriceWithPlatformCommission",
   "calculateSpecialistLiquidFromCustomerPrice",
 ]) {
   if (!calculatorSource.includes(`function ${exportedName}`)) fail(`Missing calculator export: ${exportedName}`);

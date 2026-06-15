@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ChangeEvent, type ReactNode } from "
 import { AdminCreditLedgerPreview } from "@/components/AdminCreditLedgerPreview";
 import { AdminFinancePanel } from "@/components/AdminFinancePanel";
 import { AdminPricingPanel } from "@/components/AdminPricingPanel";
+import { chileTaxConfig2026 } from "@/config/taxConfig";
 import { specialists } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
 import {
@@ -150,7 +151,7 @@ const adminSections: { id: AdminSection; label: string }[] = [
   { id: "negociacion", label: "Tarifas, cotizaciones y negociación" },
   { id: "catalogo", label: "Catálogo de servicios" },
   { id: "comunas", label: "Comunas y cobertura" },
-  { id: "creditos", label: "Créditos y márgenes" },
+  { id: "creditos", label: "Créditos y comisiones" },
   { id: "planes", label: "Planes" },
   { id: "referidos", label: "Referidos" },
   { id: "seguridad", label: "Checklist de seguridad" },
@@ -327,7 +328,8 @@ export function AdminPanel() {
   const visiblePublished = publishedFilter === "all" ? [...approvedBase, ...managedPublished] : managedPublished;
   const pendingOnly = pendingSpecialists.filter((item) => item.status === "pendiente" || item.status === "info solicitada");
   const rejectedOnly = pendingSpecialists.filter((item) => item.status === "rechazado");
-  const estimatedMargin = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * 0.35, 0);
+  const commissionGrossRate = chileTaxConfig2026.platformCommission.standardRate * (chileTaxConfig2026.platformCommission.ivaApplies ? 1 + chileTaxConfig2026.ivaRate : 1);
+  const estimatedCommission = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * commissionGrossRate, 0);
   const reviewRows = useMemo<AdminReviewRow[]>(
     () =>
       [...(demoDataEnabled ? specialists : []), ...publishedSpecialists].flatMap((specialist) =>
@@ -353,7 +355,7 @@ export function AdminPanel() {
     { label: "Reviews nuevas", value: reviewRows.filter((review) => !review.reviewedByAdmin).length.toString() },
     { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
     { label: "Créditos vendidos", value: String(paymentTransactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0)) },
-    { label: "Margen estimado", value: formatCLP(Math.round(estimatedMargin)) },
+    { label: "Comision OficiosPro", value: formatCLP(Math.round(estimatedCommission)) },
     { label: "Comunas cubiertas", value: coverage.filter((item) => item.active).length.toString() },
   ];
 
@@ -544,7 +546,7 @@ export function AdminPanel() {
   function editQuoteMargin(id: string, platformNote: string) {
     updateQuoteAgreement(id, { platformNote, status: "platform_review" }, "OficiosPro esta revisando esta propuesta.");
     refresh();
-    setNotice("Nota de margen guardada y propuesta marcada para revision.");
+    setNotice("Nota de comision guardada y propuesta marcada para revision.");
   }
 
   function updateAdditionalStatus(id: string, status: AdditionalRequest["status"], message: string) {
@@ -738,7 +740,7 @@ export function AdminPanel() {
       <section className="panel">
         <p className="eyebrow">Acceso administrador</p>
         <h2 className="text-3xl font-black">Inicia sesión para gestionar OficiosPro.</h2>
-        <p className="mt-3 font-semibold leading-7 text-muted">El panel administra especialistas, márgenes, créditos y publicación en marketplace.</p>
+        <p className="mt-3 font-semibold leading-7 text-muted">El panel administra especialistas, comisiones, créditos y publicación en marketplace.</p>
         <Link className="btn-primary mt-6" href="/login">
           Ir al login
         </Link>
@@ -983,11 +985,11 @@ export function AdminPanel() {
         ) : null}
 
         {activeSection === "creditos" || activeSection === "configuracion" ? (
-          <Panel title="Créditos y márgenes" eyebrow="Configuración comercial">
+          <Panel title="Créditos y comisiones" eyebrow="Configuración comercial">
             <div className="grid gap-4 md:grid-cols-3">
               <NumberField label="Valor de 1 crédito en CLP" name="creditValueCLP" value={config.creditValueCLP} onChange={updateConfig} />
-              <NumberField label="Margen mínimo hogar" name="minHomeMarginCLP" value={config.minHomeMarginCLP} onChange={updateConfig} />
-              <NumberField label="Margen mínimo empresa" name="minCompanyMarginCLP" value={config.minCompanyMarginCLP} onChange={updateConfig} />
+              <NumberField label="Comisión mínima hogar futura" name="minHomeMarginCLP" value={config.minHomeMarginCLP} onChange={updateConfig} />
+              <NumberField label="Comisión mínima empresa futura" name="minCompanyMarginCLP" value={config.minCompanyMarginCLP} onChange={updateConfig} />
               <NumberField label="Fee visita inicial hogar" name="homeVisitFeeCLP" value={config.homeVisitFeeCLP} onChange={updateConfig} />
               <NumberField label="Fee visita inicial empresa" name="companyVisitFeeCLP" value={config.companyVisitFeeCLP} onChange={updateConfig} />
               <NumberField label="Vencimiento créditos en meses" name="creditExpirationMonths" value={config.creditExpirationMonths} onChange={updateConfig} />
@@ -1070,7 +1072,7 @@ export function AdminPanel() {
                           <input type="number" value={specialty.suggestedCredits} onChange={(event) => updateSpecialty(type.id, specialty.id, { suggestedCredits: Number(event.target.value) })} />
                         </label>
                         <label className="field">
-                          Margen mínimo
+                          Comisión mínima futura
                           <input type="number" value={specialty.suggestedMinMarginCLP} onChange={(event) => updateSpecialty(type.id, specialty.id, { suggestedMinMarginCLP: Number(event.target.value) })} />
                         </label>
                         <label className="field">
@@ -1264,7 +1266,7 @@ function SpecialistAdminRow({
         <div className="flex flex-wrap items-center gap-2">
           <strong>{request.name}</strong>
           <span className="chip bg-amber-50 text-amber-800">{request.status}</span>
-          {margin ? <span className={`chip ${margin.status === "OK" ? "bg-brand-soft text-brand-dark" : "bg-amber-50 text-amber-800"}`}>Margen {margin.status}</span> : null}
+          {margin ? <span className={`chip ${margin.status === "OK" ? "bg-brand-soft text-brand-dark" : "bg-amber-50 text-amber-800"}`}>Comision {margin.status}</span> : null}
         </div>
         <p className="mt-2 text-sm font-bold text-muted">
           {request.rut} · {request.email} · {request.phone} · {request.commune} · {request.coverageRadiusKm} km
@@ -1499,14 +1501,14 @@ function NegotiationAdminPanel({
   onQuoteNote: (id: string, note: string) => void;
   onAdditionalStatus: (id: string, status: AdditionalRequest["status"], message: string) => void;
 }) {
-  const lowMarginQuotes = quotes.filter((quote) => (quote.proposal?.platformMarginCredits ?? 0) > 0 && (quote.proposal?.platformMarginCredits ?? 0) < 10);
+  const lowCommissionQuotes = quotes.filter((quote) => (quote.proposal?.platformMarginCredits ?? 0) > 0 && (quote.proposal?.platformMarginCredits ?? 0) < 10);
   return (
     <Panel title="Tarifas, cotizaciones y negociación" eyebrow="Adicionales y acuerdo">
       <div className="grid gap-4 md:grid-cols-4">
         <MiniMetric label="Servicios precio fijo" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "fixed").length.toString()} />
         <MiniMetric label="Servicios por hora" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "hourly").length.toString()} />
         <MiniMetric label="Requieren cotización" value={specialists.flatMap((item) => item.servicePricing ?? []).filter((service) => service.pricingMode === "quote_required" || service.pricingMode === "visit_then_quote").length.toString()} />
-        <MiniMetric label="Márgenes bajos" value={lowMarginQuotes.length.toString()} />
+        <MiniMetric label="Comisiones bajas" value={lowCommissionQuotes.length.toString()} />
       </div>
 
       <div className="mt-5 grid gap-5 xl:grid-cols-2">
@@ -1524,7 +1526,7 @@ function NegotiationAdminPanel({
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   <InfoBox label="Total créditos" value={`${quoteTotalCredits(quote) || "por definir"}`} />
                   <InfoBox label="Pago especialista" value={`${quote.proposal?.specialistPayoutCredits ?? "pendiente"} cr`} />
-                  <InfoBox label="Margen plataforma" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
+                  <InfoBox label="Comisión OficiosPro" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
                 </div>
                 <label className="field mt-3">
                   Nota interna o ajuste recomendado
@@ -1627,7 +1629,7 @@ function PaymentsAdminPanel({
   const providerErrors = rejectedPayments.length + failedSubscriptions.length;
   const usedProviders = Array.from(new Set(payments.map((payment) => normalizePaymentProviderName(payment.provider))));
   const pendingPayouts = payouts.filter((payout) => payout.status !== "pagado");
-  const estimatedMargin = payouts.reduce((sum, payout) => sum + payout.platformMarginCLP, 0);
+  const estimatedCommission = payouts.reduce((sum, payout) => sum + payout.platformMarginCLP, 0);
 
   return (
     <Panel title="Pagos y créditos" eyebrow="Operación global">
@@ -1668,7 +1670,7 @@ function PaymentsAdminPanel({
             <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
             <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
             <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
-            <MiniMetric label="Margen estimado" value={formatCLP(estimatedMargin)} />
+            <MiniMetric label="Comision OficiosPro" value={formatCLP(estimatedCommission)} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button className="btn-secondary" type="button" onClick={onReconcile}>
@@ -1802,7 +1804,7 @@ function PaymentsAdminPanel({
                   <span className="chip bg-white text-brand-dark">{payout.status}</span>
                 </div>
                 <p className="mt-2 text-sm font-bold text-muted">
-                  {payout.serviceName} · cliente {formatCLP(payout.customerChargeCLP)} · especialista {formatCLP(payout.specialistPayoutCLP)} · margen {formatCLP(payout.platformMarginCLP)}
+                  {payout.serviceName} - cliente {formatCLP(payout.customerChargeCLP)} - especialista {formatCLP(payout.specialistPayoutCLP)} - comision {formatCLP(payout.platformMarginCLP)}
                 </p>
                 {payout.status !== "pagado" ? (
                   <button className="btn-secondary mt-3" type="button" onClick={() => onMarkPayoutPaid(payout.id)}>
@@ -1904,7 +1906,7 @@ function SpecialistDetailPanel({
               emergency: service.emergency,
               config: defaultPricingConfig,
             });
-            const estimatedMargin = estimatePlatformMarginCLP({
+            const estimatedCommission = estimatePlatformMarginCLP({
               specialistExpectedPayoutCLP: expectedPayout,
               categoryId: service.serviceTypeId,
               emergency: service.emergency,
@@ -1927,7 +1929,7 @@ function SpecialistDetailPanel({
                 <InfoBox label="Tarifa esperada especialista CLP" value={formatPricingCLP(expectedPayout)} />
                 <InfoBox label="Créditos cliente calculados" value={`${calculatedClientCredits} créditos`} />
                 <InfoBox label="Precio cliente CLP estimado interno" value={formatPricingCLP(estimatedClientPrice)} />
-                <InfoBox label="Margen estimado" value={`${formatPricingCLP(estimatedMargin)} · ${economics.status}`} />
+                <InfoBox label="Comision OficiosPro estimada" value={`${formatPricingCLP(estimatedCommission)} - ${economics.status}`} />
                 <label className="field">
                   Créditos cliente
                   <input type="number" value={calculatedClientCredits} onChange={(event) => onUpdateService(index, { clientCredits: Number(event.target.value), pricingStatus: "adjusted_by_oficiospro" })} />

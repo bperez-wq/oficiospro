@@ -77,5 +77,5 @@ TEST_BASE_URL=https://oficiospro.cl node scripts/test-lead-endpoints.mjs
 - El botón final de postulación vuelve a habilitarse si hay error.
 - Una postulación exitosa redirige a `/?postulacion=recibida`.
 - El especialista declara tarifa esperada en CLP; no elige créditos.
-- El cliente ve créditos, no margen ni payout.
-- El admin puede revisar CLP, créditos, margen y ledger desde vistas internas; `/admin/leads` muestra un bloque de pricing interno cuando el payload trae servicios postulados.
+- El cliente ve créditos, no comisión interna ni payout.
+- El admin puede revisar CLP, créditos, Comisión OficiosPro y ledger desde vistas internas; `/admin/leads` muestra un bloque de pricing interno cuando el payload trae servicios postulados.

@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { EmptyState } from "@/components/DesignSystem";
 import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayoutPanel";
+import { AdminTaxDocumentControlsPanel } from "@/components/AdminTaxDocumentControlsPanel";
 import { adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 
 const tokenStorageKey = "oficiospro.adminFormalizationToken";
@@ -67,6 +68,7 @@ export function AdminFormalizationPage() {
             <AdminQueueMetric label="Revision contador/SII" value="Obligatoria" detail="Antes de pagos reales" />
           </section>
           <FormalizationAndPayoutPanel variant="admin" initialTaxType="boleta_honorarios" initialTargetCLP={45000} />
+          <AdminTaxDocumentControlsPanel />
           <EmptyState
             eyebrow="Cola D1"
             title="Aun no hay perfiles tributarios reales para revisar."

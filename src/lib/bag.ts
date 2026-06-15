@@ -9,6 +9,7 @@
  */
 
 import type { FlexibleService } from "@/data/flexiblePricing";
+import { defaultCommercialConfig } from "@/data/commercialConfig";
 import type { Specialist } from "@/data/mock";
 import { getSpecialistProfileImage } from "@/data/profileImages";
 import { addCartItem, getCartItems } from "@/lib/cart";
@@ -84,7 +85,7 @@ export function addSpecialistToBagAndProceed({
           : ("service_request" as const),
     title: selectedService.name,
     credits,
-    amountCLP: credits * 1000,
+    amountCLP: credits * defaultCommercialConfig.customerCreditValueCLP,
     specialistId: specialist.id,
     specialistName: specialist.name,
     specialistSlug: specialist.slug,

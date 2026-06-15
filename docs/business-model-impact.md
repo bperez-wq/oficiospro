@@ -40,7 +40,7 @@ Los créditos crean una unidad simple para el cliente y permiten planificar serv
 - Créditos usados.
 - Créditos devueltos o expirados.
 - Payout especialista.
-- Margen plataforma.
+- Comision OficiosPro.
 - Documentación tributaria pendiente o emitida.
 
 El valor contable, tributario y financiero final debe validarse con contador.

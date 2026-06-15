@@ -1,14 +1,18 @@
 /**
- * Cálculo de comisión/margen de plataforma.
+ * Calculo de Comision OficiosPro.
  *
- * Reglas:
- * - El frontend nunca define montos finales: todo se calcula desde
- *   defaultCommercialConfig (catálogo interno) y estos helpers.
- * - La comisión se expresa en CLP y créditos, con trazabilidad por solicitud.
+ * Regla activa:
+ * - 9,5% neto segun src/config/taxConfig.ts
+ * - IVA sobre la comision si taxConfig.platformCommission.ivaApplies = true
+ *
+ * Cuando exista documento especialista, preferir
+ * calculateCustomerPriceWithPlatformCommission() porque calcula sobre la base
+ * tributaria real del documento. Este helper mantiene compatibilidad con el
+ * ledger financiero legacy que parte desde creditos finales.
  */
 
+import { chileTaxConfig2026, roundTaxCLP } from "@/config/taxConfig";
 import { defaultCommercialConfig, type CommercialPricingConfig } from "@/data/commercialConfig";
-import { splitNetAndIva } from "@/lib/finance/taxModel";
 import { financeId, nowIso, type FinanceServiceRequest, type PlatformCommission } from "@/lib/finance/types";
 
 export function creditsToCLP(credits: number, config: CommercialPricingConfig = defaultCommercialConfig) {
@@ -20,18 +24,12 @@ export type CommissionBreakdown = {
   commissionRate: number;
   commissionCLP: number;
   commissionCredits: number;
-  /** IVA débito estimado sobre el margen (VALIDAR tratamiento con contador). */
   ivaAmount: number;
   minimumMarginApplied: boolean;
 };
 
-/**
- * Comisión de plataforma para un servicio cerrado en `finalCredits`.
- * Aplica platformFeePercent + multiplicador de categoría y respeta el margen mínimo por segmento.
- */
 export function calculatePlatformCommission({
   finalCredits,
-  categoryId,
   config = defaultCommercialConfig,
 }: {
   finalCredits: number;
@@ -39,21 +37,20 @@ export function calculatePlatformCommission({
   config?: CommercialPricingConfig;
 }): CommissionBreakdown {
   const grossServiceCLP = creditsToCLP(finalCredits, config);
-  const categoryMultiplier = (categoryId && config.categoryMultipliers[categoryId]) || 1;
-  const commissionRate = Math.min(0.9, config.platformFeePercent * categoryMultiplier);
-  const rawCommission = Math.round(grossServiceCLP * commissionRate);
-
-  const minimumMargin = minimumMarginFor(categoryId, config);
-  const commissionCLP = Math.min(grossServiceCLP, Math.max(rawCommission, minimumMargin));
-  const { ivaAmountCLP } = splitNetAndIva(commissionCLP);
+  const commissionRate = chileTaxConfig2026.platformCommission.standardRate;
+  const commissionNetCLP = roundTaxCLP(grossServiceCLP * commissionRate, chileTaxConfig2026);
+  const ivaAmount = chileTaxConfig2026.platformCommission.ivaApplies
+    ? roundTaxCLP(commissionNetCLP * chileTaxConfig2026.ivaRate, chileTaxConfig2026)
+    : 0;
+  const commissionCLP = Math.min(grossServiceCLP, commissionNetCLP + ivaAmount);
 
   return {
     grossServiceCLP,
     commissionRate,
     commissionCLP,
     commissionCredits: Math.round(commissionCLP / config.customerCreditValueCLP),
-    ivaAmount: ivaAmountCLP,
-    minimumMarginApplied: commissionCLP > rawCommission,
+    ivaAmount,
+    minimumMarginApplied: false,
   };
 }
 
@@ -71,10 +68,8 @@ export function minimumMarginFor(categoryId: string | undefined, config: Commerc
   }
 }
 
-/** Comisión sobre adicionales/materiales aprobados. */
 export function calculateAdditionalCommission({
   additionalCredits,
-  kind,
   config = defaultCommercialConfig,
 }: {
   additionalCredits: number;
@@ -82,17 +77,15 @@ export function calculateAdditionalCommission({
   config?: CommercialPricingConfig;
 }) {
   const grossCLP = creditsToCLP(additionalCredits, config);
-  const rate =
-    kind === "materials"
-      ? config.materialCommissionPercent
-      : kind === "labor"
-        ? config.additionalLaborCommissionPercent
-        : config.platformFeePercent;
-  const commissionCLP = Math.round(grossCLP * rate);
+  const rate = chileTaxConfig2026.platformCommission.standardRate;
+  const commissionNetCLP = roundTaxCLP(grossCLP * rate, chileTaxConfig2026);
+  const ivaCLP = chileTaxConfig2026.platformCommission.ivaApplies
+    ? roundTaxCLP(commissionNetCLP * chileTaxConfig2026.ivaRate, chileTaxConfig2026)
+    : 0;
+  const commissionCLP = commissionNetCLP + ivaCLP;
   return { grossCLP, rate, commissionCLP };
 }
 
-/** Crea el registro de comisión de plataforma para una solicitud completada. */
 export function createPlatformCommissionRecord(
   request: Pick<FinanceServiceRequest, "id" | "specialistId" | "customerId" | "categoryId">,
   breakdown: CommissionBreakdown,

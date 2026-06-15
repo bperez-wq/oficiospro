@@ -1,4 +1,8 @@
 import { defaultCommercialConfig, type CommercialPricingConfig } from "@/data/commercialConfig";
+import {
+  calculateCustomerPriceWithPlatformCommission,
+  commissionRuleFromCommercialConfig,
+} from "@/lib/finance/specialistPayoutCalculator";
 
 export type CreditCalculationParams = {
   specialistExpectedPayoutCLP: number;
@@ -25,31 +29,50 @@ export function normalizeCLPInput(value: string | number) {
 
 export function estimateClientPriceCLP({
   specialistExpectedPayoutCLP,
-  categoryId,
-  communeName,
   emergency = false,
   config = defaultCommercialConfig,
 }: CreditCalculationParams) {
   const payout = clampPayout(normalizeCLPInput(specialistExpectedPayoutCLP), config);
-  const variableFees = payout * (config.platformFeePercent + config.paymentFeePercent + config.riskBufferPercent);
-  const categoryMultiplier = categoryId ? config.categoryMultipliers[categoryId] ?? 1 : 1;
-  const communeMultiplier = communeName ? config.communeMultipliers[communeName] ?? 1 : 1;
-  const baseAmount = (payout + variableFees + config.fixedServiceFeeCLP) * categoryMultiplier * communeMultiplier;
-  return Math.round(emergency ? applyEmergencyMultiplier(baseAmount, config) : baseAmount);
+  if (!payout) return 0;
+  const calculation = calculateCustomerPriceWithPlatformCommission({
+    specialistTargetAmountCLP: payout,
+    taxType: "boleta_honorarios",
+    commissionRule: commissionRuleFromCommercialConfig(config),
+    accountantReviewed: true,
+    siiValidated: true,
+    emergencyMultiplier: emergency ? config.emergencyMultiplier : 1,
+  });
+  return calculation.customerGrossPriceCLP;
 }
 
 export function calculateClientCreditsFromSpecialistPayout(params: CreditCalculationParams) {
   const config = params.config ?? defaultCommercialConfig;
-  const estimatedClientPrice = estimateClientPriceCLP({ ...params, config });
-  const rawCredits = estimatedClientPrice / config.customerCreditValueCLP;
-  return Math.max(config.minimumClientCredits, roundCredits(rawCredits, config.creditRoundingStep));
+  const payout = clampPayout(normalizeCLPInput(params.specialistExpectedPayoutCLP), config);
+  if (!payout) return 0;
+  const calculation = calculateCustomerPriceWithPlatformCommission({
+    specialistTargetAmountCLP: payout,
+    taxType: "boleta_honorarios",
+    commissionRule: commissionRuleFromCommercialConfig(config),
+    accountantReviewed: true,
+    siiValidated: true,
+    emergencyMultiplier: params.emergency ? config.emergencyMultiplier : 1,
+  });
+  return Math.max(config.minimumClientCredits, calculation.totalCreditsEstimate);
 }
 
 export function estimatePlatformMarginCLP(params: CreditCalculationParams) {
   const config = params.config ?? defaultCommercialConfig;
-  const clientCredits = calculateClientCreditsFromSpecialistPayout({ ...params, config });
-  const clientPriceCLP = clientCredits * config.customerCreditValueCLP;
-  return clientPriceCLP - clampPayout(normalizeCLPInput(params.specialistExpectedPayoutCLP), config);
+  const payout = clampPayout(normalizeCLPInput(params.specialistExpectedPayoutCLP), config);
+  if (!payout) return 0;
+  const calculation = calculateCustomerPriceWithPlatformCommission({
+    specialistTargetAmountCLP: payout,
+    taxType: "boleta_honorarios",
+    commissionRule: commissionRuleFromCommercialConfig(config),
+    accountantReviewed: true,
+    siiValidated: true,
+    emergencyMultiplier: params.emergency ? config.emergencyMultiplier : 1,
+  });
+  return calculation.platformCommissionGrossCLP;
 }
 
 export function applyEmergencyMultiplier(amount: number, config: CommercialPricingConfig = defaultCommercialConfig) {

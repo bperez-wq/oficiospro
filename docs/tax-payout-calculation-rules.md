@@ -42,7 +42,7 @@ Esta definicion debe validarse con contador antes de operar pagos reales.
 
 - `specialistTargetAmountCLP`: tarifa esperada declarada por el especialista.
 - `taxType`: `factura_afecta`, `boleta_honorarios`, `factura_exenta` o `unknown`.
-- `commissionRule`: comision, fee de pago, buffer, fijo, margen minimo, valor credito y redondeo.
+- `commissionRule`: valor credito, redondeo y ajustes aprobados. La comision estandar vive en `taxConfig.platformCommission` y no debe duplicarse con fees legacy.
 - `taxConfig`: version tributaria vigente.
 
 ## Factura afecta
@@ -113,6 +113,18 @@ La calculadora agrega:
 
 Luego convierte a creditos con `creditValueCLP` y redondea por `creditRoundingStep`.
 
+Helper obligatorio para servicios/cotizaciones:
+
+`calculateCustomerPriceWithPlatformCommission()`
+
+Este helper calcula documento especialista, Comision OficiosPro 9,5% + IVA, precio cliente y creditos. Si se necesita partir desde precio cliente cerrado, usar `calculateSpecialistLiquidFromCustomerPrice()` solo como estimacion inversa.
+
+## Planes, packs y Club Hogar
+
+Club Hogar, packs de creditos y planes empresa tienen precios comerciales propios. No se recalculan aplicando 9,5% + IVA sobre el especialista porque no representan una liquidacion de servicio especifica.
+
+Cuando esos creditos se usan en un servicio, el servicio si debe pasar por la regla de documento especialista + Comision OficiosPro.
+
 ## Bloqueos de payout
 
 Un payout no puede liberarse si existe:
@@ -123,6 +135,9 @@ Un payout no puede liberarse si existe:
 - revision contador pendiente,
 - validacion SII pendiente,
 - revision manual admin pendiente.
+- documento sin autorizacion interna previa,
+- documento duplicado o con emisor/monto/receptor distinto,
+- cesion, factoring o transferencia sin autorizacion escrita de OP SpA.
 
 ## UI
 

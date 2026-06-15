@@ -55,32 +55,31 @@ function assertNoHardcodedVisualOpMark(path) {
 function assertPricingMath() {
   const config = {
     customerCreditValueCLP: 1000,
-    platformFeePercent: 0.18,
-    paymentFeePercent: 0.035,
-    riskBufferPercent: 0.04,
-    fixedServiceFeeCLP: 2500,
+    platformCommissionRate: 0.095,
+    ivaRate: 0.19,
+    honorariosRetentionRate: 0.1525,
     emergencyMultiplier: 1.35,
     minimumClientCredits: 12,
     creditRoundingStep: 2,
   };
   const roundCredits = (credits, step) => Math.ceil(credits / step) * step;
   const calculateCredits = (payout, emergency = false) => {
-    const estimated =
-      payout +
-      payout * (config.platformFeePercent + config.paymentFeePercent + config.riskBufferPercent) +
-      config.fixedServiceFeeCLP;
+    const specialistDocumentGrossCLP = Math.round(payout / (1 - config.honorariosRetentionRate));
+    const commissionNetCLP = Math.round(specialistDocumentGrossCLP * config.platformCommissionRate);
+    const commissionIvaCLP = Math.round(commissionNetCLP * config.ivaRate);
+    const estimated = specialistDocumentGrossCLP + commissionNetCLP + commissionIvaCLP;
     const adjusted = emergency ? estimated * config.emergencyMultiplier : estimated;
     return Math.max(config.minimumClientCredits, roundCredits(adjusted / config.customerCreditValueCLP, config.creditRoundingStep));
   };
   const baseCredits = calculateCredits(10000);
   const emergencyCredits = calculateCredits(10000, true);
-  const margin = baseCredits * config.customerCreditValueCLP - 10000;
+  const commissionGross = Math.round(Math.round(10000 / (1 - config.honorariosRetentionRate)) * config.platformCommissionRate * (1 + config.ivaRate));
 
   if (baseCredits <= 0) fail("Pricing validation: $10.000 CLP must produce credits greater than 0");
   if (baseCredits < config.minimumClientCredits) fail("Pricing validation: credits must respect minimumClientCredits");
   if (baseCredits % config.creditRoundingStep !== 0) fail("Pricing validation: credits must round by creditRoundingStep");
   if (emergencyCredits <= baseCredits) fail("Pricing validation: emergency must increase credits");
-  if (!Number.isFinite(margin)) fail("Pricing validation: estimated margin must be calculable");
+  if (!Number.isFinite(commissionGross) || commissionGross <= 0) fail("Pricing validation: Comision OficiosPro must be calculable");
 }
 
 function assertNoPublicInternalPricingLeak() {

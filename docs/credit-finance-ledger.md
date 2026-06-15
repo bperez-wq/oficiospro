@@ -2,24 +2,24 @@
 
 ## Objetivo
 
-El ledger de créditos permite separar experiencia de cliente y operación interna. El cliente ve créditos. El especialista declara tarifa esperada en CLP. OficiosPro calcula créditos, retenciones, payout y margen según reglas internas administrables.
+El ledger de creditos separa experiencia de cliente y operacion interna. El cliente ve creditos. El especialista declara tarifa esperada en CLP. OficiosPro calcula creditos, retenciones, payout y Comision OficiosPro segun reglas internas administrables.
 
 La contabilidad final debe validarse con contador.
 
-## Estados Principales
+## Estados principales
 
-- Créditos comprados: créditos cargados por suscripción o compra puntual.
-- Créditos disponibles: saldo que el cliente puede usar.
-- Créditos retenidos: saldo bloqueado al reservar o aceptar una propuesta.
-- Créditos usados: créditos consumidos por un servicio cerrado.
-- Créditos devueltos: créditos liberados por cancelación, ajuste o reversa.
-- Créditos expirados: créditos vencidos según términos de vigencia.
+- Creditos comprados: creditos cargados por suscripcion o compra puntual.
+- Creditos disponibles: saldo que el cliente puede usar.
+- Creditos retenidos: saldo bloqueado al reservar o aceptar una propuesta.
+- Creditos usados: creditos consumidos por un servicio cerrado.
+- Creditos devueltos: creditos liberados por cancelacion, ajuste o reversa.
+- Creditos expirados: creditos vencidos segun terminos de vigencia.
 - Payout especialista: monto CLP que corresponde revisar y pagar.
-- Margen plataforma: diferencia estimada entre valor cliente y payout, menos costos según configuración.
-- Ingresos por servicio cerrado: ingreso reconocible cuando corresponde, sujeto a validación contable.
-- Saldo no utilizado: créditos disponibles y retenidos que aún representan obligación operacional.
+- Comision OficiosPro: 9,5% + IVA para servicios/cotizaciones cuando se calcula desde documento o tarifa especialista.
+- Ingresos por servicio cerrado: ingreso reconocible cuando corresponde, sujeto a validacion contable.
+- Saldo no utilizado: creditos disponibles y retenidos que aun representan obligacion operacional.
 
-## Eventos Del Ledger
+## Eventos del ledger
 
 Eventos preparados en `src/data/financeModel.ts`:
 
@@ -37,45 +37,46 @@ Eventos preparados en `src/data/financeModel.ts`:
 - `boleta_pending`
 - `boleta_received`
 
-## Reglas De Visibilidad
+## Reglas de visibilidad
 
 Cliente:
 
-- Ve créditos, servicios, retenciones, uso y devoluciones.
-- No ve margen interno ni configuración comercial.
+- Ve creditos, servicios, retenciones, uso y devoluciones.
+- No ve comision interna ni configuracion comercial.
 
 Especialista:
 
 - Declara tarifa esperada en CLP.
-- Puede ver estado de pago y documentación pendiente cuando corresponda.
-- No controla créditos cliente ni margen plataforma.
+- Puede ver estado de pago y documentacion pendiente cuando corresponda.
+- No controla creditos cliente ni Comision OficiosPro.
 
 Admin/backend:
 
-- Ve CLP, créditos, payout, margen, documento tributario y ledger.
+- Ve CLP, creditos, payout, Comision OficiosPro, documento tributario y ledger.
 - Ajusta reglas comerciales y revisa excepciones.
 
-## Reportes Admin
+## Reportes admin
 
-Reportes mínimos:
+Reportes minimos:
 
-- Créditos comprados por periodo.
-- Créditos disponibles por cliente/empresa.
-- Créditos retenidos por reserva.
-- Créditos usados por servicio cerrado.
-- Créditos expirados.
+- Creditos comprados por periodo.
+- Creditos disponibles por cliente/empresa.
+- Creditos retenidos por reserva.
+- Creditos usados por servicio cerrado.
+- Creditos expirados.
 - Payouts pendientes y pagados.
-- Margen estimado por categoría/comuna.
+- Comision estimada por categoria/comuna.
 - Documentos tributarios pendientes.
 - Saldo no utilizado.
 
-## Validación Contable
+## Validacion contable
 
 Antes de escalar, validar:
 
-- Tratamiento de créditos como prepago, saldo o beneficio contractual.
+- Tratamiento de creditos como prepago, saldo o beneficio contractual.
 - Momento de reconocimiento de ingreso.
-- Tratamiento de expiración.
-- Emisión de boleta/factura.
-- Documentación requerida al especialista.
-- Reversas, garantías y disputas.
+- Tratamiento de expiracion.
+- Emision de boleta/factura.
+- Documentacion requerida al especialista.
+- Autorizacion previa y bloqueo de documentos no autorizados.
+- Reversas, garantias y disputas.

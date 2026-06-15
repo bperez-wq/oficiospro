@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
+import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 import { ALL_COMMUNES_VALUE, ALL_REGIONS_VALUE, regionNameForCode } from "@/lib/catalog";
 import { estimatePlatformMarginCLP, formatCLP as formatPricingCLP } from "@/lib/pricing";
@@ -413,7 +414,7 @@ function LeadDetail({
                     <span>Tarifa especialista: {formatPricingCLP(row.specialistExpectedPayoutCLP)}</span>
                     <span>Créditos cliente: {row.clientCredits || "por revisar"}</span>
                     <span>Precio cliente estimado: {row.estimatedClientPriceCLP ? formatPricingCLP(row.estimatedClientPriceCLP) : "por revisar"}</span>
-                    <span>Margen estimado interno: {row.estimatedMarginCLP ? formatPricingCLP(row.estimatedMarginCLP) : "por revisar"}</span>
+                    <span>Comision OficiosPro estimada: {row.estimatedCommissionCLP ? formatPricingCLP(row.estimatedCommissionCLP) : "por revisar"}</span>
                     <span>Estado pricing: {row.pricingStatus || "pending_review"}</span>
                     <span>Emergencia: {row.emergencyAvailable ? "sí" : "no"}</span>
                   </div>
@@ -490,7 +491,7 @@ type InternalPricingRow = {
   specialistExpectedPayoutCLP: number;
   clientCredits: number;
   estimatedClientPriceCLP: number;
-  estimatedMarginCLP: number;
+  estimatedCommissionCLP: number;
   pricingStatus: string;
   emergencyAvailable: boolean;
 };
@@ -510,10 +511,14 @@ function internalPricingRows(payload: Record<string, unknown>): InternalPricingR
           numberValue(service.minCredits),
           numberValue(service.visitCredits),
         ].find((value) => value > 0) ?? 0;
-      const estimatedClientPriceCLP = numberValue(service.estimatedClientPriceCLP) || (clientCredits ? clientCredits * 1000 : 0);
-      const estimatedMarginCLP =
+      const estimatedClientPriceCLP = numberValue(service.estimatedClientPriceCLP) || (clientCredits ? clientCredits * defaultCommercialConfig.customerCreditValueCLP : 0);
+      const estimatedCommissionCLP =
         estimatedClientPriceCLP && specialistExpectedPayoutCLP
-          ? estimatedClientPriceCLP - specialistExpectedPayoutCLP
+          ? estimatePlatformMarginCLP({
+              specialistExpectedPayoutCLP,
+              categoryId: textValue(service.serviceTypeId),
+              serviceId: textValue(service.serviceTypeId),
+            })
           : specialistExpectedPayoutCLP
             ? estimatePlatformMarginCLP({
                 specialistExpectedPayoutCLP,
@@ -528,7 +533,7 @@ function internalPricingRows(payload: Record<string, unknown>): InternalPricingR
         specialistExpectedPayoutCLP,
         clientCredits,
         estimatedClientPriceCLP,
-        estimatedMarginCLP,
+        estimatedCommissionCLP,
         pricingStatus: textValue(service.pricingStatus),
         emergencyAvailable: Boolean(service.emergencyAvailable),
       };

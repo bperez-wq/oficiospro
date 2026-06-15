@@ -65,7 +65,7 @@ export function SpecialtyCatalogPreview() {
         <p className="eyebrow">Catálogo nacional</p>
         <h2 className="section-title">Más de 300 especialidades agrupadas para crecer por categoría.</h2>
         <p className="section-lead">
-          El catálogo está listo para indexación, filtros, márgenes por categoría y rutas locales futuras de la plataforma.
+          El catálogo está listo para indexación, filtros, comisiones internas por categoría y rutas locales futuras de la plataforma.
         </p>
       </div>
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -163,7 +163,7 @@ export function AdminMarketplaceControls() {
             "Gestión de especialistas",
             "Validación de referencias",
             "Gestión de créditos",
-            "Configuración de márgenes",
+            "Configuración de comisiones",
             "Mapas y métricas",
             "Cobertura por radio",
           ].map((item) => (

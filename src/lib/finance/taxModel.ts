@@ -65,7 +65,7 @@ export const taxModels: TaxModelDefinition[] = [
       "Cliente recibe un solo documento, de una sola empresa: experiencia simple.",
       "Especialista no factura a desconocidos: siempre emite a OP SpA.",
       "Pago protegido y créditos calzan naturalmente: OP SpA recauda y libera.",
-      "Control total de conciliación, reportes y márgenes.",
+      "Control total de conciliacion, reportes y Comision OficiosPro.",
     ],
     disadvantages: [
       "OP SpA reconoce como ingreso el total recaudado (no solo la comisión): más IVA débito y más carga administrativa.",
@@ -214,7 +214,7 @@ export const accountantValidationPoints = [
   "Modelo A: confirmación de que OP SpA puede documentar el total y registrar el pago al especialista como costo con respaldo (boleta honorarios/factura).",
   "Tasa de retención de honorarios vigente y obligación de OP SpA de retener y enterar (F29/F1879).",
   "IVA de la comisión de plataforma si se migrara a Modelo B/C parcial.",
-  "Materiales y repuestos: documentación de respaldo, margen sobre materiales y si requieren factura del proveedor a OP SpA o al especialista.",
+  "Materiales y repuestos: documentacion de respaldo, comision sobre materiales si aplica y si requieren factura del proveedor a OP SpA o al especialista.",
   "Riesgo de laboralidad: contratos de prestación de servicios con especialistas, criterios de independencia.",
   "Boletas de honorarios de especialistas: emisión electrónica a OP SpA y su registro como gasto.",
   "Inicio de actividades, giros correctos de OP SpA y eventual PPM.",
