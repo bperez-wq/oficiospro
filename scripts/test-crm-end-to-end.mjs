@@ -2,11 +2,27 @@ import readline from "node:readline";
 
 const baseUrl = (process.env.TEST_BASE_URL ?? "https://www.oficiospro.cl").replace(/\/$/, "");
 const adminToken = validateAdminToken(process.env.ADMIN_TOKEN || process.env.TEST_ADMIN_TOKEN || (await promptSecret("ADMIN_TOKEN: ")));
+const testRunId = process.env.CRM_E2E_TEST_RUN_ID || `e2e_${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}_${Math.random().toString(36).slice(2, 8)}`;
+const keepTestData = process.argv.includes("--keep-test-data") || process.env.CRM_E2E_KEEP_TEST_DATA === "1";
+const cleanupOnly = process.argv.includes("--cleanup-only");
 
 const safePerson = {
   fullName: "Juan Perez",
   email: "juan.perez@example.com",
   phone: "+56 9 1234 5678",
+};
+
+const testMarker = {
+  source: "e2e_test",
+  testRunId,
+  isTest: true,
+};
+
+const sourceMarker = {
+  source: "e2e_test",
+  sourcePage: "e2e_test",
+  sourceComponent: "scripts/test-crm-end-to-end.mjs",
+  utmSource: "e2e_test",
 };
 
 const createRequests = [
@@ -17,14 +33,16 @@ const createRequests = [
     body: {
       leadType: "customer_request",
       ...safePerson,
+      ...testMarker,
+      ...sourceMarker,
       service: "Gasfiteria",
       problemDescription: "Prueba end-to-end CRM sin datos reales sensibles.",
       urgency: "esta_semana",
       regionCode: "13",
       regionName: "Region Metropolitana",
       communeName: "Providencia",
-      sourceComponent: "scripts/test-crm-end-to-end.mjs",
       sourceButton: "crm_e2e_customer_lead",
+      payload: { ...testMarker, scenario: "customer_lead" },
     },
   },
   {
@@ -33,14 +51,16 @@ const createRequests = [
     endpoint: "/api/companies/request",
     body: {
       ...safePerson,
+      ...testMarker,
+      ...sourceMarker,
       companyName: "Empresa de Prueba OficiosPro SpA",
       service: "Mantencion multisede",
       problemDescription: "Prueba end-to-end CRM empresa sin datos reales sensibles.",
       regionCode: "13",
       regionName: "Region Metropolitana",
       communeName: "Las Condes",
-      sourceComponent: "scripts/test-crm-end-to-end.mjs",
       sourceButton: "crm_e2e_company_lead",
+      payload: { ...testMarker, scenario: "company_lead" },
     },
   },
   {
@@ -49,15 +69,18 @@ const createRequests = [
     endpoint: "/api/specialists/apply",
     body: {
       ...safePerson,
+      ...testMarker,
+      ...sourceMarker,
       applicantType: "specialist",
       trade: "Electricidad",
       service: "Mantencion electrica",
       regionCode: "13",
       regionName: "Region Metropolitana",
       communeName: "Nunoa",
-      sourceComponent: "scripts/test-crm-end-to-end.mjs",
       sourceButton: "crm_e2e_specialist_application",
       payload: {
+        ...testMarker,
+        scenario: "specialist_application",
         services: [
           {
             serviceTypeId: "electricidad",
@@ -83,6 +106,7 @@ const createRequests = [
       customerName: safePerson.fullName,
       customerEmail: safePerson.email,
       customerPhone: safePerson.phone,
+      ...testMarker,
       customerId: "crm-e2e-customer",
       specialistId: "crm-e2e-specialist",
       specialistName: "Especialista de Prueba",
@@ -111,9 +135,19 @@ const adminRequests = [
   { label: "consultar crm reports", method: "GET", endpoint: "/api/admin/crm/reports" },
 ];
 
+const cleanupRequest = {
+  label: "limpiar datos de prueba",
+  method: "POST",
+  endpoint: "/api/admin/crm/cleanup-test-data",
+  body: { ...testMarker },
+};
+
 let failures = 0;
 
 console.log(`Testing CRM end-to-end against ${baseUrl}`);
+console.log(`Test run id: ${testRunId}`);
+console.log("Este script crea datos marcados como e2e_test/isTest/example.com.");
+console.log(keepTestData ? "Cleanup automatico desactivado por --keep-test-data o CRM_E2E_KEEP_TEST_DATA=1." : "Cleanup automatico activado al finalizar.");
 console.log("");
 
 if (process.env.ADMIN_LOGIN_EMAIL && process.env.ADMIN_LOGIN_SECRET) {
@@ -144,6 +178,12 @@ if (!preflight.ok) {
 
 console.log("");
 
+if (cleanupOnly) {
+  await requestJson(cleanupRequest, adminToken);
+  finish();
+  process.exit(0);
+}
+
 for (const item of createRequests) {
   await requestJson(item);
 }
@@ -152,13 +192,21 @@ for (const item of adminRequests) {
   await requestJson(item, adminToken);
 }
 
-console.log("");
-if (failures) {
-  console.error(`CRM E2E finished with ${failures} failing request(s).`);
-  process.exit(1);
+if (!keepTestData) {
+  await requestJson(cleanupRequest, adminToken);
 }
 
-console.log("CRM E2E finished successfully.");
+finish();
+
+function finish() {
+  console.log("");
+  if (failures) {
+    console.error(`CRM E2E finished with ${failures} failing request(s).`);
+    process.exit(1);
+  }
+
+  console.log("CRM E2E finished successfully.");
+}
 
 async function requestJson({ label, method, endpoint, body }, token = "", options = {}) {
   const headers = body ? { "Content-Type": "application/json" } : {};

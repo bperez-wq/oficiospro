@@ -51,6 +51,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   const [newOpportunity, setNewOpportunity] = useState({ title: "", type: "customer_request", pipeline: "clientes", stage: "nuevo", priority: "media" });
   const [newTask, setNewTask] = useState({ title: "", taskType: "followup", priority: "media", assignedTo: "", dueAt: "" });
   const [newNote, setNewNote] = useState("");
+  const [showTestData, setShowTestData] = useState(false);
 
   useEffect(() => {
     const initial = initialAdminToken(tokenStorageKey);
@@ -88,9 +89,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
       } else if (view === "tasks") {
         await loadTasks(activeToken);
       } else if (view === "contacts") {
-        const data = await adminFetch(activeToken, "/api/admin/crm/contacts?limit=100");
-        setContacts(arrayFrom(data.contacts));
-        setNotice("Contactos cargados desde D1.");
+        await loadContacts(activeToken);
       } else if (view === "companies") {
         const data = await adminFetch(activeToken, "/api/admin/crm/companies?limit=100");
         setCompanies(arrayFrom(data.companies));
@@ -123,6 +122,14 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
     setNotice("Tareas cargadas desde D1.");
   }
 
+  async function loadContacts(activeToken = token, includeTestData = showTestData) {
+    const params = new URLSearchParams({ limit: "100" });
+    if (includeTestData) params.set("showTestData", "true");
+    const data = await adminFetch(activeToken, `/api/admin/crm/contacts?${params.toString()}`);
+    setContacts(arrayFrom(data.contacts));
+    setNotice(includeTestData ? "Contactos cargados incluyendo datos de prueba." : "Contactos reales cargados desde D1. Los datos de prueba estan ocultos.");
+  }
+
   async function sync(source: "sync-leads" | "sync-specialists" | "sync-virtual-quotes") {
     if (!token) return;
     setLoading(true);
@@ -135,6 +142,25 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function cleanupTestData() {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const data = await adminFetch(token, "/api/admin/crm/cleanup-test-data", { method: "POST", body: { source: "e2e_test", isTest: true } });
+      setNotice(`Limpieza lista: ${String(data.total ?? 0)} registros de prueba removidos.`);
+      await loadView(token);
+    } catch (error) {
+      setNotice(adminErrorMessage(error));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggleShowTestData(next: boolean) {
+    setShowTestData(next);
+    if (view === "contacts" && token) void loadContacts(token, next);
   }
 
   async function createOpportunity(event: FormEvent<HTMLFormElement>) {
@@ -254,7 +280,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
       </section>
 
       {view === "overview" ? (
-        <OverviewView overview={overview} loading={loading} onRefresh={() => loadView()} onSync={sync} />
+        <OverviewView overview={overview} loading={loading} onRefresh={() => loadView()} onSync={sync} onCleanup={cleanupTestData} />
       ) : null}
 
       {view === "opportunities" ? (
@@ -285,7 +311,21 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
       ) : null}
 
       {view === "tasks" ? <RowsView title="Tareas internas" rows={tasks} columns={["id", "title", "taskType", "status", "priority", "assignedTo", "dueAt", "completedAt", "opportunityId"]} onRefresh={() => loadTasks()} onExport={exportCurrentCsv} action={(row) => String(row.status) !== "done" ? <button className="btn-secondary" type="button" onClick={() => completeTask(String(row.id))}>Completar</button> : null} /> : null}
-      {view === "contacts" ? <RowsView title="Contactos" rows={contacts} columns={["id", "name", "email", "phone", "contactType", "source", "commune", "region", "status"]} onRefresh={() => loadView()} onExport={exportCurrentCsv} /> : null}
+      {view === "contacts" ? (
+        <RowsView
+          title="Contactos"
+          rows={contacts}
+          columns={["id", "name", "email", "phone", "contactType", "source", "commune", "region", "status", "isTest"]}
+          onRefresh={() => loadContacts()}
+          onExport={exportCurrentCsv}
+          extraActions={
+            <label className="flex items-center gap-2 rounded-2xl border border-line bg-white px-4 py-2 text-sm font-black text-muted">
+              <input type="checkbox" checked={showTestData} onChange={(event) => toggleShowTestData(event.target.checked)} />
+              Mostrar datos de prueba
+            </label>
+          }
+        />
+      ) : null}
       {view === "companies" ? <RowsView title="Empresas" rows={companies} columns={["id", "companyName", "rut", "industry", "contactName", "email", "phone", "commune", "region", "status"]} onRefresh={() => loadView()} onExport={exportCurrentCsv} /> : null}
       {view === "pipeline" ? <PipelineView groups={pipelineGroups} onDetail={(id) => loadDetail(id)} /> : null}
       {view === "activity" ? <RowsView title="Historial de actividad" rows={activity} columns={["id", "entityType", "entityId", "action", "actor", "metadataJson", "createdAt"]} onRefresh={() => loadView()} onExport={exportCurrentCsv} /> : null}
@@ -293,7 +333,19 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   );
 }
 
-function OverviewView({ overview, loading, onRefresh, onSync }: { overview: Overview | null; loading: boolean; onRefresh: () => void; onSync: (source: "sync-leads" | "sync-specialists" | "sync-virtual-quotes") => void }) {
+function OverviewView({
+  overview,
+  loading,
+  onRefresh,
+  onSync,
+  onCleanup,
+}: {
+  overview: Overview | null;
+  loading: boolean;
+  onRefresh: () => void;
+  onSync: (source: "sync-leads" | "sync-specialists" | "sync-virtual-quotes") => void;
+  onCleanup: () => void;
+}) {
   const metrics = [
     { label: "Leads nuevos", value: overview?.newLeads ?? 0, detail: "Pipeline clientes", tone: "brand" as const },
     { label: "Especialistas pendientes", value: overview?.pendingSpecialists ?? 0, detail: "Onboarding" },
@@ -316,10 +368,11 @@ function OverviewView({ overview, loading, onRefresh, onSync }: { overview: Over
           </div>
           <button className="btn-secondary" type="button" disabled={loading} onClick={onRefresh}>{loading ? "Cargando..." : "Actualizar"}</button>
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="mt-4 grid gap-3 md:grid-cols-4">
           <button className="btn-primary" type="button" onClick={() => onSync("sync-leads")}>Sincronizar leads</button>
           <button className="btn-primary" type="button" onClick={() => onSync("sync-specialists")}>Sincronizar especialistas</button>
           <button className="btn-primary" type="button" onClick={() => onSync("sync-virtual-quotes")}>Sincronizar cotizaciones</button>
+          <button className="btn-secondary" type="button" disabled={loading} onClick={onCleanup}>Limpiar datos de prueba</button>
         </div>
       </section>
       <RowsView title="Oportunidades por pipeline" rows={overview?.opportunitiesByPipeline ?? []} columns={["pipeline", "count"]} />
@@ -443,12 +496,31 @@ function PipelineView({ groups, onDetail }: { groups: Record<string, Record<stri
   );
 }
 
-function RowsView({ title, rows, columns, onRefresh, onExport, onRowClick, action }: { title: string; rows: CrmRow[]; columns: string[]; onRefresh?: () => void; onExport?: () => void; onRowClick?: (row: CrmRow) => void; action?: (row: CrmRow) => ReactNode }) {
+function RowsView({
+  title,
+  rows,
+  columns,
+  onRefresh,
+  onExport,
+  onRowClick,
+  action,
+  extraActions,
+}: {
+  title: string;
+  rows: CrmRow[];
+  columns: string[];
+  onRefresh?: () => void;
+  onExport?: () => void;
+  onRowClick?: (row: CrmRow) => void;
+  action?: (row: CrmRow) => ReactNode;
+  extraActions?: ReactNode;
+}) {
   return (
     <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-2xl font-black text-ink">{title}</h2>
         <div className="flex flex-wrap gap-2">
+          {extraActions}
           {onRefresh ? <button className="btn-secondary" type="button" onClick={onRefresh}>Actualizar</button> : null}
           {onExport ? <button className="btn-secondary" type="button" disabled={!rows.length} onClick={onExport}>Exportar CSV</button> : null}
         </div>
@@ -458,7 +530,10 @@ function RowsView({ title, rows, columns, onRefresh, onExport, onRowClick, actio
           <article key={String(row.id ?? index)} className="rounded-2xl border border-line bg-slate-50 p-4 text-left transition hover:border-brand hover:bg-brand-soft">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <strong className="block text-ink">{String(row.title ?? row.name ?? row.companyName ?? row.action ?? row.id ?? "Registro")}</strong>
+                <div className="flex flex-wrap items-center gap-2">
+                  <strong className="block text-ink">{String(row.title ?? row.name ?? row.companyName ?? row.action ?? row.id ?? "Registro")}</strong>
+                  {row.isTest ? <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] font-black uppercase text-amber-700">Test</span> : null}
+                </div>
                 <span className="mt-1 block text-sm font-bold text-muted">{columns.slice(0, 4).map((column) => formatValue(row[column])).join(" / ")}</span>
               </div>
               <div className="flex flex-wrap gap-2">

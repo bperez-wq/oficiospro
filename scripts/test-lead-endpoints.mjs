@@ -1,9 +1,19 @@
 const baseUrl = (process.env.TEST_BASE_URL ?? "http://localhost:8787").replace(/\/$/, "");
+const testRunId = process.env.LEAD_E2E_TEST_RUN_ID || `lead_e2e_${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}_${Math.random().toString(36).slice(2, 8)}`;
 
 const safePerson = {
   fullName: "Juan Pérez",
   email: "juan.perez@example.com",
   phone: "+56 9 1234 5678",
+};
+
+const testMarker = {
+  source: "e2e_test",
+  sourcePage: "e2e_test",
+  sourceComponent: "scripts/test-lead-endpoints.mjs",
+  utmSource: "e2e_test",
+  isTest: true,
+  testRunId,
 };
 
 const requests = [
@@ -12,6 +22,7 @@ const requests = [
     body: {
       leadType: "contact_message",
       ...safePerson,
+      ...testMarker,
       service: "Consulta general",
       problemDescription: "Prueba operacional de captura desde script.",
       regionCode: "13",
@@ -19,23 +30,27 @@ const requests = [
       communeName: "Providencia",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/leads",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/contact",
     body: {
       ...safePerson,
+      ...testMarker,
       applicantType: "Hogar",
       service: "Contacto",
       problemDescription: "Mensaje de prueba para contacto.",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/contact",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/specialists/apply",
     body: {
       ...safePerson,
+      ...testMarker,
       applicantType: "specialist",
       trade: "Electricidad",
       service: "Mantención eléctrica",
@@ -45,6 +60,9 @@ const requests = [
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/specialists/apply",
       payload: {
+        source: "e2e_test",
+        isTest: true,
+        testRunId,
         services: [
           {
             serviceTypeId: "electricidad",
@@ -64,6 +82,7 @@ const requests = [
     endpoint: "/api/jobs/request",
     body: {
       ...safePerson,
+      ...testMarker,
       service: "Gasfitería",
       problemDescription: "Prueba de solicitud de trabajo del hogar.",
       urgency: "Esta semana",
@@ -72,12 +91,14 @@ const requests = [
       communeName: "Las Condes",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/jobs/request",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/customers/register-interest",
     body: {
       ...safePerson,
+      ...testMarker,
       service: "Club Hogar Plus",
       problemDescription: "Prueba operacional de lead cliente.",
       regionCode: "13",
@@ -85,13 +106,14 @@ const requests = [
       communeName: "Vitacura",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/customers/register-interest",
-      payload: { rut: "12.345.678-9", address: "Direccion de prueba 123" },
+      payload: { source: "e2e_test", isTest: true, testRunId, rut: "12.345.678-9", address: "Direccion de prueba 123" },
     },
   },
   {
     endpoint: "/api/companies/lead",
     body: {
       ...safePerson,
+      ...testMarker,
       companyName: "Empresa de Prueba SpA",
       service: "Mantención multisede",
       problemDescription: "Prueba operacional de solicitud empresa.",
@@ -100,13 +122,14 @@ const requests = [
       communeName: "Valparaíso",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/companies/lead",
-      payload: { companyRut: "76.123.456-7", branches: 2 },
+      payload: { source: "e2e_test", isTest: true, testRunId, companyRut: "76.123.456-7", branches: 2 },
     },
   },
   {
     endpoint: "/api/companies/request",
     body: {
       ...safePerson,
+      ...testMarker,
       companyName: "Empresa Legacy SpA",
       service: "MantenciÃ³n multisede",
       problemDescription: "Prueba operacional de alias empresa.",
@@ -115,12 +138,14 @@ const requests = [
       communeName: "Providencia",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/companies/request",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/service-requests/create",
     body: {
       ...safePerson,
+      ...testMarker,
       service: "Climatización",
       problemDescription: "Prueba de reserva sin bloquear agenda real.",
       requestedDate: "2026-06-15",
@@ -133,12 +158,14 @@ const requests = [
       communeName: "Concepción",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/service-requests/create",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/bookings/request",
     body: {
       ...safePerson,
+      ...testMarker,
       service: "ClimatizaciÃ³n",
       problemDescription: "Prueba operacional de alias reserva.",
       requestedDate: "2026-06-15",
@@ -151,21 +178,24 @@ const requests = [
       communeName: "ConcepciÃ³n",
       sourceComponent: "scripts/test-lead-endpoints.mjs",
       sourceButton: "POST /api/bookings/request",
+      payload: { source: "e2e_test", isTest: true, testRunId },
     },
   },
   {
     endpoint: "/api/conversion-events/create",
     body: {
       type: "script_test_conversion",
-      source: "scripts/test-lead-endpoints.mjs",
+      source: "e2e_test",
       page: "/prueba",
-      payload: { safe: true },
+      payload: { safe: true, source: "e2e_test", isTest: true, testRunId },
     },
   },
 ];
 
 async function run() {
   console.log(`Testing lead endpoints against ${baseUrl}`);
+  console.log(`Test run id: ${testRunId}`);
+  console.log("Los registros creados quedan marcados como e2e_test/isTest/example.com para limpieza segura.");
   console.log("");
 
   for (const request of requests) {

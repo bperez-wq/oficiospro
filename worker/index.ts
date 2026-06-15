@@ -966,7 +966,7 @@ async function authorizeAdmin(request: Request, env: Env) {
 }
 
 type AdminCrmRoute = {
-  resource: "overview" | "work-queue" | "reports" | "opportunities" | "tasks" | "notes" | "activity" | "contacts" | "companies" | "sync-leads" | "sync-specialists" | "sync-virtual-quotes";
+  resource: "overview" | "work-queue" | "reports" | "opportunities" | "tasks" | "notes" | "activity" | "contacts" | "companies" | "sync-leads" | "sync-specialists" | "sync-virtual-quotes" | "cleanup-test-data";
   method: string;
   id?: string;
 };
@@ -978,7 +978,7 @@ function matchAdminCrmRoute(pathname: string, method: string): AdminCrmRoute | n
   if (!rest) return { resource: "overview", method };
   const parts = rest.split("/");
   const resource = parts[0] as AdminCrmRoute["resource"];
-  if (!["overview", "work-queue", "reports", "opportunities", "tasks", "notes", "activity", "contacts", "companies", "sync-leads", "sync-specialists", "sync-virtual-quotes"].includes(resource)) return null;
+  if (!["overview", "work-queue", "reports", "opportunities", "tasks", "notes", "activity", "contacts", "companies", "sync-leads", "sync-specialists", "sync-virtual-quotes", "cleanup-test-data"].includes(resource)) return null;
   return { resource, method, id: parts[1] ? decodeURIComponent(parts[1]) : undefined };
 }
 
@@ -1006,6 +1006,7 @@ async function handleAdminCrmRoute(request: Request, env: Env, route: AdminCrmRo
     if (route.resource === "sync-leads" && route.method === "POST") return syncCrmLeads(request, env.DB);
     if (route.resource === "sync-specialists" && route.method === "POST") return syncCrmSpecialists(request, env.DB);
     if (route.resource === "sync-virtual-quotes" && route.method === "POST") return syncCrmVirtualQuotes(request, env.DB);
+    if (route.resource === "cleanup-test-data" && route.method === "POST") return cleanupCrmTestData(request, env.DB);
     return json({ ok: false, error: "endpoint_not_found" }, 404);
   } catch (error) {
     const message = String(error);
@@ -1126,6 +1127,164 @@ async function listCrmReports(request: Request, db: D1Database) {
       wonLostSummary: wonLostSummary.results ?? [],
     },
   });
+}
+
+async function cleanupCrmTestData(request: Request, db: D1Database) {
+  const hasJsonBody = (request.headers.get("content-type") ?? "").toLowerCase().includes("application/json");
+  const body = hasJsonBody ? await readJsonBody<Record<string, unknown>>(request) : {};
+  const dryRun = Boolean(body.dryRun);
+  const deletions: Record<string, number> = {};
+
+  for (const item of crmTestCleanupTargets()) {
+    deletions[item.table] = await cleanupDelete(db, item.table, item.where, dryRun);
+  }
+
+  const total = Object.values(deletions).reduce((sum, count) => sum + count, 0);
+  await crmActivity(db, request, {
+    entityType: "crm",
+    entityId: "cleanup-test-data",
+    action: dryRun ? "crm_cleanup_test_data_preview" : "crm_cleanup_test_data",
+    metadata: { total, deletions, dryRun },
+  });
+
+  return json({ ok: true, dryRun, deleted: deletions, total });
+}
+
+function crmTestCleanupTargets() {
+  const lead = leadSubmissionTestWhere();
+  const customerLead = customerLeadTestWhere();
+  const companyLead = companyLeadTestWhere();
+  const specialist = specialistApplicationTestWhere();
+  const serviceRequest = serviceRequestTestWhere();
+  const virtualQuote = virtualQuoteTestWhere();
+  const contact = crmContactTestWhere();
+  const company = crmCompanyTestWhere();
+  const opportunity = crmOpportunityTestWhere();
+
+  return [
+    { table: "crm_notes", where: `entityId IN (SELECT id FROM crm_opportunities WHERE ${opportunity}) OR entityId IN (SELECT id FROM crm_contacts WHERE ${contact}) OR COALESCE(body, '') LIKE '%e2e_test%' OR COALESCE(body, '') LIKE '%testRunId%'` },
+    { table: "crm_activity_log", where: `entityId IN (SELECT id FROM crm_opportunities WHERE ${opportunity}) OR entityId IN (SELECT id FROM crm_contacts WHERE ${contact}) OR COALESCE(metadataJson, '') LIKE '%e2e_test%' OR COALESCE(metadataJson, '') LIKE '%testRunId%'` },
+    { table: "crm_status_history", where: `entityId IN (SELECT id FROM crm_opportunities WHERE ${opportunity}) OR entityId IN (SELECT id FROM crm_tasks WHERE ${crmTaskTestWhere()})` },
+    { table: "crm_tasks", where: crmTaskTestWhere() },
+    { table: "crm_opportunities", where: opportunity },
+    { table: "crm_contacts", where: contact },
+    { table: "crm_companies", where: company },
+    { table: "virtual_quote_messages", where: `quoteRequestId IN (SELECT id FROM virtual_quote_requests WHERE ${virtualQuote})` },
+    { table: "virtual_quote_offers", where: `quoteRequestId IN (SELECT id FROM virtual_quote_requests WHERE ${virtualQuote})` },
+    { table: "virtual_quote_attachments", where: `quoteRequestId IN (SELECT id FROM virtual_quote_requests WHERE ${virtualQuote})` },
+    { table: "virtual_quote_requests", where: virtualQuote },
+    { table: "service_requests", where: serviceRequest },
+    { table: "customer_leads", where: customerLead },
+    { table: "company_leads", where: companyLead },
+    { table: "specialist_applications", where: specialist },
+    { table: "lead_submissions", where: lead },
+    { table: "conversion_events", where: `COALESCE(source, '') LIKE '%e2e_test%' OR COALESCE(payloadJson, '') LIKE '%e2e_test%' OR COALESCE(payloadJson, '') LIKE '%testRunId%' OR COALESCE(type, '') LIKE '%script_test%'` },
+  ];
+}
+
+async function cleanupDelete(db: D1Database, table: string, where: string, dryRun: boolean) {
+  const count = await countCrm(db, table, where, []);
+  if (!dryRun && count > 0) await db.prepare(`DELETE FROM ${table} WHERE ${where}`).run();
+  return count;
+}
+
+function crmOpportunityTestWhere() {
+  return [
+    `sourceEntityId IN (SELECT id FROM lead_submissions WHERE ${leadSubmissionTestWhere()})`,
+    `sourceEntityId IN (SELECT id FROM specialist_applications WHERE ${specialistApplicationTestWhere()})`,
+    `sourceEntityId IN (SELECT id FROM company_leads WHERE ${companyLeadTestWhere()})`,
+    `serviceRequestId IN (SELECT id FROM service_requests WHERE ${serviceRequestTestWhere()})`,
+    `virtualQuoteId IN (SELECT id FROM virtual_quote_requests WHERE ${virtualQuoteTestWhere()})`,
+    `contactId IN (SELECT id FROM crm_contacts WHERE ${crmContactTestWhere()})`,
+    `companyId IN (SELECT id FROM crm_companies WHERE ${crmCompanyTestWhere()})`,
+    `COALESCE(sourceEntityId, '') LIKE '%e2e_%'`,
+  ].join(" OR ");
+}
+
+function crmTaskTestWhere() {
+  return [
+    `opportunityId IN (SELECT id FROM crm_opportunities WHERE ${crmOpportunityTestWhere()})`,
+    `contactId IN (SELECT id FROM crm_contacts WHERE ${crmContactTestWhere()})`,
+    `COALESCE(description, '') LIKE '%e2e_test%'`,
+    `COALESCE(description, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function crmContactTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(source, '') LIKE '%e2e_test%'`,
+    `COALESCE(tags, '') LIKE '%e2e_test%'`,
+    `COALESCE(tags, '') LIKE '%testRunId:%'`,
+  ].join(" OR ");
+}
+
+function crmCompanyTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(source, '') LIKE '%e2e_test%'`,
+  ].join(" OR ");
+}
+
+function leadSubmissionTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(source_page, '') LIKE '%e2e_test%'`,
+    `COALESCE(source_component, '') LIKE '%scripts/test-%'`,
+    `COALESCE(source_button, '') LIKE '%crm_e2e%'`,
+    `COALESCE(utm_source, '') = 'e2e_test'`,
+    `COALESCE(payload_json, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payload_json, '') LIKE '%e2e_test%'`,
+    `COALESCE(payload_json, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function customerLeadTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(source, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payloadJson, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function companyLeadTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(payloadJson, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payloadJson, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function specialistApplicationTestWhere() {
+  return [
+    `LOWER(COALESCE(email, '')) LIKE '%example.com%'`,
+    `COALESCE(source, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payloadJson, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function serviceRequestTestWhere() {
+  return [
+    `LOWER(COALESCE(customerEmail, '')) LIKE '%example.com%'`,
+    `COALESCE(payloadJson, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payloadJson, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
+}
+
+function virtualQuoteTestWhere() {
+  return [
+    `LOWER(COALESCE(customerEmail, '')) LIKE '%example.com%'`,
+    `COALESCE(customerId, '') LIKE '%crm-e2e%'`,
+    `COALESCE(payloadJson, '') LIKE '%"isTest":true%'`,
+    `COALESCE(payloadJson, '') LIKE '%e2e_test%'`,
+    `COALESCE(payloadJson, '') LIKE '%testRunId%'`,
+  ].join(" OR ");
 }
 
 async function listCrmOpportunities(request: Request, db: D1Database) {
@@ -1391,6 +1550,8 @@ async function listCrmDirectory(request: Request, db: D1Database, table: "crm_co
   const { limit, offset } = crmPagination(url);
   const filters: string[] = [];
   const values: unknown[] = [];
+  const showTestData = url.searchParams.get("showTestData") === "true";
+  if (!showTestData) filters.push(`NOT (${table === "crm_contacts" ? crmContactTestWhere() : crmCompanyTestWhere()})`);
   addCrmFilter(filters, values, "status", url.searchParams.get("status"));
   const q = sanitizeText(url.searchParams.get("search") ?? url.searchParams.get("q") ?? "", 120);
   if (q) {
@@ -1399,7 +1560,8 @@ async function listCrmDirectory(request: Request, db: D1Database, table: "crm_co
   }
   const where = filters.length ? ` WHERE ${filters.join(" AND ")}` : "";
   const result = await db.prepare(`SELECT * FROM ${table}${where} ORDER BY updatedAt DESC LIMIT ? OFFSET ?`).bind(...values, limit, offset).all();
-  return json({ ok: true, [key]: result.results ?? [], limit, offset });
+  const rows = (result.results ?? []).map((row) => ({ ...row, isTest: isCrmTestRecord(row as Record<string, unknown>) }));
+  return json({ ok: true, [key]: rows, limit, offset, showTestData });
 }
 
 async function syncCrmLeads(request: Request, db: D1Database) {
@@ -1411,11 +1573,10 @@ async function syncCrmLeads(request: Request, db: D1Database) {
     const id = String(row.id ?? "");
     if (!id) continue;
     const leadType = String(row.lead_type ?? "customer_request");
-    const contactId = `crm_contact_lead_${id}`;
     const companyId = row.company_name ? `crm_company_lead_${id}` : null;
     const now = new Date().toISOString();
-    await upsertCrmContact(db, {
-      id: contactId,
+    const contactId = await upsertCrmContact(db, {
+      id: crmContactIdFor("lead", row, id),
       name: String(row.full_name ?? row.company_name ?? "Contacto OficiosPro"),
       email: String(row.email ?? ""),
       phone: String(row.phone ?? ""),
@@ -1423,6 +1584,7 @@ async function syncCrmLeads(request: Request, db: D1Database) {
       source: sourceFromRow(row),
       commune: String(row.commune_name ?? row.commune_code ?? ""),
       region: String(row.region_name ?? row.region_code ?? ""),
+      tags: crmTagsFromRow(row),
       status: String(row.status ?? "new"),
       createdAt: String(row.created_at ?? now),
       updatedAt: now,
@@ -1474,17 +1636,17 @@ async function syncCrmSpecialists(request: Request, db: D1Database) {
     if (!id) continue;
     const now = new Date().toISOString();
     const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || String(row.email ?? "Especialista OficiosPro");
-    const contactId = `crm_contact_specialist_${id}`;
-    await upsertCrmContact(db, {
-      id: contactId,
+    const contactId = await upsertCrmContact(db, {
+      id: crmContactIdFor("specialist", row, id),
       name,
       email: String(row.email ?? ""),
       phone: String(row.whatsapp ?? ""),
       rut: String(row.rut ?? ""),
       contactType: "specialist",
-      source: String(row.source ?? "specialist_application"),
+      source: isCrmTestRecord(row) ? "e2e_test" : String(row.source ?? "specialist_application"),
       commune: String(row.comuna ?? ""),
       region: String(row.region ?? ""),
+      tags: crmTagsFromRow(row),
       status: String(row.status ?? row.publicationStatus ?? "pending"),
       createdAt: String(row.createdAt ?? now),
       updatedAt: now,
@@ -1526,16 +1688,16 @@ async function syncCrmVirtualQuotes(request: Request, db: D1Database) {
     const id = String(row.id ?? "");
     if (!id) continue;
     const now = new Date().toISOString();
-    const contactId = `crm_contact_virtual_quote_${id}`;
-    await upsertCrmContact(db, {
-      id: contactId,
+    const contactId = await upsertCrmContact(db, {
+      id: crmContactIdFor("virtual_quote", row, id),
       name: String(row.customerName ?? "Cliente cotizacion virtual"),
       email: String(row.customerEmail ?? ""),
       phone: String(row.customerPhone ?? ""),
       contactType: "customer",
-      source: "virtual_quote",
+      source: isCrmTestRecord(row) ? "e2e_test" : "virtual_quote",
       commune: String(row.commune ?? ""),
       region: String(row.region ?? ""),
+      tags: crmTagsFromRow(row),
       status: String(row.status ?? "pendiente_revision"),
       createdAt: String(row.createdAt ?? now),
       updatedAt: now,
@@ -1663,10 +1825,19 @@ function stageFromVirtualQuote(status: string) {
 }
 
 function sourceFromRow(row: Record<string, unknown>) {
+  if (isCrmTestRecord(row)) return "e2e_test";
   return [row.source_page, row.source_component, row.source_button].filter(Boolean).join(" / ") || "lead_submission";
 }
 
 async function upsertCrmContact(db: D1Database, input: Record<string, unknown>) {
+  const normalizedEmail = sanitizeEmail(input.email);
+  const normalizedPhone = normalizeChileanPhone(input.phone);
+  const normalizedRut = normalizeRut(input.rut);
+  const fallbackId = sanitizeText(input.id, 160) ?? `crm_contact_${crypto.randomUUID()}`;
+  const existing = await findExistingCrmContact(db, { email: normalizedEmail, phone: normalizedPhone, rut: normalizedRut });
+  const id = existing?.id ? String(existing.id) : fallbackId;
+  const tags = mergeCrmTags(sanitizeText(existing?.tags, 600), sanitizeText(input.tags, 600), isCrmTestRecord(input) ? ["Test", "e2e_test", ...testRunTags(input)] : []);
+
   await db
     .prepare(
       `INSERT INTO crm_contacts (id, name, email, phone, rut, contactType, source, commune, region, addressSummary, tags, status, createdAt, updatedAt)
@@ -1676,22 +1847,129 @@ async function upsertCrmContact(db: D1Database, input: Record<string, unknown>) 
        addressSummary = excluded.addressSummary, tags = excluded.tags, status = excluded.status, updatedAt = excluded.updatedAt`,
     )
     .bind(
-      input.id,
+      id,
       sanitizeText(input.name, 180) ?? "Contacto OficiosPro",
-      sanitizeEmail(input.email) ?? null,
-      sanitizeText(input.phone, 40) ?? null,
-      sanitizeText(input.rut, 30) ?? null,
+      normalizedEmail ?? null,
+      normalizedPhone ?? null,
+      normalizedRut ?? null,
       sanitizeText(input.contactType, 40) ?? "customer",
-      sanitizeText(input.source, 180) ?? null,
+      isCrmTestRecord(input) ? "e2e_test" : sanitizeText(input.source, 180) ?? null,
       sanitizeText(input.commune, 120) ?? null,
       sanitizeText(input.region, 120) ?? null,
       sanitizeText(input.addressSummary, 240) ?? null,
-      sanitizeText(input.tags, 600) ?? null,
+      tags || null,
       sanitizeText(input.status, 40) ?? "new",
-      input.createdAt,
+      existing?.createdAt ?? input.createdAt,
       input.updatedAt,
     )
     .run();
+  return id;
+}
+
+async function findExistingCrmContact(db: D1Database, input: { email?: string | null; phone?: string | null; rut?: string | null }) {
+  const clauses: string[] = [];
+  const values: unknown[] = [];
+  if (input.email) {
+    clauses.push("LOWER(email) = ?");
+    values.push(input.email);
+  }
+  if (input.phone) {
+    clauses.push("phone = ?");
+    values.push(input.phone);
+  }
+  if (input.rut) {
+    clauses.push("rut = ?");
+    values.push(input.rut);
+  }
+  if (!clauses.length) return null;
+  return db.prepare(`SELECT * FROM crm_contacts WHERE ${clauses.join(" OR ")} ORDER BY updatedAt DESC LIMIT 1`).bind(...values).first<Record<string, unknown>>();
+}
+
+function crmContactIdFor(prefix: string, row: Record<string, unknown>, fallback: string) {
+  const email = sanitizeEmail(row.email ?? row.customerEmail);
+  if (email) return `crm_contact_email_${stableCrmKey(email)}`;
+  const phone = normalizeChileanPhone(row.phone ?? row.whatsapp ?? row.customerPhone);
+  if (phone) return `crm_contact_phone_${stableCrmKey(phone)}`;
+  const rut = normalizeRut(row.rut ?? row.customerRut);
+  if (rut) return `crm_contact_rut_${stableCrmKey(rut)}`;
+  return `crm_contact_${prefix}_${stableCrmKey(fallback)}`;
+}
+
+function stableCrmKey(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "")
+    .slice(0, 120) || crypto.randomUUID();
+}
+
+function normalizeChileanPhone(value: unknown) {
+  const raw = sanitizeText(value, 60);
+  if (!raw) return null;
+  let digits = raw.replace(/\D/g, "");
+  if (!digits) return null;
+  if (digits.startsWith("00")) digits = digits.slice(2);
+  if (digits.startsWith("56")) return `+${digits}`;
+  if (digits.startsWith("9") && digits.length === 9) return `+56${digits}`;
+  if (digits.length === 8) return `+569${digits}`;
+  return `+${digits}`;
+}
+
+function normalizeRut(value: unknown) {
+  const raw = sanitizeText(value, 30);
+  if (!raw) return null;
+  const normalized = raw.replace(/[^0-9kK]/g, "").toUpperCase();
+  return normalized.length >= 2 ? normalized : null;
+}
+
+function crmTagsFromRow(row: Record<string, unknown>) {
+  if (!isCrmTestRecord(row)) return "";
+  return mergeCrmTags("", "", ["Test", "e2e_test", ...testRunTags(row)]);
+}
+
+function mergeCrmTags(...groups: Array<string | string[] | null | undefined>) {
+  const tags = groups.flatMap((group) => {
+    if (!group) return [];
+    if (Array.isArray(group)) return group;
+    return group.split(",").map((tag) => tag.trim());
+  }).filter(Boolean);
+  return Array.from(new Set(tags)).join(", ");
+}
+
+function testRunTags(row: Record<string, unknown>) {
+  const id = testRunIdFromRecord(row);
+  return id ? [`testRunId:${id}`] : [];
+}
+
+function testRunIdFromRecord(row: Record<string, unknown>) {
+  const direct = sanitizeText(row.testRunId, 120);
+  if (direct) return direct;
+  const payload = payloadRecord(row.payloadJson ?? row.payload_json);
+  return sanitizeText(payload.testRunId, 120) ?? "";
+}
+
+function isCrmTestRecord(row: Record<string, unknown>) {
+  const payload = payloadRecord(row.payloadJson ?? row.payload_json);
+  return Boolean(
+    row.isTest === true ||
+      payload.isTest === true ||
+      sanitizeText(row.source, 180) === "e2e_test" ||
+      sanitizeText(payload.source, 180) === "e2e_test" ||
+      sanitizeText(row.utm_source, 120) === "e2e_test" ||
+      sanitizeText(row.source_page, 180) === "e2e_test" ||
+      sanitizeText(row.tags, 600)?.includes("e2e_test") ||
+      testRunIdFromRecord(row) ||
+      sanitizeEmail(row.email ?? row.customerEmail)?.endsWith("example.com"),
+  );
+}
+
+function payloadRecord(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Record<string, unknown>;
+  if (typeof value !== "string" || !value.trim()) return {};
+  const parsed = safeJson(value);
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as Record<string, unknown> : {};
 }
 
 async function insertCrmOpportunityIfMissing(db: D1Database, input: Record<string, unknown>) {
