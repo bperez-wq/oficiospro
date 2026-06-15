@@ -68,7 +68,10 @@ export function FormalizationAndPayoutPanel({
               OficiosPro calcula la liquidacion y bloquea pagos sin documento validado.
             </h2>
             <p className="mt-3 text-sm font-bold leading-6 text-brand-dark">
-              El calculo es referencial y queda sujeto a validacion de contador y SII. El especialista no debe definir impuestos manualmente: declara su situacion y OficiosPro prepara el flujo.
+              Comision OficiosPro: 9,5% + IVA. Financia tecnologia, operacion, soporte, pago protegido y gestion de plataforma.
+            </p>
+            <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
+              Calculo referencial sujeto a validacion contable/SII. El especialista no debe definir impuestos manualmente: declara su situacion y OficiosPro prepara el flujo.
             </p>
           </div>
           <div className="rounded-2xl border border-white/70 bg-white/85 p-4 shadow-sm">
@@ -124,17 +127,21 @@ export function FormalizationAndPayoutPanel({
               <Metric label="Documento especialista" value={formatCLP(calculation.specialistDocumentGrossCLP)} />
               <Metric label="Liquidacion estimada" value={formatCLP(calculation.specialistLiquidPayoutCLP)} />
               <Metric label="Retencion estimada" value={formatCLP(calculation.withholdingAmountCLP)} />
-              <Metric label="Creditos cliente" value={`${calculation.customerCredits} creditos`} />
-              {isAdmin ? <Metric label="Margen interno" value={formatCLP(calculation.marginCLP)} /> : null}
-              {isAdmin ? <Metric label="IVA documento" value={formatCLP(calculation.ivaAmountCLP)} /> : null}
+              <Metric label="IVA documento" value={formatCLP(calculation.specialistIvaAmountCLP)} />
+              <Metric label="Comision OficiosPro" value={formatCLP(calculation.platformCommissionGrossCLP)} detail={chileTaxConfig2026.platformCommission.shortLabel} />
+              <Metric label="Comision neta" value={formatCLP(calculation.platformCommissionNetCLP)} />
+              <Metric label="IVA comision" value={formatCLP(calculation.platformCommissionIvaCLP)} />
+              <Metric label="Creditos cliente" value={`${calculation.totalCreditsEstimate} creditos`} />
+              {isAdmin ? <Metric label="Base de calculo" value={formatCLP(calculation.platformCommissionBaseCLP)} detail={calculation.platformCommissionBaseMode.replace(/_/g, " ")} /> : null}
+              {isAdmin ? <Metric label="Regla aplicada" value={calculation.platformCommissionLabel} detail={chileTaxConfig2026.platformCommission.description} /> : null}
             </div>
             {calculation.blockReasons.length ? (
               <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-sm font-black text-amber-900">
-                Pendiente: {calculation.blockReasons.map((reason) => reason.replace(/_/g, " ")).join(", ")}.
+                Pendiente de validacion contable/documental: {calculation.blockReasons.map((reason) => reason.replace(/_/g, " ")).join(", ")}.
               </p>
             ) : null}
             <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-              {calculation.warnings[0]} {calculation.warnings[1]}
+              {calculation.warnings[0]} El precio cliente puede variar segun documento, retencion, materiales, urgencia y validacion final.
             </p>
           </div>
         </div>
@@ -164,12 +171,13 @@ export function FormalizationAndPayoutPanel({
   );
 }
 
-function Metric({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "neutral" | "ok" | "warning" }) {
+function Metric({ label, value, detail, tone = "neutral" }: { label: string; value: string; detail?: string; tone?: "neutral" | "ok" | "warning" }) {
   const toneClass = tone === "ok" ? "border-emerald-200 bg-emerald-50" : tone === "warning" ? "border-amber-200 bg-amber-50" : "border-line bg-slate-50";
   return (
     <div className={`rounded-2xl border p-4 ${toneClass}`}>
       <span className="text-xs font-black uppercase text-muted">{label}</span>
       <strong className="mt-1 block text-sm text-ink">{value}</strong>
+      {detail ? <span className="mt-1 block text-xs font-bold leading-5 text-muted">{detail}</span> : null}
     </div>
   );
 }

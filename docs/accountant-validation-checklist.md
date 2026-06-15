@@ -20,6 +20,16 @@ Antes de abrir pagos reales a especialistas, validar y documentar:
 - Datos reales de receptor OP SpA: razon social, RUT, giro, direccion y email.
 - Requisitos de respaldo para materiales y repuestos.
 
+## Comision OficiosPro
+
+- Validar tratamiento tributario de la comision estandar 9,5% + IVA.
+- Validar que la base por defecto `specialist_gross_document` sea correcta.
+- Validar si en factura afecta la base debe ser documento bruto o neto.
+- Validar si la comision aplica IVA en todos los segmentos.
+- Validar glosa y forma de mostrar comision a especialista/admin/cliente.
+- Definir si existiran minimos futuros por categoria, urgencia, empresas o servicios gestionados.
+- Confirmar que la comision no reemplaza documentos tributarios del especialista ni asesoria contable.
+
 ## Payout
 
 - Documento requerido antes de liberar pago.

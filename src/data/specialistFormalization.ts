@@ -1,4 +1,4 @@
-import type { TaxConfigVersion } from "../config/taxConfig";
+import type { PlatformCommissionBaseMode, TaxConfigVersion } from "../config/taxConfig";
 
 export type SpecialistFormalizationTaxType =
   | "factura_afecta"
@@ -16,6 +16,7 @@ export type FormalizationStatus =
   | "blocked";
 
 export type PayoutBlockReason =
+  | "formalization_required"
   | "missing_tax_profile"
   | "missing_document_capability"
   | "missing_secure_storage"
@@ -31,13 +32,12 @@ export type RequiredSpecialistDocumentKind =
   | "none";
 
 export type CommissionRule = {
-  platformFeePercent: number;
-  paymentFeePercent: number;
-  riskBufferPercent: number;
-  fixedServiceFeeCLP: number;
-  minimumMarginCLP: number;
   creditValueCLP: number;
   creditRoundingStep: number;
+  additionalApprovedCLP?: number;
+  surchargeCLP?: number;
+  discountCLP?: number;
+  manualCommissionBaseCLP?: number;
 };
 
 export type SpecialistPayoutCalculationInput = {
@@ -60,13 +60,23 @@ export type SpecialistPayoutCalculationResult = {
   specialistDocumentGrossCLP: number;
   specialistDocumentNetCLP: number;
   ivaAmountCLP: number;
+  specialistIvaAmountCLP: number;
   withholdingAmountCLP: number;
   specialistLiquidPayoutCLP: number;
+  platformCommissionBaseCLP: number;
+  platformCommissionBaseMode: PlatformCommissionBaseMode;
+  platformCommissionRate: number;
+  platformCommissionNetCLP: number;
+  platformCommissionIvaCLP: number;
+  platformCommissionGrossCLP: number;
+  platformCommissionLabel: string;
   platformCommissionCLP: number;
-  paymentFeeCLP: number;
-  riskBufferCLP: number;
-  fixedServiceFeeCLP: number;
+  additionalApprovedCLP: number;
+  surchargeCLP: number;
+  discountCLP: number;
   materialsCLP: number;
+  customerGrossPriceCLP: number;
+  totalCreditsEstimate: number;
   customerChargeCLP: number;
   customerCredits: number;
   marginCLP: number;
@@ -74,6 +84,8 @@ export type SpecialistPayoutCalculationResult = {
     taxConfigId: string;
     ivaRate: number;
     honorariosRetentionRate: number;
+    platformCommissionRate: number;
+    platformCommissionIvaApplies: boolean;
   };
   warnings: string[];
 };

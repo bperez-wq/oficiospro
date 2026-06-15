@@ -8,6 +8,36 @@ Las tasas viven en `src/config/taxConfig.ts`.
 
 No se deben incrustar tasas dentro de formulas. Si cambia IVA, retencion de honorarios u otra regla, se crea una nueva version de config y se valida con contador/SII.
 
+## Comision OficiosPro
+
+La regla estandar de plataforma es:
+
+- Comision neta OficiosPro: `platformCommission.standardRate` = 9,5%.
+- IVA de comision: `platformCommissionNetCLP * taxConfig.ivaRate` si `platformCommission.ivaApplies = true`.
+- Comision total: comision neta + IVA comision.
+- Minimo actual: `platformCommission.minimumCommissionCLP = 0`.
+
+Esta comision financia tecnologia, operacion, soporte, CRM, pago protegido, formalizacion asistida, validacion, seguimiento comercial y cotizacion virtual.
+
+Calculo referencial sujeto a validacion contable/SII.
+
+## Base de calculo
+
+Base por defecto:
+
+`commissionBaseCLP = specialistGrossDocumentCLP`
+
+Esto se configura con `platformCommission.commissionBaseMode = specialist_gross_document`.
+
+Modos preparados:
+
+- `specialist_gross_document`: monto bruto del documento del especialista.
+- `specialist_net`: monto neto del documento del especialista.
+- `customer_net_before_commission`: base cliente antes de comision.
+- `manual`: base definida por una regla auditada.
+
+Esta definicion debe validarse con contador antes de operar pagos reales.
+
 ## Entradas
 
 - `specialistTargetAmountCLP`: tarifa esperada declarada por el especialista.
@@ -24,6 +54,9 @@ Interpretacion referencial: la tarifa esperada es neta.
 - Documento bruto = neto + IVA.
 - Retencion = 0.
 - Liquidacion estimada = documento bruto.
+- Comision OficiosPro = base configurada * 9,5%.
+- IVA comision = comision neta * `ivaRate`.
+- Precio cliente = documento bruto especialista + comision total.
 
 ## Boleta de honorarios
 
@@ -33,6 +66,20 @@ Interpretacion referencial: la tarifa esperada es liquida deseada.
 - Retencion = documento bruto * `honorariosRetentionRate`.
 - Liquidacion estimada = documento bruto - retencion.
 - Documento requerido = boleta de honorarios emitida a OP SpA.
+- Comision OficiosPro = monto bruto de la boleta * 9,5%.
+- IVA comision = comision neta * `ivaRate`.
+- Precio cliente = boleta bruta + comision total.
+
+Ejemplo referencial con config actual:
+
+- Liquido especialista: $25.000.
+- Boleta bruta aproximada: $29.499.
+- Retencion aproximada: $4.499.
+- Comision neta aproximada: $2.802.
+- IVA comision aproximado: $532.
+- Comision total aproximada: $3.334.
+- Precio cliente aproximado: $32.833.
+- Creditos aproximados: 33 si `creditValueCLP = 1000`.
 
 ## Factura exenta
 
@@ -42,6 +89,7 @@ Interpretacion referencial: la tarifa esperada es el monto del documento.
 - IVA = 0.
 - Retencion = 0.
 - Liquidacion estimada = documento bruto.
+- La comision OficiosPro sigue afecta a IVA si `platformCommission.ivaApplies = true`.
 
 ## Unknown
 
@@ -49,18 +97,19 @@ Si el tipo tributario es `unknown`:
 
 - Documento requerido = `none`.
 - `payoutAllowed = false`.
-- Razones de bloqueo: `missing_tax_profile`, `missing_document_capability`.
+- Razon de bloqueo: `formalization_required`.
+- No se muestra comision definitiva.
 
 ## Precio cliente y creditos
 
 La calculadora agrega:
 
 - costo bruto del documento especialista,
-- materiales si aplican,
-- comision plataforma,
-- fee de pago,
-- buffer de riesgo,
-- cargo fijo operativo.
+- comision OficiosPro neta,
+- IVA de comision,
+- materiales o adicionales aprobados si aplican,
+- recargos configurados,
+- descuentos configurados.
 
 Luego convierte a creditos con `creditValueCLP` y redondea por `creditRoundingStep`.
 

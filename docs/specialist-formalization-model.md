@@ -16,6 +16,25 @@ Estado: operativo referencial, pendiente de validacion contador/SII antes de pag
 7. Admin valida documento, perfil tributario, cuenta bancaria y revision contador/SII.
 8. Solo con documento validado el payout puede pasar a listo para pago.
 
+## Comision OficiosPro
+
+La comision estandar de plataforma queda definida como **9,5% + IVA**.
+
+Se calcula desde `src/config/taxConfig.ts`:
+
+- `platformCommission.standardRate = 0.095`.
+- `platformCommission.ivaApplies = true`.
+- `platformCommission.commissionBaseMode = specialist_gross_document`.
+- `platformCommission.minimumCommissionCLP = 0`.
+
+Base por defecto:
+
+`commissionBaseCLP = specialistGrossDocumentCLP`
+
+La comision financia tecnologia, CRM, soporte, operacion, pago protegido, formalizacion asistida, gestion administrativa, validacion, seguimiento comercial y cotizacion virtual.
+
+Calculo referencial sujeto a validacion contable/SII.
+
 ## Estados clave
 
 - `unknown`: especialista aun no sabe como documentar; payout bloqueado.

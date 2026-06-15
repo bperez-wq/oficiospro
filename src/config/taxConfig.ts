@@ -1,3 +1,27 @@
+export type PlatformCommissionBaseMode =
+  | "specialist_gross_document"
+  | "specialist_net"
+  | "customer_net_before_commission"
+  | "manual";
+
+export type PlatformCommissionConfig = {
+  standardRate: number;
+  ivaApplies: boolean;
+  minimumCommissionCLP: number;
+  maximumCommissionCLP: number | null;
+  appliesTo: "specialist_document_amount";
+  commissionBaseMode: PlatformCommissionBaseMode;
+  label: string;
+  shortLabel: string;
+  description: string;
+  futureRuleSlots: {
+    categoryMinimumsEnabled: boolean;
+    urgencyRulesEnabled: boolean;
+    companyRulesEnabled: boolean;
+    managedServiceRulesEnabled: boolean;
+  };
+};
+
 export type TaxConfigVersion = {
   id: string;
   country: "CL";
@@ -5,6 +29,7 @@ export type TaxConfigVersion = {
   effectiveFrom: string;
   ivaRate: number;
   honorariosRetentionRate: number;
+  platformCommission: PlatformCommissionConfig;
   roundingMode: "nearest";
   accountantValidationRequired: boolean;
   siiValidationRequired: boolean;
@@ -18,6 +43,23 @@ export const chileTaxConfig2026: TaxConfigVersion = {
   effectiveFrom: "2026-01-01",
   ivaRate: 0.19,
   honorariosRetentionRate: 0.1525,
+  platformCommission: {
+    standardRate: 0.095,
+    ivaApplies: true,
+    minimumCommissionCLP: 0,
+    maximumCommissionCLP: null,
+    appliesTo: "specialist_document_amount",
+    commissionBaseMode: "specialist_gross_document",
+    label: "Comision OficiosPro",
+    shortLabel: "9,5% + IVA",
+    description: "Financia tecnologia, operacion, soporte, CRM, pago protegido y gestion de plataforma.",
+    futureRuleSlots: {
+      categoryMinimumsEnabled: false,
+      urgencyRulesEnabled: false,
+      companyRulesEnabled: false,
+      managedServiceRulesEnabled: false,
+    },
+  },
   roundingMode: "nearest",
   accountantValidationRequired: true,
   siiValidationRequired: true,

@@ -21,6 +21,16 @@ export default function FormalizacionPage() {
         title="Formalizacion clara antes de cobrar servicios."
         subtitle="OficiosPro ordena el flujo para que el cliente pague con creditos y el especialista emita su documento a OP SpA antes de liberar liquidaciones."
       />
+      <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-6 shadow-soft">
+        <p className="eyebrow">Comision OficiosPro</p>
+        <h2 className="text-3xl font-black text-ink">9,5% + IVA sobre la base configurada del servicio.</h2>
+        <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-brand-dark">
+          OficiosPro aplica una comision estandar de plataforma de 9,5% + IVA. Esta comision financia tecnologia, soporte, operacion, pago protegido y gestion administrativa.
+        </p>
+        <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-brand-dark">
+          El calculo final puede variar segun tipo de documento, retencion, IVA, materiales, urgencia y validacion contable.
+        </p>
+      </section>
       <section className="grid gap-5 lg:grid-cols-3">
         {[
           ["1", "El cliente compra creditos", "OficiosPro documenta la compra o suscripcion segun corresponda."],
@@ -39,7 +49,7 @@ export default function FormalizacionPage() {
         <p className="eyebrow">Importante</p>
         <h2 className="text-2xl font-black text-ink">La calculadora es referencial.</h2>
         <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-muted">
-          Las tasas, glosas, documentos y momentos de emision deben validarse con contador y SII antes de operar pagos reales. OficiosPro no libera pagos sin documento revisado.
+          Las tasas, glosas, documentos y momentos de emision deben validarse con contador y SII antes de operar pagos reales. OficiosPro no libera pagos sin documento revisado. Calculo referencial sujeto a validacion contable.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link className="btn-primary" href="/registro-especialista">

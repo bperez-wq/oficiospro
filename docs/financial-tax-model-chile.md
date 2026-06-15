@@ -81,7 +81,7 @@ El especialista emite **siempre a OP SpA**, nunca al cliente final:
 
 ### E. Comisión/margen de OficiosPro
 - En el Modelo A la comisión es **margen interno**: OP SpA documenta el total al cliente y registra el costo del especialista contra su documento. No se emite documento separado por comisión (el riesgo de documentarla aparte es duplicar ingreso). **[VALIDAR]**
-- Cálculo: `calculatePlatformCommission` = `platformFeePercent` × multiplicador de categoría, con **margen mínimo por segmento** (hogar/empresa/agro/industria) desde `commercialConfig`. Registro en `platform_commissions` con IVA estimado del margen.
+- Cálculo formalización: `calculatePlatformCommission` usa la regla estándar configurable **Comisión OficiosPro = 9,5% + IVA** desde `taxConfig.platformCommission`, con base por defecto `specialist_gross_document`. Cualquier mínimo futuro debe quedar explícito en config y validado con contador/SII.
 
 ### F. Materiales y adicionales
 - Adicional (materiales, repuestos, mano de obra extra, urgencia, horas): requiere **aprobación del cliente** antes de retener créditos (`reserveApprovedAdditional` rechaza sin aprobación).

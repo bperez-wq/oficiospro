@@ -3,7 +3,19 @@ export * from "@/lib/finance/taxModel";
 export * from "@/lib/finance/commission";
 export * from "@/lib/finance/creditOperations";
 export * from "@/lib/finance/specialistPayouts";
-export * from "@/lib/finance/specialistPayoutCalculator";
+export {
+  calculateCustomerPriceFromSpecialistTarget,
+  calculateExemptInvoiceScenario,
+  calculateFeeReceiptScenario,
+  calculateInvoiceAfectaScenario,
+  calculatePayoutFromTarget,
+  calculatePlatformCommission as calculateFormalizationPlatformCommission,
+  calculateSpecialistLiquidFromCustomerPrice,
+  calculateUnknownTaxScenario,
+  commissionRuleFromCommercialConfig,
+  money,
+  roundCredits,
+} from "@/lib/finance/specialistPayoutCalculator";
 export * from "@/lib/finance/taxDocuments";
 export * from "@/lib/finance/taxDocumentProviders";
 export * from "@/lib/finance/accountingReports";
