@@ -1,5 +1,13 @@
 import { ContactForm } from "@/components/ContactForm";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Contacto OficiosPro | Solicitudes y soporte inicial",
+  description: "Contacta a OficiosPro para solicitudes de especialistas, cobertura empresa, Club Hogar, soporte o postulaciones de especialistas.",
+  path: "/contacto",
+  keywords: ["contacto OficiosPro", "solicitar especialista", "soporte OficiosPro"],
+});
 
 export default function ContactoPage() {
   return (

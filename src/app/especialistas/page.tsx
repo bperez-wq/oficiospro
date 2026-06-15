@@ -3,6 +3,14 @@ import { Suspense } from "react";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ConversionButton } from "@/components/ConversionModal";
 import { SpecialistsExplorer } from "@/components/SpecialistsExplorer";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Especialistas verificados por oficio y comuna",
+  description: "Busca especialistas verificados por categoria, comuna, disponibilidad, reputacion y precio en creditos dentro de OficiosPro.",
+  path: "/especialistas",
+  keywords: ["especialistas verificados", "oficios por comuna", "gasfiter", "electricista"],
+});
 
 export default function SpecialistsPage() {
   return (

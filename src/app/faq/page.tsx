@@ -1,4 +1,12 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Preguntas frecuentes OficiosPro",
+  description: "Resuelve dudas sobre creditos, reservas, especialistas verificados, Club Hogar, empresas y postulaciones en OficiosPro.",
+  path: "/faq",
+  keywords: ["FAQ OficiosPro", "preguntas frecuentes", "creditos OficiosPro"],
+});
 
 const questions = [
   ["Clientes", "¿La reserva queda confirmada automáticamente?", "No. La solicitud queda pendiente de confirmación para que OficiosPro y el especialista revisen horario, comuna y detalle del trabajo."],

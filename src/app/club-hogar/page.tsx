@@ -11,6 +11,15 @@ import { defaultCommercialConfig } from "@/data/commercialConfig";
 import { defaultTransactions, workStories } from "@/data/mock";
 import { formatCLP, subscriptionPlans } from "@/data/marketplace";
 import { shouldShowDemoData } from "@/lib/demoData";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Club Hogar OficiosPro | Creditos para mantenciones",
+  description: "Club Hogar entrega creditos recurrentes para ordenar mantenciones, reparaciones y solicitudes tecnicas con especialistas verificados.",
+  path: "/club-hogar",
+  image: "/assets/hero-hogar.webp",
+  keywords: ["Club Hogar", "creditos mantencion", "servicios hogar"],
+});
 
 const comparisonExamples: [string, number, string][] = [
   ["Mantención calefont", 25, "/assets/oficios/calefont/calefont-mantencion-01.jpg"],

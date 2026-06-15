@@ -2,6 +2,14 @@ import Link from "next/link";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Piloto OficiosPro | Primeras comunas y especialistas",
+  description: "Revisa el piloto de OficiosPro para activar especialistas verificados, leads reales, creditos y cobertura controlada.",
+  path: "/piloto",
+  keywords: ["piloto OficiosPro", "especialistas fundadores", "cobertura inicial"],
+});
 
 const pilotSteps = [
   ["1", "Especialistas fundadores crean perfil sin costo inicial."],

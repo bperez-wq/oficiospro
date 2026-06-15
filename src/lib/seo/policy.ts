@@ -7,6 +7,7 @@ export type SeoPageType =
   | "worker-acquisition"
   | "business-segment"
   | "community-service"
+  | "public-base"
   | "internal";
 
 export type SeoPageContext = {

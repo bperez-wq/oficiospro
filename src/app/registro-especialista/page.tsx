@@ -2,6 +2,14 @@ import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Registro especialista OficiosPro | Crea tu perfil",
+  description: "Postula como especialista verificado, declara tus servicios, cobertura, tarifa esperada y documentos de validacion cuando aplique.",
+  path: "/registro-especialista",
+  keywords: ["registro especialista", "postular oficio", "trabajar en OficiosPro"],
+});
 
 export default function SpecialistRegisterPage() {
   return (

@@ -8,6 +8,14 @@ import { PremiumCard } from "@/components/PremiumCard";
 import { SectionHeader } from "@/components/SectionHeader";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { PlatformNav } from "@/components/PlatformNav";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Impacto OficiosPro | Confianza para el trabajo tecnico",
+  description: "Conoce el modelo de confianza, reputacion, creditos, pago protegido y formalizacion del trabajo tecnico en OficiosPro.",
+  path: "/impacto",
+  keywords: ["impacto OficiosPro", "trabajo tecnico", "reputacion especialistas"],
+});
 
 const impactStats = [
   ["Especialistas", "Perfil verificable, reputación y agenda para vender mejor su oficio."],

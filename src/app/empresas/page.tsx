@@ -7,6 +7,15 @@ import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
 import { subscriptionPlans } from "@/data/marketplace";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "OficiosPro Empresas | Servicios tecnicos con creditos",
+  description: "Centraliza solicitudes tecnicas, creditos empresa, historial y especialistas verificados para oficinas, locales y operaciones.",
+  path: "/empresas",
+  image: "/assets/club-empresas.webp",
+  keywords: ["servicios tecnicos empresas", "mantencion oficinas", "creditos empresa"],
+});
 
 export default function EmpresasPage() {
   const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");

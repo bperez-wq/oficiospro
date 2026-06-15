@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
@@ -16,6 +17,16 @@ import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
 import { subscriptionPlans } from "@/data/marketplace";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata: Metadata = buildPublicRouteMetadata({
+  title: "OficiosPro Chile | Especialistas verificados para hogar y empresas",
+  description:
+    "Encuentra especialistas verificados para hogar, empresas y comunidades con creditos, reputacion, disponibilidad y pago protegido.",
+  path: "/",
+  image: "/brand/logo-worker-tile.svg",
+  keywords: ["OficiosPro", "especialistas verificados", "oficios Chile", "servicios hogar"],
+});
 
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);

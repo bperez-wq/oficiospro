@@ -2,6 +2,14 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { VisualFaqAccordion, type FaqItem } from "@/components/VisualFaqAccordion";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Soporte OficiosPro | Ayuda para clientes y especialistas",
+  description: "Encuentra ayuda para reservas, creditos, postulaciones, especialistas, empresas y solicitudes operativas en OficiosPro.",
+  path: "/soporte",
+  keywords: ["soporte OficiosPro", "ayuda reservas", "ayuda especialistas"],
+});
 
 const supportTopics = ["Créditos", "Reservas", "Pagos", "Adicionales", "Documentos", "Cuenta"];
 

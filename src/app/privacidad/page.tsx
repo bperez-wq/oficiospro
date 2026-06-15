@@ -1,4 +1,12 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+
+export const metadata = buildPublicRouteMetadata({
+  title: "Privacidad OficiosPro | Uso de datos y formularios",
+  description: "Conoce como OficiosPro trata datos de contacto, postulaciones, solicitudes, documentos y comunicaciones operativas.",
+  path: "/privacidad",
+  keywords: ["privacidad OficiosPro", "datos personales", "formularios"],
+});
 
 export default function PrivacidadPage() {
   return (

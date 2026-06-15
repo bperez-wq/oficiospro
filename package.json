@@ -12,7 +12,8 @@
     "validate": "node scripts/validate-project.mjs",
     "test:leads": "node scripts/test-lead-endpoints.mjs",
     "seo:sitemap": "node scripts/generate-sitemap.mjs",
-    "seo:audit": "node scripts/seo-audit.mjs"
+    "seo:audit": "node scripts/seo-audit.mjs",
+    "seo:live-audit": "node scripts/seo-live-audit.mjs"
   },
   "engines": {
     "node": ">=20"
