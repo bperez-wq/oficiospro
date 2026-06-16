@@ -14,6 +14,14 @@ import {
   serviceTypes,
   subscriptionPlans,
 } from "@/data/marketplace";
+import {
+  buildAcquisitionContextFromSearch,
+  founderQualityChecklist,
+  isInstitutionalAcquisitionSource,
+  normalizeToken,
+  sourceLabel,
+  type AcquisitionContext,
+} from "@/data/specialistAcquisition";
 import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/flexiblePricing";
 import { specialistTaxTypeLabels, type SpecialistFormalizationTaxType } from "@/data/specialistFormalization";
 import {
@@ -32,7 +40,7 @@ import {
   specialtyOptionsForType,
 } from "@/lib/catalog";
 import { calculateClientCreditsFromSpecialistPayout, estimatePlatformMarginCLP } from "@/lib/pricing";
-import { submitLead } from "@/lib/leadClient";
+import { submitConversionEvent, submitLead } from "@/lib/leadClient";
 import {
   clearSpecialistQuickDraft,
   mergeSpecialistDraft,
@@ -497,6 +505,7 @@ export function ClientRegisterForm() {
 export function SpecialistRegisterForm() {
   const [status, setStatus] = useState("");
   const [step, setStep] = useState(1);
+  const [acquisition, setAcquisition] = useState<AcquisitionContext>({ source: "direct", campaign: "founder_specialists" });
   const [identity, setIdentity] = useState({
     firstNames: "",
     lastNames: "",
@@ -567,6 +576,35 @@ export function SpecialistRegisterForm() {
       });
     });
     setDraftNotice("Precargamos los datos que ya ingresaste. Puedes editarlos antes de enviar.");
+  }, []);
+
+  useEffect(() => {
+    const next = buildAcquisitionContextFromSearch(window.location.search, {
+      source: "direct",
+      campaign: "founder_specialists",
+      landingPage: window.location.pathname,
+    });
+    setAcquisition(next);
+    if (next.commune) setBaseCommune(next.commune);
+    const serviceTypeId = serviceTypeIdFromAcquisitionTrade(next.trade);
+    if (serviceTypeId) {
+      setPrimaryTradeId(serviceTypeId);
+      setServices((current) =>
+        current.map((service, index) => {
+          if (index !== 0) return service;
+          const specialty = specialtyForAcquisitionTrade(serviceTypeId, next.trade) ?? specialtyOptionsForType(serviceTypeId)[0]?.value ?? service.specialty;
+          return { ...service, serviceTypeId, specialty };
+        }),
+      );
+    }
+    void submitConversionEvent({
+      type: "specialist_application_started",
+      source: next.source ?? "direct",
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Formulario abierto",
+      page: "/registro-especialista",
+      payload: next,
+    });
   }, []);
 
   useEffect(() => {
@@ -807,6 +845,32 @@ export function SpecialistRegisterForm() {
         emergencyCredits: service.emergency && calculatedClientCredits ? calculatedClientCredits + 10 : undefined,
       };
     });
+    const acquisitionPayload = {
+      ...acquisition,
+      source: acquisition.source ?? "direct",
+      sourceLabel: sourceLabel(acquisition.source),
+      trade: acquisition.trade ?? mainType?.slug ?? mainType?.id ?? mainType?.name,
+      commune: acquisition.commune ?? baseCommune,
+    };
+    const founderQuality = buildFounderQualityChecklist({
+      services: normalizedServices,
+      completedReferencesCount: completedReferences.length,
+      portfolioPhotosCount: portfolioPhotos.length,
+      baseCommune,
+      coverageCommunes,
+      taxType: formalization.taxType,
+      consentContact,
+      consentVerification,
+      consentDocumentPolicy,
+    });
+    const crmAcquisitionPlan = {
+      pipeline: "especialistas",
+      stage: "postulacion_recibida",
+      assignedTeam: "Operaciones",
+      slaReviewHours: 48,
+      taskTitle: "Revisar postulacion especialista fundador",
+      tags: isInstitutionalAcquisitionSource(acquisition.source) ? ["institucional", acquisition.source, acquisition.sourceDetail].filter(Boolean) : [acquisition.source].filter(Boolean),
+    };
     const hasIdentityDocuments = Boolean(identityDocuments.idFrontName || identityDocuments.idBackName || identityDocuments.selfieName);
     const privateIdentityVerification = {
       ...defaultIdentityVerification(),
@@ -853,6 +917,16 @@ export function SpecialistRegisterForm() {
         ...formalization,
         status: formalization.taxType === "unknown" ? "pending_formalization" : "pending_accountant_sii_review",
       },
+      acquisitionSource: acquisitionPayload.source,
+      sourceDetail: acquisition.sourceDetail,
+      campaign: acquisition.campaign,
+      referrerSpecialistId: acquisition.referrerSpecialistId,
+      referralCode: acquisition.referralCode,
+      founderStatus: "fundador_postulante",
+      founderBadgeBoost: false,
+      referralCount: 0,
+      approvedReferralCount: 0,
+      founderQualityChecklist: founderQuality,
       documentPolicyAccepted: consentDocumentPolicy,
       documentPolicyAcceptedAt: now,
       documentPolicyVersion: "op-spa-document-authorization-v1",
@@ -906,7 +980,8 @@ export function SpecialistRegisterForm() {
       regionName: regionNameForCode(baseRegion),
       communeName: baseCommune,
       sourceComponent: "SpecialistRegisterForm",
-      sourceButton: "Crear perfil fundador",
+      sourceButton: acquisitionPayload.source === "direct" ? "Crear perfil fundador" : `Crear perfil fundador - ${acquisitionPayload.source}`,
+      referralCode: acquisition.referralCode,
       consentContact,
       consentTerms: consentVerification,
       honeypot: websiteTrap,
@@ -950,12 +1025,43 @@ export function SpecialistRegisterForm() {
         status: "postulado",
         reviewStatus: "pendiente_revision",
         certificationStatus: hasNoFormalCertifications || selectedCertifications.length === 0 ? "sin_certificacion_declarada" : "certificacion_declarada_pendiente_revision",
+        source: acquisitionPayload.source,
+        sourceDetail: acquisition.sourceDetail,
+        campaign: acquisition.campaign,
+        commune: acquisitionPayload.commune,
+        trade: acquisitionPayload.trade,
+        referrerSpecialistId: acquisition.referrerSpecialistId,
+        referralCode: acquisition.referralCode,
+        acquisition: acquisitionPayload,
+        founderProgram: {
+          status: "fundador_postulante",
+          badge: "Especialista fundador",
+          badgeVisibleOnlyWhen: ["fundador_aprobado", "fundador_publicado"],
+          qualityChecklist: founderQuality,
+          crm: crmAcquisitionPlan,
+          noPromises: ["no_ingresos_garantizados", "no_volumen_fijo_trabajos"],
+        },
+        crm: crmAcquisitionPlan,
       },
     });
     if (!leadResult.ok && leadResult.error !== "database_not_configured") {
       setStatus(leadResult.message);
       return;
     }
+    void submitConversionEvent({
+      type: "specialist_application_submitted",
+      source: acquisitionPayload.source,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Crear perfil fundador",
+      page: "/registro-especialista",
+      payload: {
+        leadId: leadResult.id,
+        stored: leadResult.stored,
+        localRequestId: request.id,
+        acquisition: acquisitionPayload,
+        founderStatus: "fundador_postulante",
+      },
+    });
     clearSpecialistQuickDraft();
     setSubmitted(true);
     setStatus(
@@ -1012,6 +1118,16 @@ export function SpecialistRegisterForm() {
             Cada trabajo bien hecho construye tu reputacion. En esta etapa piloto revisamos perfiles manualmente antes de publicarlos y te contactaremos si falta algun antecedente.
           </p>
         </div>
+        {acquisition.source && acquisition.source !== "direct" ? (
+          <div className="rounded-3xl border border-line bg-slate-50 p-5">
+            <p className="text-sm font-black uppercase text-muted">Origen de invitacion</p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-ink">
+              Llegaste por {sourceLabel(acquisition.source)}
+              {acquisition.trade ? ` para ${acquisition.trade.replace(/[-_]/g, " ")}` : ""}
+              {acquisition.commune ? ` en ${acquisition.commune}` : ""}. Guardaremos este dato para seguimiento interno.
+            </p>
+          </div>
+        ) : null}
         {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
         <section className={step <= 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <label className="field">
@@ -1653,6 +1769,86 @@ function SuccessMessage({ children, className = "" }: { children: ReactNode; cla
 
 function Warning({ children }: { children: ReactNode }) {
   return <p className="rounded-2xl border border-amber-200 bg-amber-50 p-4 font-black text-amber-800">{children}</p>;
+}
+
+function serviceTypeIdFromAcquisitionTrade(trade?: string) {
+  const token = normalizeToken(trade);
+  if (!token) return "";
+  const hints: Record<string, string> = {
+    gasfiter: "gasfiteria",
+    gasfiteria: "gasfiteria",
+    electricidad: "electricidad",
+    electricista: "electricidad",
+    calefont: "gasfiteria",
+    filtracion_de_agua: "hogar",
+    fuga_de_agua: "hogar",
+    pintura: "construccion",
+    jardin: "jardineria",
+    jardineria: "jardineria",
+    cerrajeria: "hogar",
+    climatizacion: "climatizacion-refrigeracion",
+    aire_acondicionado: "climatizacion-refrigeracion",
+    refrigeracion_comercial: "climatizacion-refrigeracion",
+    soldadura: "industria",
+    portones: "empresas",
+    riego_tecnificado: "agroindustria",
+  };
+  const hinted = hints[token];
+  if (hinted && serviceTypes.some((serviceType) => serviceType.id === hinted)) return hinted;
+  const direct = serviceTypes.find((serviceType) => [serviceType.id, serviceType.slug, serviceType.name].some((value) => normalizeToken(value) === token));
+  if (direct) return direct.id;
+  const bySpecialty = serviceTypes.find((serviceType) =>
+    serviceType.specialties.some((specialty) => {
+      const specialtyToken = normalizeToken(specialty);
+      return specialtyToken.includes(token) || token.includes(specialtyToken.split("_")[0] ?? "");
+    }),
+  );
+  return bySpecialty?.id ?? "";
+}
+
+function specialtyForAcquisitionTrade(serviceTypeId: string, trade?: string) {
+  const token = normalizeToken(trade);
+  if (!token) return "";
+  return specialtyOptionsForType(serviceTypeId).find((option) => {
+    const optionToken = normalizeToken(option.label || option.value);
+    return optionToken.includes(token) || token.includes(optionToken.split("_")[0] ?? "");
+  })?.value;
+}
+
+function buildFounderQualityChecklist({
+  services,
+  completedReferencesCount,
+  portfolioPhotosCount,
+  baseCommune,
+  coverageCommunes,
+  taxType,
+  consentContact,
+  consentVerification,
+  consentDocumentPolicy,
+}: {
+  services: Array<{ name?: string; description?: string; duration?: string; specialistExpectedPayoutCLP?: number; pricingMode?: string }>;
+  completedReferencesCount: number;
+  portfolioPhotosCount: number;
+  baseCommune: string;
+  coverageCommunes: string;
+  taxType: SpecialistFormalizationTaxType;
+  consentContact: boolean;
+  consentVerification: boolean;
+  consentDocumentPolicy: boolean;
+}) {
+  const hasServiceBasics = services.some((service) => Boolean(service.name && service.description && service.duration));
+  const checklist: Record<string, boolean> = {
+    experiencia_declarada: hasServiceBasics,
+    comuna_cobertura: Boolean(baseCommune && coverageCommunes),
+    servicios_claros: services.every((service) => Boolean(service.name && service.description)),
+    portfolio_si_existe: portfolioPhotosCount > 0,
+    referencias_opcionales: completedReferencesCount > 0,
+    disponibilidad: services.some((service) => Boolean(service.duration)),
+    tipo_tributario_formalizacion: Boolean(taxType && taxType !== "unknown"),
+    aceptacion_terminos: consentContact && consentVerification && consentDocumentPolicy,
+    perfil_completo_minimo: hasServiceBasics && Boolean(baseCommune) && consentContact && consentVerification && consentDocumentPolicy,
+  };
+  return Object.fromEntries(founderQualityChecklist.map((item) => [item, Boolean(checklist[item])]));
 }
 
 function IdentityPreview({ src, name, privateDocument = false }: { src: string; name: string; privateDocument?: boolean }) {

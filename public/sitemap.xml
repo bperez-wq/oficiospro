@@ -2,73 +2,76 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.oficiospro.cl/</loc>
-    
     <changefreq>weekly</changefreq>
     <priority>1.00</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/especialistas</loc>
-    
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/club-hogar</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.78</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/empresas</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.78</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/registro-especialista</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.74</priority>
   </url>
   <url>
+    <loc>https://www.oficiospro.cl/especialistas-fundadores</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.72</priority>
+  </url>
+  <url>
+    <loc>https://www.oficiospro.cl/instituciones</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.58</priority>
+  </url>
+  <url>
+    <loc>https://www.oficiospro.cl/referidos/especialistas</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.46</priority>
+  </url>
+  <url>
     <loc>https://www.oficiospro.cl/contacto</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.62</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/faq</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.55</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/soporte</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.52</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/impacto</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/piloto</loc>
-    
     <changefreq>monthly</changefreq>
     <priority>0.50</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/terminos</loc>
-    
     <changefreq>yearly</changefreq>
     <priority>0.25</priority>
   </url>
   <url>
     <loc>https://www.oficiospro.cl/privacidad</loc>
-    
     <changefreq>yearly</changefreq>
     <priority>0.25</priority>
   </url>

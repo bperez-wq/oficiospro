@@ -4,9 +4,10 @@ import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { formatCLP } from "@/data/marketplace";
+import { isInstitutionalAcquisitionSource, sourceLabel } from "@/data/specialistAcquisition";
 import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 
-type CrmView = "overview" | "opportunities" | "tasks" | "contacts" | "companies" | "pipeline" | "activity";
+type CrmView = "overview" | "opportunities" | "tasks" | "contacts" | "companies" | "pipeline" | "activity" | "acquisition";
 type CrmRow = Record<string, unknown>;
 
 type Overview = {
@@ -29,6 +30,7 @@ const crmNav: { href: string; label: string; view: CrmView }[] = [
   { href: "/admin/crm/contacts", label: "Contactos", view: "contacts" },
   { href: "/admin/crm/companies", label: "Empresas", view: "companies" },
   { href: "/admin/crm/pipeline", label: "Pipeline", view: "pipeline" },
+  { href: "/admin/crm/acquisition", label: "Captacion especialistas", view: "acquisition" },
   { href: "/admin/crm/activity", label: "Actividad", view: "activity" },
 ];
 
@@ -43,11 +45,13 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   const [contacts, setContacts] = useState<CrmRow[]>([]);
   const [companies, setCompanies] = useState<CrmRow[]>([]);
   const [activity, setActivity] = useState<CrmRow[]>([]);
+  const [specialistApplications, setSpecialistApplications] = useState<CrmRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<CrmRow | null>(null);
   const [detailTasks, setDetailTasks] = useState<CrmRow[]>([]);
   const [detailNotes, setDetailNotes] = useState<CrmRow[]>([]);
   const [filters, setFilters] = useState({ pipeline: "", stage: "", status: "", type: "", search: "", assignedTo: "" });
+  const [acquisitionFilters, setAcquisitionFilters] = useState({ source: "", trade: "", commune: "", referral: "", founderStatus: "", institution: "" });
   const [newOpportunity, setNewOpportunity] = useState({ title: "", type: "customer_request", pipeline: "clientes", stage: "nuevo", priority: "media" });
   const [newTask, setNewTask] = useState({ title: "", taskType: "followup", priority: "media", assignedTo: "", dueAt: "" });
   const [newNote, setNewNote] = useState("");
@@ -61,7 +65,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  const activeRows = activeRowsForView(view, { opportunities, tasks, contacts, companies, activity });
+  const activeRows = activeRowsForView(view, { opportunities, tasks, contacts, companies, activity, specialistApplications });
   const selected = activeRows.find((row) => String(row.id ?? "") === selectedId) ?? activeRows[0] ?? null;
   const pipelineGroups = useMemo(() => groupByPipeline(opportunities), [opportunities]);
 
@@ -94,6 +98,8 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
         const data = await adminFetch(activeToken, "/api/admin/crm/companies?limit=100");
         setCompanies(arrayFrom(data.companies));
         setNotice("Empresas cargadas desde D1.");
+      } else if (view === "acquisition") {
+        await loadAcquisition(activeToken);
       } else if (view === "activity") {
         const data = await adminFetch(activeToken, "/api/admin/crm/activity?limit=100");
         setActivity(arrayFrom(data.activity));
@@ -120,6 +126,18 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
     const data = await adminFetch(activeToken, "/api/admin/crm/tasks?limit=100");
     setTasks(arrayFrom(data.tasks));
     setNotice("Tareas cargadas desde D1.");
+  }
+
+  async function loadAcquisition(activeToken = token) {
+    const [specialistsData, opportunitiesData, tasksData] = await Promise.all([
+      adminFetch(activeToken, "/api/admin/specialists?limit=100"),
+      adminFetch(activeToken, "/api/admin/crm/opportunities?pipeline=especialistas&limit=100"),
+      adminFetch(activeToken, "/api/admin/crm/tasks?limit=100"),
+    ]);
+    setSpecialistApplications(arrayFrom(specialistsData.specialists));
+    setOpportunities(arrayFrom(opportunitiesData.opportunities));
+    setTasks(arrayFrom(tasksData.tasks));
+    setNotice("Captacion de especialistas cargada desde D1.");
   }
 
   async function loadContacts(activeToken = token, includeTestData = showTestData) {
@@ -328,6 +346,18 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
       ) : null}
       {view === "companies" ? <RowsView title="Empresas" rows={companies} columns={["id", "companyName", "rut", "industry", "contactName", "email", "phone", "commune", "region", "status"]} onRefresh={() => loadView()} onExport={exportCurrentCsv} /> : null}
       {view === "pipeline" ? <PipelineView groups={pipelineGroups} onDetail={(id) => loadDetail(id)} /> : null}
+      {view === "acquisition" ? (
+        <AcquisitionView
+          rows={specialistApplications}
+          opportunities={opportunities}
+          tasks={tasks}
+          filters={acquisitionFilters}
+          setFilters={setAcquisitionFilters}
+          loading={loading}
+          onRefresh={() => loadAcquisition()}
+          onSync={() => sync("sync-specialists")}
+        />
+      ) : null}
       {view === "activity" ? <RowsView title="Historial de actividad" rows={activity} columns={["id", "entityType", "entityId", "action", "actor", "metadataJson", "createdAt"]} onRefresh={() => loadView()} onExport={exportCurrentCsv} /> : null}
     </main>
   );
@@ -496,6 +526,96 @@ function PipelineView({ groups, onDetail }: { groups: Record<string, Record<stri
   );
 }
 
+function AcquisitionView({
+  rows,
+  opportunities,
+  tasks,
+  filters,
+  setFilters,
+  loading,
+  onRefresh,
+  onSync,
+}: {
+  rows: CrmRow[];
+  opportunities: CrmRow[];
+  tasks: CrmRow[];
+  filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string };
+  setFilters: (filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string }) => void;
+  loading: boolean;
+  onRefresh: () => void;
+  onSync: () => void;
+}) {
+  const enrichedRows = rows.map(enrichAcquisitionRow);
+  const filteredRows = enrichedRows.filter((row) => acquisitionRowMatches(row, filters));
+  const kpis = acquisitionKpis(filteredRows, opportunities, tasks);
+  const exportRows = filteredRows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    email: row.email,
+    phone: row.phone,
+    acquisitionSource: row.acquisitionSource,
+    sourceDetail: row.sourceDetail,
+    campaign: row.campaign,
+    trade: row.trade,
+    commune: row.commune,
+    referralCode: row.referralCode,
+    referrerSpecialistId: row.referrerSpecialistId,
+    founderStatus: row.founderStatus,
+    createdAt: row.createdAt,
+    slaStatus: row.slaStatus,
+  }));
+
+  return (
+    <section className="grid gap-6">
+      <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="eyebrow">Captacion especialistas</p>
+            <h2 className="text-2xl font-black text-ink">Embudo organico de especialistas fundadores</h2>
+            <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-muted">
+              Usa datos reales de postulaciones D1. No se crean ni muestran registros de relleno.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" disabled={loading} onClick={onRefresh}>{loading ? "Cargando..." : "Actualizar"}</button>
+            <button className="btn-primary" type="button" disabled={loading} onClick={onSync}>Sincronizar especialistas</button>
+          </div>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-6">
+          {(["source", "trade", "commune", "referral", "founderStatus", "institution"] as const).map((field) => (
+            <label key={field} className="field">
+              {filterLabel(field)}
+              <input value={filters[field]} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} />
+            </label>
+          ))}
+        </div>
+      </section>
+
+      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+        {kpis.map((metric) => (
+          <DashboardMetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} tone={metric.tone} />
+        ))}
+      </div>
+
+      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
+        <RowsView
+          title="Postulaciones captadas"
+          rows={exportRows}
+          columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
+          onRefresh={onRefresh}
+          onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
+        />
+        <section className="grid gap-5">
+          <RowsView title="Embudo fundador" rows={groupCountRows(filteredRows, "founderStatus")} columns={["value", "count"]} />
+          <RowsView title="Top fuentes" rows={groupCountRows(filteredRows, "acquisitionSource")} columns={["value", "count"]} />
+          <RowsView title="Oficios" rows={groupCountRows(filteredRows, "trade")} columns={["value", "count"]} />
+          <RowsView title="Comunas" rows={groupCountRows(filteredRows, "commune")} columns={["value", "count"]} />
+        </section>
+      </section>
+    </section>
+  );
+}
+
 function RowsView({
   title,
   rows,
@@ -571,11 +691,12 @@ async function adminFetch(token: string, endpoint: string, options: { method?: s
   return data;
 }
 
-function activeRowsForView(view: CrmView, data: { opportunities: CrmRow[]; tasks: CrmRow[]; contacts: CrmRow[]; companies: CrmRow[]; activity: CrmRow[] }) {
+function activeRowsForView(view: CrmView, data: { opportunities: CrmRow[]; tasks: CrmRow[]; contacts: CrmRow[]; companies: CrmRow[]; activity: CrmRow[]; specialistApplications: CrmRow[] }) {
   if (view === "tasks") return data.tasks;
   if (view === "contacts") return data.contacts;
   if (view === "companies") return data.companies;
   if (view === "activity") return data.activity;
+  if (view === "acquisition") return data.specialistApplications;
   return data.opportunities;
 }
 
@@ -592,6 +713,120 @@ function groupByPipeline(rows: CrmRow[]) {
     acc[pipeline][stage].push(row);
     return acc;
   }, {});
+}
+
+function enrichAcquisitionRow(row: CrmRow): CrmRow {
+  const payload = parseJsonRecord(row.payloadJson ?? row.payload_json);
+  const acquisition = recordValue(payload.acquisition);
+  const founderProgram = recordValue(payload.founderProgram);
+  const rawSource = stringValue(acquisition.source ?? payload.source ?? row.source) || "direct";
+  const createdAt = stringValue(row.createdAt ?? row.created_at);
+  const founderStatus = stringValue(founderProgram.status ?? payload.founderStatus ?? row.status ?? row.publicationStatus) || "fundador_postulante";
+  const name = [row.firstName, row.lastName].filter(Boolean).join(" ") || stringValue(payload.fullName ?? row.name) || "Especialista OficiosPro";
+  const sourceDetail = stringValue(acquisition.sourceDetail ?? payload.sourceDetail);
+  const referralCode = stringValue(acquisition.referralCode ?? payload.referralCode ?? row.referralCode);
+  const referrerSpecialistId = stringValue(acquisition.referrerSpecialistId ?? payload.referrerSpecialistId);
+  const acquisitionSource = sourceLabel(rawSource);
+
+  return {
+    ...row,
+    name,
+    phone: row.whatsapp ?? row.phone,
+    acquisitionSource,
+    acquisitionSourceRaw: rawSource,
+    sourceDetail,
+    campaign: stringValue(acquisition.campaign ?? payload.campaign) || "founder_specialists",
+    trade: stringValue(acquisition.trade ?? payload.trade ?? payload.primaryTrade ?? row.serviceTypes) || "Sin oficio",
+    commune: stringValue(acquisition.commune ?? payload.commune ?? payload.communeName ?? row.comuna) || "Sin comuna",
+    referralCode,
+    referrerSpecialistId,
+    founderStatus,
+    institution: isInstitutionalAcquisitionSource(rawSource) ? sourceDetail || acquisitionSource : "",
+    slaStatus: isFounderSlaOverdue(createdAt, founderStatus) ? "SLA vencido" : "En plazo",
+    createdAt,
+  };
+}
+
+function acquisitionRowMatches(row: CrmRow, filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string }) {
+  return (
+    includesFilter(row.acquisitionSource, filters.source) &&
+    includesFilter(row.trade, filters.trade) &&
+    includesFilter(row.commune, filters.commune) &&
+    includesFilter([row.referralCode, row.referrerSpecialistId].filter(Boolean).join(" "), filters.referral) &&
+    includesFilter(row.founderStatus, filters.founderStatus) &&
+    includesFilter(row.institution, filters.institution)
+  );
+}
+
+function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[]) {
+  const founderStatus = (status: string) => rows.filter((row) => String(row.founderStatus).includes(status)).length;
+  const referrals = rows.filter((row) => Boolean(row.referralCode || row.referrerSpecialistId)).length;
+  const institutions = rows.filter((row) => Boolean(row.institution)).length;
+  const slaOverdue = rows.filter((row) => row.slaStatus === "SLA vencido").length;
+  const openSpecialistOpps = opportunities.filter((row) => String(row.pipeline) === "especialistas" && String(row.status) !== "closed").length;
+  const pendingTasks = tasks.filter((row) => String(row.status) !== "done").length;
+
+  return [
+    { label: "Postulaciones", value: String(rows.length), detail: "Total filtrado", tone: "brand" as const },
+    { label: "En revision", value: String(founderStatus("revision") + founderStatus("postulante")), detail: "Embudo fundador", tone: "light" as const },
+    { label: "Aprobados", value: String(founderStatus("aprobado")), detail: "Listos para activar", tone: "light" as const },
+    { label: "Publicados", value: String(founderStatus("publicado")), detail: "Badge visible", tone: "light" as const },
+    { label: "Referidos", value: String(referrals), detail: "Con codigo o referente", tone: "light" as const },
+    { label: "Instituciones", value: String(institutions), detail: "OMIL/SENCE/CFT/IP", tone: "light" as const },
+    { label: "SLA pendiente", value: String(slaOverdue), detail: `${openSpecialistOpps} opps / ${pendingTasks} tareas`, tone: slaOverdue ? ("brand" as const) : ("light" as const) },
+  ];
+}
+
+function groupCountRows(rows: CrmRow[], field: string) {
+  const counts = rows.reduce<Record<string, number>>((acc, row) => {
+    const value = stringValue(row[field]) || "Sin dato";
+    acc[value] = (acc[value] ?? 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(counts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([value, count]) => ({ value, count }));
+}
+
+function filterLabel(field: "source" | "trade" | "commune" | "referral" | "founderStatus" | "institution") {
+  const labels = {
+    source: "Fuente",
+    trade: "Oficio",
+    commune: "Comuna",
+    referral: "Referido",
+    founderStatus: "Estado fundador",
+    institution: "Institucion",
+  };
+  return labels[field];
+}
+
+function parseJsonRecord(value: unknown): Record<string, unknown> {
+  if (typeof value !== "string") return {};
+  try {
+    return recordValue(JSON.parse(value));
+  } catch {
+    return {};
+  }
+}
+
+function recordValue(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function stringValue(value: unknown) {
+  return value === null || value === undefined ? "" : String(value);
+}
+
+function includesFilter(value: unknown, filter: string) {
+  if (!filter.trim()) return true;
+  return stringValue(value).toLowerCase().includes(filter.trim().toLowerCase());
+}
+
+function isFounderSlaOverdue(createdAt: string, status: string) {
+  if (!createdAt || ["fundador_aprobado", "fundador_publicado", "approved", "rejected", "rechazado", "published"].includes(status)) return false;
+  const created = Date.parse(createdAt);
+  if (Number.isNaN(created)) return false;
+  return Date.now() - created > 48 * 60 * 60 * 1000;
 }
 
 function exportCsv(filename: string, rows: CrmRow[]) {

@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ConversionButton } from "@/components/ConversionModal";
+import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
+import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
@@ -25,6 +26,9 @@ const pilotAudiences = [
 ];
 
 export default function PilotPage() {
+  const founderContext = { source: "campana_local" as const, campaign: "founder_specialists_pilot", landingPage: "/piloto" };
+  const founderHref = founderRegistrationHref(founderContext);
+
   return (
     <main className="section grid gap-8">
       <PlatformNav />
@@ -40,9 +44,9 @@ export default function PilotPage() {
               <Link className="btn-primary" href="/especialistas">
                 Buscar especialistas
               </Link>
-              <ConversionButton type="registro_especialista" sourceButton="Crear perfil fundador piloto" className="btn-sun">
+              <AcquisitionTrackingLink href={founderHref} className="btn-sun" sourceButton="Crear perfil fundador piloto" context={founderContext}>
                 Crear perfil fundador
-              </ConversionButton>
+              </AcquisitionTrackingLink>
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
@@ -74,6 +78,35 @@ export default function PilotPage() {
             </article>
           ))}
         </div>
+      </section>
+
+      <section className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
+        <MarketplaceCard hover={false}>
+          <p className="eyebrow">Especialistas fundadores</p>
+          <h2 className="text-3xl font-black leading-tight text-ink">El piloto necesita buenos oficios por comuna, no volumen sin control.</h2>
+          <p className="mt-3 font-semibold leading-7 text-muted">
+            Captamos especialistas por oficio, comuna, referidos e instituciones. Cada postulacion queda para revision operacional antes de publicarse.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-3">
+            <AcquisitionTrackingLink href={founderHref} className="btn-primary" sourceButton="Postular desde piloto" context={founderContext}>
+              Quiero aparecer en OficiosPro
+            </AcquisitionTrackingLink>
+            <Link className="btn-secondary" href="/especialistas-fundadores">
+              Ver programa fundador
+            </Link>
+            <Link className="btn-secondary" href="/instituciones">
+              Instituciones y alianzas
+            </Link>
+          </div>
+        </MarketplaceCard>
+        <MarketplaceCard hover={false}>
+          <p className="eyebrow">Control de calidad</p>
+          <div className="grid gap-3">
+            {["Experiencia declarada", "Cobertura real", "Servicios claros", "Formalizacion asistida", "Aceptacion de terminos"].map((item) => (
+              <span key={item} className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-ink">{item}</span>
+            ))}
+          </div>
+        </MarketplaceCard>
       </section>
     </main>
   );

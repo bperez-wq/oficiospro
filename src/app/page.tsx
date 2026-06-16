@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
@@ -16,6 +17,7 @@ import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, Validati
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
+import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
@@ -31,6 +33,7 @@ export const metadata: Metadata = buildPublicRouteMetadata({
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);
   const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
+  const founderHeroContext = { source: "campana_local" as const, campaign: "founder_specialists_home_hero", landingPage: "/" };
 
   return (
     <main>
@@ -54,9 +57,9 @@ export default function HomePage() {
               <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
                 Buscar especialista
               </Link>
-              <ConversionButton type="registro_especialista" sourceButton="Postular como especialista hero" className="btn-sun">
+              <AcquisitionTrackingLink href={founderRegistrationHref(founderHeroContext)} className="btn-sun" sourceButton="Postular como especialista hero" context={founderHeroContext}>
                 Crear perfil fundador
-              </ConversionButton>
+              </AcquisitionTrackingLink>
               <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
                 ¿Cómo funcionan los créditos? →
               </Link>
@@ -319,6 +322,7 @@ export default function HomePage() {
 }
 
 function PilotLaunchStrip() {
+  const founderContext = { source: "campana_local" as const, campaign: "founder_specialists_home_pilot", landingPage: "/" };
   return (
     <section className="section-compact">
       <div className="grid gap-5 rounded-[32px] border border-brand/15 bg-white p-5 shadow-soft md:grid-cols-[1fr_1.2fr] md:p-7">
@@ -345,9 +349,12 @@ function PilotLaunchStrip() {
           <Link className="btn-primary" href="/piloto">
             Ver etapa piloto
           </Link>
-          <ConversionButton type="registro_especialista" sourceButton="Crear perfil fundador piloto home" className="btn-secondary">
+          <AcquisitionTrackingLink href={founderRegistrationHref(founderContext)} className="btn-secondary" sourceButton="Crear perfil fundador piloto home" context={founderContext}>
             Crear perfil fundador
-          </ConversionButton>
+          </AcquisitionTrackingLink>
+          <Link className="btn-secondary" href="/especialistas-fundadores">
+            Ver programa fundador
+          </Link>
         </div>
       </div>
     </section>

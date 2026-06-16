@@ -325,6 +325,17 @@ export type PendingSpecialistProfile = {
   documentPolicyAccepted?: boolean;
   documentPolicyAcceptedAt?: string;
   documentPolicyVersion?: string;
+  acquisitionSource?: string;
+  sourceDetail?: string;
+  campaign?: string;
+  referrerSpecialistId?: string;
+  referralCode?: string;
+  referralLink?: string;
+  referralCount?: number;
+  approvedReferralCount?: number;
+  founderBadgeBoost?: boolean;
+  founderStatus?: string;
+  founderQualityChecklist?: Record<string, boolean>;
   reviewStatus?: "pendiente_revision" | "info_solicitada" | "aprobado" | "rechazado";
   certificationStatus?: "sin_certificacion_declarada" | "certificacion_declarada_pendiente_revision";
   submittedAt: string;

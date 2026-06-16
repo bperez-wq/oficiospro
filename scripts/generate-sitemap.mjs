@@ -16,6 +16,9 @@ const publicBaseRoutes = [
   { path: "/club-hogar", priority: 0.78, changefreq: "monthly" },
   { path: "/empresas", priority: 0.78, changefreq: "monthly" },
   { path: "/registro-especialista", priority: 0.74, changefreq: "monthly" },
+  { path: "/especialistas-fundadores", priority: 0.72, changefreq: "monthly" },
+  { path: "/instituciones", priority: 0.58, changefreq: "monthly" },
+  { path: "/referidos/especialistas", priority: 0.46, changefreq: "monthly" },
   { path: "/contacto", priority: 0.62, changefreq: "monthly" },
   { path: "/faq", priority: 0.55, changefreq: "monthly" },
   { path: "/soporte", priority: 0.52, changefreq: "monthly" },
@@ -121,14 +124,19 @@ function escapeXml(value) {
 const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls
-  .map(
-    (url) => `  <url>
-    <loc>${escapeXml(`${siteUrl}${url.path}`)}</loc>
-    ${url.lastmod ? `<lastmod>${escapeXml(url.lastmod)}</lastmod>` : ""}
-    <changefreq>${escapeXml(url.changefreq)}</changefreq>
-    <priority>${Number(url.priority).toFixed(2)}</priority>
-  </url>`,
-  )
+  .map((url) => {
+    const lines = [
+      "  <url>",
+      `    <loc>${escapeXml(`${siteUrl}${url.path}`)}</loc>`,
+    ];
+    if (url.lastmod) lines.push(`    <lastmod>${escapeXml(url.lastmod)}</lastmod>`);
+    lines.push(
+      `    <changefreq>${escapeXml(url.changefreq)}</changefreq>`,
+      `    <priority>${Number(url.priority).toFixed(2)}</priority>`,
+      "  </url>",
+    );
+    return lines.join("\n");
+  })
   .join("\n")}
 </urlset>
 `;

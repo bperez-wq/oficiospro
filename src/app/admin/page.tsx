@@ -14,6 +14,9 @@ export default function AdminPage() {
           <Link className="btn-primary" href="/admin/crm">
             Abrir CRM
           </Link>
+          <Link className="btn-secondary" href="/admin/crm/acquisition">
+            Captacion especialistas
+          </Link>
           <Link className="btn-secondary" href="/admin/formalizacion">
             Formalizacion
           </Link>

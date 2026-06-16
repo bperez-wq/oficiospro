@@ -6,6 +6,7 @@ const groups = [
     title: "Producto",
     links: [
       { href: "/especialistas", label: "Especialistas" },
+      { href: "/especialistas-fundadores", label: "Especialistas fundadores" },
       { href: "/club-hogar", label: "Club Hogar" },
       { href: "/empresas", label: "Empresas" },
       { href: "/impacto", label: "Impacto" },
@@ -24,6 +25,8 @@ const groups = [
     links: [
       { href: "/registro-cliente", label: "Registro cliente" },
       { href: "/registro-especialista", label: "Registro especialista" },
+      { href: "/referidos/especialistas", label: "Referidos especialistas" },
+      { href: "/instituciones", label: "Instituciones" },
       { href: "/admin", label: "Admin" },
     ],
   },

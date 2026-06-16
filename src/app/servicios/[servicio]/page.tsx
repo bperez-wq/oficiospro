@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { SeoProgrammaticPage } from "@/components/SeoProgrammaticPage";
+import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { findSeoCommune, findSeoProblem, findSeoService, seoServices } from "@/data/seoRoutes";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { policyContextForBaseRoute, searchHref, specialistsForSeo } from "@/lib/seo/pageData";
@@ -46,6 +47,7 @@ export default async function ServicePage({ params }: PageProps) {
   const path = `/servicios/${service.slug}`;
   const specialists = specialistsForSeo({ specialty: service.specialty, categoryId: service.categoryId, limit: 4 });
   const primaryCtaHref = searchHref(service.searchParams);
+  const founderHref = founderRegistrationHref({ source: "seo_trabajos", trade: service.slug, campaign: "founder_specialists", landingPage: path });
   const communeLinks = service.popularCommunes
     .map((communeSlug) => findSeoCommune(communeSlug))
     .filter(Boolean)
@@ -78,7 +80,7 @@ export default async function ServicePage({ params }: PageProps) {
       imageAlt={service.title}
       badges={["Especialistas verificados", "Pago con creditos", "Cotizacion con contexto"]}
       primaryCta={{ href: primaryCtaHref, label: "Buscar especialistas" }}
-      secondaryCta={{ href: "/registro-especialista", label: "Postular como especialista" }}
+      secondaryCta={{ href: founderHref, label: "Postular como especialista" }}
       includedTitle="Servicios incluidos"
       includedItems={service.includedServices}
       creditRange={service.creditRange}
@@ -91,6 +93,8 @@ export default async function ServicePage({ params }: PageProps) {
       faqs={service.faqs}
       internalLinks={[
         { href: primaryCtaHref, label: "Ver especialistas filtrados", description: "Mantiene categoria y especialidad aplicadas." },
+        { href: founderHref, label: "Postular como especialista", description: "Registro fundador con origen del servicio aplicado." },
+        { href: "/especialistas-fundadores", label: "Especialistas Fundadores", description: "Programa para crear perfil profesional sin costo inicial en piloto." },
         { href: "/club-hogar", label: "Club Hogar", description: "Creditos recurrentes para mantenciones y reparaciones." },
         ...communeLinks,
         ...problemLinks,
