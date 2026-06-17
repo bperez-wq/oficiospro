@@ -577,8 +577,9 @@ function AcquisitionView({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" onClick={() => setFilters({ ...filters, founderStatus: "revision" })}>Ver pendientes</button>
             <button className="btn-secondary" type="button" disabled={loading} onClick={onRefresh}>{loading ? "Cargando..." : "Actualizar"}</button>
-            <button className="btn-primary" type="button" disabled={loading} onClick={onSync}>Sincronizar especialistas</button>
+            <button className="btn-primary" type="button" disabled={loading} onClick={onSync}>Sincronizar CRM</button>
           </div>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-6">
@@ -597,21 +598,107 @@ function AcquisitionView({
         ))}
       </div>
 
-      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <RowsView
-          title="Postulaciones captadas"
-          rows={exportRows}
-          columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
-          onRefresh={onRefresh}
-          onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
-        />
-        <section className="grid gap-5">
-          <RowsView title="Embudo fundador" rows={groupCountRows(filteredRows, "founderStatus")} columns={["value", "count"]} />
-          <RowsView title="Top fuentes" rows={groupCountRows(filteredRows, "acquisitionSource")} columns={["value", "count"]} />
-          <RowsView title="Oficios" rows={groupCountRows(filteredRows, "trade")} columns={["value", "count"]} />
-          <RowsView title="Comunas" rows={groupCountRows(filteredRows, "commune")} columns={["value", "count"]} />
-        </section>
-      </section>
+      <div className="grid gap-5 xl:grid-cols-2">
+        <AcquisitionFunnel rows={filteredRows} />
+        <SourceBreakdown rows={groupCountRows(filteredRows, "acquisitionSource")} />
+      </div>
+
+      <div className="grid gap-5 md:grid-cols-2">
+        <BarBreakdown title="Oficios con mas interes" rows={groupCountRows(filteredRows, "trade")} accent="bg-sun" />
+        <BarBreakdown title="Comunas con mas interes" rows={groupCountRows(filteredRows, "commune")} accent="bg-brand" />
+      </div>
+
+      <RowsView
+        title="Postulaciones captadas"
+        rows={exportRows}
+        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
+        onRefresh={onRefresh}
+        onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
+      />
+    </section>
+  );
+}
+
+function AcquisitionFunnel({ rows }: { rows: CrmRow[] }) {
+  const stages = [
+    { key: "postulante", label: "Postulacion iniciada" },
+    { key: "revision", label: "En revision" },
+    { key: "aprobado", label: "Aprobado" },
+    { key: "publicado", label: "Publicado" },
+  ];
+  const count = (key: string) => rows.filter((row) => String(row.founderStatus).includes(key)).length;
+  const total = Math.max(1, rows.length);
+  return (
+    <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+      <h3 className="text-lg font-black text-ink">Embudo fundador</h3>
+      <p className="mt-1 text-xs font-bold text-muted">Datos reales de postulaciones filtradas en D1.</p>
+      <div className="mt-4 grid gap-3">
+        {stages.map((stage) => {
+          const value = count(stage.key);
+          const pct = Math.round((value / total) * 100);
+          return (
+            <div key={stage.key}>
+              <div className="flex items-center justify-between text-sm font-black text-ink">
+                <span>{stage.label}</span>
+                <span className="text-muted">{value} · {pct}%</span>
+              </div>
+              <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-gradient-to-r from-brand to-accent" style={{ width: `${pct}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function SourceBreakdown({ rows }: { rows: { value: string; count: number }[] }) {
+  const max = Math.max(1, ...rows.map((row) => row.count));
+  return (
+    <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+      <h3 className="text-lg font-black text-ink">Fuentes de captacion</h3>
+      {rows.length ? (
+        <div className="mt-4 grid gap-3">
+          {rows.slice(0, 8).map((row) => (
+            <div key={row.value}>
+              <div className="flex items-center justify-between text-sm font-black text-ink">
+                <span>{sourceLabel(row.value)}</span>
+                <span className="text-muted">{row.count}</span>
+              </div>
+              <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-brand" style={{ width: `${Math.round((row.count / max) * 100)}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm font-bold text-muted">Sin datos de fuentes todavia.</p>
+      )}
+    </section>
+  );
+}
+
+function BarBreakdown({ title, rows, accent }: { title: string; rows: { value: string; count: number }[]; accent: string }) {
+  const max = Math.max(1, ...rows.map((row) => row.count));
+  return (
+    <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+      <h3 className="text-lg font-black text-ink">{title}</h3>
+      {rows.length ? (
+        <div className="mt-4 grid gap-2.5">
+          {rows.slice(0, 6).map((row) => (
+            <div key={row.value} className="flex items-center gap-3">
+              <span className="w-28 shrink-0 truncate text-sm font-bold text-ink">{row.value}</span>
+              <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+                <div className={`h-full rounded-full ${accent}`} style={{ width: `${Math.round((row.count / max) * 100)}%` }} />
+              </div>
+              <span className="w-8 shrink-0 text-right text-sm font-black text-muted">{row.count}</span>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="mt-4 text-sm font-bold text-muted">Sin datos todavia.</p>
+      )}
     </section>
   );
 }
