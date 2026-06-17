@@ -6,7 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { categoryImages } from "@/data/visualAssets";
 import type { FlexibleService } from "@/data/flexiblePricing";
-import { distanceInKm, getSpecialtiesByServiceType } from "@/data/marketplace";
+import { distanceInKm } from "@/data/marketplace";
+import { getTradeCategoryById, getTradeCoverageLabel, getTradeSpecialtyBySlugOrLabel, isTradeForming } from "@/data/tradeTaxonomy";
 import { useConversionModal } from "@/components/ConversionModal";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
@@ -23,11 +24,12 @@ import {
   ALL_COMMUNES_VALUE,
   ALL_REGIONS_VALUE,
   communeRegionCode,
+  clientServiceTypeOptions,
+  clientSpecialtyOptionsForType,
   normalizePlaceName,
   normalizeSearch,
   regionCodeForName,
   regionNameForCode,
-  serviceTypeOptions,
 } from "@/lib/catalog";
 import { submitConversionEvent } from "@/lib/leadClient";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
@@ -164,14 +166,14 @@ export function SpecialistsExplorer() {
     setSpecialty("all");
   }, [category]);
 
-  const specialties =
+  const specialtyOptions =
     category === "all"
       ? []
-      : getSpecialtiesByServiceType(category);
-  const typeFilterOptions = [{ value: "all", label: "Todos los tipos" }, ...serviceTypeOptions];
+      : clientSpecialtyOptionsForType(category);
+  const typeFilterOptions = [{ value: "all", label: "Todos los tipos" }, ...clientServiceTypeOptions];
   const specialtyFilterOptions = [
     { value: "all", label: "Todas las especialidades" },
-    ...specialties.map((item) => ({ value: item, label: item })),
+    ...specialtyOptions,
   ];
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
   const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
@@ -180,9 +182,16 @@ export function SpecialistsExplorer() {
     : "Agrega tu comuna para ver especialistas cerca de ti";
   const routeCategory = categoryParam ? categoryRoutes[categoryParam] : null;
   const routeSpecialty = specialtyParam ? specialtyRoutes[specialtyParam] : null;
+  const taxonomyCategory = getTradeCategoryById(categoryParam || (category !== "all" ? category : ""));
+  const taxonomySpecialty = specialtyParam ? getTradeSpecialtyBySlugOrLabel(specialtyParam, taxonomyCategory?.id) : null;
+  const taxonomyCoverage = taxonomySpecialty ?? taxonomyCategory;
+  const formingCoverage = taxonomyCoverage ? isTradeForming(taxonomyCoverage) : false;
+  const coverageLabel = taxonomyCoverage ? getTradeCoverageLabel(taxonomyCoverage) : "";
   const selectedTypeLabel = typeFilterOptions.find((item) => item.value === category)?.label;
   const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Tecnicos recomendados");
-  const contextualSubtitle = routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos." : resultContext);
+  const contextualSubtitle = formingCoverage
+    ? `Estamos formando red para este oficio. Puedes dejar una solicitud y priorizaremos cobertura por comuna.`
+    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos." : resultContext);
   const suggestedChips = routeCategory?.suggestions ?? [];
   const activeSearchIntent = useMemo<SpecialistSearchIntent>(
     () => ({
@@ -470,6 +479,11 @@ export function SpecialistsExplorer() {
               <p className="mt-2 text-sm font-bold text-muted">
                 {contextualSubtitle}
               </p>
+              {coverageLabel ? (
+                <span className={`mt-3 inline-flex rounded-full px-3 py-1.5 text-xs font-black ${formingCoverage ? "bg-amber-50 text-amber-800" : "bg-brand-soft text-brand-dark"}`}>
+                  {coverageLabel}
+                </span>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               <strong className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
@@ -536,9 +550,9 @@ export function SpecialistsExplorer() {
             ) : (
               <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                 <EmptyState
-                  eyebrow="Piloto por comuna"
-                  title="Estamos sumando especialistas para este servicio en tu zona."
-                  text="Dejanos tu solicitud y el equipo OficiosPro revisara alternativas disponibles. Si eres especialista de esta zona, tambien puedes crear tu perfil fundador."
+                  eyebrow={formingCoverage ? "Cobertura en formacion" : "Piloto por comuna"}
+                  title={searchIntentLabel ? `Estamos sumando especialistas de ${searchIntentLabel} en tu zona.` : "Estamos sumando especialistas para este servicio en tu zona."}
+                  text="Dejanos tu solicitud y priorizaremos esta cobertura. Si eres especialista de esta zona, tambien puedes crear tu perfil fundador."
                   visual={<span aria-hidden className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-2xl font-black text-brand-dark">OP</span>}
                   action={
                     <>

@@ -58,7 +58,7 @@ export default function HomePage() {
                 Buscar especialista
               </Link>
               <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
-                Crear perfil fundador
+                Postular como especialista fundador
               </AcquisitionTrackingLink>
               <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
                 ¿Cómo funcionan los créditos? →

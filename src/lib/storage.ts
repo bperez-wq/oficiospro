@@ -15,6 +15,7 @@ import {
   type QuoteStatus,
 } from "@/data/flexiblePricing";
 import { defaultCommercialConfig, getServiceTypeById, serviceTypes, type CommercialConfig, type SubscriptionPlan } from "@/data/marketplace";
+import { getTradeCategoryById } from "@/data/tradeTaxonomy";
 
 const keys = {
   wallet: "oficiospro.creditsWallet",
@@ -306,6 +307,13 @@ export type PendingSpecialistProfile = {
   coverageRadiusKm: number;
   coverageCommunes?: string[];
   typeServicio: string;
+  primaryTradeId?: string;
+  primaryTrade?: string;
+  tradeSegment?: string;
+  tradeCoverageStatus?: string;
+  tradeCoverageLabel?: string;
+  selectedSpecialties?: string[];
+  customTradeRequest?: string;
   specialty: string;
   services: PendingSpecialistService[];
   references: PendingSpecialistReference[];
@@ -1558,7 +1566,11 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
   const certifications = request.certifications ?? [];
   const portfolioPhotos = request.portfolioPhotos ?? [];
   const references = request.references ?? [];
-  const serviceType = getServiceTypeById(primaryService?.serviceTypeId ?? "hogar") ?? serviceTypes[0];
+  const marketplaceServiceType = getServiceTypeById(primaryService?.serviceTypeId ?? "hogar");
+  const taxonomyServiceType = getTradeCategoryById(primaryService?.serviceTypeId ?? "") ?? getTradeCategoryById(request.primaryTradeId ?? "");
+  const serviceType = marketplaceServiceType ?? serviceTypes[0];
+  const serviceTypeId = marketplaceServiceType?.id ?? taxonomyServiceType?.id ?? primaryService?.serviceTypeId ?? request.primaryTradeId ?? serviceType.id;
+  const serviceTypeName = marketplaceServiceType?.name ?? taxonomyServiceType?.label ?? request.primaryTrade ?? serviceType.name;
   const publicId = request.slug ?? specialistSlug(request.name, displaySpecialty(primaryService), request.commune, request.id);
   const initials = (request.name ?? "Especialista OficiosPro")
     .split(" ")
@@ -1577,9 +1589,9 @@ function toPublishedSpecialist(request: PendingSpecialistProfile): Specialist {
     name: request.name ?? "Especialista OficiosPro",
     initials,
     specialty: displaySpecialty(primaryService),
-    category: serviceType.name,
-    serviceTypeId: serviceType.id,
-    serviceType: serviceType.name,
+    category: serviceTypeName,
+    serviceTypeId,
+    serviceType: serviceTypeName,
     specialties: requestServices.map((service) => displaySpecialty(service)),
     zone: request.commune ?? "Santiago",
     commune: request.commune ?? "Santiago",

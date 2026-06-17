@@ -25,6 +25,12 @@ import {
 import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/flexiblePricing";
 import { specialistTaxTypeLabels, type SpecialistFormalizationTaxType } from "@/data/specialistFormalization";
 import {
+  getTradeCategoryById,
+  getTradeCoverageLabel,
+  isTradeForming,
+  tradeSegmentForCategory,
+} from "@/data/tradeTaxonomy";
+import {
   appendPendingSpecialist,
   appendStoredItem,
   defaultIdentityVerification,
@@ -36,6 +42,7 @@ import {
   DEFAULT_REGION_CODE,
   OTHER_SERVICE_VALUE,
   regionNameForCode,
+  registrationServiceTypeOptions,
   serviceTypeOptions,
   specialtyOptionsForType,
 } from "@/lib/catalog";
@@ -552,9 +559,13 @@ export function SpecialistRegisterForm() {
   const [coverageRadiusKm, setCoverageRadiusKm] = useState(18);
   const [baseCommune, setBaseCommune] = useState("Santiago");
   const [baseRegion, setBaseRegion] = useState(DEFAULT_REGION_CODE);
+  const [customTradeRequest, setCustomTradeRequest] = useState("");
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
 
   const completedReferences = references.filter((reference) => reference.name && reference.phone && reference.work);
+  const selectedPrimaryTrade = getTradeCategoryById(primaryTradeId);
+  const selectedPrimaryTradeCoverage = selectedPrimaryTrade ? getTradeCoverageLabel(selectedPrimaryTrade) : "";
+  const selectedPrimaryTradeIsForming = selectedPrimaryTrade ? isTradeForming(selectedPrimaryTrade) : false;
 
   useEffect(() => {
     const draft = readSpecialistQuickDraft();
@@ -817,6 +828,10 @@ export function SpecialistRegisterForm() {
     const lastNames = identity.lastNames;
     const fullName = `${firstNames} ${lastNames}`.trim();
     const mainType = getServiceTypeById(primaryTradeId);
+    const primaryTradeMeta = getTradeCategoryById(primaryTradeId);
+    const primaryTradeLabel = primaryTradeMeta?.label ?? mainType?.name ?? "Hogar";
+    const primaryTradeCoverageLabel = primaryTradeMeta ? getTradeCoverageLabel(primaryTradeMeta) : "";
+    const primaryTradeSegment = tradeSegmentForCategory(primaryTradeId);
     const primaryService = services.find((service) => service.serviceTypeId === primaryTradeId) ?? services[0];
     const now = new Date().toISOString();
     const normalizedServices = services.map((service) => {
@@ -849,7 +864,7 @@ export function SpecialistRegisterForm() {
       ...acquisition,
       source: acquisition.source ?? "direct",
       sourceLabel: sourceLabel(acquisition.source),
-      trade: acquisition.trade ?? mainType?.slug ?? mainType?.id ?? mainType?.name,
+      trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
       commune: acquisition.commune ?? baseCommune,
     };
     const founderQuality = buildFounderQualityChecklist({
@@ -905,7 +920,16 @@ export function SpecialistRegisterForm() {
       lng: geo.lng,
       coverageRadiusKm,
       coverageCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
-      typeServicio: mainType?.name ?? "Hogar",
+      typeServicio: primaryTradeLabel,
+      primaryTradeId,
+      primaryTrade: primaryTradeLabel,
+      tradeSegment: primaryTradeSegment,
+      tradeCoverageStatus: primaryTradeMeta?.coverageStatus,
+      tradeCoverageLabel: primaryTradeCoverageLabel,
+      selectedSpecialties: normalizedServices
+        .map((service) => (service.isOtherService ? service.otherServiceDescription : service.specialty))
+        .filter(Boolean),
+      customTradeRequest: customTradeRequest.trim() || undefined,
       specialty: primaryService.isOtherService ? primaryService.otherServiceDescription : primaryService.specialty,
       services: normalizedServices,
       references: completedReferences,
@@ -974,7 +998,7 @@ export function SpecialistRegisterForm() {
       email: identity.email,
       phone: identity.whatsapp,
       applicantType: "specialist",
-      trade: mainType?.name ?? "Hogar",
+      trade: primaryTradeLabel,
       service: primaryService.isOtherService ? primaryService.otherServiceDescription : primaryService.specialty,
       regionCode: baseRegion,
       regionName: regionNameForCode(baseRegion),
@@ -991,7 +1015,12 @@ export function SpecialistRegisterForm() {
         email: identity.email,
         phone: identity.whatsapp,
         applicantType: "specialist",
-        primaryTrade: mainType?.name ?? "Hogar",
+        primaryTradeId,
+        primaryTrade: primaryTradeLabel,
+        tradeSegment: primaryTradeSegment,
+        tradeCoverageStatus: primaryTradeMeta?.coverageStatus,
+        tradeCoverageLabel: primaryTradeCoverageLabel,
+        customTradeRequest: customTradeRequest.trim() || undefined,
         services: servicesPayload,
         yearsExperience: "",
         availability: "Pendiente de coordinar",
@@ -1000,7 +1029,7 @@ export function SpecialistRegisterForm() {
         communeName: baseCommune,
         additionalCommunes: coverageCommunes.split(",").map((item) => item.trim()).filter(Boolean),
         handlesEmergencies: services.some((service) => service.emergency),
-        servesBusinesses: mainType?.marginType === "company",
+        servesBusinesses: primaryTradeMeta?.allowedFor.includes("empresa") ?? mainType?.marginType === "company",
         certifications: selectedCertifications,
         otherCertificationText,
         hasNoFormalCertifications,
@@ -1229,7 +1258,7 @@ export function SpecialistRegisterForm() {
             <SearchableSelect
               label="Oficio principal"
               value={primaryTradeId}
-              options={serviceTypeOptions}
+              options={registrationServiceTypeOptions}
               onChange={updatePrimaryTrade}
               placeholder="Selecciona el oficio principal"
               required
@@ -1237,7 +1266,26 @@ export function SpecialistRegisterForm() {
             <div className="grid gap-2 text-sm font-bold leading-6 text-brand-dark">
               <span>Puedes aparecer en varias busquedas, pero tendras un solo perfil con toda tu reputacion.</span>
               <span>Tu ingresas tarifa esperada en CLP; OficiosPro calcula los creditos visibles para clientes.</span>
+              {selectedPrimaryTradeCoverage ? (
+                <span className={`rounded-2xl px-3 py-2 text-xs font-black ${selectedPrimaryTradeIsForming ? "bg-amber-50 text-amber-800" : "bg-white text-brand-dark"}`}>
+                  {selectedPrimaryTradeCoverage}
+                </span>
+              ) : null}
             </div>
+            {selectedPrimaryTradeIsForming ? (
+              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-900 md:col-span-2">
+                Estamos formando red para este rubro. Puedes postular ahora y el equipo OficiosPro revisara cobertura, certificaciones y demanda antes de publicarlo al cliente.
+              </div>
+            ) : null}
+            <label className="field md:col-span-2">
+              No encuentro exactamente mi oficio
+              <input
+                value={customTradeRequest}
+                onChange={(event) => setCustomTradeRequest(event.target.value)}
+                placeholder="Ej: maestro trazador, instalador de volcanita, soldador TIG sanitario"
+              />
+              <span className="text-xs font-bold text-muted">Opcional. Lo usaremos para priorizar nuevas especialidades sin frenar tu postulacion.</span>
+            </label>
           </div>
 
           {services.map((service, index) => (
@@ -1416,6 +1464,9 @@ function ServiceEditor({
   const selectedPricing = pricingModeOptions.find((option) => option.value === service.pricingMode);
   const hasLowMargin = marginWarningForService(service);
   const estimatedClientCredits = estimatedClientCreditsForService(service);
+  const serviceTrade = getTradeCategoryById(service.serviceTypeId);
+  const serviceTradeCoverage = serviceTrade ? getTradeCoverageLabel(serviceTrade) : "";
+  const serviceTradeIsForming = serviceTrade ? isTradeForming(serviceTrade) : false;
   const pricingReviewLabel = estimatedClientCredits ? `${estimatedClientCredits} créditos estimados` : "Créditos por revisar";
   return (
     <article className="grid gap-4 rounded-[24px] border border-line bg-white p-5 shadow-sm">
@@ -1427,10 +1478,15 @@ function ServiceEditor({
         <SearchableSelect
           label="Tipo de servicio"
           value={service.serviceTypeId}
-          options={serviceTypeOptions}
+          options={registrationServiceTypeOptions}
           onChange={(serviceTypeId) => onChange({ serviceTypeId })}
           required
         />
+        {serviceTradeCoverage ? (
+          <div className={`rounded-2xl border p-4 text-sm font-bold leading-6 ${serviceTradeIsForming ? "border-amber-200 bg-amber-50 text-amber-900" : "border-brand/15 bg-brand-soft text-brand-dark"}`}>
+            {serviceTradeCoverage}. OficiosPro revisara cobertura y publicacion antes de mostrarlo al cliente.
+          </div>
+        ) : null}
         <SearchableSelect
           label="Especialidad"
           value={service.specialty}
@@ -1774,27 +1830,44 @@ function Warning({ children }: { children: ReactNode }) {
 function serviceTypeIdFromAcquisitionTrade(trade?: string) {
   const token = normalizeToken(trade);
   if (!token) return "";
+  const directRegistrationMatch = registrationServiceTypeOptions.find((option) => [option.value, option.label].some((value) => normalizeToken(value) === token));
+  if (directRegistrationMatch) return directRegistrationMatch.value;
   const hints: Record<string, string> = {
     gasfiter: "gasfiteria",
     gasfiteria: "gasfiteria",
     electricidad: "electricidad",
     electricista: "electricidad",
     calefont: "gasfiteria",
-    filtracion_de_agua: "hogar",
-    fuga_de_agua: "hogar",
-    pintura: "construccion",
-    jardin: "jardineria",
-    jardineria: "jardineria",
+    filtracion_de_agua: "gasfiteria",
+    fuga_de_agua: "gasfiteria",
+    pintura: "terminaciones",
+    maestro_pintor: "terminaciones",
+    terminaciones: "terminaciones",
+    jardin: "jardineria-exterior",
+    jardineria: "jardineria-exterior",
+    piscinas: "jardineria-exterior",
     cerrajeria: "hogar",
     climatizacion: "climatizacion-refrigeracion",
     aire_acondicionado: "climatizacion-refrigeracion",
     refrigeracion_comercial: "climatizacion-refrigeracion",
+    carpinteria: "muebleria-carpinteria",
+    muebleria: "muebleria-carpinteria",
+    construccion: "construccion-obra",
+    obra: "construccion-obra",
     soldadura: "industria",
-    portones: "empresas",
-    riego_tecnificado: "agroindustria",
+    soldador: "metalmecanica",
+    portones: "comunidades-edificios",
+    riego_tecnificado: "riego-agricola",
+    agro: "agroindustria-campos",
   };
   const hinted = hints[token];
-  if (hinted && serviceTypes.some((serviceType) => serviceType.id === hinted)) return hinted;
+  if (hinted && registrationServiceTypeOptions.some((option) => option.value === hinted)) return hinted;
+  const registrationFuzzy = registrationServiceTypeOptions.find((option) => {
+    const labelToken = normalizeToken(option.label);
+    const valueToken = normalizeToken(option.value);
+    return labelToken.includes(token) || token.includes(labelToken.split("_")[0] ?? "") || valueToken.includes(token) || token.includes(valueToken.split("_")[0] ?? "");
+  });
+  if (registrationFuzzy) return registrationFuzzy.value;
   const direct = serviceTypes.find((serviceType) => [serviceType.id, serviceType.slug, serviceType.name].some((value) => normalizeToken(value) === token));
   if (direct) return direct.id;
   const bySpecialty = serviceTypes.find((serviceType) =>

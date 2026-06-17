@@ -34,6 +34,7 @@ Si el score baja de 70, la ruta debe quedar `noindex`, salir del sitemap o volve
 - No crear todas las combinaciones servicio/comuna.
 - No publicar paginas que solo cambian el nombre de la comuna.
 - No indexar paginas sin especialistas, demanda CRM, piloto activo o contenido editorial fuerte.
+- No indexar oficios con `clientVisibility = forming` o `coverageStatus = waitlist` hasta que tengan contenido editorial fuerte y aprobacion operacional.
 - No incluir query params en sitemap.
 - No usar textos genericos repetidos.
 - No inventar disponibilidad, rating, local fisico ni demanda.
@@ -86,6 +87,7 @@ Usar CRM para priorizar expansion cuando:
 - hay varias solicitudes con el mismo servicio y comuna;
 - hay oportunidades B2B recurrentes;
 - hay especialistas publicados o postulantes aprobables en la zona;
+- hay suficientes postulantes en una capa de la taxonomia (`tradeSegment`) para pasar de formacion a piloto;
 - hay consultas que requieren una guia de seguridad o preparacion.
 
 No usar CRM para publicar automaticamente. El CRM alimenta el backlog editorial, no el sitemap directo.

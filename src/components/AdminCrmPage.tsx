@@ -5,10 +5,21 @@ import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "re
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { formatCLP } from "@/data/marketplace";
 import { isInstitutionalAcquisitionSource, sourceLabel } from "@/data/specialistAcquisition";
+import { getTradeCategoryById, getTradeCoverageLabel, tradeCategories, tradeSegmentForCategory, tradeSegmentLabels } from "@/data/tradeTaxonomy";
 import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
 
 type CrmView = "overview" | "opportunities" | "tasks" | "contacts" | "companies" | "pipeline" | "activity" | "acquisition";
 type CrmRow = Record<string, unknown>;
+type AcquisitionFilters = {
+  source: string;
+  trade: string;
+  commune: string;
+  referral: string;
+  founderStatus: string;
+  institution: string;
+  tradeSegment: string;
+  coverageStatus: string;
+};
 
 type Overview = {
   newLeads: number;
@@ -51,7 +62,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   const [detailTasks, setDetailTasks] = useState<CrmRow[]>([]);
   const [detailNotes, setDetailNotes] = useState<CrmRow[]>([]);
   const [filters, setFilters] = useState({ pipeline: "", stage: "", status: "", type: "", search: "", assignedTo: "" });
-  const [acquisitionFilters, setAcquisitionFilters] = useState({ source: "", trade: "", commune: "", referral: "", founderStatus: "", institution: "" });
+  const [acquisitionFilters, setAcquisitionFilters] = useState({ source: "", trade: "", commune: "", referral: "", founderStatus: "", institution: "", tradeSegment: "", coverageStatus: "" });
   const [newOpportunity, setNewOpportunity] = useState({ title: "", type: "customer_request", pipeline: "clientes", stage: "nuevo", priority: "media" });
   const [newTask, setNewTask] = useState({ title: "", taskType: "followup", priority: "media", assignedTo: "", dueAt: "" });
   const [newNote, setNewNote] = useState("");
@@ -539,8 +550,8 @@ function AcquisitionView({
   rows: CrmRow[];
   opportunities: CrmRow[];
   tasks: CrmRow[];
-  filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string };
-  setFilters: (filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string }) => void;
+  filters: AcquisitionFilters;
+  setFilters: (filters: AcquisitionFilters) => void;
   loading: boolean;
   onRefresh: () => void;
   onSync: () => void;
@@ -557,6 +568,9 @@ function AcquisitionView({
     sourceDetail: row.sourceDetail,
     campaign: row.campaign,
     trade: row.trade,
+    tradeSegment: row.tradeSegmentLabel,
+    coverageStatus: row.coverageStatus,
+    coverageLabel: row.coverageLabel,
     commune: row.commune,
     referralCode: row.referralCode,
     referrerSpecialistId: row.referrerSpecialistId,
@@ -583,7 +597,7 @@ function AcquisitionView({
           </div>
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-6">
-          {(["source", "trade", "commune", "referral", "founderStatus", "institution"] as const).map((field) => (
+          {(["source", "trade", "commune", "referral", "founderStatus", "institution", "tradeSegment", "coverageStatus"] as const).map((field) => (
             <label key={field} className="field">
               {filterLabel(field)}
               <input value={filters[field]} onChange={(event) => setFilters({ ...filters, [field]: event.target.value })} />
@@ -606,12 +620,20 @@ function AcquisitionView({
       <div className="grid gap-5 md:grid-cols-2">
         <BarBreakdown title="Oficios con mas interes" rows={groupCountRows(filteredRows, "trade")} accent="bg-sun" />
         <BarBreakdown title="Comunas con mas interes" rows={groupCountRows(filteredRows, "commune")} accent="bg-brand" />
+        <BarBreakdown title="Capas con mas postulantes" rows={groupCountRows(filteredRows, "tradeSegmentLabel")} accent="bg-ink" />
+        <BarBreakdown title="Estado de cobertura" rows={groupCountRows(filteredRows, "coverageLabel")} accent="bg-brand-dark" />
       </div>
+
+      <RowsView
+        title="Taxonomia operacional"
+        rows={taxonomyRows()}
+        columns={["id", "label", "segment", "clientVisibility", "registrationVisibility", "coverageStatus", "requiresCertification", "seoEnabled"]}
+      />
 
       <RowsView
         title="Postulaciones captadas"
         rows={exportRows}
-        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
+        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "tradeSegment", "coverageLabel", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
         onRefresh={onRefresh}
         onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
       />
@@ -814,6 +836,12 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   const referralCode = stringValue(acquisition.referralCode ?? payload.referralCode ?? row.referralCode);
   const referrerSpecialistId = stringValue(acquisition.referrerSpecialistId ?? payload.referrerSpecialistId);
   const acquisitionSource = sourceLabel(rawSource);
+  const rawTrade = stringValue(acquisition.trade ?? payload.trade ?? payload.primaryTrade ?? row.serviceTypes) || "Sin oficio";
+  const tradeId = stringValue(payload.primaryTradeId ?? payload.serviceTypeId ?? row.serviceTypeId);
+  const taxonomyCategory = taxonomyCategoryFromValues(tradeId, rawTrade);
+  const tradeSegment = stringValue(payload.tradeSegment) || (taxonomyCategory ? tradeSegmentForCategory(taxonomyCategory.id) : "");
+  const coverageStatus = stringValue(payload.tradeCoverageStatus) || taxonomyCategory?.coverageStatus || "";
+  const coverageLabel = stringValue(payload.tradeCoverageLabel) || (taxonomyCategory ? getTradeCoverageLabel(taxonomyCategory) : "Sin cobertura declarada");
 
   return {
     ...row,
@@ -823,7 +851,11 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
     acquisitionSourceRaw: rawSource,
     sourceDetail,
     campaign: stringValue(acquisition.campaign ?? payload.campaign) || "founder_specialists",
-    trade: stringValue(acquisition.trade ?? payload.trade ?? payload.primaryTrade ?? row.serviceTypes) || "Sin oficio",
+    trade: rawTrade,
+    tradeSegment,
+    tradeSegmentLabel: tradeSegment ? tradeSegmentLabels[tradeSegment as keyof typeof tradeSegmentLabels] ?? tradeSegment : "Sin capa",
+    coverageStatus,
+    coverageLabel,
     commune: stringValue(acquisition.commune ?? payload.commune ?? payload.communeName ?? row.comuna) || "Sin comuna",
     referralCode,
     referrerSpecialistId,
@@ -834,14 +866,16 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   };
 }
 
-function acquisitionRowMatches(row: CrmRow, filters: { source: string; trade: string; commune: string; referral: string; founderStatus: string; institution: string }) {
+function acquisitionRowMatches(row: CrmRow, filters: AcquisitionFilters) {
   return (
     includesFilter(row.acquisitionSource, filters.source) &&
     includesFilter(row.trade, filters.trade) &&
     includesFilter(row.commune, filters.commune) &&
     includesFilter([row.referralCode, row.referrerSpecialistId].filter(Boolean).join(" "), filters.referral) &&
     includesFilter(row.founderStatus, filters.founderStatus) &&
-    includesFilter(row.institution, filters.institution)
+    includesFilter(row.institution, filters.institution) &&
+    includesFilter(row.tradeSegmentLabel, filters.tradeSegment) &&
+    includesFilter([row.coverageStatus, row.coverageLabel].filter(Boolean).join(" "), filters.coverageStatus)
   );
 }
 
@@ -875,7 +909,20 @@ function groupCountRows(rows: CrmRow[], field: string) {
     .map(([value, count]) => ({ value, count }));
 }
 
-function filterLabel(field: "source" | "trade" | "commune" | "referral" | "founderStatus" | "institution") {
+function taxonomyRows() {
+  return tradeCategories.map((category) => ({
+    id: category.id,
+    label: category.label,
+    segment: tradeSegmentLabels[category.segment],
+    clientVisibility: category.clientVisibility,
+    registrationVisibility: category.registrationVisibility,
+    coverageStatus: category.coverageStatus,
+    requiresCertification: category.requiresCertification ? "si" : "no",
+    seoEnabled: category.seoEnabled ? "si" : "no",
+  }));
+}
+
+function filterLabel(field: keyof AcquisitionFilters) {
   const labels = {
     source: "Fuente",
     trade: "Oficio",
@@ -883,6 +930,8 @@ function filterLabel(field: "source" | "trade" | "commune" | "referral" | "found
     referral: "Referido",
     founderStatus: "Estado fundador",
     institution: "Institucion",
+    tradeSegment: "Capa",
+    coverageStatus: "Cobertura",
   };
   return labels[field];
 }
@@ -902,6 +951,27 @@ function recordValue(value: unknown): Record<string, unknown> {
 
 function stringValue(value: unknown) {
   return value === null || value === undefined ? "" : String(value);
+}
+
+function taxonomyCategoryFromValues(...values: string[]) {
+  for (const value of values) {
+    const direct = getTradeCategoryById(value);
+    if (direct) return direct;
+  }
+  const normalizedValues = values.map(normalizeCrmToken).filter(Boolean);
+  return tradeCategories.find((category) => {
+    const tokens = [category.id, category.slug, category.label, category.shortLabel, ...category.relatedServices, ...category.relatedProblems].map(normalizeCrmToken);
+    return normalizedValues.some((value) => tokens.some((token) => token === value || token.includes(value) || value.includes(token)));
+  });
+}
+
+function normalizeCrmToken(value: unknown) {
+  return stringValue(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
 }
 
 function includesFilter(value: unknown, filter: string) {

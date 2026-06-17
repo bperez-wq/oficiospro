@@ -6,80 +6,12 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
+import { getClientMenuGroups } from "@/data/tradeTaxonomy";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
 const quickSuggestions = ["Calefont", "Filtracion", "Electricista SEC", "Camaras", "Riego", "Piscina", "Porton"];
 
-const categoryGroups = [
-  {
-    title: "Hogar",
-    href: "/especialistas?categoria=hogar",
-    items: [
-      ["Gasfiteria", "/especialistas?categoria=hogar&especialidad=gasfiteria"],
-      ["Electricidad", "/especialistas?categoria=hogar&especialidad=electricidad"],
-      ["Calefont", "/especialistas?categoria=hogar&especialidad=calefont"],
-      ["Filtraciones", "/especialistas?categoria=hogar&especialidad=filtraciones"],
-      ["Cerrajeria", "/especialistas?categoria=hogar&especialidad=cerrajeria"],
-      ["Pintura", "/especialistas?categoria=hogar&especialidad=pintura"],
-      ["Jardineria", "/especialistas?categoria=hogar&especialidad=jardineria"],
-      ["Piscinas", "/especialistas?categoria=hogar&especialidad=piscinas"],
-      ["Reparaciones menores", "/especialistas?categoria=hogar&especialidad=reparaciones-menores"],
-    ],
-  },
-  {
-    title: "Comunidades y edificios",
-    href: "/especialistas?categoria=comunidades-edificios",
-    items: [
-      ["Salas de bombas", "/especialistas?categoria=comunidades-edificios&especialidad=salas-de-bombas"],
-      ["Portones", "/especialistas?categoria=comunidades-edificios&especialidad=portones"],
-      ["Camaras", "/especialistas?categoria=comunidades-edificios&especialidad=camaras"],
-      ["Calderas", "/especialistas?categoria=comunidades-edificios&especialidad=calderas"],
-      ["Piscinas", "/especialistas?categoria=comunidades-edificios&especialidad=piscinas"],
-      ["Electricidad comun", "/especialistas?categoria=comunidades-edificios&especialidad=electricidad-comun"],
-      ["Mantencion preventiva", "/especialistas?categoria=comunidades-edificios&especialidad=mantencion-preventiva"],
-    ],
-  },
-  {
-    title: "Empresas e industria",
-    href: "/especialistas?categoria=empresas-industria",
-    items: [
-      ["Mantencion comercial", "/especialistas?categoria=empresas-industria&especialidad=mantencion-comercial"],
-      ["Refrigeracion comercial", "/especialistas?categoria=empresas-industria&especialidad=refrigeracion-comercial"],
-      ["Seguridad electronica", "/especialistas?categoria=empresas-industria&especialidad=seguridad-electronica"],
-      ["Limpieza", "/especialistas?categoria=empresas-industria&especialidad=limpieza"],
-      ["Mantencion industrial", "/especialistas?categoria=empresas-industria&especialidad=mantencion-industrial"],
-      ["Soldadura", "/especialistas?categoria=empresas-industria&especialidad=soldadura"],
-      ["Bombas y motores", "/especialistas?categoria=empresas-industria&especialidad=bombas-motores"],
-      ["Tableros / PLC", "/especialistas?categoria=empresas-industria&especialidad=tableros-plc"],
-    ],
-  },
-  {
-    title: "Agroindustria y campos",
-    href: "/especialistas?categoria=agroindustria-campos",
-    items: [
-      ["Riego tecnificado", "/especialistas?categoria=agroindustria-campos&especialidad=riego-tecnificado"],
-      ["Maquinaria agricola", "/especialistas?categoria=agroindustria-campos&especialidad=maquinaria-agricola"],
-      ["Packing y frio", "/especialistas?categoria=agroindustria-campos&especialidad=packing-frio"],
-      ["Bombas de riego", "/especialistas?categoria=agroindustria-campos&especialidad=bombas-de-riego"],
-      ["Contratistas agricolas", "/especialistas?categoria=agroindustria-campos&especialidad=contratistas-agricolas"],
-      ["Poda y cosecha", "/especialistas?categoria=agroindustria-campos&especialidad=poda-cosecha"],
-      ["Lineas de proceso", "/especialistas?categoria=agroindustria-campos&especialidad=lineas-proceso"],
-    ],
-  },
-  {
-    title: "Emergencias",
-    href: "/especialistas?categoria=emergencias",
-    items: [
-      ["Fuga de agua", "/especialistas?categoria=emergencias&especialidad=fuga-de-agua"],
-      ["Corte electrico", "/especialistas?categoria=emergencias&especialidad=corte-electrico"],
-      ["Calefont detenido", "/especialistas?categoria=emergencias&especialidad=calefont-detenido"],
-      ["Cerrajero", "/especialistas?categoria=emergencias&especialidad=cerrajero"],
-      ["Porton detenido", "/especialistas?categoria=emergencias&especialidad=porton-detenido"],
-      ["Destape urgente", "/especialistas?categoria=emergencias&especialidad=destape-urgente"],
-      ["Refrigeracion critica", "/especialistas?categoria=emergencias&especialidad=refrigeracion-critica"],
-    ],
-  },
-] as const;
+const categoryGroups = getClientMenuGroups();
 
 const adminQuickLinks = [
   { href: "/admin", label: "Panel admin" },
@@ -404,9 +336,9 @@ function MegaCategoryMenu({ open, onClose }: { open: boolean; onClose: () => voi
                 {group.title}
               </Link>
               <div className="mt-2 grid gap-1">
-                {group.items.map(([label, href]) => (
-                  <Link key={href} href={href} role="menuitem" className="rounded-xl px-2 py-2 text-sm font-bold text-muted transition hover:bg-white hover:text-brand-dark focus:bg-white focus:text-brand-dark focus:outline-none" onClick={onClose}>
-                    {label}
+                {group.items.map((item) => (
+                  <Link key={item.href} href={item.href} role="menuitem" className="rounded-xl px-2 py-2 text-sm font-bold text-muted transition hover:bg-white hover:text-brand-dark focus:bg-white focus:text-brand-dark focus:outline-none" onClick={onClose}>
+                    {item.label}
                   </Link>
                 ))}
               </div>
@@ -501,9 +433,9 @@ function MobileMenu({
                   <Link href={group.href} className="rounded-lg px-2 py-2 text-sm font-black text-ink" onClick={onClose}>
                     Ver todo
                   </Link>
-                  {group.items.map(([label, href]) => (
-                    <Link key={href} href={href} className="rounded-lg px-2 py-2 text-sm font-bold text-muted" onClick={onClose}>
-                      {label}
+                  {group.items.map((item) => (
+                    <Link key={item.href} href={item.href} className="rounded-lg px-2 py-2 text-sm font-bold text-muted" onClick={onClose}>
+                      {item.label}
                     </Link>
                   ))}
                 </div>

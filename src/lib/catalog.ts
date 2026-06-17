@@ -1,6 +1,12 @@
 import { chileCommunes, getCommunesByRegion, getRegions } from "@/data/chileCommunes";
 import { allServiceSpecialties, serviceTypes } from "@/data/marketplace";
 import { otherServiceLabels } from "@/data/serviceCatalog";
+import {
+  getClientVisibleSpecialtyOptions,
+  getClientVisibleTradeOptions,
+  getRegistrationSpecialtyOptions,
+  getRegistrationTradeOptions,
+} from "@/data/tradeTaxonomy";
 
 export const OTHER_SERVICE_VALUE = "__otro_servicio__";
 export const OTHER_SERVICE_LABEL = "Otro / No encontré mi servicio";
@@ -129,14 +135,11 @@ export function communeRegionCode(communeName: string) {
   return chileCommunes.find((commune) => normalizeSearch(normalizePlaceName(commune.name)) === normalized)?.regionId ?? "";
 }
 
-export const serviceTypeOptions: SelectOption[] = sortByLabel(
-  serviceTypes.map((type) => ({
-    value: type.id,
-    label: type.name,
-    meta: type.description,
-    group: type.marginType === "company" ? "Empresas e industria" : "Hogar y personas",
-  })),
-);
+export const registrationServiceTypeOptions: SelectOption[] = sortByLabel(getRegistrationTradeOptions());
+
+export const clientServiceTypeOptions: SelectOption[] = sortByLabel(getClientVisibleTradeOptions());
+
+export const serviceTypeOptions: SelectOption[] = clientServiceTypeOptions;
 
 // Nombres cortos + subtítulo para el buscador del hero (no afecta los formularios internos).
 const heroServiceTypeOverrides: Record<string, { label: string; meta: string }> = {
@@ -189,6 +192,10 @@ export const heroServiceTypeOptions: SelectOption[] = (() => {
 })();
 
 export function specialtyOptionsForType(serviceTypeId: string, includeOther = true) {
+  const taxonomyOptions = getRegistrationSpecialtyOptions(serviceTypeId);
+  if (taxonomyOptions.length) {
+    return includeOther ? [...sortByLabel(taxonomyOptions), { value: OTHER_SERVICE_VALUE, label: otherLabelForType(serviceTypes.find((item) => item.id === serviceTypeId)?.appliesTo ?? []) }] : sortByLabel(taxonomyOptions);
+  }
   const type = serviceTypes.find((item) => item.id === serviceTypeId);
   const specialties = type?.specialties ?? allServiceSpecialties.map((item) => item.name);
   const unique = Array.from(new Set(specialties.filter((specialty) => !normalizeSearch(specialty).startsWith("otro servicio"))));
@@ -200,6 +207,14 @@ export function specialtyOptionsForType(serviceTypeId: string, includeOther = tr
     })),
   );
   return includeOther ? [...options, { value: OTHER_SERVICE_VALUE, label: otherLabelForType(type?.appliesTo ?? []) }] : options;
+}
+
+export function clientSpecialtyOptionsForType(serviceTypeId: string, includeOther = false) {
+  const taxonomyOptions = getClientVisibleSpecialtyOptions(serviceTypeId);
+  if (taxonomyOptions.length) {
+    return includeOther ? [...sortByLabel(taxonomyOptions), { value: OTHER_SERVICE_VALUE, label: OTHER_SERVICE_LABEL }] : sortByLabel(taxonomyOptions);
+  }
+  return specialtyOptionsForType(serviceTypeId, includeOther);
 }
 
 export const allSpecialtyOptions: SelectOption[] = [

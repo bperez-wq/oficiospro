@@ -1,5 +1,6 @@
 import type { Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
+import { getTradeCategoryById, getTradeSpecialtyBySlugOrLabel, tradeSearchTermsForCategory } from "@/data/tradeTaxonomy";
 import { normalizeSearch } from "@/lib/catalog";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 
@@ -301,22 +302,28 @@ export function specialistSearchText(specialist: Specialist) {
 export function matchesRouteCategory(specialist: Specialist, categoryParam: string) {
   if (!categoryParam) return true;
   const route = categoryRoutes[categoryParam];
-  const terms = route?.terms ?? [categoryParam.replace(/-/g, " ")];
+  const taxonomyCategory = getTradeCategoryById(categoryParam);
+  const terms = route?.terms ?? tradeSearchTermsForCategory(categoryParam) ?? [categoryParam.replace(/-/g, " ")];
   const text = specialistSearchText(specialist);
-  const normalizedCategory = normalizeSearch(route?.categoryId ?? categoryParam);
+  const normalizedCategory = normalizeSearch(route?.categoryId ?? taxonomyCategory?.id ?? categoryParam);
   const matchesPrimaryType = normalizeSearch(specialist.serviceTypeId ?? "") === normalizedCategory;
   const matchesServiceType = (specialist.servicePricing ?? []).some(
     (service) => service.active !== false && normalizeSearch(service.serviceTypeId) === normalizedCategory,
   );
-  return matchesPrimaryType || matchesServiceType || terms.some((term) => text.includes(normalizeSearch(term)));
+  const taxonomyIdMatch = taxonomyCategory
+    ? [specialist.serviceTypeId, specialist.serviceType, specialist.category].some((value) => normalizeSearch(value ?? "") === normalizeSearch(taxonomyCategory.id))
+    : false;
+  return matchesPrimaryType || matchesServiceType || taxonomyIdMatch || terms.some((term) => text.includes(normalizeSearch(term)));
 }
 
 export function matchesRouteSpecialty(specialist: Specialist, specialtyParam: string) {
   if (!specialtyParam || specialtyParam === "todas") return true;
   const route = specialtyRoutes[specialtyParam];
-  const terms = route?.terms ?? [specialtyParam.replace(/-/g, " ")];
+  const taxonomySpecialty = getTradeSpecialtyBySlugOrLabel(specialtyParam);
+  const terms = route?.terms ?? taxonomySpecialty?.keywords ?? [specialtyParam.replace(/-/g, " ")];
   const text = specialistSearchText(specialist);
-  return terms.some((term) => text.includes(normalizeSearch(term)));
+  const normalizedSpecialty = normalizeSearch(taxonomySpecialty?.label ?? specialtyParam.replace(/-/g, " "));
+  return text.includes(normalizedSpecialty) || terms.some((term) => text.includes(normalizeSearch(term)));
 }
 
 export function findMatchingService(specialist: Specialist, intent: SpecialistSearchIntent = {}) {
@@ -324,8 +331,10 @@ export function findMatchingService(specialist: Specialist, intent: SpecialistSe
   const services = activeServices?.length ? activeServices : [getPrimaryFlexibleService(specialist)];
   const explicitSpecialty = intent.explicitSpecialty && intent.explicitSpecialty !== "all" ? intent.explicitSpecialty : "";
   const explicitCategory = intent.explicitCategory && intent.explicitCategory !== "all" ? intent.explicitCategory : "";
-  const specialtyTerms = intent.specialtyParam ? specialtyRoutes[intent.specialtyParam]?.terms ?? [intent.specialtyParam.replace(/-/g, " ")] : [];
-  const categoryTerms = intent.categoryParam ? categoryRoutes[intent.categoryParam]?.terms ?? [intent.categoryParam.replace(/-/g, " ")] : [];
+  const specialtyTerms = intent.specialtyParam
+    ? specialtyRoutes[intent.specialtyParam]?.terms ?? getTradeSpecialtyBySlugOrLabel(intent.specialtyParam)?.keywords ?? [intent.specialtyParam.replace(/-/g, " ")]
+    : [];
+  const categoryTerms = intent.categoryParam ? categoryRoutes[intent.categoryParam]?.terms ?? tradeSearchTermsForCategory(intent.categoryParam) ?? [intent.categoryParam.replace(/-/g, " ")] : [];
   const queryTerms = intent.query ? normalizeSearch(intent.query).split(/\s+/).filter((term) => term.length > 2) : [];
   const allTerms = [...specialtyTerms, explicitSpecialty, ...queryTerms, ...categoryTerms].filter(Boolean);
 

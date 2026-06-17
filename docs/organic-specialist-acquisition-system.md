@@ -23,6 +23,17 @@ OficiosPro capta especialistas fundadores antes de escalar demanda masiva. El si
 
 Cada postulacion puede guardar `source`, `sourceDetail`, `campaign`, `commune`, `trade`, `referrerSpecialistId` y `referralCode`.
 
+## Taxonomia de oficios
+
+La fuente de verdad del catalogo esta en `src/data/tradeTaxonomy.ts`.
+
+Regla operacional:
+
+- Registro especialista usa un catalogo amplio para captar oferta activa, piloto y en formacion.
+- Cliente y navegacion publica usan solo oficios con `clientVisibility = active` o `pilot`.
+- Las postulaciones guardan `primaryTradeId`, `primaryTrade`, `tradeSegment`, `tradeCoverageStatus`, `tradeCoverageLabel`, `selectedSpecialties` y `customTradeRequest`.
+- Si el oficio no existe exactamente, el especialista puede describirlo en texto libre. Eso no bloquea el envio; operaciones lo revisa en CRM.
+
 ## Embudo fundador
 
 1. Visita una pagina de captacion: `/especialistas-fundadores`, `/piloto`, `/trabajos/[oficio]`, `/instituciones` o `/referidos/especialistas`.
@@ -65,6 +76,7 @@ El formulario no requiere columnas nuevas para funcionar: guarda el contexto en 
 - postulaciones por comuna
 - referidos
 - instituciones
+- capas de oficio y cobertura
 - embudo fundador
 - pendientes por SLA 48h
 - export CSV
