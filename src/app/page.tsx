@@ -57,7 +57,7 @@ export default function HomePage() {
               <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
                 Buscar especialista
               </Link>
-              <AcquisitionTrackingLink href={founderRegistrationHref(founderHeroContext)} className="btn-sun" sourceButton="Postular como especialista hero" context={founderHeroContext}>
+              <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
                 Crear perfil fundador
               </AcquisitionTrackingLink>
               <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">

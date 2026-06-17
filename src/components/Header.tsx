@@ -5,7 +5,6 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
-import { ConversionButton } from "@/components/ConversionModal";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
@@ -278,9 +277,9 @@ export function Header() {
             </div>
             <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
             <NavLink href="/empresas" label="Empresas" pathname={pathname} />
-            <ConversionButton type="registro_especialista" sourceButton="Trabaja con nosotros header" className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark">
+            <Link href="/especialistas-fundadores?source=header&intent=offer_services" className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark">
               Trabaja con nosotros
-            </ConversionButton>
+            </Link>
             <NavLink href="/soporte" label="Soporte" pathname={pathname} />
           </nav>
         </div>
@@ -514,7 +513,7 @@ function MobileMenu({
         </div>
         <MobileLink href="/club-hogar" label="Club Hogar" pathname={pathname} onClick={onClose} />
         <MobileLink href="/empresas" label="Empresas" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/registro-especialista" label="Trabaja con nosotros" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/especialistas-fundadores?source=header&intent=offer_services" label="Trabaja con nosotros" pathname={pathname} onClick={onClose} />
         <MobileLink href="/soporte" label="Soporte" pathname={pathname} onClick={onClose} />
         <button className="btn-secondary" type="button" onClick={onOpenCart}>
           Mi bolsa

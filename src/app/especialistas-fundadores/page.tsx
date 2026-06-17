@@ -9,7 +9,6 @@ import { FounderWizard } from "@/components/founders/FounderWizard";
 import { FounderFinalCta } from "@/components/founders/FounderFinalCta";
 import {
   founderNoPromiseMessages,
-  founderRegistrationHref,
   founderReferralHref,
 } from "@/data/specialistAcquisition";
 import { seoWorkerAcquisitionPages } from "@/data/seoRoutes";
@@ -26,7 +25,7 @@ const founderContext = { source: "campana_local" as const, campaign: "founder_sp
 const tradeLinks = seoWorkerAcquisitionPages.slice(0, 6);
 
 export default function FounderSpecialistsPage() {
-  const registerHref = founderRegistrationHref(founderContext);
+  const registerHref = "/registro-especialista?source=founder_landing&intent=offer_services";
   const referralHref = founderReferralHref();
 
   return (
