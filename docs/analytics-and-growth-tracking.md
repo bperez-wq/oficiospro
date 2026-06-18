@@ -1,0 +1,106 @@
+# Analytics and growth tracking
+
+Este documento define la medicion propia para adquisicion y conversion de especialistas en OficiosPro.
+
+## Objetivo
+
+Medir el camino completo desde visita hasta postulacion enviada:
+
+1. Visita a Home o landing publica.
+2. Click en CTA de especialista.
+3. Visita a `/especialistas-fundadores`.
+4. Click hacia registro.
+5. Inicio de registro.
+6. Avance por pasos.
+7. Abandono o envio final.
+8. Lectura operacional en `/admin/crm/acquisition`.
+
+## Capa tecnica
+
+- Cliente: `src/lib/analytics/index.ts`.
+- Page view helper: `src/components/AnalyticsTracker.tsx`.
+- Compatibilidad con eventos existentes: `src/lib/leadClient.ts`.
+- Endpoint usado: `POST /api/conversion-events/create`.
+- Tabla D1 usada: `conversion_events`.
+- Lectura admin: `GET /api/admin/conversion-events`.
+
+No se creo un endpoint nuevo `/api/events` en este ciclo para evitar tocar Worker. La capa cliente ya deja el payload con forma de analytics y puede migrarse a `/api/events` cuando se apruebe tocar Worker.
+
+## Eventos medidos
+
+| Evento | Donde ocurre | Uso |
+| --- | --- | --- |
+| `page_view` | Paginas publicas de referidos e instituciones | Trafico publico general |
+| `home_view` | Home | Base del funnel |
+| `click_search_specialist` | Buscador del hero | Intencion cliente |
+| `click_offer_services` | CTA especialista en Home | Intencion especialista |
+| `founder_landing_view` | `/especialistas-fundadores` | Visitas a landing fundadora |
+| `founder_cta_click` | CTAs de landing fundadora | Click hacia registro |
+| `specialist_application_started` | Apertura de registro especialista | Inicio real del formulario |
+| `specialist_application_step_completed` | Avance de paso en registro | Friccion por paso |
+| `specialist_application_abandoned` | Salida de registro antes de enviar | Abandono |
+| `specialist_application_submitted` | Envio de postulacion | Conversion principal |
+| `search_performed` | Busqueda enviada | Demanda cliente |
+| `lead_submitted` | Lead enviado | Conversion generica |
+| `referral_link_created` | Herramienta de referidos | Activacion de referidores |
+| `institution_contact_submitted` | Formulario institucional | Alianzas / OMIL / programas |
+
+## Campos comunes
+
+Cada evento incluye:
+
+- `path`
+- `referrer`
+- `utmSource`
+- `utmMedium`
+- `utmCampaign`
+- `source`
+- `campaign`
+- `anonymousId`
+- `sessionId`
+- `timestamp`
+- `sourceComponent`
+- `sourceButton`
+- `payload` con metadata no sensible
+
+## Privacidad
+
+La capa de analytics filtra y redacta:
+
+- RUT
+- passwords
+- tokens
+- secretos
+- documentos
+- cedula
+- selfie
+- emails dentro de texto libre
+
+No usar analytics para guardar archivos, credenciales, documentos, RUT completo ni notas sensibles.
+
+## Revision semanal
+
+Revisar cada lunes:
+
+1. Visitas 7 dias.
+2. Clicks `click_offer_services`.
+3. `founder_landing_view`.
+4. `founder_cta_click`.
+5. `specialist_application_started`.
+6. `specialist_application_step_completed` por paso.
+7. `specialist_application_abandoned` por paso.
+8. `specialist_application_submitted`.
+9. Top fuentes y campanas UTM.
+10. Acciones para la semana siguiente.
+
+## Regla operativa
+
+Si hay visitas pero no clicks: mejorar propuesta y CTA.
+
+Si hay clicks pero no landing views: revisar rutas, performance o links.
+
+Si hay landing views pero no CTA clicks: simplificar landing y repetir CTA.
+
+Si hay starts pero no submits: reducir friccion del paso con mas abandono.
+
+Si hay submits pero pocos especialistas publicados: revisar operacion CRM, SLA y aprobacion.

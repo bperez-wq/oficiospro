@@ -5,6 +5,7 @@ import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import { heroServiceTypeOptions, OTHER_SERVICE_VALUE } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
+import { trackEvent } from "@/lib/analytics";
 
 const suggestedTags = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego"];
 const heroTypeOptions = [
@@ -35,6 +36,21 @@ export function HeroSearchPanel() {
     if (serviceTypeId && serviceTypeId !== OTHER_SERVICE_VALUE) params.set("tipo", serviceTypeId);
     if (region) params.set("region", region);
     if (commune) params.set("comuna", commune);
+    const queryString = params.toString();
+    const destination = queryString ? `/especialistas?${queryString}` : "/especialistas";
+    void trackEvent({
+      eventName: "click_search_specialist",
+      sourceComponent: "HeroSearchPanel",
+      sourceButton: "Buscar especialista hero",
+      metadata: {
+        hasQuery: Boolean(finalQuery),
+        queryLength: finalQuery.length,
+        serviceTypeId,
+        hasRegion: Boolean(region),
+        hasCommune: Boolean(commune),
+        usedOtherService: serviceTypeId === OTHER_SERVICE_VALUE,
+      },
+    });
     await submitLead({
       leadType: "customer_request",
       fullName: "Cliente OficiosPro",
@@ -48,8 +64,19 @@ export function HeroSearchPanel() {
       consentContact: false,
       payload: { serviceTypeId },
     });
-    const queryString = params.toString();
-    window.location.href = queryString ? `/especialistas?${queryString}` : "/especialistas";
+    void trackEvent({
+      eventName: "search_performed",
+      sourceComponent: "HeroSearchPanel",
+      metadata: {
+        hasQuery: Boolean(finalQuery),
+        queryLength: finalQuery.length,
+        serviceTypeId,
+        region,
+        commune,
+        destination,
+      },
+    });
+    window.location.href = destination;
   }
 
   return (

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
@@ -47,6 +47,7 @@ import {
   specialtyOptionsForType,
 } from "@/lib/catalog";
 import { calculateClientCreditsFromSpecialistPayout, estimatePlatformMarginCLP } from "@/lib/pricing";
+import { trackEvent } from "@/lib/analytics";
 import { submitConversionEvent, submitLead } from "@/lib/leadClient";
 import {
   clearSpecialistQuickDraft,
@@ -105,6 +106,7 @@ const specialistSuccessMessage =
   "Tu postulación fue recibida. Revisaremos tus antecedentes antes de publicar tu perfil.";
 const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
+const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -561,11 +563,15 @@ export function SpecialistRegisterForm() {
   const [baseRegion, setBaseRegion] = useState(DEFAULT_REGION_CODE);
   const [customTradeRequest, setCustomTradeRequest] = useState("");
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
+  const submittedRef = useRef(false);
+  const maxStepReachedRef = useRef(1);
+  const startedAtRef = useRef(Date.now());
 
   const completedReferences = references.filter((reference) => reference.name && reference.phone && reference.work);
   const selectedPrimaryTrade = getTradeCategoryById(primaryTradeId);
   const selectedPrimaryTradeCoverage = selectedPrimaryTrade ? getTradeCoverageLabel(selectedPrimaryTrade) : "";
   const selectedPrimaryTradeIsForming = selectedPrimaryTrade ? isTradeForming(selectedPrimaryTrade) : false;
+  const estimatedMinutesLeft = Math.max(1, 4 - Math.floor(step / 2));
 
   useEffect(() => {
     const draft = readSpecialistQuickDraft();
@@ -614,9 +620,42 @@ export function SpecialistRegisterForm() {
       sourceComponent: "SpecialistRegisterForm",
       sourceButton: "Formulario abierto",
       page: "/registro-especialista",
-      payload: next,
+      payload: {
+        ...next,
+        totalSteps: 6,
+        step: 1,
+        stepName: specialistStepLabels[0],
+      },
     });
   }, []);
+
+  useEffect(() => {
+    maxStepReachedRef.current = Math.max(maxStepReachedRef.current, step);
+  }, [step]);
+
+  useEffect(() => {
+    const reportAbandonment = () => {
+      if (submittedRef.current) return;
+      void trackEvent({
+        eventName: "specialist_application_abandoned",
+        sourceComponent: "SpecialistRegisterForm",
+        metadata: {
+          maxStepReached: maxStepReachedRef.current,
+          maxStepName: specialistStepLabels[maxStepReachedRef.current - 1],
+          elapsedMs: Date.now() - startedAtRef.current,
+          hasTrade: Boolean(primaryTradeId),
+          hasCommune: Boolean(baseCommune),
+          servicesCount: services.length,
+          acquisitionSource: acquisition.source ?? "direct",
+          campaign: acquisition.campaign,
+        },
+      });
+    };
+    window.addEventListener("beforeunload", reportAbandonment);
+    return () => {
+      window.removeEventListener("beforeunload", reportAbandonment);
+    };
+  }, [acquisition.campaign, acquisition.source, baseCommune, primaryTradeId, services.length]);
 
   useEffect(() => {
     const hasMeaningfulDraft =
@@ -784,7 +823,21 @@ export function SpecialistRegisterForm() {
 
   function nextStep() {
     if (!validateStep(step)) return;
-    setStep((current) => Math.min(6, current + 1));
+    const next = Math.min(6, step + 1);
+    void trackEvent({
+      eventName: "specialist_application_step_completed",
+      sourceComponent: "SpecialistRegisterForm",
+      metadata: {
+        step,
+        stepName: specialistStepLabels[step - 1],
+        nextStep: next,
+        nextStepName: specialistStepLabels[next - 1],
+        elapsedMs: Date.now() - startedAtRef.current,
+        acquisitionSource: acquisition.source ?? "direct",
+        campaign: acquisition.campaign,
+      },
+    });
+    setStep(next);
   }
 
   function previousStep() {
@@ -1077,6 +1130,7 @@ export function SpecialistRegisterForm() {
       setStatus(leadResult.message);
       return;
     }
+    submittedRef.current = true;
     void submitConversionEvent({
       type: "specialist_application_submitted",
       source: acquisitionPayload.source,
@@ -1089,6 +1143,20 @@ export function SpecialistRegisterForm() {
         localRequestId: request.id,
         acquisition: acquisitionPayload,
         founderStatus: "fundador_postulante",
+        maxStepReached: maxStepReachedRef.current,
+        elapsedMs: Date.now() - startedAtRef.current,
+      },
+    });
+    void trackEvent({
+      eventName: "lead_submitted",
+      sourceComponent: "SpecialistRegisterForm",
+      metadata: {
+        leadType: "specialist_application",
+        stored: leadResult.stored,
+        source: acquisitionPayload.source,
+        campaign: acquisitionPayload.campaign,
+        commune: acquisitionPayload.commune,
+        trade: acquisitionPayload.trade,
       },
     });
     clearSpecialistQuickDraft();
@@ -1432,7 +1500,7 @@ export function SpecialistRegisterForm() {
           <button className="btn-secondary" type="button" onClick={previousStep} disabled={step === 1 || isSubmitting}>
             Volver
           </button>
-          <span className="text-sm font-black text-muted">Paso {step} de 6 · completa lo que tengas disponible.</span>
+          <span className="text-sm font-black text-muted">Paso {step} de 6 · te faltan aprox. {estimatedMinutesLeft} min.</span>
           <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
             Continuar paso
           </button>

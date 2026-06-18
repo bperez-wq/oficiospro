@@ -42,7 +42,7 @@ const faqs = [
 export default function SpecialistReferralsPage() {
   return (
     <main className="section grid gap-12">
-      <AcquisitionPageViewTracker source="referido_especialista" context={referralContext} />
+      <AcquisitionPageViewTracker eventType="page_view" source="referido_especialista" context={referralContext} />
       <PlatformNav />
 
       {/* HERO */}

@@ -1,5 +1,6 @@
 "use client";
 
+import { analyticsContext, sanitizeAnalyticsMetadata } from "@/lib/analytics";
 import { leadMessageForResult, type LeadSubmissionPayload, type LeadSubmitResult } from "@/lib/leads";
 
 const localLeadBackupKey = "oficiospro.leadSubmissions.localBackup";
@@ -92,10 +93,34 @@ export async function submitLead(payload: LeadSubmissionPayload, endpoint = endp
 }
 
 export async function submitConversionEvent(event: { type: string; source?: string; sourceButton?: string; sourceComponent?: string; page?: string; data?: Record<string, unknown>; payload?: Record<string, unknown> }) {
+  const context = analyticsContext();
   const body = {
     ...pageSource(),
+    path: context.path,
+    referrer: context.referrer,
+    medium: context.medium,
+    anonymousId: context.anonymousId,
+    sessionId: context.sessionId,
+    timestamp: context.timestamp,
     ...event,
-    payload: event.payload ?? event.data ?? {},
+    eventName: event.type,
+    page: event.page ?? context.path,
+    payload: sanitizeAnalyticsMetadata({
+      ...(event.payload ?? event.data ?? {}),
+      path: context.path,
+      referrer: context.referrer,
+      utmSource: context.utmSource,
+      utmMedium: context.utmMedium,
+      utmCampaign: context.utmCampaign,
+      source: event.source ?? context.source,
+      medium: context.medium,
+      campaign: context.campaign,
+      anonymousId: context.anonymousId,
+      sessionId: context.sessionId,
+      timestamp: context.timestamp,
+      sourceButton: event.sourceButton,
+      sourceComponent: event.sourceComponent,
+    }),
   };
 
   try {

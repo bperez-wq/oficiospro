@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { trackEvent } from "@/lib/analytics";
 import { submitLead } from "@/lib/leadClient";
 
 const allianceTypes = [
@@ -37,7 +38,23 @@ export function InstitutionContactForm() {
     });
     setStatus(result.message);
     setSubmitting(false);
-    if (result.ok) event.currentTarget.reset();
+    if (result.ok) {
+      void trackEvent({
+        eventName: "institution_contact_submitted",
+        source: "omil",
+        campaign: "institutional_partnerships",
+        sourceComponent: "InstitutionContactForm",
+        sourceButton: "Solicitar reunion institucional",
+        metadata: {
+          leadId: result.id,
+          stored: result.stored,
+          commune,
+          alliance,
+          hasInstitutionName: Boolean(institution.trim()),
+        },
+      });
+      event.currentTarget.reset();
+    }
   }
 
   return (

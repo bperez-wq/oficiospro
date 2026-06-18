@@ -36,7 +36,7 @@ const reportRows = [
 export default function InstitutionsPage() {
   return (
     <main className="section grid gap-12">
-      <AcquisitionPageViewTracker source="omil" context={context} />
+      <AcquisitionPageViewTracker eventType="page_view" source="omil" context={context} />
       <PlatformNav />
 
       {/* HERO */}

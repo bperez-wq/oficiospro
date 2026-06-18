@@ -11,8 +11,8 @@ type Value = {
 const values: Value[] = [
   {
     tone: "bg-brand-soft text-brand-dark",
-    title: "Visibilidad local",
-    text: "Apareces ante clientes de tu zona desde el primer dia.",
+    title: "Perfil por comuna",
+    text: "Ordenamos tu oficio, zona y servicios para que aparezcas donde podamos revisar cobertura real.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2}>
         <path d="M21 10c0 7-9 12-9 12s-9-5-9-12a9 9 0 0 1 18 0Z" />
@@ -22,8 +22,8 @@ const values: Value[] = [
   },
   {
     tone: "bg-sun-soft text-sun-dark",
-    title: "Perfil con respaldo",
-    text: "Identidad y oficio validados que generan confianza real.",
+    title: "Formalizacion asistida",
+    text: "Te guiamos con datos tributarios y documentos de cobro antes de activar pagos o publicaciones.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2}>
         <path d="M12 2 4 5v6c0 5 3.5 8.5 8 11 4.5-2.5 8-6 8-11V5l-8-3Z" />
@@ -33,8 +33,8 @@ const values: Value[] = [
   },
   {
     tone: "bg-emerald-50 text-emerald-700",
-    title: "Reputacion verificable",
-    text: "Acumulas trabajos y calificaciones que quedan a tu nombre.",
+    title: "Solicitudes con seguimiento",
+    text: "Cada solicitud queda registrada para que operaciones pueda revisar origen, comuna y proximo paso.",
     icon: (
       <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={2}>
         <path d="m12 2 2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.8 5.9 21.4l1.4-6.8L2.2 9.9l6.9-.8L12 2Z" />
@@ -49,6 +49,7 @@ export function FounderValueCards() {
       <div className="max-w-2xl">
         <p className="eyebrow">Por que ahora</p>
         <h2 className="section-title">Una oportunidad temprana para profesionalizar tu oficio</h2>
+        <p className="mt-3 text-sm font-bold leading-6 text-muted">Sin costo inicial, con revision humana y sin prometer ingresos garantizados.</p>
       </div>
       <div className="grid gap-5 md:grid-cols-3">
         {values.map((value) => (

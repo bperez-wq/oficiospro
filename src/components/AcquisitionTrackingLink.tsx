@@ -3,13 +3,14 @@
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
 import { submitConversionEvent } from "@/lib/leadClient";
+import type { AnalyticsEventName } from "@/lib/analytics";
 import type { AcquisitionContext, FounderConversionEvent } from "@/data/specialistAcquisition";
 
 type AcquisitionTrackingLinkProps = {
   href: string;
   children: ReactNode;
   className?: string;
-  eventType?: FounderConversionEvent;
+  eventType?: FounderConversionEvent | AnalyticsEventName;
   sourceButton: string;
   sourceComponent?: string;
   context?: AcquisitionContext;
@@ -50,7 +51,7 @@ export function AcquisitionPageViewTracker({
   sourceComponent = "SpecialistAcquisition",
   context,
 }: {
-  eventType?: FounderConversionEvent;
+  eventType?: FounderConversionEvent | AnalyticsEventName;
   source?: string;
   sourceComponent?: string;
   context?: AcquisitionContext;

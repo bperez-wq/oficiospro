@@ -1,7 +1,7 @@
 import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import type { AcquisitionContext } from "@/data/specialistAcquisition";
 
-const trustChips = ["Revision en 48 h", "Perfil verificado", "Sin costo inicial"];
+const trustChips = ["Sin costo inicial", "Revision en 48 h", "Perfil por comuna", "Solicitudes con seguimiento"];
 
 export function FounderHero({
   registerHref,
@@ -23,15 +23,27 @@ export function FounderHero({
           <p className="mt-5 max-w-xl text-lg font-semibold leading-8 text-white/80">
             Crea un perfil profesional, gana visibilidad local y comienza a construir reputacion verificada desde el primer grupo de especialistas.
           </p>
+          <p className="mt-3 max-w-xl text-sm font-black text-sun">
+            Toma 3 minutos. Revision manual en 48 h. No necesitas pagar para postular.
+          </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <AcquisitionTrackingLink
               href={registerHref}
               className="btn-sun"
-              sourceButton="Hero - Quiero ser fundador"
+              sourceButton="Hero - Empezar ahora"
               sourceComponent="FounderHero"
               context={context}
             >
-              Quiero ser fundador
+              Empezar ahora
+            </AcquisitionTrackingLink>
+            <AcquisitionTrackingLink
+              href={registerHref}
+              className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20"
+              sourceButton="Hero - Crear perfil sin costo"
+              sourceComponent="FounderHero"
+              context={context}
+            >
+              Crear perfil sin costo
             </AcquisitionTrackingLink>
             <a href="#proceso" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
               Ver como funciona
@@ -72,7 +84,7 @@ export function FounderHero({
           <div className="absolute -bottom-6 -right-3 w-60 rounded-card border border-line bg-white p-4 shadow-lift md:-right-6">
             <p className="text-xs font-black uppercase tracking-wide text-brand">Postulacion guiada</p>
             <p className="mt-1 text-sm font-black leading-snug text-ink">
-              3 pasos para crear tu perfil fundador
+              3 minutos para iniciar tu perfil
             </p>
             <div className="mt-3 flex gap-1.5">
               <span className="h-1.5 flex-1 rounded-full bg-sun" />

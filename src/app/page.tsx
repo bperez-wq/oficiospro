@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
+import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HeroSearchPanel } from "@/components/HeroSearchPanel";
@@ -37,6 +38,7 @@ export default function HomePage() {
 
   return (
     <main>
+      <AnalyticsPageView eventName="home_view" metadata={{ funnel: "specialist_acquisition" }} />
       <PostulationToast />
       <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
@@ -57,7 +59,7 @@ export default function HomePage() {
               <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
                 Buscar especialista
               </Link>
-              <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
+              <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun" eventType="click_offer_services" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
                 Postular como especialista fundador
               </AcquisitionTrackingLink>
               <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">

@@ -57,6 +57,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   const [companies, setCompanies] = useState<CrmRow[]>([]);
   const [activity, setActivity] = useState<CrmRow[]>([]);
   const [specialistApplications, setSpecialistApplications] = useState<CrmRow[]>([]);
+  const [conversionEvents, setConversionEvents] = useState<CrmRow[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [detail, setDetail] = useState<CrmRow | null>(null);
   const [detailTasks, setDetailTasks] = useState<CrmRow[]>([]);
@@ -140,15 +141,17 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
   }
 
   async function loadAcquisition(activeToken = token) {
-    const [specialistsData, opportunitiesData, tasksData] = await Promise.all([
+    const [specialistsData, opportunitiesData, tasksData, eventsData] = await Promise.all([
       adminFetch(activeToken, "/api/admin/specialists?limit=100"),
       adminFetch(activeToken, "/api/admin/crm/opportunities?pipeline=especialistas&limit=100"),
       adminFetch(activeToken, "/api/admin/crm/tasks?limit=100"),
+      adminFetch(activeToken, "/api/admin/conversion-events?limit=300"),
     ]);
     setSpecialistApplications(arrayFrom(specialistsData.specialists));
     setOpportunities(arrayFrom(opportunitiesData.opportunities));
     setTasks(arrayFrom(tasksData.tasks));
-    setNotice("Captacion de especialistas cargada desde D1.");
+    setConversionEvents(arrayFrom(eventsData.conversionEvents));
+    setNotice("Captacion de especialistas y eventos de conversion cargados desde D1.");
   }
 
   async function loadContacts(activeToken = token, includeTestData = showTestData) {
@@ -362,6 +365,7 @@ export function AdminCrmPage({ view = "overview" }: { view?: CrmView }) {
           rows={specialistApplications}
           opportunities={opportunities}
           tasks={tasks}
+          events={conversionEvents}
           filters={acquisitionFilters}
           setFilters={setAcquisitionFilters}
           loading={loading}
@@ -541,6 +545,7 @@ function AcquisitionView({
   rows,
   opportunities,
   tasks,
+  events,
   filters,
   setFilters,
   loading,
@@ -550,6 +555,7 @@ function AcquisitionView({
   rows: CrmRow[];
   opportunities: CrmRow[];
   tasks: CrmRow[];
+  events: CrmRow[];
   filters: AcquisitionFilters;
   setFilters: (filters: AcquisitionFilters) => void;
   loading: boolean;
@@ -557,8 +563,13 @@ function AcquisitionView({
   onSync: () => void;
 }) {
   const enrichedRows = rows.map(enrichAcquisitionRow);
+  const enrichedEvents = events.map(enrichConversionEvent);
   const filteredRows = enrichedRows.filter((row) => acquisitionRowMatches(row, filters));
-  const kpis = acquisitionKpis(filteredRows, opportunities, tasks);
+  const kpis = [...acquisitionGrowthKpis(enrichedEvents), ...acquisitionKpis(filteredRows, opportunities, tasks)];
+  const recentEvents = enrichedEvents.slice(0, 20);
+  const topPages = groupCountRows(enrichedEvents.filter((event) => event.isPageView), "path");
+  const topCampaigns = groupCountRows(enrichedEvents.filter((event) => event.campaign), "campaign");
+  const abandonmentRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_abandoned"), "maxStepName");
   const exportRows = filteredRows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -612,17 +623,27 @@ function AcquisitionView({
         ))}
       </div>
 
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="grid gap-5 xl:grid-cols-3">
+        <AcquisitionEventFunnel events={enrichedEvents} />
         <AcquisitionFunnel rows={filteredRows} />
         <SourceBreakdown rows={groupCountRows(filteredRows, "acquisitionSource")} />
       </div>
 
       <div className="grid gap-5 md:grid-cols-2">
+        <BarBreakdown title="Paginas mas vistas" rows={topPages} accent="bg-accent" />
+        <BarBreakdown title="Campanas UTM" rows={topCampaigns} accent="bg-sun" />
+        <BarBreakdown title="Abandono por paso" rows={abandonmentRows} accent="bg-brand" />
         <BarBreakdown title="Oficios con mas interes" rows={groupCountRows(filteredRows, "trade")} accent="bg-sun" />
         <BarBreakdown title="Comunas con mas interes" rows={groupCountRows(filteredRows, "commune")} accent="bg-brand" />
         <BarBreakdown title="Capas con mas postulantes" rows={groupCountRows(filteredRows, "tradeSegmentLabel")} accent="bg-ink" />
         <BarBreakdown title="Estado de cobertura" rows={groupCountRows(filteredRows, "coverageLabel")} accent="bg-brand-dark" />
       </div>
+
+      <RowsView
+        title="Eventos recientes"
+        rows={recentEvents}
+        columns={["id", "eventName", "path", "source", "medium", "campaign", "utmSource", "utmMedium", "utmCampaign", "sourceButton", "createdAt"]}
+      />
 
       <RowsView
         title="Taxonomia operacional"
@@ -637,6 +658,46 @@ function AcquisitionView({
         onRefresh={onRefresh}
         onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
       />
+    </section>
+  );
+}
+
+function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
+  const stages = [
+    { key: "home_view", label: "Home view" },
+    { key: "click_offer_services", label: "Click ofrecer servicios" },
+    { key: "founder_landing_view", label: "Landing fundadores" },
+    { key: "founder_cta_click", label: "CTA landing" },
+    { key: "specialist_application_started", label: "Registro iniciado" },
+    { key: "specialist_application_submitted", label: "Postulacion enviada" },
+  ];
+  const count = (key: string) => events.filter((event) => event.eventName === key).length;
+  const top = Math.max(1, count("home_view"), count("founder_landing_view"));
+  return (
+    <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+      <h3 className="text-lg font-black text-ink">Embudo de conversion real</h3>
+      <p className="mt-1 text-xs font-bold text-muted">Eventos guardados en D1 desde Home, landing y registro.</p>
+      {events.length ? (
+        <div className="mt-4 grid gap-3">
+          {stages.map((stage) => {
+            const value = count(stage.key);
+            const pct = Math.round((value / top) * 100);
+            return (
+              <div key={stage.key}>
+                <div className="flex items-center justify-between text-sm font-black text-ink">
+                  <span>{stage.label}</span>
+                  <span className="text-muted">{value} / {pct}%</span>
+                </div>
+                <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-slate-100">
+                  <div className="h-full rounded-full bg-gradient-to-r from-brand to-accent" style={{ width: `${Math.min(100, pct)}%` }} />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState title="Aun no hay eventos registrados." text="Comparte links con UTM para medir adquisicion." />
+      )}
     </section>
   );
 }
@@ -896,6 +957,74 @@ function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[
     { label: "Instituciones", value: String(institutions), detail: "OMIL/SENCE/CFT/IP", tone: "light" as const },
     { label: "SLA pendiente", value: String(slaOverdue), detail: `${openSpecialistOpps} opps / ${pendingTasks} tareas`, tone: slaOverdue ? ("brand" as const) : ("light" as const) },
   ];
+}
+
+function acquisitionGrowthKpis(events: CrmRow[]) {
+  const visits24h = events.filter((event) => isPageViewEvent(event) && isWithinHours(event.createdAt, 24)).length;
+  const visits7d = events.filter((event) => isPageViewEvent(event) && isWithinHours(event.createdAt, 24 * 7)).length;
+  const offerClicks = eventCount(events, "click_offer_services");
+  const landingViews = eventCount(events, "founder_landing_view");
+  const starts = eventCount(events, "specialist_application_started");
+  const submits = eventCount(events, "specialist_application_submitted");
+
+  return [
+    { label: "Visitas 24h", value: String(visits24h), detail: "Page views medidos", tone: "light" as const },
+    { label: "Visitas 7 dias", value: String(visits7d), detail: "Page views medidos", tone: "light" as const },
+    { label: "Clicks ofrecer", value: String(offerClicks), detail: "CTA especialista", tone: "brand" as const },
+    { label: "Landing fundador", value: String(landingViews), detail: "Visitas /especialistas-fundadores", tone: "light" as const },
+    { label: "Inicios registro", value: String(starts), detail: `Landing a inicio ${formatPercent(starts, landingViews)}`, tone: "light" as const },
+    { label: "Envios registro", value: String(submits), detail: `Inicio a envio ${formatPercent(submits, starts)}`, tone: submits ? ("brand" as const) : ("light" as const) },
+  ];
+}
+
+function enrichConversionEvent(row: CrmRow): CrmRow {
+  const payload = parseJsonRecord(row.payloadJson ?? row.payload_json);
+  const eventName = stringValue(row.eventName ?? row.type ?? payload.eventName ?? payload.type);
+  const source = stringValue(row.source ?? payload.source ?? payload.utmSource) || "direct";
+  const path = stringValue(row.path ?? row.page ?? payload.path ?? payload.page) || "Sin pagina";
+  const createdAt = stringValue(row.createdAt ?? row.created_at ?? payload.timestamp);
+  const step = stringValue(payload.maxStepName ?? payload.stepName);
+
+  return {
+    ...row,
+    eventName,
+    path,
+    source,
+    medium: stringValue(payload.medium ?? payload.utmMedium),
+    campaign: stringValue(payload.campaign ?? payload.utmCampaign),
+    utmSource: stringValue(payload.utmSource),
+    utmMedium: stringValue(payload.utmMedium),
+    utmCampaign: stringValue(payload.utmCampaign),
+    sourceButton: stringValue(payload.sourceButton),
+    sourceComponent: stringValue(payload.sourceComponent),
+    anonymousId: stringValue(payload.anonymousId),
+    sessionId: stringValue(payload.sessionId),
+    maxStepName: step || "Sin paso",
+    isPageView: isPageViewName(eventName),
+    createdAt,
+  };
+}
+
+function eventCount(events: CrmRow[], eventName: string) {
+  return events.filter((event) => event.eventName === eventName).length;
+}
+
+function isPageViewEvent(event: CrmRow) {
+  return event.isPageView === true || isPageViewName(stringValue(event.eventName));
+}
+
+function isPageViewName(eventName: string) {
+  return ["page_view", "home_view", "founder_landing_view"].includes(eventName);
+}
+
+function isWithinHours(value: unknown, hours: number) {
+  const created = Date.parse(stringValue(value));
+  return Number.isFinite(created) && Date.now() - created <= hours * 60 * 60 * 1000;
+}
+
+function formatPercent(part: number, total: number) {
+  if (!total) return "0%";
+  return `${Math.round((part / total) * 100)}%`;
 }
 
 function groupCountRows(rows: CrmRow[], field: string) {

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink";
+import { AcquisitionPageViewTracker, AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { PlatformNav } from "@/components/PlatformNav";
 import { FounderHero } from "@/components/founders/FounderHero";
 import { FounderValueCards } from "@/components/founders/FounderValueCards";
@@ -30,7 +30,7 @@ export default function FounderSpecialistsPage() {
 
   return (
     <main className="section grid gap-10">
-      <AcquisitionPageViewTracker source="campana_local" context={founderContext} />
+      <AcquisitionPageViewTracker eventType="founder_landing_view" source="campana_local" context={founderContext} />
       <PlatformNav />
 
       <FounderHero registerHref={registerHref} context={founderContext} />
@@ -38,6 +38,24 @@ export default function FounderSpecialistsPage() {
       <div id="beneficios">
         <FounderValueCards />
       </div>
+
+      <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-5 shadow-sm md:flex md:items-center md:justify-between md:gap-6">
+        <div>
+          <p className="text-sm font-black uppercase text-brand-dark">Perfil fundador sin costo inicial</p>
+          <p className="mt-2 max-w-2xl text-sm font-bold leading-6 text-brand-dark/80">
+            Toma 3 minutos. Revision en 48 h. Si falta informacion, el equipo OficiosPro te contacta antes de publicar.
+          </p>
+        </div>
+        <AcquisitionTrackingLink
+          href={registerHref}
+          className="btn-primary mt-4 md:mt-0"
+          sourceButton="CTA beneficios - Crear perfil sin costo"
+          sourceComponent="FounderBenefitsCta"
+          context={founderContext}
+        >
+          Crear perfil sin costo
+        </AcquisitionTrackingLink>
+      </section>
 
       <FounderTimeline />
 

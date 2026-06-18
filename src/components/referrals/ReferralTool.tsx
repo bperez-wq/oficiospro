@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { founderReferralHref } from "@/data/specialistAcquisition";
+import { trackEvent } from "@/lib/analytics";
 
 export function ReferralTool() {
   const [code, setCode] = useState("");
@@ -24,6 +25,21 @@ export function ReferralTool() {
     }
   }
 
+  function createLink() {
+    setCreated(true);
+    void trackEvent({
+      eventName: "referral_link_created",
+      source: "referido_especialista",
+      campaign: "founder_specialist_referrals",
+      sourceComponent: "ReferralTool",
+      sourceButton: "Crear link",
+      metadata: {
+        hasCustomCode: Boolean(code.trim()),
+        codeLength: code.trim().length,
+      },
+    });
+  }
+
   const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`Te invito a crear tu perfil fundador en OficiosPro: ${link}`)}`;
 
   return (
@@ -35,7 +51,7 @@ export function ReferralTool() {
         <input value={code} onChange={(event) => setCode(event.target.value)} placeholder="Ej: carlos-gasfiter" />
       </label>
 
-      <button type="button" className="btn-primary mt-3 w-full" onClick={() => setCreated(true)}>
+      <button type="button" className="btn-primary mt-3 w-full" onClick={createLink}>
         Crear link
       </button>
 
