@@ -570,6 +570,16 @@ function AcquisitionView({
   const topPages = groupCountRows(enrichedEvents.filter((event) => event.isPageView), "path");
   const topCampaigns = groupCountRows(enrichedEvents.filter((event) => event.campaign), "campaign");
   const abandonmentRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_abandoned"), "maxStepName");
+  const assistantEvents = enrichedEvents.filter((event) => stringValue(event.eventName).startsWith("specialist_assistant_"));
+  const assistantQuestions = assistantEvents.filter((event) => event.eventName === "specialist_assistant_question_asked");
+  const assistantEscalations = assistantEvents.filter((event) => event.eventName === "specialist_assistant_escalated");
+  const assistantAnswers = assistantEvents.filter((event) => event.eventName === "specialist_assistant_answer_served");
+  const assistantTopics = groupCountRows(
+    assistantEvents.map((event) => ({ ...event, assistantIntent: event.answerIntent || event.intentGuess || event.reason || "Sin intent" })),
+    "assistantIntent",
+  );
+  const assistantEscalationReasons = groupCountRows(assistantEscalations, "reason");
+  const assistantUnansweredRows = assistantEscalations.filter((event) => ["unknown", "low_confidence", "out_of_scope", "tax_legal", "question_limit", "sensitive"].includes(stringValue(event.reason)));
   const exportRows = filteredRows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -633,16 +643,40 @@ function AcquisitionView({
         <BarBreakdown title="Paginas mas vistas" rows={topPages} accent="bg-accent" />
         <BarBreakdown title="Campanas UTM" rows={topCampaigns} accent="bg-sun" />
         <BarBreakdown title="Abandono por paso" rows={abandonmentRows} accent="bg-brand" />
+        <BarBreakdown title="Temas asistente especialistas" rows={assistantTopics} accent="bg-brand-dark" />
+        <BarBreakdown title="Escalaciones asistente" rows={assistantEscalationReasons} accent="bg-accent" />
         <BarBreakdown title="Oficios con mas interes" rows={groupCountRows(filteredRows, "trade")} accent="bg-sun" />
         <BarBreakdown title="Comunas con mas interes" rows={groupCountRows(filteredRows, "commune")} accent="bg-brand" />
         <BarBreakdown title="Capas con mas postulantes" rows={groupCountRows(filteredRows, "tradeSegmentLabel")} accent="bg-ink" />
         <BarBreakdown title="Estado de cobertura" rows={groupCountRows(filteredRows, "coverageLabel")} accent="bg-brand-dark" />
       </div>
 
+      <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="eyebrow">Asistente especialistas</p>
+            <h3 className="text-xl font-black text-ink">Dudas frecuentes y escalaciones</h3>
+            <p className="mt-1 text-xs font-bold text-muted">Solo usa eventos sanitizados; no guarda RUT, documentos ni datos privados.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <DashboardMetricCard label="Preguntas" value={String(assistantQuestions.length)} detail="Consultas realizadas" />
+          <DashboardMetricCard label="Respuestas" value={String(assistantAnswers.length)} detail="Respuestas servidas" />
+          <DashboardMetricCard label="Escalaciones" value={String(assistantEscalations.length)} detail="Derivadas a correo" tone={assistantEscalations.length ? "brand" : "light"} />
+          <DashboardMetricCard label="Sin respuesta" value={String(assistantUnansweredRows.length)} detail="Para mejorar base curada" />
+        </div>
+      </section>
+
       <RowsView
         title="Eventos recientes"
         rows={recentEvents}
         columns={["id", "eventName", "path", "source", "medium", "campaign", "utmSource", "utmMedium", "utmCampaign", "sourceButton", "createdAt"]}
+      />
+
+      <RowsView
+        title="Preguntas escaladas del asistente"
+        rows={assistantUnansweredRows}
+        columns={["questionSanitized", "intentGuess", "reason", "path", "createdAt"]}
       />
 
       <RowsView
@@ -1000,6 +1034,11 @@ function enrichConversionEvent(row: CrmRow): CrmRow {
     anonymousId: stringValue(payload.anonymousId),
     sessionId: stringValue(payload.sessionId),
     maxStepName: step || "Sin paso",
+    questionSanitized: stringValue(payload.questionSanitized),
+    intentGuess: stringValue(payload.intentGuess),
+    answerIntent: stringValue(payload.intent),
+    fallbackType: stringValue(payload.fallbackType),
+    reason: stringValue(payload.reason),
     isPageView: isPageViewName(eventName),
     createdAt,
   };

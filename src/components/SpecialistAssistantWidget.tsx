@@ -1,0 +1,290 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { specialistAssistantSuggestedQuestions } from "@/data/specialistAssistantKnowledge";
+import { trackEvent } from "@/lib/analytics";
+import {
+  buildAssistantResponse,
+  detectSpecialistAssistantIntent,
+  sanitizeSpecialistAssistantQuestion,
+  shouldEscalateToHuman,
+  type SpecialistAssistantResponse,
+  type SpecialistAssistantSession,
+} from "@/lib/specialistAssistant";
+
+type AssistantMessage = {
+  id: string;
+  role: "assistant" | "user";
+  content: string;
+  response?: SpecialistAssistantResponse;
+};
+
+const storageKey = "oficiospro.specialistAssistantSession";
+
+export function SpecialistAssistantWidget() {
+  const [open, setOpen] = useState(false);
+  const [question, setQuestion] = useState("");
+  const [session, setSession] = useState<SpecialistAssistantSession>(() => createSession());
+  const [messages, setMessages] = useState<AssistantMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        "Hola. Soy el asistente OficiosPro para especialistas. Respondo solo informacion curada sobre registro, formalizacion, pagos, referidos y funcionamiento de la plataforma.",
+    },
+  ]);
+
+  useEffect(() => {
+    const stored = readStoredSession();
+    if (stored) setSession(stored);
+  }, []);
+
+  useEffect(() => {
+    persistSession(session);
+  }, [session]);
+
+  const visibleSuggestions = useMemo(() => specialistAssistantSuggestedQuestions.slice(0, 6), []);
+
+  function toggleOpen() {
+    setOpen((current) => {
+      const next = !current;
+      if (next) {
+        void trackEvent({
+          eventName: "specialist_assistant_opened",
+          sourceComponent: "SpecialistAssistantWidget",
+          metadata: {
+            questionCount: session.questionCount,
+            infoSeekingCount: session.infoSeekingCount,
+          },
+        });
+      }
+      return next;
+    });
+  }
+
+  function askSuggested(nextQuestion: string) {
+    void handleQuestion(nextQuestion);
+  }
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await handleQuestion(question);
+  }
+
+  async function handleQuestion(rawQuestion: string) {
+    const cleanQuestion = rawQuestion.trim();
+    if (!cleanQuestion) return;
+
+    const sanitized = sanitizeSpecialistAssistantQuestion(cleanQuestion);
+    const intentGuess = detectSpecialistAssistantIntent(cleanQuestion);
+    const nextSession: SpecialistAssistantSession = {
+      ...session,
+      questionCount: session.questionCount + 1,
+      infoSeekingCount: session.infoSeekingCount + 1,
+      lastQuestions: [...session.lastQuestions, sanitized].slice(-8),
+    };
+    const response = buildAssistantResponse(cleanQuestion, nextSession);
+    const escalated = shouldEscalateToHuman(nextSession, response.intent);
+    const storedSession = { ...nextSession, escalated: nextSession.escalated || escalated };
+
+    setSession(storedSession);
+    setMessages((current) => [
+      ...current,
+      { id: `user-${Date.now()}`, role: "user", content: sanitized },
+      { id: `assistant-${Date.now()}`, role: "assistant", content: response.answer, response },
+    ]);
+    setQuestion("");
+
+    void trackEvent({
+      eventName: "specialist_assistant_question_asked",
+      sourceComponent: "SpecialistAssistantWidget",
+      metadata: {
+        questionLength: cleanQuestion.length,
+        intentGuess,
+        questionCount: storedSession.questionCount,
+        infoSeekingCount: storedSession.infoSeekingCount,
+      },
+    });
+
+    void trackEvent({
+      eventName: "specialist_assistant_answer_served",
+      sourceComponent: "SpecialistAssistantWidget",
+      metadata: {
+        intent: response.intent,
+        matchedEntryId: response.matchedEntryId,
+        confidence: Number(response.confidence.toFixed(2)),
+        fallbackType: response.fallbackType,
+        escalationRecommended: response.escalationRecommended,
+      },
+    });
+
+    if (escalated || response.fallbackType) {
+      void trackEvent({
+        eventName: "specialist_assistant_escalated",
+        sourceComponent: "SpecialistAssistantWidget",
+        metadata: {
+          reason: response.fallbackType ?? "escalation_recommended",
+          intentGuess,
+          questionSanitized: sanitized,
+          questionCount: storedSession.questionCount,
+          infoSeekingCount: storedSession.infoSeekingCount,
+        },
+      });
+    }
+  }
+
+  function registerConcreteAction(action: "register" | "email" | "formalization") {
+    setSession((current) => {
+      const next = { ...current, infoSeekingCount: 0, escalated: false };
+      persistSession(next);
+      return next;
+    });
+    const eventName =
+      action === "register"
+        ? "specialist_assistant_clicked_register"
+        : action === "email"
+          ? "specialist_assistant_clicked_email"
+          : "specialist_assistant_clicked_formalization";
+    void trackEvent({
+      eventName,
+      sourceComponent: "SpecialistAssistantWidget",
+      metadata: { action },
+    });
+  }
+
+  return (
+    <aside className="fixed bottom-20 right-3 z-50 md:bottom-6 md:right-6">
+      {open ? (
+        <section
+          className="mb-3 grid max-h-[68vh] w-[calc(100vw-1.5rem)] max-w-[390px] overflow-hidden rounded-[24px] border border-line bg-white shadow-lift"
+          role="dialog"
+          aria-modal="false"
+          aria-label="Asistente OficiosPro para especialistas"
+        >
+          <header className="flex items-start justify-between gap-3 border-b border-line bg-brand-soft p-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-wide text-brand-dark">Asistente OficiosPro</p>
+              <h2 className="text-base font-black text-ink">Dudas para ofrecer tus servicios</h2>
+            </div>
+            <button
+              className="grid h-9 w-9 place-items-center rounded-full border border-brand/20 bg-white text-lg font-black text-brand-dark"
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="Cerrar asistente"
+            >
+              x
+            </button>
+          </header>
+
+          <div className="grid max-h-[44vh] gap-3 overflow-y-auto p-4" aria-live="polite">
+            {messages.map((message) => (
+              <article
+                key={message.id}
+                className={`rounded-2xl p-3 text-sm font-bold leading-6 ${
+                  message.role === "user" ? "ml-8 bg-ink text-white" : "mr-8 border border-line bg-slate-50 text-ink"
+                }`}
+              >
+                <p>{message.content}</p>
+                {message.response?.relatedLinks.length ? (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {message.response.relatedLinks.map((link) => (
+                      <Link
+                        key={link.href}
+                        className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-sm hover:bg-brand-soft"
+                        href={link.href}
+                        onClick={() => registerConcreteAction(link.href.startsWith("mailto:") ? "email" : link.href.startsWith("/formalizacion") ? "formalization" : "register")}
+                      >
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+                ) : null}
+              </article>
+            ))}
+          </div>
+
+          <div className="grid gap-3 border-t border-line p-4">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {visibleSuggestions.map((item) => (
+                <button
+                  key={item}
+                  className="shrink-0 rounded-full border border-line bg-white px-3 py-2 text-xs font-black text-muted transition hover:border-brand hover:text-brand-dark"
+                  type="button"
+                  onClick={() => askSuggested(item)}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+            <form className="flex gap-2" onSubmit={submit}>
+              <input
+                className="min-w-0 flex-1 rounded-2xl border border-line px-4 py-3 text-sm font-bold outline-none transition focus:border-brand focus:shadow-focus"
+                value={question}
+                onChange={(event) => setQuestion(event.target.value)}
+                placeholder="Escribe una duda"
+                maxLength={240}
+              />
+              <button className="btn-primary px-4 py-3 text-sm" type="submit">
+                Enviar
+              </button>
+            </form>
+            <div className="grid grid-cols-3 gap-2">
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/registro-especialista?source=specialist_assistant&intent=offer_services" onClick={() => registerConcreteAction("register")}>
+                Crear perfil
+              </Link>
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/formalizacion?source=specialist_assistant" onClick={() => registerConcreteAction("formalization")}>
+                Formalizacion
+              </Link>
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="mailto:bperez@oficiospro.cl" onClick={() => registerConcreteAction("email")}>
+                Email
+              </Link>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
+      <button
+        className="rounded-full border border-brand/20 bg-white px-4 py-3 text-sm font-black text-brand-dark shadow-lift transition hover:-translate-y-0.5 hover:bg-brand-soft"
+        type="button"
+        onClick={toggleOpen}
+        aria-expanded={open}
+      >
+        Dudas para ofrecer tus servicios?
+      </button>
+    </aside>
+  );
+}
+
+function createSession(): SpecialistAssistantSession {
+  return {
+    sessionId: browserId(),
+    questionCount: 0,
+    infoSeekingCount: 0,
+    lastQuestions: [],
+    escalated: false,
+  };
+}
+
+function readStoredSession() {
+  try {
+    const raw = window.sessionStorage.getItem(storageKey);
+    if (!raw) return null;
+    return JSON.parse(raw) as SpecialistAssistantSession;
+  } catch {
+    return null;
+  }
+}
+
+function persistSession(session: SpecialistAssistantSession) {
+  try {
+    window.sessionStorage.setItem(storageKey, JSON.stringify(session));
+  } catch {
+    // The assistant must keep working even if sessionStorage is unavailable.
+  }
+}
+
+function browserId() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return `assistant_${crypto.randomUUID()}`;
+  return `assistant_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+}

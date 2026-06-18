@@ -15,6 +15,13 @@ export const analyticsEventNames = [
   "lead_submitted",
   "referral_link_created",
   "institution_contact_submitted",
+  "specialist_assistant_opened",
+  "specialist_assistant_question_asked",
+  "specialist_assistant_answer_served",
+  "specialist_assistant_escalated",
+  "specialist_assistant_clicked_register",
+  "specialist_assistant_clicked_email",
+  "specialist_assistant_clicked_formalization",
 ] as const;
 
 export type AnalyticsEventName = (typeof analyticsEventNames)[number] | (string & {});
