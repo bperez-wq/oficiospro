@@ -33,6 +33,7 @@ Tipos sugeridos:
 | KZ-002 | Ejemplo: ruta SEO candidata sin demanda suficiente | Search Console / CRM | bajo | baja | seo | ChatGPT + Grok | diagnosticado | - | revisar score editorial | pendiente |
 | KZ-003 | Trafico existe pero no hay medicion clara de conversion especialista | Cloudflare / Benjamin | alto | alta | conversion | Codex | validando | Add growth analytics and specialist conversion funnel | validate/build/dry-run | pendiente |
 | KZ-004 | Especialistas necesitan respuestas seguras sin IA generativa libre | Benjamin / Kaizen | medio | media | seguridad | Codex | validando | Add controlled specialist assistant | validate/build/dry-run | pendiente |
+| KZ-005 | Asistente existe pero no aparece global ni guia a acciones reales | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Add global actionable OficiosPro assistant | validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

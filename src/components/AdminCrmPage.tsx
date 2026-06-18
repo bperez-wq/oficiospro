@@ -570,10 +570,13 @@ function AcquisitionView({
   const topPages = groupCountRows(enrichedEvents.filter((event) => event.isPageView), "path");
   const topCampaigns = groupCountRows(enrichedEvents.filter((event) => event.campaign), "campaign");
   const abandonmentRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_abandoned"), "maxStepName");
-  const assistantEvents = enrichedEvents.filter((event) => stringValue(event.eventName).startsWith("specialist_assistant_"));
-  const assistantQuestions = assistantEvents.filter((event) => event.eventName === "specialist_assistant_question_asked");
-  const assistantEscalations = assistantEvents.filter((event) => event.eventName === "specialist_assistant_escalated");
-  const assistantAnswers = assistantEvents.filter((event) => event.eventName === "specialist_assistant_answer_served");
+  const assistantEvents = enrichedEvents.filter((event) => {
+    const eventName = stringValue(event.eventName);
+    return eventName.startsWith("specialist_assistant_") || eventName.startsWith("assistant_");
+  });
+  const assistantQuestions = assistantEvents.filter((event) => ["specialist_assistant_question_asked", "assistant_question_asked"].includes(stringValue(event.eventName)));
+  const assistantEscalations = assistantEvents.filter((event) => ["specialist_assistant_escalated", "assistant_escalated"].includes(stringValue(event.eventName)));
+  const assistantAnswers = assistantEvents.filter((event) => ["specialist_assistant_answer_served", "assistant_intent_detected"].includes(stringValue(event.eventName)));
   const assistantTopics = groupCountRows(
     assistantEvents.map((event) => ({ ...event, assistantIntent: event.answerIntent || event.intentGuess || event.reason || "Sin intent" })),
     "assistantIntent",

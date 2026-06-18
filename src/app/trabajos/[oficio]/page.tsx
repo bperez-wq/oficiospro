@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink";
 import { SeoProgrammaticPage } from "@/components/SeoProgrammaticPage";
-import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { findSeoWorkerPage, seoWorkerAcquisitionPages } from "@/data/seoRoutes";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
@@ -99,7 +98,6 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
           ...(faqPageSchema(page.faqs) ? [faqPageSchema(page.faqs)!] : []),
         ]}
       />
-      <SpecialistAssistantWidget />
     </>
   );
 }

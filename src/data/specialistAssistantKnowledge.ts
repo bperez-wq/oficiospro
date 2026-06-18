@@ -1,4 +1,5 @@
 export type SpecialistAssistantCategory =
+  | "cliente"
   | "registro"
   | "formalizacion"
   | "pagos"
@@ -10,6 +11,8 @@ export type SpecialistAssistantCategory =
 export type SpecialistAssistantLink = {
   label: string;
   href: string;
+  eventName?: string;
+  serviceSlug?: string;
 };
 
 export type SpecialistAssistantKnowledgeEntry = {
@@ -19,6 +22,7 @@ export type SpecialistAssistantKnowledgeEntry = {
   keywords: string[];
   questionExamples: string[];
   answer: string;
+  actionButtons?: SpecialistAssistantLink[];
   relatedLinks: SpecialistAssistantLink[];
   confidence: number;
   escalationRecommended: boolean;
@@ -28,12 +32,12 @@ export const specialistAssistantContactEmail = "bperez@oficiospro.cl";
 export const specialistAssistantContactLink = `mailto:${specialistAssistantContactEmail}`;
 
 export const specialistAssistantSuggestedQuestions = [
+  "Necesito gasfiter",
+  "Busco electricista",
+  "Tengo una filtracion",
+  "Quiero ofrecer mis servicios",
   "Tiene costo crear mi perfil?",
   "Que pasa si no se emitir boleta?",
-  "Cuanto cobra OficiosPro?",
-  "Cuando puedo recibir solicitudes?",
-  "Puedo ofrecer mas de un servicio?",
-  "Que significa categoria en formacion?",
 ];
 
 export const specialistAssistantFallbacks = {
@@ -52,10 +56,174 @@ export const specialistAssistantFallbacks = {
 };
 
 const commonContactLink = [{ label: "Escribir a bperez@oficiospro.cl", href: specialistAssistantContactLink }];
-const registerLink = { label: "Crear perfil", href: "/registro-especialista?source=specialist_assistant&intent=offer_services" };
-const formalizationLink = { label: "Ver formalizacion", href: "/formalizacion?source=specialist_assistant" };
+const registerLink = { label: "Crear perfil", href: "/registro-especialista?source=assistant&intent=offer_services", eventName: "assistant_offer_services_clicked" };
+const founderLink = { label: "Ofrecer mis servicios", href: "/especialistas-fundadores?source=assistant&intent=offer_services", eventName: "assistant_offer_services_clicked" };
+const formalizationLink = { label: "Ver formalizacion", href: "/formalizacion?source=assistant", eventName: "assistant_action_clicked" };
+const supportLink = { label: "Escribir a soporte", href: "/contacto?source=assistant", eventName: "assistant_action_clicked" };
 
 export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] = [
+  {
+    id: "cliente-find-service",
+    category: "cliente",
+    intent: "find_service",
+    keywords: ["necesito ayuda", "busco especialista", "buscar especialista", "servicio tecnico", "tecnico", "especialista cerca"],
+    questionExamples: ["Necesito un especialista", "Busco servicio tecnico", "Me pueden ayudar con un trabajo?"],
+    answer:
+      "Puedo ayudarte a buscar especialistas publicados o a dejar una solicitud. No tengo confirmada cobertura inmediata para cada comuna, pero la solicitud ayuda a priorizar el caso.",
+    actionButtons: [
+      { label: "Buscar especialista", href: "/especialistas?source=assistant", eventName: "assistant_find_service_clicked" },
+      { label: "Solicitar especialista", href: "/contacto?source=assistant", eventName: "assistant_action_clicked" },
+    ],
+    relatedLinks: [{ label: "Ver especialistas", href: "/especialistas" }],
+    confidence: 0.82,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-gasfiter",
+    category: "cliente",
+    intent: "find_gasfiter",
+    keywords: ["gasfiter", "gasfiteria", "fuga", "filtracion", "filtracion agua", "llave", "cañeria", "caneria", "agua", "lavamanos", "wc"],
+    questionExamples: ["Necesito gasfiter", "Tengo una filtracion", "Busco gasfiter urgente"],
+    answer:
+      "Te puedo ayudar a encontrar gasfiteres. Puedes revisar especialistas publicados o dejar una solicitud si aun estamos formando cobertura en tu comuna; no tengo confirmada disponibilidad inmediata.",
+    actionButtons: [
+      { label: "Ver gasfiteres", href: "/especialistas?servicio=gasfiteria&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "gasfiteria" },
+      { label: "Buscar por comuna", href: "/especialistas?servicio=gasfiteria&source=assistant#busqueda", eventName: "assistant_find_service_clicked", serviceSlug: "gasfiteria" },
+      { label: "Solicitar especialista", href: "/contacto?intent=gasfiteria&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "gasfiteria" },
+    ],
+    relatedLinks: [{ label: "Servicio gasfiteria", href: "/servicios/gasfiteria", serviceSlug: "gasfiteria" }],
+    confidence: 0.94,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-electricista",
+    category: "cliente",
+    intent: "find_electricista",
+    keywords: ["electricista", "electricidad", "corte electrico", "enchufe", "tablero", "automatico", "luz", "sec"],
+    questionExamples: ["Busco electricista", "Tengo un corte electrico", "Necesito revisar enchufes"],
+    answer:
+      "Te puedo orientar hacia electricistas publicados o una solicitud de contacto. La disponibilidad real depende de comuna y agenda, asi que no la prometo desde el asistente.",
+    actionButtons: [
+      { label: "Ver electricistas", href: "/especialistas?servicio=electricidad&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "electricidad" },
+      { label: "Buscar por comuna", href: "/especialistas?servicio=electricidad&source=assistant#busqueda", eventName: "assistant_find_service_clicked", serviceSlug: "electricidad" },
+      { label: "Solicitar especialista", href: "/contacto?intent=electricidad&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "electricidad" },
+    ],
+    relatedLinks: [{ label: "Servicio electricidad", href: "/servicios/electricidad", serviceSlug: "electricidad" }],
+    confidence: 0.94,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-calefont",
+    category: "cliente",
+    intent: "find_calefont",
+    keywords: ["calefont", "calefon", "agua caliente", "no enciende", "gas", "llama piloto"],
+    questionExamples: ["Mi calefont no enciende", "Necesito tecnico de calefont", "No tengo agua caliente"],
+    answer:
+      "Para problemas de calefont puedes revisar el servicio asociado y buscar especialistas. Si no hay cobertura confirmada para tu comuna, deja una solicitud para priorizarla.",
+    actionButtons: [
+      { label: "Ver calefont", href: "/servicios/calefont?source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "calefont" },
+      { label: "Buscar gasfiter", href: "/especialistas?servicio=gasfiteria&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "gasfiteria" },
+      { label: "Solicitar especialista", href: "/contacto?intent=calefont&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "calefont" },
+    ],
+    relatedLinks: [{ label: "Servicio calefont", href: "/servicios/calefont", serviceSlug: "calefont" }],
+    confidence: 0.92,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-jardinero",
+    category: "cliente",
+    intent: "find_jardinero",
+    keywords: ["jardinero", "jardineria", "pasto", "riego", "jardin", "poda"],
+    questionExamples: ["Necesito jardinero", "Busco jardineria", "Quiero podar el jardin"],
+    answer:
+      "Puedes buscar especialistas de jardineria o dejar una solicitud. La cobertura depende de comuna y perfiles aprobados, por eso no confirmo disponibilidad inmediata desde aqui.",
+    actionButtons: [
+      { label: "Ver jardineros", href: "/especialistas?servicio=jardineria&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "jardineria" },
+      { label: "Buscar por comuna", href: "/especialistas?servicio=jardineria&source=assistant#busqueda", eventName: "assistant_find_service_clicked", serviceSlug: "jardineria" },
+      { label: "Solicitar especialista", href: "/contacto?intent=jardineria&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "jardineria" },
+    ],
+    relatedLinks: [{ label: "Ver especialistas", href: "/especialistas?servicio=jardineria", serviceSlug: "jardineria" }],
+    confidence: 0.9,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-climatizacion",
+    category: "cliente",
+    intent: "find_climatizacion",
+    keywords: ["aire acondicionado", "climatizacion", "hvac", "refrigeracion", "split", "calefaccion"],
+    questionExamples: ["Necesito aire acondicionado", "Busco tecnico en climatizacion", "Reparar split"],
+    answer:
+      "Para climatizacion puedes revisar especialistas publicados o dejar una solicitud. OficiosPro evita prometer disponibilidad sin revisar comuna, agenda y cobertura.",
+    actionButtons: [
+      { label: "Ver climatizacion", href: "/especialistas?servicio=climatizacion&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "climatizacion" },
+      { label: "Solicitar especialista", href: "/contacto?intent=climatizacion&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "climatizacion" },
+    ],
+    relatedLinks: [{ label: "Ver especialistas", href: "/especialistas?servicio=climatizacion", serviceSlug: "climatizacion" }],
+    confidence: 0.9,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-pintor",
+    category: "cliente",
+    intent: "find_pintor",
+    keywords: ["pintor", "pintura", "pintar", "muro", "fachada", "departamento"],
+    questionExamples: ["Necesito pintor", "Quiero pintar mi departamento", "Busco pintura"],
+    answer:
+      "Puedes revisar especialistas de pintura o dejar una solicitud para que el equipo priorice cobertura. La disponibilidad se confirma fuera del asistente.",
+    actionButtons: [
+      { label: "Ver pintores", href: "/especialistas?servicio=pintura&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "pintura" },
+      { label: "Solicitar especialista", href: "/contacto?intent=pintura&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "pintura" },
+    ],
+    relatedLinks: [{ label: "Ver especialistas", href: "/especialistas?servicio=pintura", serviceSlug: "pintura" }],
+    confidence: 0.88,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-seguridad",
+    category: "cliente",
+    intent: "find_security_service",
+    keywords: ["cerrajero", "cerradura", "llave", "camara", "camaras", "porton", "portones", "control remoto", "seguridad"],
+    questionExamples: ["Necesito cerrajero", "Busco tecnico de camaras", "Tengo problema con porton"],
+    answer:
+      "Puedo guiarte hacia especialistas o solicitudes para seguridad, cerrajeria, camaras o portones. Si no hay cobertura confirmada en tu comuna, deja una solicitud para priorizarla.",
+    actionButtons: [
+      { label: "Ver especialistas", href: "/especialistas?source=assistant", eventName: "assistant_find_service_clicked" },
+      { label: "Solicitar especialista", href: "/contacto?intent=seguridad&source=assistant", eventName: "assistant_action_clicked" },
+      { label: "Ver portones", href: "/comunidades/portones?source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "portones" },
+    ],
+    relatedLinks: [{ label: "Marketplace", href: "/especialistas" }],
+    confidence: 0.82,
+    escalationRecommended: false,
+  },
+  {
+    id: "cliente-find-piscina",
+    category: "cliente",
+    intent: "find_pool_service",
+    keywords: ["piscina", "piscinero", "bomba piscina", "mantencion piscina", "filtro piscina"],
+    questionExamples: ["Necesito mantencion de piscina", "Busco tecnico para piscina"],
+    answer:
+      "Puedes dejar una solicitud o revisar especialistas publicados. OficiosPro no confirma disponibilidad inmediata sin comuna y cobertura real.",
+    actionButtons: [
+      { label: "Ver especialistas", href: "/especialistas?servicio=piscina&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "piscina" },
+      { label: "Solicitar especialista", href: "/contacto?intent=piscina&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "piscina" },
+    ],
+    relatedLinks: [{ label: "Ver especialistas", href: "/especialistas?servicio=piscina", serviceSlug: "piscina" }],
+    confidence: 0.84,
+    escalationRecommended: false,
+  },
+  {
+    id: "especialista-offer-services",
+    category: "registro",
+    intent: "offer_services",
+    keywords: ["quiero trabajar", "ofrecer servicios", "soy gasfiter", "soy electricista", "tengo un oficio", "ser especialista", "quiero postular", "inscribo", "inscribirme"],
+    questionExamples: ["Quiero ofrecer mis servicios", "Soy gasfiter y quiero trabajar", "Como me inscribo?"],
+    answer:
+      "Puedes crear tu perfil de especialista fundador sin costo inicial. Te guiamos para declarar tus servicios, comuna y forma de documentar; no prometemos ingresos ni volumen fijo de trabajos.",
+    actionButtons: [founderLink, registerLink, formalizationLink],
+    relatedLinks: [founderLink, registerLink, formalizationLink],
+    confidence: 0.95,
+    escalationRecommended: false,
+  },
   {
     id: "registro-como-postular",
     category: "registro",
@@ -153,6 +321,19 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     escalationRecommended: true,
   },
   {
+    id: "formalizacion-general",
+    category: "formalizacion",
+    intent: "formalization",
+    keywords: ["formalizacion", "formalizar", "documentacion", "documentar", "contador", "sii"],
+    questionExamples: ["Como funciona la formalizacion?", "Que documentos necesito?", "Como documento mis servicios?"],
+    answer:
+      "La formalizacion en OficiosPro es referencial y se revisa antes de operar pagos. Puedes ver la pagina de formalizacion, pero tu caso debe validarse con contador o SII cuando corresponda.",
+    actionButtons: [formalizationLink, { label: "Escribir a soporte", href: specialistAssistantContactLink, eventName: "assistant_action_clicked" }],
+    relatedLinks: [formalizationLink, ...commonContactLink],
+    confidence: 0.9,
+    escalationRecommended: true,
+  },
+  {
     id: "formalizacion-factura",
     category: "formalizacion",
     intent: "invoice",
@@ -191,7 +372,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
   {
     id: "pagos-comision",
     category: "pagos",
-    intent: "platform_commission",
+    intent: "commission",
     keywords: ["comision", "9,5", "9.5", "iva", "cuanto cobra", "porcentaje", "descuento"],
     questionExamples: ["Cuanto cobra OficiosPro?", "Cual es la comision?", "Me descuentan algo?"],
     answer:
@@ -203,7 +384,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
   {
     id: "pagos-creditos-precio-cliente",
     category: "pagos",
-    intent: "credits_and_customer_price",
+    intent: "credits",
     keywords: ["creditos", "cliente", "precio cliente", "tarifa", "clp", "cuanto ve el cliente"],
     questionExamples: ["El cliente ve pesos o creditos?", "Como se calcula el precio cliente?", "Yo elijo creditos?"],
     answer:
@@ -227,7 +408,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
   {
     id: "referidos-como-funciona",
     category: "referidos",
-    intent: "referrals",
+    intent: "referral",
     keywords: ["referir", "referidos", "invitar", "link referido", "codigo", "colega"],
     questionExamples: ["Como refiero a alguien?", "Puedo crear link de referido?", "Como invito a un colega?"],
     answer:
@@ -299,7 +480,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
   {
     id: "soporte-contacto-humano",
     category: "soporte",
-    intent: "human_support",
+    intent: "support",
     keywords: ["soporte", "ayuda", "contacto", "correo", "humano", "hablar", "bperez"],
     questionExamples: ["Como hablo con alguien?", "Necesito ayuda humana", "Cual es el correo?"],
     answer:
@@ -307,5 +488,21 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     relatedLinks: commonContactLink,
     confidence: 0.96,
     escalationRecommended: true,
+  },
+  {
+    id: "soporte-instituciones",
+    category: "soporte",
+    intent: "institution",
+    keywords: ["institucion", "omil", "municipalidad", "sence", "cft", "ip", "alianza", "piloto comunal"],
+    questionExamples: ["Soy de una OMIL", "Quiero proponer una alianza", "Como trabaja OficiosPro con instituciones?"],
+    answer:
+      "OficiosPro tiene una propuesta para instituciones, OMIL, municipalidades y programas de empleabilidad. La colaboracion se revisa como piloto o conversacion institucional, sin prometer empleo ni ingresos.",
+    actionButtons: [
+      { label: "Ver instituciones", href: "/instituciones?source=assistant", eventName: "assistant_action_clicked" },
+      { label: "Contactar soporte", href: "/contacto?source=assistant&intent=institucion", eventName: "assistant_action_clicked" },
+    ],
+    relatedLinks: [{ label: "Instituciones", href: "/instituciones" }, ...commonContactLink],
+    confidence: 0.9,
+    escalationRecommended: false,
   },
 ];

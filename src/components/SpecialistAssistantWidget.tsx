@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { specialistAssistantSuggestedQuestions } from "@/data/specialistAssistantKnowledge";
 import { trackEvent } from "@/lib/analytics";
@@ -23,6 +24,7 @@ type AssistantMessage = {
 const storageKey = "oficiospro.specialistAssistantSession";
 
 export function SpecialistAssistantWidget() {
+  const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [question, setQuestion] = useState("");
   const [session, setSession] = useState<SpecialistAssistantSession>(() => createSession());
@@ -31,7 +33,7 @@ export function SpecialistAssistantWidget() {
       id: "welcome",
       role: "assistant",
       content:
-        "Hola. Soy el asistente OficiosPro para especialistas. Respondo solo informacion curada sobre registro, formalizacion, pagos, referidos y funcionamiento de la plataforma.",
+        "Hola. Soy el asistente OficiosPro. Te ayudo a buscar especialistas, ofrecer servicios o resolver dudas con informacion curada de la plataforma.",
     },
   ]);
 
@@ -45,13 +47,16 @@ export function SpecialistAssistantWidget() {
   }, [session]);
 
   const visibleSuggestions = useMemo(() => specialistAssistantSuggestedQuestions.slice(0, 6), []);
+  const hidden = shouldHideAssistant(pathname);
+
+  if (hidden) return null;
 
   function toggleOpen() {
     setOpen((current) => {
       const next = !current;
       if (next) {
         void trackEvent({
-          eventName: "specialist_assistant_opened",
+          eventName: "assistant_opened",
           sourceComponent: "SpecialistAssistantWidget",
           metadata: {
             questionCount: session.questionCount,
@@ -97,7 +102,7 @@ export function SpecialistAssistantWidget() {
     setQuestion("");
 
     void trackEvent({
-      eventName: "specialist_assistant_question_asked",
+      eventName: "assistant_question_asked",
       sourceComponent: "SpecialistAssistantWidget",
       metadata: {
         questionLength: cleanQuestion.length,
@@ -108,7 +113,7 @@ export function SpecialistAssistantWidget() {
     });
 
     void trackEvent({
-      eventName: "specialist_assistant_answer_served",
+      eventName: "assistant_intent_detected",
       sourceComponent: "SpecialistAssistantWidget",
       metadata: {
         intent: response.intent,
@@ -121,7 +126,7 @@ export function SpecialistAssistantWidget() {
 
     if (escalated || response.fallbackType) {
       void trackEvent({
-        eventName: "specialist_assistant_escalated",
+        eventName: "assistant_escalated",
         sourceComponent: "SpecialistAssistantWidget",
         metadata: {
           reason: response.fallbackType ?? "escalation_recommended",
@@ -134,38 +139,38 @@ export function SpecialistAssistantWidget() {
     }
   }
 
-  function registerConcreteAction(action: "register" | "email" | "formalization") {
+  function registerConcreteAction(link: { href: string; label?: string; eventName?: string; serviceSlug?: string }) {
     setSession((current) => {
       const next = { ...current, infoSeekingCount: 0, escalated: false };
       persistSession(next);
       return next;
     });
-    const eventName =
-      action === "register"
-        ? "specialist_assistant_clicked_register"
-        : action === "email"
-          ? "specialist_assistant_clicked_email"
-          : "specialist_assistant_clicked_formalization";
     void trackEvent({
-      eventName,
+      eventName: link.eventName ?? "assistant_action_clicked",
       sourceComponent: "SpecialistAssistantWidget",
-      metadata: { action },
+      metadata: {
+        href: link.href,
+        label: link.label,
+        serviceSlug: link.serviceSlug,
+        source: "assistant",
+      },
     });
   }
 
   return (
-    <aside className="fixed bottom-20 right-3 z-50 md:bottom-6 md:right-6">
+    <aside className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-3 z-40 md:right-6">
       {open ? (
         <section
-          className="mb-3 grid max-h-[68vh] w-[calc(100vw-1.5rem)] max-w-[390px] overflow-hidden rounded-[24px] border border-line bg-white shadow-lift"
+          className="mb-3 grid max-h-[72vh] w-[calc(100vw-1.5rem)] max-w-[410px] overflow-hidden rounded-[24px] border border-line bg-white shadow-lift"
           role="dialog"
           aria-modal="false"
-          aria-label="Asistente OficiosPro para especialistas"
+          aria-label="Asistente OficiosPro"
         >
           <header className="flex items-start justify-between gap-3 border-b border-line bg-brand-soft p-4">
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-brand-dark">Asistente OficiosPro</p>
-              <h2 className="text-base font-black text-ink">Dudas para ofrecer tus servicios</h2>
+              <h2 className="text-base font-black text-ink">Te ayudo a avanzar</h2>
+              <p className="mt-1 text-xs font-bold leading-5 text-muted">Busca especialistas, ofrece servicios o resuelve dudas.</p>
             </div>
             <button
               className="grid h-9 w-9 place-items-center rounded-full border border-brand/20 bg-white text-lg font-black text-brand-dark"
@@ -186,14 +191,14 @@ export function SpecialistAssistantWidget() {
                 }`}
               >
                 <p>{message.content}</p>
-                {message.response?.relatedLinks.length ? (
+                {message.response ? (
                   <div className="mt-3 flex flex-wrap gap-2">
-                    {message.response.relatedLinks.map((link) => (
+                    {dedupeAssistantLinks([...message.response.actionButtons, ...message.response.relatedLinks]).map((link) => (
                       <Link
                         key={link.href}
                         className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-sm hover:bg-brand-soft"
                         href={link.href}
-                        onClick={() => registerConcreteAction(link.href.startsWith("mailto:") ? "email" : link.href.startsWith("/formalizacion") ? "formalization" : "register")}
+                        onClick={() => registerConcreteAction(link)}
                       >
                         {link.label}
                       </Link>
@@ -230,14 +235,14 @@ export function SpecialistAssistantWidget() {
               </button>
             </form>
             <div className="grid grid-cols-3 gap-2">
-              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/registro-especialista?source=specialist_assistant&intent=offer_services" onClick={() => registerConcreteAction("register")}>
-                Crear perfil
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/especialistas?source=assistant" onClick={() => registerConcreteAction({ href: "/especialistas?source=assistant", label: "Buscar especialista", eventName: "assistant_find_service_clicked" })}>
+                Buscar
               </Link>
-              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/formalizacion?source=specialist_assistant" onClick={() => registerConcreteAction("formalization")}>
-                Formalizacion
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/especialistas-fundadores?source=assistant&intent=offer_services" onClick={() => registerConcreteAction({ href: "/especialistas-fundadores?source=assistant&intent=offer_services", label: "Ofrecer servicios", eventName: "assistant_offer_services_clicked" })}>
+                Ofrecer
               </Link>
-              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="mailto:bperez@oficiospro.cl" onClick={() => registerConcreteAction("email")}>
-                Email
+              <Link className="btn-secondary justify-center px-2 py-2 text-xs" href="/contacto?source=assistant" onClick={() => registerConcreteAction({ href: "/contacto?source=assistant", label: "Soporte", eventName: "assistant_action_clicked" })}>
+                Soporte
               </Link>
             </div>
           </div>
@@ -245,15 +250,36 @@ export function SpecialistAssistantWidget() {
       ) : null}
 
       <button
-        className="rounded-full border border-brand/20 bg-white px-4 py-3 text-sm font-black text-brand-dark shadow-lift transition hover:-translate-y-0.5 hover:bg-brand-soft"
+        className="inline-flex items-center gap-2 rounded-full border border-brand/20 bg-brand px-4 py-3 text-sm font-black text-white shadow-lift transition hover:-translate-y-0.5 hover:bg-brand-dark"
         type="button"
         onClick={toggleOpen}
         aria-expanded={open}
       >
-        Dudas para ofrecer tus servicios?
+        <span className="grid h-6 w-6 place-items-center rounded-full bg-white/18 text-xs">OP</span>
+        Te ayudo?
       </button>
     </aside>
   );
+}
+
+function shouldHideAssistant(pathname: string) {
+  return (
+    pathname.startsWith("/admin") ||
+    pathname === "/checkout" ||
+    pathname.startsWith("/checkout/") ||
+    pathname === "/bolsa" ||
+    pathname.startsWith("/bolsa/") ||
+    pathname === "/login"
+  );
+}
+
+function dedupeAssistantLinks(links: { href: string; label: string; eventName?: string; serviceSlug?: string }[]) {
+  const seen = new Set<string>();
+  return links.filter((link) => {
+    if (seen.has(link.href)) return false;
+    seen.add(link.href);
+    return true;
+  });
 }
 
 function createSession(): SpecialistAssistantSession {

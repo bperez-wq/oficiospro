@@ -3,7 +3,6 @@ import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
-import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Registro especialista OficiosPro | Crea tu perfil",
@@ -95,7 +94,6 @@ export default function SpecialistRegisterPage() {
         </MarketplaceCard>
       </section>
       <ContactTrustStrip />
-      <SpecialistAssistantWidget />
     </main>
   );
 }

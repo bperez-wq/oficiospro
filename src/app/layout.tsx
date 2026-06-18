@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { ConversionModalProvider } from "@/components/ConversionModal";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
+import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -56,6 +57,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           <Header />
           {children}
           <Footer />
+          <SpecialistAssistantWidget />
         </ConversionModalProvider>
       </body>
     </html>

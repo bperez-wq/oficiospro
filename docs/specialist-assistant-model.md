@@ -1,11 +1,13 @@
-# Specialist assistant model
+# OficiosPro assistant model
 
-Este documento describe la primera version del Asistente OficiosPro para especialistas.
+Este documento describe la primera version del Asistente OficiosPro controlado y accionable.
 
 ## Objetivo
 
-Responder dudas frecuentes de especialistas sobre:
+Guiar a clientes y especialistas con informacion curada sobre:
 
+- busqueda de especialistas
+- solicitudes por servicio
 - registro
 - perfil fundador
 - formalizacion
@@ -49,6 +51,38 @@ El asistente no responde:
 - Si detecta tema tributario/legal especifico, responde con disclaimer y deriva.
 - Si no hay intencion conocida, dice que no tiene respuesta confirmada.
 
+## Intenciones accionables
+
+El asistente detecta intenciones como:
+
+- `find_service`
+- `find_gasfiter`
+- `find_electricista`
+- `find_calefont`
+- `find_jardinero`
+- `find_climatizacion`
+- `find_pintor`
+- `find_security_service`
+- `find_pool_service`
+- `offer_services`
+- `formalization`
+- `commission`
+- `credits`
+- `support`
+- `referral`
+- `institution`
+
+Cada respuesta puede incluir botones como:
+
+- Buscar especialista
+- Ver gasfiteres
+- Buscar por comuna
+- Solicitar especialista
+- Ofrecer mis servicios
+- Ir al registro
+- Ver formalizacion
+- Escribir a soporte
+
 ## Limite de 5 preguntas
 
 El widget guarda una sesion local en `sessionStorage`:
@@ -71,13 +105,29 @@ Acciones que reinician la friccion:
 
 ## Donde aparece
 
-El widget `src/components/SpecialistAssistantWidget.tsx` aparece en:
+El widget `src/components/SpecialistAssistantWidget.tsx` se monta globalmente desde `src/app/layout.tsx`.
 
+Aparece en paginas publicas como:
+
+- `/`
+- `/especialistas`
 - `/especialistas-fundadores`
 - `/registro-especialista`
 - `/trabajos/[oficio]`
+- `/servicios/[servicio]`
 - `/formalizacion`
 - `/referidos/especialistas`
+- `/instituciones`
+
+Se oculta en:
+
+- `/admin`
+- `/admin/*`
+- `/checkout`
+- `/checkout/*`
+- `/bolsa`
+- `/bolsa/*`
+- `/login`
 
 ## Eventos registrados
 
@@ -85,6 +135,13 @@ Usa la capa existente `src/lib/analytics/index.ts` y el endpoint existente `POST
 
 Eventos:
 
+- `assistant_opened`
+- `assistant_question_asked`
+- `assistant_intent_detected`
+- `assistant_action_clicked`
+- `assistant_escalated`
+- `assistant_find_service_clicked`
+- `assistant_offer_services_clicked`
 - `specialist_assistant_opened`
 - `specialist_assistant_question_asked`
 - `specialist_assistant_answer_served`
@@ -97,7 +154,7 @@ No se guardan documentos, RUT completos, telefonos completos, tokens ni password
 
 ## CRM
 
-`/admin/crm/acquisition` muestra:
+`/admin/crm/acquisition` muestra eventos antiguos `specialist_assistant_*` y eventos globales `assistant_*`:
 
 - cantidad de preguntas
 - respuestas servidas

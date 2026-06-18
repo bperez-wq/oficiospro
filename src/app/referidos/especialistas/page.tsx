@@ -1,6 +1,5 @@
 import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink";
 import { PlatformNav } from "@/components/PlatformNav";
-import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 import { ReferralTool } from "@/components/referrals/ReferralTool";
 import { femaleProfileImages } from "@/data/visualAssets";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
@@ -134,7 +133,6 @@ export default function SpecialistReferralsPage() {
           ))}
         </div>
       </section>
-      <SpecialistAssistantWidget />
     </main>
   );
 }

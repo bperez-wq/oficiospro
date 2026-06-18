@@ -3,7 +3,6 @@ import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayout
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { MarketplaceCard } from "@/components/DesignSystem";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
-import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
@@ -62,7 +61,6 @@ export default function FormalizacionPage() {
         </div>
       </section>
       <ContactTrustStrip />
-      <SpecialistAssistantWidget />
     </main>
   );
 }

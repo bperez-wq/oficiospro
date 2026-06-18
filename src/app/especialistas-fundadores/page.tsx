@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { AcquisitionPageViewTracker, AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { PlatformNav } from "@/components/PlatformNav";
-import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
 import { FounderHero } from "@/components/founders/FounderHero";
 import { FounderValueCards } from "@/components/founders/FounderValueCards";
 import { FounderTimeline } from "@/components/founders/FounderTimeline";
@@ -98,7 +97,6 @@ export default function FounderSpecialistsPage() {
           La participacion en el programa fundador esta sujeta a revision operativa para mantener el estandar de confianza de OficiosPro.
         </p>
       </footer>
-      <SpecialistAssistantWidget />
     </main>
   );
 }

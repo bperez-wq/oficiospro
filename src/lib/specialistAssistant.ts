@@ -24,6 +24,7 @@ export type SpecialistAssistantResponse = {
   answer: string;
   intent: string;
   confidence: number;
+  actionButtons: SpecialistAssistantLink[];
   relatedLinks: SpecialistAssistantLink[];
   escalationRecommended: boolean;
   fallbackType?: "unknown" | "low_confidence" | "out_of_scope" | "tax_legal" | "question_limit" | "sensitive";
@@ -31,6 +32,8 @@ export type SpecialistAssistantResponse = {
 };
 
 const contactLink = { label: "Escribir a bperez@oficiospro.cl", href: specialistAssistantContactLink };
+const offerServicesLink = { label: "Ofrecer mis servicios", href: "/especialistas-fundadores?source=assistant&intent=offer_services", eventName: "assistant_offer_services_clicked" };
+const findSpecialistLink = { label: "Buscar especialista", href: "/especialistas?source=assistant", eventName: "assistant_find_service_clicked" };
 const informationLimit = 5;
 const lowConfidenceThreshold = 0.34;
 
@@ -138,10 +141,60 @@ export function buildAssistantResponse(question: string, sessionState: Specialis
     answer: trimAnswer(answer),
     intent: match.entry.intent,
     confidence: match.confidence,
+    actionButtons: dedupeLinks(match.entry.actionButtons?.length ? match.entry.actionButtons : getAssistantActionsForIntent(match.entry.intent)),
     relatedLinks: dedupeLinks(match.entry.escalationRecommended ? [...match.entry.relatedLinks, contactLink] : match.entry.relatedLinks),
     escalationRecommended: match.entry.escalationRecommended,
     matchedEntryId: match.entry.id,
   };
+}
+
+export function getAssistantActionForIntent(intent: string) {
+  return getAssistantActionsForIntent(intent)[0] ?? contactLink;
+}
+
+export function getAssistantActionsForIntent(intent: string): SpecialistAssistantLink[] {
+  if (intent === "find_gasfiter") {
+    return [
+      { label: "Ver gasfiteres", href: "/especialistas?servicio=gasfiteria&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "gasfiteria" },
+      { label: "Solicitar especialista", href: "/contacto?intent=gasfiteria&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "gasfiteria" },
+    ];
+  }
+  if (intent === "find_electricista") {
+    return [
+      { label: "Ver electricistas", href: "/especialistas?servicio=electricidad&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "electricidad" },
+      { label: "Solicitar especialista", href: "/contacto?intent=electricidad&source=assistant", eventName: "assistant_action_clicked", serviceSlug: "electricidad" },
+    ];
+  }
+  if (intent === "find_calefont") {
+    return [
+      { label: "Ver calefont", href: "/servicios/calefont?source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "calefont" },
+      { label: "Buscar gasfiter", href: "/especialistas?servicio=gasfiteria&source=assistant", eventName: "assistant_find_service_clicked", serviceSlug: "gasfiteria" },
+    ];
+  }
+  if (intent.startsWith("find_")) {
+    return [findSpecialistLink, { label: "Solicitar especialista", href: "/contacto?source=assistant", eventName: "assistant_action_clicked" }];
+  }
+  if (["offer_services", "register_specialist", "how_to_apply", "founder_profile"].includes(intent)) {
+    return [
+      offerServicesLink,
+      { label: "Ir al registro", href: "/registro-especialista?source=assistant&intent=offer_services", eventName: "assistant_offer_services_clicked" },
+      { label: "Ver formalizacion", href: "/formalizacion?source=assistant", eventName: "assistant_action_clicked" },
+    ];
+  }
+  if (["formalization", "boleta_honorarios", "invoice", "required_documents", "blocked_payout", "commission", "credits", "protected_payment"].includes(intent)) {
+    return [
+      { label: "Ver formalizacion", href: "/formalizacion?source=assistant", eventName: "assistant_action_clicked" },
+      contactLink,
+    ];
+  }
+  if (["referral", "founder_badge"].includes(intent)) {
+    return [{ label: "Ver referidos", href: "/referidos/especialistas?source=assistant", eventName: "assistant_action_clicked" }];
+  }
+  if (intent === "support") return [contactLink];
+  if (intent === "institution") {
+    return [{ label: "Ver instituciones", href: "/instituciones?source=assistant", eventName: "assistant_action_clicked" }, contactLink];
+  }
+  return [contactLink];
 }
 
 export function shouldEscalateToHuman(sessionState: SpecialistAssistantSession, intent: string) {
@@ -203,6 +256,7 @@ function fallbackResponse(
     answer,
     intent,
     confidence: 0,
+    actionButtons: fallbackType === "question_limit" ? [contactLink, offerServicesLink, findSpecialistLink] : [contactLink],
     relatedLinks: [contactLink],
     escalationRecommended: true,
     fallbackType,
