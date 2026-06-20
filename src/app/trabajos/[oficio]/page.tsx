@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink";
 import { SeoProgrammaticPage } from "@/components/SeoProgrammaticPage";
+import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { findSeoWorkerPage, seoWorkerAcquisitionPages } from "@/data/seoRoutes";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
@@ -49,8 +50,13 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
   const specialists = specialistsForSeo({ specialty: page.specialty, categoryId: page.categoryId, limit: 4 });
   const acquisitionContext = {
     source: "seo_trabajos" as const,
+    sourceDetail: "seo_jobs",
     trade: page.slug,
     campaign: "founder_specialists",
+    utmSource: "seo",
+    utmMedium: "organic",
+    utmCampaign: "seo_jobs",
+    utmContent: page.slug,
     landingPage: path,
   };
 
@@ -64,8 +70,35 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
         image={page.image}
         imageAlt={page.title}
         badges={["Perfil verificado", "Servicios multiples", "Formalizacion asistida", "Sin prometer ingresos"]}
-        primaryCta={{ href: founderRegistrationHref(acquisitionContext), label: "Crear perfil fundador" }}
+        primaryCta={{ href: founderRegistrationHref(acquisitionContext), label: "Ofrecer mis servicios" }}
         secondaryCta={{ href: searchHref(page.searchParams), label: "Ver especialistas publicados" }}
+        acquisitionSlot={
+          <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+            <SpecialistQuickLeadForm
+              title={`Ofrecer servicios de ${page.shortTitle}`}
+              text={`Estamos formando red de ${page.shortTitle} por comuna. Deja tus datos si quieres que operaciones te ayude a crear el perfil.`}
+              defaultTrade={page.shortTitle}
+              context={acquisitionContext}
+              sourceComponent="WorkerAcquisitionPage"
+              sourceButton={`Lead rapido ${page.slug}`}
+              leadKind="job_page_lead"
+            />
+            <div className="rounded-[28px] border border-brand/15 bg-brand-soft p-6">
+              <p className="eyebrow">Cobertura en formacion</p>
+              <h2 className="text-2xl font-black leading-tight text-ink">Buscamos especialistas por comuna.</h2>
+              <p className="mt-3 text-sm font-bold leading-6 text-brand-dark/80">
+                Puedes postular aunque todavia no tengas todo resuelto. OficiosPro revisa el perfil, oficio, comuna y antecedentes antes de publicar.
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {["Crear perfil", "Dejenme contacto", "Formalizacion asistida", "Sin ingresos garantizados"].map((item) => (
+                  <span key={item} className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
+                    {item}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+        }
         includedTitle="Beneficios operativos"
         includedItems={[
           ...page.benefits,

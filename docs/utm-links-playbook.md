@@ -34,6 +34,12 @@ OMIL:
 https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_campaign=piloto_comunal
 ```
 
+Referidos:
+
+```text
+https://www.oficiospro.cl/referidos/especialistas?source=referido_especialista&utm_source=referral&utm_medium=specialist_share&utm_campaign=founder_specialist_referrals&utm_content=share_link
+```
+
 Ejemplo con contenido especifico:
 
 ```text
@@ -55,6 +61,17 @@ https://www.oficiospro.cl/especialistas-fundadores?utm_source=whatsapp&utm_mediu
 - No poner telefonos, RUT ni emails en UTMs.
 - Mantener campanas simples y en minuscula.
 - Usar guion bajo para separar palabras.
+
+## Campaign kit en admin
+
+La vista `/admin/crm/acquisition` incluye "Links y mensajes para captar especialistas".
+
+Cada tarjeta permite copiar:
+
+- link UTM
+- mensaje completo con CTA
+
+Cada copia emite `campaign_link_copied` para saber que campanas esta usando operaciones.
 
 ## Como medir Instagram
 

@@ -9,6 +9,9 @@ flowchart TD
   A["home_view"] --> B["specialist_home_cta_viewed"]
   B --> C["click_offer_services"]
   C --> D["founder_landing_view"]
+  D --> Q["quick_lead_started"]
+  Q --> R["quick_lead_submitted"]
+  R --> S["draft_profile_created"]
   D --> E["founder_cta_click"]
   E --> F["specialist_application_started"]
   F --> G["specialist_application_step_started"]
@@ -28,6 +31,11 @@ La ruta `/admin/crm/acquisition` muestra:
 - visitas 7 dias
 - clicks "Ofrecer mis servicios"
 - visitas landing fundadores
+- leads rapidos iniciados y enviados
+- perfiles borrador/incompletos
+- clicks de WhatsApp/contacto
+- links de campana copiados
+- referidos enviados
 - inicios de registro
 - pasos iniciados y pasos completados
 - errores de registro por paso
@@ -44,6 +52,8 @@ La ruta `/admin/crm/acquisition` muestra:
 - postulantes que necesitan ayuda de formalizacion tributaria
 - eventos recientes
 - postulaciones captadas en D1
+- leads capturados, perfiles incompletos y referidos
+- links/copies de campanas para Instagram, WhatsApp, Facebook, OMIL, ferreterias y CFT/IP
 
 ## Interpretacion
 
@@ -52,6 +62,8 @@ La ruta `/admin/crm/acquisition` muestra:
 | Visitas altas y clicks bajos | La propuesta no esta clara o el CTA no se ve | Ajustar hero, texto del CTA y prueba de confianza |
 | Clicks altos y landing views bajos | Link, navegacion o carga puede fallar | Revisar href, deploy y mobile |
 | Landing views altas y CTA clicks bajos | Landing no convence rapido | Repetir CTA, reducir texto, mostrar beneficio concreto |
+| Leads rapidos altos y submits bajos | Hay interes, pero formulario completo genera friccion | Contactar por CRM y revisar paso de abandono |
+| Borradores altos | Personas quieren ayuda o no tienen documentos listos | Priorizar seguimiento 24/48 h y ayuda de formalizacion |
 | Starts altos y submits bajos | Registro tiene friccion | Revisar paso con mas abandono y microcopy |
 | Errores de paso concentrados | Un requisito o texto bloquea conversion | Revisar `reason` y ajustar copy, orden o validacion |
 | Muchas solicitudes de oficio no listado | El catalogo no cubre demanda real | Priorizar nueva especialidad o landing SEO |
@@ -71,6 +83,14 @@ El registro especialista reporta:
 - `specialist_application_submitted`
 - `specialist_custom_trade_requested`
 - `specialist_formalization_help_requested`
+- `quick_lead_started`
+- `quick_lead_submitted`
+- `job_page_quick_lead_submitted`
+- `draft_profile_created`
+- `referral_lead_submitted`
+- `whatsapp_contact_clicked`
+- `campaign_link_copied`
+- `founder_sticky_cta_clicked`
 
 El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin guardar RUT, documentos ni datos sensibles. Los eventos de error guardan solo el motivo operacional, paso, oficio, comuna y contexto de UTM.
 
@@ -79,13 +99,14 @@ El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin g
 1. Click rate Home a CTA especialista: `click_offer_services / home_view`.
 2. Landing conversion: `founder_cta_click / founder_landing_view`.
 3. Start rate: `specialist_application_started / founder_landing_view`.
-4. Submit rate: `specialist_application_submitted / specialist_application_started`.
-5. Abandono por paso.
-6. Errores por paso y motivo.
-7. Oficios no encontrados.
-8. Postulantes con ayuda de formalizacion.
-9. Fuente con mejor submit rate.
-10. Campana con mas registros enviados.
+4. Quick lead rate: `quick_lead_submitted / quick_lead_started`.
+5. Submit rate: `specialist_application_submitted / specialist_application_started`.
+6. Abandono por paso.
+7. Errores por paso y motivo.
+8. Oficios no encontrados.
+9. Postulantes con ayuda de formalizacion.
+10. Fuente con mejor submit rate.
+11. Campana con mas registros enviados.
 
 ## Validacion en admin
 

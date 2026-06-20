@@ -103,7 +103,7 @@ const emptyReference: ReferenceDraft = { name: "", company: "", phone: "", email
 const noFormalCertificationLabel = "No tengo certificaciones formales";
 const certificationOptions = ["SEC", "HVAC", "Gas", "Soldadura", "Otro"];
 const specialistSuccessMessage =
-  "Tu postulación fue recibida. Revisaremos tus antecedentes antes de publicar tu perfil.";
+  "¡Recibimos tu postulación! Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te contactará antes de publicar tu perfil.";
 const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
@@ -912,6 +912,98 @@ export function SpecialistRegisterForm() {
     markStepStarted(previous, "Volver paso", { previousStep: step, previousStepName: specialistStepLabels[step - 1] });
   }
 
+  async function saveIncompleteProfileLead() {
+    const fullName = `${identity.firstNames} ${identity.lastNames}`.trim();
+    const mainType = getServiceTypeById(primaryTradeId);
+    const primaryTradeMeta = getTradeCategoryById(primaryTradeId);
+    const tradeLabel = primaryTradeMeta?.label ?? mainType?.name ?? primaryTradeId;
+    if (!fullName || !identity.whatsapp.trim() || !baseCommune.trim() || !tradeLabel) {
+      setStatus("Dejanos al menos nombre, telefono, oficio y comuna para guardar tu avance y contactarte.");
+      trackSpecialistFunnelEvent("specialist_application_step_error", "Guardar avance", step, { reason: "missing_minimum_draft_fields" });
+      return;
+    }
+
+    setIsSubmitting(true);
+    setStatus("Guardando avance...");
+    const draft = saveSpecialistQuickDraft({
+      firstNames: identity.firstNames,
+      lastNames: identity.lastNames,
+      whatsapp: identity.whatsapp,
+      email: identity.email,
+      serviceTypeId: primaryTradeId,
+      region: baseRegion,
+      commune: baseCommune,
+      fromQuickSpecialist: true,
+    });
+    const leadResult = await submitLead({
+      leadType: "specialist_application",
+      fullName,
+      email: identity.email || undefined,
+      phone: identity.whatsapp,
+      applicantType: "specialist",
+      trade: tradeLabel,
+      service: tradeLabel,
+      regionCode: baseRegion,
+      regionName: regionNameForCode(baseRegion),
+      communeName: baseCommune,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Guardar avance y pedir contacto",
+      referralCode: acquisition.referralCode,
+      consentContact: true,
+      consentTerms: true,
+      payload: {
+        specialistLeadKind: "draft_profile",
+        leadSubtype: "draft_profile",
+        draftProfileCreated: Boolean(draft),
+        draftProfileStatus: "incomplete",
+        draftProfileStep: specialistStepLabels[step - 1],
+        founderStatus: "lead_capturado",
+        source: acquisition.source ?? "direct",
+        campaign: acquisition.campaign ?? "founder_specialists",
+        commune: baseCommune,
+        trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
+        acquisition: {
+          ...acquisition,
+          source: acquisition.source ?? "direct",
+          campaign: acquisition.campaign ?? "founder_specialists",
+          commune: acquisition.commune ?? baseCommune,
+          trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
+        },
+        crm: {
+          pipeline: "especialistas",
+          stage: "lead_capturado",
+          assignedTeam: "Operaciones",
+          taskTitle: "Contactar especialista con perfil incompleto",
+          slaHours: 48,
+        },
+      },
+    });
+    void trackEvent({
+      eventName: "draft_profile_created",
+      source: acquisition.source ?? "direct",
+      campaign: acquisition.campaign,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Guardar avance y pedir contacto",
+      metadata: specialistFunnelMetadata(step, {
+        leadId: leadResult.id,
+        stored: leadResult.stored,
+        draftProfileCreated: Boolean(draft),
+        draftProfileStatus: "incomplete",
+      }),
+    });
+    setDraftNotice(
+      leadResult.stored
+        ? "Ya guardamos tu avance. Puedes terminar tu perfil ahora o pedir ayuda; operaciones lo revisara como perfil incompleto."
+        : leadResult.message,
+    );
+    setStatus(
+      leadResult.stored
+        ? "Ya guardamos tu avance. Puedes terminar tu perfil ahora o pedir ayuda."
+        : leadResult.message,
+    );
+    setIsSubmitting(false);
+  }
+
   function toggleCertification(certification: string) {
     if (certification === noFormalCertificationLabel) {
       const nextNoFormal = !hasNoFormalCertifications;
@@ -1288,6 +1380,15 @@ export function SpecialistRegisterForm() {
           Sitio web
           <input value={websiteTrap} onChange={(event) => setWebsiteTrap(event.target.value)} tabIndex={-1} autoComplete="off" />
         </label>
+        <div className="grid gap-2">
+          <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-muted">
+            <span>Paso {step} de 6 · {specialistStepLabels[step - 1]}</span>
+            <span>{Math.round((step / 6) * 100)}%</span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={6}>
+            <div className="h-full rounded-full bg-gradient-to-r from-brand to-brand-dark transition-all duration-300" style={{ width: `${(step / 6) * 100}%` }} />
+          </div>
+        </div>
         <div className="grid gap-3 md:grid-cols-6">
           {[
             ["Identidad", "Datos y contacto"],
@@ -1492,7 +1593,13 @@ export function SpecialistRegisterForm() {
               <option value="factura_afecta">{specialistTaxTypeLabels.factura_afecta}</option>
               <option value="factura_exenta">{specialistTaxTypeLabels.factura_exenta}</option>
             </select>
+            <span className="text-xs font-bold text-muted">¿No sabes cuál? Elige “No sé / necesito ayuda” y seguimos: la formalización es asistida.</span>
           </label>
+          {formalization.taxType === "unknown" ? (
+            <div className="rounded-2xl border border-brand/15 bg-brand-soft p-4 text-sm font-bold leading-6 text-brand-dark md:col-span-2">
+              Tranquilo, no necesitas saber de impuestos para empezar. Puedes postular ahora y el equipo OficiosPro te guía con boletas, facturas y datos tributarios antes de activar pagos. Los campos de abajo son opcionales en este caso.
+            </div>
+          ) : null}
           <label className="field">
             Nombre o razon social para cobro
             <input value={formalization.legalName} onChange={(event) => setFormalization({ ...formalization, legalName: event.target.value })} placeholder="Puede ser tu nombre legal o razon social" />
@@ -1616,20 +1723,41 @@ export function SpecialistRegisterForm() {
             Volver
           </button>
           <span className="text-sm font-black text-muted">Paso {step} de 6 · te faltan aprox. {estimatedMinutesLeft} min.</span>
-          <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
-            Continuar paso
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-secondary" type="button" onClick={saveIncompleteProfileLead} disabled={isSubmitting}>
+              Guardar avance y pedir contacto
+            </button>
+            <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
+              Continuar paso
+            </button>
+          </div>
         </div>
 
-        <button className="btn-primary" type="submit" disabled={isSubmitting || submitted} data-event="specialist_application_submit">
-          {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
-        </button>
         {submitted ? (
-          <Link className="btn-secondary text-center" href="/?postulacion=recibida">
-            Volver al inicio
-          </Link>
-        ) : null}
-        {status ? <SuccessMessage>{status}</SuccessMessage> : null}
+          <div className="grid gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-center">
+            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
+              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
+                <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <div>
+              <h3 className="text-2xl font-black text-emerald-900">Recibimos tu postulación</h3>
+              <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-emerald-800">
+                Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te contactará antes de publicar tu perfil.
+              </p>
+            </div>
+            <Link className="btn-primary mx-auto" href="/?postulacion=recibida">
+              Volver al inicio
+            </Link>
+          </div>
+        ) : (
+          <>
+            <button className="btn-primary" type="submit" disabled={isSubmitting} data-event="specialist_application_submit">
+              {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
+            </button>
+            {status ? <SuccessMessage>{status}</SuccessMessage> : null}
+          </>
+        )}
       </form>
     </FormShell>
   );

@@ -18,6 +18,7 @@ import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, Validati
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
+import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
@@ -56,17 +57,23 @@ export default function HomePage() {
               Estamos abriendo OficiosPro de forma controlada: explora especialistas fundadores, compara reputacion y solicita contacto sin registrarte hasta que decidas avanzar.
             </p>
             <HeroSearchPanel />
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
-              <Link href="/especialistas" className="btn-primary" data-event="browse_specialists_home_hero">
-                Buscar especialista
-              </Link>
-              <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun" eventType="click_offer_services" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
-                Postular como especialista fundador
-              </AcquisitionTrackingLink>
-              <Link href="#club-hogar" className="text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
-                ¿Cómo funcionan los créditos? →
-              </Link>
+            <div className="mt-6 grid gap-3 sm:grid-cols-2">
+              <div className="flex flex-col gap-1.5">
+                <Link href="/especialistas" className="btn-primary w-full" data-event="browse_specialists_home_hero">
+                  Buscar especialista
+                </Link>
+                <span className="text-[13px] font-semibold leading-5 text-muted">Encuentra técnicos y especialistas por comuna.</span>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun w-full" eventType="click_offer_services" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
+                  Ofrecer mis servicios
+                </AcquisitionTrackingLink>
+                <span className="text-[13px] font-semibold leading-5 text-muted">Crea tu perfil, muestra tus servicios y recibe solicitudes.</span>
+              </div>
             </div>
+            <Link href="#club-hogar" className="mt-4 inline-block text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
+              ¿Cómo funcionan los créditos? →
+            </Link>
             <div className="mt-7 flex flex-wrap gap-2.5">
               {[
                 ["*", "Piloto fundador", "chip-sun"],
@@ -232,8 +239,8 @@ export default function HomePage() {
             <p className="text-lg font-semibold leading-8 text-ink">
               OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
             </p>
-            <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_purpose&intent=offer_services" className="btn-sun justify-self-start" eventType="click_offer_services" sourceButton="Quiero inscribir mi oficio proposito" context={{ source: "campana_local", campaign: "founder_specialists_home_purpose", landingPage: "/" }}>
-              Quiero inscribir mi oficio
+            <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_purpose&intent=offer_services" className="btn-sun justify-self-start" eventType="click_offer_services" sourceButton="Ofrecer mis servicios proposito" context={{ source: "campana_local", campaign: "founder_specialists_home_purpose", landingPage: "/" }}>
+              Ofrecer mis servicios
             </AcquisitionTrackingLink>
           </div>
         </div>
@@ -263,6 +270,28 @@ export default function HomePage() {
             Ver todos
           </Link>
         </div>
+        <div className="mb-6 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+          <SpecialistQuickLeadForm
+            title="Quieres ofrecer tus servicios en OficiosPro?"
+            text="Deja tus datos basicos y te ayudamos a preparar tu perfil fundador sin costo inicial."
+            context={{ source: "campana_local", campaign: "founder_specialists_home_section", landingPage: "/" }}
+            sourceComponent="HomeSpecialistsSection"
+            sourceButton="Captura rapida home especialistas"
+            leadKind="specialist_lead"
+            compact
+          />
+          <div className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+            <p className="eyebrow">Etapa fundador abierta</p>
+            <h3 className="text-2xl font-black leading-tight text-ink">No necesitas tener todo resuelto para empezar.</h3>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2">
+              {["Perfil sin costo inicial", "Revision en 48 h", "Puedes ofrecer mas de un servicio", "Categorias nuevas en formacion"].map((item) => (
+                <span key={item} className="rounded-2xl bg-brand-soft px-4 py-3 text-sm font-black text-brand-dark">
+                  {item}
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {featured.map((specialist) => (
             <SpecialistCard key={specialist.id} specialist={specialist} />
@@ -291,9 +320,9 @@ export default function HomePage() {
           <CTA title="Soy empresa" text="Centraliza mantenciones, sucursales, reportes y facturación." type="contacto_empresa" label="Solicitar cuenta" />
           <CTA
             title="Soy especialista"
-            text="Crea tu perfil fundador, muestra trabajos y construye reputacion real desde el piloto."
+            text="Ofrece tus servicios y crea tu perfil fundador sin costo inicial: muestra tus trabajos y construye reputación real desde el piloto."
             type="registro_especialista"
-            label="Crear perfil fundador"
+            label="Ofrecer mis servicios"
             secondaryHref="/agenda-especialista"
             secondaryLabel="Ver cómo funcionará mi agenda"
           />

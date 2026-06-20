@@ -21,6 +21,10 @@ export type AcquisitionContext = {
   source?: AcquisitionSource | "direct";
   sourceDetail?: string;
   campaign?: string;
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+  utmContent?: string;
   commune?: string;
   trade?: string;
   referrerSpecialistId?: string;
@@ -106,6 +110,7 @@ const sourceAliases: Record<string, AcquisitionSource> = {
   "whatsapp": "whatsapp_referral",
   "referido": "referido_especialista",
   "seo": "seo_trabajos",
+  "seo_jobs": "seo_trabajos",
 };
 
 export function normalizeAcquisitionSource(value?: string | null): AcquisitionSource | "direct" {
@@ -127,11 +132,19 @@ export function sourceLabel(source?: string | null) {
 
 export function buildAcquisitionContextFromSearch(search: string, fallback: AcquisitionContext = {}): AcquisitionContext {
   const params = new URLSearchParams(search);
-  const source = normalizeAcquisitionSource(params.get("source") ?? fallback.source);
+  const utmSource = params.get("utm_source") ?? fallback.utmSource;
+  const utmMedium = params.get("utm_medium") ?? fallback.utmMedium;
+  const utmCampaign = params.get("utm_campaign") ?? fallback.utmCampaign;
+  const utmContent = params.get("utm_content") ?? fallback.utmContent;
+  const source = normalizeAcquisitionSource(params.get("source") ?? utmSource ?? fallback.source);
   return compactContext({
     source,
-    sourceDetail: params.get("sourceDetail") ?? fallback.sourceDetail,
-    campaign: params.get("campaign") ?? fallback.campaign ?? "founder_specialists",
+    sourceDetail: params.get("sourceDetail") ?? utmContent ?? fallback.sourceDetail,
+    campaign: params.get("campaign") ?? utmCampaign ?? fallback.campaign ?? "founder_specialists",
+    utmSource,
+    utmMedium,
+    utmCampaign,
+    utmContent,
     commune: params.get("commune") ?? params.get("comuna") ?? fallback.commune,
     trade: params.get("trade") ?? params.get("oficio") ?? fallback.trade,
     referrerSpecialistId: params.get("referrerSpecialistId") ?? fallback.referrerSpecialistId,
@@ -146,6 +159,10 @@ export function founderRegistrationHref(context: AcquisitionContext = {}) {
   if (source !== "direct") params.set("source", source);
   if (context.sourceDetail) params.set("sourceDetail", context.sourceDetail);
   params.set("campaign", context.campaign ?? "founder_specialists");
+  if (context.utmSource) params.set("utm_source", context.utmSource);
+  if (context.utmMedium) params.set("utm_medium", context.utmMedium);
+  if (context.utmCampaign) params.set("utm_campaign", context.utmCampaign);
+  if (context.utmContent) params.set("utm_content", context.utmContent);
   if (context.commune) params.set("commune", context.commune);
   if (context.trade) params.set("trade", normalizeToken(context.trade));
   if (context.referrerSpecialistId) params.set("referrerSpecialistId", context.referrerSpecialistId);
@@ -158,6 +175,10 @@ export function founderReferralHref(referralCode?: string, referrerSpecialistId?
   return founderRegistrationHref({
     source: "referido_especialista",
     campaign: "founder_specialist_referrals",
+    utmSource: "referral",
+    utmMedium: "specialist_share",
+    utmCampaign: "founder_specialist_referrals",
+    utmContent: "referral_tool",
     referralCode,
     referrerSpecialistId,
   });
@@ -188,4 +209,3 @@ export function normalizeToken(value?: string | null) {
 export function acquisitionSourceOptions() {
   return acquisitionSourceIds.map((source) => ({ value: source, label: acquisitionSourceLabels[source] }));
 }
-

@@ -7,6 +7,8 @@ import { FounderTimeline } from "@/components/founders/FounderTimeline";
 import { FounderSocialProof } from "@/components/founders/FounderSocialProof";
 import { FounderWizard } from "@/components/founders/FounderWizard";
 import { FounderFinalCta } from "@/components/founders/FounderFinalCta";
+import { FounderStickyCta } from "@/components/founders/FounderStickyCta";
+import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import {
   founderNoPromiseMessages,
   founderReferralHref,
@@ -23,6 +25,20 @@ export const metadata = buildPublicRouteMetadata({
 
 const founderContext = { source: "campana_local" as const, campaign: "founder_specialists", landingPage: "/especialistas-fundadores" };
 const tradeLinks = seoWorkerAcquisitionPages.slice(0, 6);
+const popularFounderTrades = [
+  "Gasfiteria",
+  "Electricidad",
+  "Construccion",
+  "Terminaciones",
+  "Carpinteria",
+  "Metalmecanica",
+  "Riego tecnificado",
+  "Piscinas",
+  "Climatizacion",
+  "Mantencion industrial",
+  "Aseo tecnico",
+  "Control de plagas",
+];
 
 export default function FounderSpecialistsPage() {
   const registerHref = "/registro-especialista?source=founder_landing&intent=offer_services";
@@ -34,6 +50,32 @@ export default function FounderSpecialistsPage() {
       <PlatformNav />
 
       <FounderHero registerHref={registerHref} context={founderContext} />
+      <FounderStickyCta href={registerHref} />
+
+      <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+        <SpecialistQuickLeadForm
+          title="Tienes un oficio? Te ayudamos a crear tu perfil."
+          text="Si aun no quieres completar todo el registro, deja tus datos basicos y operaciones te orienta."
+          context={founderContext}
+          sourceComponent="FounderSpecialistsPage"
+          sourceButton="Captura rapida fundadores"
+          leadKind="founder_lead"
+        />
+        <div className="rounded-[28px] border border-line bg-slate-50 p-6">
+          <p className="eyebrow">Categorias en formacion</p>
+          <h2 className="text-2xl font-black leading-tight text-ink">Postula aunque tu categoria aun este creciendo.</h2>
+          <p className="mt-3 text-sm font-bold leading-6 text-muted">
+            Estamos priorizando especialistas por comuna. Puedes ofrecer mas de un servicio y pedir ayuda si no sabes que documento tributario corresponde.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {popularFounderTrades.map((trade) => (
+              <span key={trade} className="rounded-full border border-brand/15 bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
+                {trade}
+              </span>
+            ))}
+          </div>
+        </div>
+      </section>
 
       <div id="beneficios">
         <FounderValueCards />

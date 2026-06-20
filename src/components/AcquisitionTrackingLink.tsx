@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, type ReactNode } from "react";
 import { submitConversionEvent } from "@/lib/leadClient";
-import type { AnalyticsEventName } from "@/lib/analytics";
+import { getAttributionContext, type AnalyticsEventName } from "@/lib/analytics";
 import type { AcquisitionContext, FounderConversionEvent } from "@/data/specialistAcquisition";
 
 type AcquisitionTrackingLinkProps = {
@@ -30,13 +30,17 @@ export function AcquisitionTrackingLink({
       href={href}
       className={className}
       onClick={() => {
+        const attribution = getAttributionContext();
+        const mergedContext = { ...attribution, ...context };
         void submitConversionEvent({
           type: eventType,
-          source: context?.source ?? "direct",
+          source: mergedContext.source ?? "direct",
+          medium: mergedContext.utmMedium,
+          campaign: mergedContext.campaign || mergedContext.utmCampaign,
           sourceButton,
           sourceComponent,
           page: typeof window !== "undefined" ? window.location.pathname : undefined,
-          payload: { href, ...context },
+          payload: { href, ...mergedContext },
         });
       }}
     >
@@ -60,12 +64,16 @@ export function AcquisitionPageViewTracker({
     const key = `oficiospro.acquisition.event.${eventType}.${window.location.pathname}`;
     if (window.sessionStorage.getItem(key)) return;
     window.sessionStorage.setItem(key, "1");
+    const attribution = getAttributionContext();
+    const mergedContext = { ...attribution, ...context };
     void submitConversionEvent({
       type: eventType,
-      source,
+      source: String(context?.source ?? source ?? attribution.source ?? "direct"),
+      medium: mergedContext.utmMedium,
+      campaign: mergedContext.campaign || mergedContext.utmCampaign,
       sourceComponent,
       page: window.location.pathname,
-      payload: context ?? {},
+      payload: mergedContext,
     });
   }, [context, eventType, source, sourceComponent]);
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { analyticsContext, sanitizeAnalyticsMetadata } from "@/lib/analytics";
+import { analyticsContext, getAttributionContext, sanitizeAnalyticsMetadata } from "@/lib/analytics";
 import { leadMessageForResult, type LeadSubmissionPayload, type LeadSubmitResult } from "@/lib/leads";
 
 const localLeadBackupKey = "oficiospro.leadSubmissions.localBackup";
@@ -43,23 +43,32 @@ function backupLead(payload: LeadSubmissionPayload, result?: Partial<LeadSubmitR
 
 function pageSource() {
   if (typeof window === "undefined") return {};
-  const params = new URLSearchParams(window.location.search);
+  const context = getAttributionContext();
   return {
     sourcePage: window.location.pathname,
-    utmSource: params.get("utm_source") ?? undefined,
-    utmCampaign: params.get("utm_campaign") ?? undefined,
-    utmMedium: params.get("utm_medium") ?? undefined,
+    source: context.source || undefined,
+    campaign: context.campaign || undefined,
+    utmSource: context.utmSource || undefined,
+    utmCampaign: context.utmCampaign || undefined,
+    utmMedium: context.utmMedium || undefined,
+    utmContent: context.utmContent || undefined,
+    referralCode: context.referralCode || undefined,
   };
 }
 
 export async function submitLead(payload: LeadSubmissionPayload, endpoint = endpointByType[payload.leadType]) {
+  const sourceContext = pageSource();
   const body: LeadSubmissionPayload = {
-    ...pageSource(),
+    ...sourceContext,
     ...payload,
     consentContact: payload.consentContact ?? true,
     consentTerms: payload.consentTerms ?? true,
     formStartedAt: new Date(leadClientLoadedAt).toISOString(),
     formElapsedMs: Date.now() - leadClientLoadedAt,
+    payload: {
+      attribution: sourceContext,
+      ...(payload.payload ?? {}),
+    },
   };
 
   try {
@@ -92,13 +101,16 @@ export async function submitLead(payload: LeadSubmissionPayload, endpoint = endp
   }
 }
 
-export async function submitConversionEvent(event: { type: string; source?: string; sourceButton?: string; sourceComponent?: string; page?: string; data?: Record<string, unknown>; payload?: Record<string, unknown> }) {
+export async function submitConversionEvent(event: { type: string; source?: string; medium?: string; campaign?: string; sourceButton?: string; sourceComponent?: string; page?: string; data?: Record<string, unknown>; payload?: Record<string, unknown> }) {
   const context = analyticsContext();
   const body = {
     ...pageSource(),
     path: context.path,
     referrer: context.referrer,
     medium: context.medium,
+    campaign: event.campaign ?? context.campaign,
+    utmContent: context.utmContent,
+    referralCode: context.referralCode,
     anonymousId: context.anonymousId,
     sessionId: context.sessionId,
     timestamp: context.timestamp,
@@ -112,9 +124,11 @@ export async function submitConversionEvent(event: { type: string; source?: stri
       utmSource: context.utmSource,
       utmMedium: context.utmMedium,
       utmCampaign: context.utmCampaign,
+      utmContent: context.utmContent,
       source: event.source ?? context.source,
-      medium: context.medium,
-      campaign: context.campaign,
+      medium: event.medium ?? context.medium,
+      campaign: event.campaign ?? context.campaign,
+      referralCode: context.referralCode,
       anonymousId: context.anonymousId,
       sessionId: context.sessionId,
       timestamp: context.timestamp,

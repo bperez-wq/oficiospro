@@ -36,6 +36,7 @@ Tipos sugeridos:
 | KZ-005 | Asistente existe pero no aparece global ni guia a acciones reales | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Add global actionable OficiosPro assistant | validate/build/dry-run | pendiente |
 | KZ-006 | Embudo de captacion especialista necesita eventos finos por paso, oficio no listado y formalizacion | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Instrument specialist acquisition funnel | validate/build/dry-run | pendiente |
 | KZ-007 | Eventos del funnel especialista deben verificarse end-to-end contra D1 y admin | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Verify specialist funnel events and acquisition dashboard | validate/build/dry-run/test funnel | pendiente |
+| KZ-008 | Visitantes con oficio necesitan dejar datos antes de completar formulario largo | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Improve specialist lead generation and profile completion funnel | validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

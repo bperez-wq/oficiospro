@@ -46,6 +46,15 @@ No se creo un endpoint nuevo `/api/events` en este ciclo para evitar tocar Worke
 | `specialist_application_submitted` | Envio de postulacion | Conversion principal |
 | `specialist_custom_trade_requested` | Registro especialista | Oficio no encontrado en catalogo |
 | `specialist_formalization_help_requested` | Registro especialista | Barrera tributaria/formalizacion |
+| `quick_lead_started` | Formularios rapidos | Inicio de captura de baja friccion |
+| `quick_lead_submitted` | Formularios rapidos | Lead especialista guardado antes del registro completo |
+| `job_page_quick_lead_submitted` | `/trabajos/[oficio]` | Lead SEO con oficio precargado |
+| `draft_profile_created` | Registro o captura rapida | Perfil incompleto guardado |
+| `draft_profile_completed` | Registro especialista | Borrador que termina postulacion |
+| `referral_lead_submitted` | `/referidos/especialistas` | Referido capturado |
+| `whatsapp_contact_clicked` | Captura rapida / referidos | Intencion de contacto por WhatsApp o fallback email |
+| `campaign_link_copied` | `/admin/crm/acquisition` | Operaciones copio link o copy de campana |
+| `founder_sticky_cta_clicked` | Mobile fundadores | CTA sticky usado |
 | `search_performed` | Busqueda enviada | Demanda cliente |
 | `lead_submitted` | Lead enviado | Conversion generica |
 | `referral_link_created` | Herramienta de referidos | Activacion de referidores |
@@ -101,9 +110,10 @@ Revisar cada lunes:
 8. `specialist_application_failed`.
 9. `specialist_application_abandoned` por paso.
 10. `specialist_application_submitted`.
-11. Oficios no encontrados y solicitudes de ayuda tributaria.
-12. Top fuentes y campanas UTM.
-13. Acciones para la semana siguiente.
+11. Leads rapidos, perfiles incompletos y referidos.
+12. Oficios no encontrados y solicitudes de ayuda tributaria.
+13. Top fuentes y campanas UTM.
+14. Acciones para la semana siguiente.
 
 ## Campos de adquisicion especialista
 

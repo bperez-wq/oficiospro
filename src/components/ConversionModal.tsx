@@ -382,9 +382,53 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     appendConversionEvent({
       type: "specialist_quick_intent",
       sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
-      data: { status: "borrador", serviceType: serviceType.name, commune: specialistLead.commune, hasDraft: Boolean(draft) },
+      data: { status: "borrador", serviceType: serviceType.name, commune: specialistLead.commune, hasDraft: Boolean(draft), specialistLeadKind: "draft_profile" },
+    });
+    void submitConversionEvent({
+      type: "quick_lead_submitted",
+      source: "conversion_modal",
+      campaign: "founder_specialists",
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
+      payload: { status: "borrador", serviceType: serviceType.name, commune: specialistLead.commune, hasDraft: Boolean(draft), specialistLeadKind: "draft_profile" },
+    });
+    const result = await submitLead({
+      leadType: "specialist_application",
+      fullName,
+      email: specialistLead.email,
+      phone: specialistLead.phone,
+      applicantType: "specialist",
+      trade: serviceType.name,
+      service: serviceType.name,
+      regionCode: specialistLead.region,
+      regionName: regionNameForCode(specialistLead.region),
+      communeName: specialistLead.commune,
+      sourceComponent: "ConversionModal",
+      sourceButton: options?.sourceButton ?? "Trabaja con nosotros",
+      consentContact: true,
+      consentTerms: true,
+      payload: {
+        specialistLeadKind: "draft_profile",
+        leadSubtype: "draft_profile",
+        draftProfileCreated: Boolean(draft),
+        draftProfileStatus: "incomplete",
+        draftProfileStep: "conversion_modal",
+        founderStatus: "lead_capturado",
+        source: "conversion_modal",
+        campaign: "founder_specialists",
+        commune: specialistLead.commune,
+        trade: serviceType.id,
+        crm: {
+          pipeline: "especialistas",
+          stage: "lead_capturado",
+          assignedTeam: "Operaciones",
+          taskTitle: "Contactar especialista con perfil incompleto",
+          slaHours: 48,
+        },
+      },
     });
     setSpecialistNotice("Precargaremos estos datos en el formulario completo.");
+    if (!result.stored) setSpecialistNotice(result.message);
     setSubmitting(false);
     window.setTimeout(() => {
       window.location.href = "/registro-especialista?from=quick-specialist";

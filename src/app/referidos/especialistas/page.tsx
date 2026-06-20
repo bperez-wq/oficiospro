@@ -1,6 +1,7 @@
 import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink";
 import { PlatformNav } from "@/components/PlatformNav";
 import { ReferralTool } from "@/components/referrals/ReferralTool";
+import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { femaleProfileImages } from "@/data/visualAssets";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
@@ -26,11 +27,11 @@ const badges = [
   { label: "Red confiable", tone: "chip-emerald", icon: IconShield },
 ];
 
-const progress = [
-  { label: "Referidos enviados", value: "5" },
-  { label: "Postulaciones recibidas", value: "3" },
-  { label: "Aprobados", value: "2" },
-  { label: "Badge fundador", value: "Activo" },
+const referralSignals = [
+  "Link general disponible aunque no haya sesion",
+  "Referido queda trazado con source=referido_especialista",
+  "Revision operativa antes de publicar",
+  "Sin prometer pagos ni volumen de trabajos",
 ];
 
 const faqs = [
@@ -61,7 +62,7 @@ export default function SpecialistReferralsPage() {
                 <img key={src} src={src} alt="" className="h-11 w-11 rounded-full border-2 border-white object-cover shadow-sm" loading="lazy" />
               ))}
             </div>
-            <p className="text-sm font-bold text-muted">Especialistas fundadores ya estan invitando.</p>
+            <p className="text-sm font-bold text-muted">Puedes compartir un link general aunque aun no tengas cuenta activa.</p>
           </div>
           <div className="mt-6 flex flex-wrap gap-2.5">
             {badges.map((badge) => {
@@ -77,25 +78,52 @@ export default function SpecialistReferralsPage() {
         <ReferralTool />
       </section>
 
-      {/* PROGRESS / GAMIFICACION */}
+      <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
+        <SpecialistQuickLeadForm
+          title="Recomienda a un buen especialista."
+          text="Deja nombre, telefono, comuna y oficio del referido. Si postula y es aprobado, ayudas a fortalecer la red OficiosPro."
+          submitLabel="Enviar referido"
+          context={referralContext}
+          sourceComponent="SpecialistReferralsPage"
+          sourceButton="Captura referido especialista"
+          leadKind="specialist_referral_lead"
+          saveDraft={false}
+        />
+        <div className="rounded-[28px] border border-line bg-white p-6 shadow-soft">
+          <p className="eyebrow">Compartir por WhatsApp</p>
+          <h2 className="text-2xl font-black leading-tight text-ink">Invita sin prometer pagos.</h2>
+          <p className="mt-3 text-sm font-bold leading-6 text-muted">
+            Invita a un buen especialista. Si postula y es aprobado, ayudas a fortalecer la red OficiosPro.
+          </p>
+          <a
+            className="btn-sun mt-5 inline-flex"
+            href={`https://wa.me/?text=${encodeURIComponent("Invita a un buen especialista a crear su perfil fundador en OficiosPro: https://www.oficiospro.cl/referidos/especialistas?source=referido_especialista&utm_source=whatsapp&utm_medium=share&utm_campaign=founder_specialist_referrals")}`}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Compartir mensaje WhatsApp
+          </a>
+        </div>
+      </section>
+
+      {/* SEGUIMIENTO */}
       <section className="rounded-[32px] border border-line bg-slate-50 p-7 md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="eyebrow">Tu progreso</p>
-            <h2 className="section-title">Mira crecer tu red</h2>
+            <p className="eyebrow">Seguimiento</p>
+            <h2 className="section-title">Tus referidos reales se veran en tu cuenta.</h2>
           </div>
-          <span className="chip-sun px-3 py-1 text-[11px]">Ejemplo referencial</span>
+          <span className="chip-sun px-3 py-1 text-[11px]">Sin datos de relleno</span>
         </div>
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {progress.map((item) => (
-            <div key={item.label} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
-              <p className="text-3xl font-black text-ink">{item.value}</p>
-              <p className="mt-1 text-sm font-bold text-muted">{item.label}</p>
+          {referralSignals.map((item) => (
+            <div key={item} className="rounded-2xl border border-line bg-white p-5 shadow-sm">
+              <p className="text-sm font-black leading-6 text-ink">{item}</p>
             </div>
           ))}
         </div>
         <p className="mt-4 text-xs font-bold leading-5 text-muted">
-          Valores de ejemplo. Tus cifras reales apareceran en tu cuenta cuando inicies sesion como especialista aprobado.
+          Las cifras apareceran cuando existan datos reales asociados a tu cuenta o codigo de referido.
         </p>
       </section>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { EmptyState, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistCompactCard } from "@/components/SpecialistCompactCard";
 import type { Specialist } from "@/data/mock";
@@ -30,6 +31,7 @@ type SeoProgrammaticPageProps = {
   faqs: Array<{ question: string; answer: string }>;
   internalLinks: InternalLink[];
   jsonLd?: JsonLd[];
+  acquisitionSlot?: ReactNode;
 };
 
 export function SeoProgrammaticPage({
@@ -52,6 +54,7 @@ export function SeoProgrammaticPage({
   faqs,
   internalLinks,
   jsonLd = [],
+  acquisitionSlot,
 }: SeoProgrammaticPageProps) {
   return (
     <main className="bg-slate-50/50">
@@ -97,6 +100,12 @@ export function SeoProgrammaticPage({
           <img src={image} alt={imageAlt} className="h-full min-h-[320px] w-full object-cover" />
         </div>
       </section>
+
+      {acquisitionSlot ? (
+        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6">
+          {acquisitionSlot}
+        </section>
+      ) : null}
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-10 md:px-6 lg:grid-cols-[0.95fr_1.05fr]">
         <MarketplaceCard hover={false}>

@@ -19,6 +19,14 @@ export function ReferralTool() {
     try {
       await navigator.clipboard.writeText(link);
       setCopied(true);
+      void trackEvent({
+        eventName: "campaign_link_copied",
+        source: "referido_especialista",
+        campaign: "founder_specialist_referrals",
+        sourceComponent: "ReferralTool",
+        sourceButton: "Copiar link referido",
+        metadata: { channel: "referral_tool", hasCustomCode: Boolean(code.trim()) },
+      });
       setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
@@ -64,7 +72,22 @@ export function ReferralTool() {
             <button type="button" className="btn-secondary" onClick={copy}>
               {copied ? "Copiado!" : "Copiar link"}
             </button>
-            <a className="btn-sun" href={whatsappHref} target="_blank" rel="noopener noreferrer">
+            <a
+              className="btn-sun"
+              href={whatsappHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => {
+                void trackEvent({
+                  eventName: "whatsapp_contact_clicked",
+                  source: "referido_especialista",
+                  campaign: "founder_specialist_referrals",
+                  sourceComponent: "ReferralTool",
+                  sourceButton: "Compartir por WhatsApp",
+                  metadata: { channel: "whatsapp_share", hasCustomCode: Boolean(code.trim()) },
+                });
+              }}
+            >
               Compartir por WhatsApp
             </a>
           </div>

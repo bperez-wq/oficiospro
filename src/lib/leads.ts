@@ -30,9 +30,12 @@ export type LeadSubmissionPayload = {
   sourcePage?: string;
   sourceComponent?: string;
   sourceButton?: string;
+  source?: string;
+  campaign?: string;
   utmSource?: string;
   utmCampaign?: string;
   utmMedium?: string;
+  utmContent?: string;
   referralCode?: string;
   consentContact?: boolean;
   consentTerms?: boolean;

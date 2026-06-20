@@ -3,10 +3,12 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
+import { campaignAbsoluteUrl, specialistGrowthCampaigns, type GrowthCampaign } from "@/data/growthCampaigns";
 import { formatCLP } from "@/data/marketplace";
 import { isInstitutionalAcquisitionSource, sourceLabel } from "@/data/specialistAcquisition";
 import { getTradeCategoryById, getTradeCoverageLabel, tradeCategories, tradeSegmentForCategory, tradeSegmentLabels } from "@/data/tradeTaxonomy";
 import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken, persistAdminToken } from "@/lib/adminAuth";
+import { trackEvent } from "@/lib/analytics";
 
 type CrmView = "overview" | "opportunities" | "tasks" | "contacts" | "companies" | "pipeline" | "activity" | "acquisition";
 type CrmRow = Record<string, unknown>;
@@ -570,6 +572,9 @@ function AcquisitionView({
   const topPages = groupCountRows(enrichedEvents.filter((event) => event.isPageView), "path");
   const topCampaigns = groupCountRows(enrichedEvents.filter((event) => event.campaign), "campaign");
   const topSources = groupCountRows(enrichedEvents.filter((event) => event.source), "source");
+  const capturedLeadRows = filteredRows.filter((row) => ["founder_lead", "specialist_lead", "job_page_lead", "draft_profile", "specialist_referral_lead"].includes(String(row.specialistLeadKind)));
+  const incompleteProfileRows = filteredRows.filter((row) => row.draftProfileStatus === "incomplete" || row.founderStatus === "lead_capturado");
+  const referralLeadRows = filteredRows.filter((row) => row.specialistLeadKind === "specialist_referral_lead" || Boolean(row.referralCode || row.referrerSpecialistId));
   const abandonmentRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_abandoned"), "maxStepName");
   const assistantEvents = enrichedEvents.filter((event) => {
     const eventName = stringValue(event.eventName);
@@ -596,6 +601,10 @@ function AcquisitionView({
     acquisitionSource: row.acquisitionSource,
     sourceDetail: row.sourceDetail,
     campaign: row.campaign,
+    specialistLeadKind: row.specialistLeadKind,
+    draftProfileStatus: row.draftProfileStatus,
+    draftProfileStep: row.draftProfileStep,
+    crmStage: row.crmStage,
     trade: row.trade,
     tradeSegment: row.tradeSegmentLabel,
     coverageStatus: row.coverageStatus,
@@ -644,6 +653,8 @@ function AcquisitionView({
         ))}
       </div>
 
+      <CampaignKit />
+
       <div className="grid gap-5 xl:grid-cols-3">
         <AcquisitionEventFunnel events={enrichedEvents} />
         <AcquisitionFunnel rows={filteredRows} />
@@ -654,6 +665,7 @@ function AcquisitionView({
         <BarBreakdown title="Paginas mas vistas" rows={topPages} accent="bg-accent" />
         <BarBreakdown title="Fuentes UTM" rows={topSources} accent="bg-brand-dark" />
         <BarBreakdown title="Campanas UTM" rows={topCampaigns} accent="bg-sun" />
+        <BarBreakdown title="Tipos de lead capturado" rows={groupCountRows(capturedLeadRows, "specialistLeadKind")} accent="bg-emerald-500" />
         <BarBreakdown title="Abandono por paso" rows={abandonmentRows} accent="bg-brand" />
         <BarBreakdown title="Errores de registro" rows={stepErrorRows} accent="bg-amber-500" />
         <BarBreakdown title="Fallos de envio" rows={failedRows} accent="bg-rose-500" />
@@ -702,12 +714,100 @@ function AcquisitionView({
       />
 
       <RowsView
+        title="Leads capturados"
+        rows={capturedLeadRows}
+        columns={["id", "name", "phone", "email", "specialistLeadKind", "draftProfileStatus", "crmStage", "acquisitionSource", "campaign", "trade", "commune", "createdAt"]}
+      />
+
+      <RowsView
+        title="Perfiles incompletos"
+        rows={incompleteProfileRows}
+        columns={["id", "name", "phone", "email", "draftProfileStatus", "draftProfileStep", "crmStage", "trade", "commune", "createdAt"]}
+      />
+
+      <RowsView
+        title="Referidos"
+        rows={referralLeadRows}
+        columns={["id", "name", "phone", "email", "specialistLeadKind", "referralCode", "referrerSpecialistId", "trade", "commune", "createdAt"]}
+      />
+
+      <RowsView
         title="Postulaciones captadas"
         rows={exportRows}
-        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "tradeSegment", "coverageLabel", "commune", "customTradeRequest", "needsFormalizationHelp", "selectedSpecialties", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
+        columns={["id", "name", "email", "phone", "specialistLeadKind", "draftProfileStatus", "acquisitionSource", "sourceDetail", "campaign", "trade", "tradeSegment", "coverageLabel", "commune", "customTradeRequest", "needsFormalizationHelp", "selectedSpecialties", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
         onRefresh={onRefresh}
         onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
       />
+    </section>
+  );
+}
+
+function CampaignKit() {
+  async function copyCampaign(campaign: GrowthCampaign, mode: "link" | "message") {
+    const baseUrl = typeof window !== "undefined" ? window.location.origin : "https://www.oficiospro.cl";
+    const url = campaignAbsoluteUrl(campaign, baseUrl);
+    const text = mode === "link" ? url : `${campaign.suggestedCopy}\n\n${campaign.cta}: ${url}`;
+    try {
+      await navigator.clipboard.writeText(text);
+      void trackEvent({
+        eventName: "campaign_link_copied",
+        source: campaign.source,
+        medium: campaign.utmMedium,
+        campaign: campaign.utmCampaign,
+        sourceComponent: "AdminCrmAcquisitionCampaignKit",
+        sourceButton: mode === "link" ? "Copiar link UTM" : "Copiar mensaje",
+        metadata: {
+          campaignId: campaign.id,
+          utmSource: campaign.utmSource,
+          utmMedium: campaign.utmMedium,
+          utmCampaign: campaign.utmCampaign,
+          utmContent: campaign.utmContent,
+        },
+      });
+    } catch {
+      // Clipboard failures should not block the admin workflow.
+    }
+  }
+
+  return (
+    <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="eyebrow">Links y mensajes</p>
+          <h3 className="text-xl font-black text-ink">Kit para captar especialistas</h3>
+          <p className="mt-1 max-w-3xl text-sm font-bold leading-6 text-muted">
+            Copys listos para canales organicos. Cada link mantiene UTM, source y campaign para medir conversion real.
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        {specialistGrowthCampaigns.map((campaign) => {
+          const url = campaignAbsoluteUrl(campaign);
+          return (
+            <article key={campaign.id} className="rounded-2xl border border-line bg-slate-50 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h4 className="font-black text-ink">{campaign.name}</h4>
+                  <p className="mt-1 text-xs font-bold leading-5 text-muted">{campaign.target}</p>
+                </div>
+                <span className="rounded-full bg-white px-2.5 py-1 text-[10px] font-black uppercase text-brand-dark">{campaign.utmSource}</span>
+              </div>
+              <p className="mt-3 line-clamp-3 text-xs font-semibold leading-5 text-muted">{campaign.suggestedCopy}</p>
+              <div className="mt-3 rounded-xl bg-white p-2 text-[11px] font-bold leading-5 text-muted">
+                <span className="block truncate">{url}</span>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <button className="btn-secondary text-xs" type="button" onClick={() => copyCampaign(campaign, "link")}>
+                  Copiar link
+                </button>
+                <button className="btn-primary text-xs" type="button" onClick={() => copyCampaign(campaign, "message")}>
+                  Copiar copy
+                </button>
+              </div>
+            </article>
+          );
+        })}
+      </div>
     </section>
   );
 }
@@ -717,9 +817,13 @@ function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
     { key: "specialist_home_cta_viewed", label: "Home CTA" },
     { key: "click_offer_services", label: "Click ofrecer servicios" },
     { key: "founder_landing_view", label: "Landing fundadores" },
+    { key: "quick_lead_started", label: "Lead rapido iniciado" },
+    { key: "quick_lead_submitted", label: "Lead rapido enviado" },
+    { key: "draft_profile_created", label: "Borrador creado" },
     { key: "specialist_application_started", label: "Registro iniciado" },
     { key: "specialist_application_step_started", label: "Paso oficio", stepName: "Servicios" },
     { key: "specialist_application_step_started", label: "Paso formalizacion", stepName: "Formalizacion" },
+    { key: "referral_lead_submitted", label: "Referido enviado" },
     { key: "specialist_application_submitted", label: "Postulacion enviada" },
   ];
   const count = (key: string, stepName?: string) =>
@@ -756,6 +860,7 @@ function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
 
 function AcquisitionFunnel({ rows }: { rows: CrmRow[] }) {
   const stages = [
+    { key: "lead_capturado", label: "Lead capturado" },
     { key: "postulante", label: "Postulacion iniciada" },
     { key: "revision", label: "En revision" },
     { key: "aprobado", label: "Aprobado" },
@@ -941,6 +1046,7 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   const payload = parseJsonRecord(row.payloadJson ?? row.payload_json);
   const acquisition = recordValue(payload.acquisition);
   const founderProgram = recordValue(payload.founderProgram);
+  const crm = recordValue(payload.crm);
   const taxProfile = recordValue(payload.taxProfile);
   const rawSource = stringValue(acquisition.source ?? payload.source ?? row.source) || "direct";
   const createdAt = stringValue(row.createdAt ?? row.created_at);
@@ -958,6 +1064,11 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   const coverageLabel = stringValue(payload.tradeCoverageLabel) || (taxonomyCategory ? getTradeCoverageLabel(taxonomyCategory) : "Sin cobertura declarada");
   const selectedSpecialties = arrayFrom(payload.selectedSpecialties).map((item) => stringValue(item)).filter(Boolean).join(", ");
   const customTradeRequest = stringValue(payload.customTradeRequest);
+  const specialistLeadKind = stringValue(payload.specialistLeadKind ?? payload.leadSubtype) || "postulacion_completa";
+  const draftProfileStatus = stringValue(payload.draftProfileStatus);
+  const draftProfileStep = stringValue(payload.draftProfileStep);
+  const crmStage = stringValue(crm.stage);
+  const assignedTeam = stringValue(crm.assignedTeam);
   const needsFormalizationHelp =
     payload.needsFormalizationHelp === true ||
     stringValue(taxProfile.status) === "pending_formalization" ||
@@ -978,6 +1089,11 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
     coverageLabel,
     commune: stringValue(acquisition.commune ?? payload.commune ?? payload.communeName ?? row.comuna) || "Sin comuna",
     selectedSpecialties,
+    specialistLeadKind,
+    draftProfileStatus,
+    draftProfileStep,
+    crmStage,
+    assignedTeam,
     customTradeRequest,
     needsFormalizationHelp: needsFormalizationHelp ? "si" : "no",
     formalizationHelpLabel: needsFormalizationHelp ? "Necesita ayuda tributaria" : "Sin ayuda declarada",
@@ -1005,6 +1121,8 @@ function acquisitionRowMatches(row: CrmRow, filters: AcquisitionFilters) {
 
 function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[]) {
   const founderStatus = (status: string) => rows.filter((row) => String(row.founderStatus).includes(status)).length;
+  const capturedLeads = rows.filter((row) => ["founder_lead", "specialist_lead", "job_page_lead", "draft_profile", "specialist_referral_lead"].includes(String(row.specialistLeadKind))).length;
+  const incompleteProfiles = rows.filter((row) => row.draftProfileStatus === "incomplete" || row.founderStatus === "lead_capturado").length;
   const referrals = rows.filter((row) => Boolean(row.referralCode || row.referrerSpecialistId)).length;
   const institutions = rows.filter((row) => Boolean(row.institution)).length;
   const slaOverdue = rows.filter((row) => row.slaStatus === "SLA vencido").length;
@@ -1015,6 +1133,8 @@ function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[
 
   return [
     { label: "Postulaciones", value: String(rows.length), detail: "Total filtrado", tone: "brand" as const },
+    { label: "Leads capturados", value: String(capturedLeads), detail: "Baja friccion", tone: capturedLeads ? ("brand" as const) : ("light" as const) },
+    { label: "Perfiles incompletos", value: String(incompleteProfiles), detail: "Contactar 24/48 h", tone: incompleteProfiles ? ("brand" as const) : ("light" as const) },
     { label: "En revision", value: String(founderStatus("revision") + founderStatus("postulante")), detail: "Embudo fundador", tone: "light" as const },
     { label: "Aprobados", value: String(founderStatus("aprobado")), detail: "Listos para activar", tone: "light" as const },
     { label: "Publicados", value: String(founderStatus("publicado")), detail: "Badge visible", tone: "light" as const },
@@ -1031,6 +1151,12 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
   const visits7d = events.filter((event) => isPageViewEvent(event) && isWithinHours(event.createdAt, 24 * 7)).length;
   const offerClicks = eventCount(events, "click_offer_services");
   const landingViews = eventCount(events, "founder_landing_view");
+  const quickLeadStarts = eventCount(events, "quick_lead_started");
+  const quickLeadSubmits = eventCount(events, "quick_lead_submitted") + eventCount(events, "job_page_quick_lead_submitted");
+  const draftProfiles = eventCount(events, "draft_profile_created");
+  const whatsappClicks = eventCount(events, "whatsapp_contact_clicked");
+  const campaignCopies = eventCount(events, "campaign_link_copied");
+  const referralSubmits = eventCount(events, "referral_lead_submitted");
   const starts = eventCount(events, "specialist_application_started");
   const stepsCompleted = eventCount(events, "specialist_application_step_completed");
   const submits = eventCount(events, "specialist_application_submitted");
@@ -1046,6 +1172,11 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
     { label: "Visitas 7 dias", value: String(visits7d), detail: "Page views medidos", tone: "light" as const },
     { label: "Clicks ofrecer", value: String(offerClicks), detail: "CTA especialista", tone: "brand" as const },
     { label: "Landing fundador", value: String(landingViews), detail: "Visitas /especialistas-fundadores", tone: "light" as const },
+    { label: "Lead rapido", value: String(quickLeadSubmits), detail: `Inicio a envio ${formatPercent(quickLeadSubmits, quickLeadStarts)}`, tone: quickLeadSubmits ? ("brand" as const) : ("light" as const) },
+    { label: "Borradores", value: String(draftProfiles), detail: "Perfil incompleto guardado", tone: draftProfiles ? ("brand" as const) : ("light" as const) },
+    { label: "WhatsApp", value: String(whatsappClicks), detail: "Clicks contacto", tone: whatsappClicks ? ("brand" as const) : ("light" as const) },
+    { label: "Links copiados", value: String(campaignCopies), detail: "Uso campaign kit", tone: campaignCopies ? ("brand" as const) : ("light" as const) },
+    { label: "Referidos enviados", value: String(referralSubmits), detail: "Leads referidos", tone: referralSubmits ? ("brand" as const) : ("light" as const) },
     { label: "Inicios registro", value: String(starts), detail: `Landing a inicio ${formatPercent(starts, landingViews)}`, tone: "light" as const },
     { label: "Pasos completos", value: String(stepsCompleted), detail: "Avances registrados", tone: "light" as const },
     { label: "Errores paso", value: String(stepErrors), detail: "Validaciones detenidas", tone: stepErrors ? ("brand" as const) : ("light" as const) },
