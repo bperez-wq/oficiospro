@@ -34,11 +34,19 @@ OMIL:
 https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_campaign=piloto_comunal
 ```
 
+Ejemplo con contenido especifico:
+
+```text
+https://www.oficiospro.cl/especialistas-fundadores?utm_source=whatsapp&utm_medium=direct&utm_campaign=primeros_fundadores&utm_content=mensaje_01
+```
+
 ## Convencion
 
 - `utm_source`: canal o socio. Ejemplos: `instagram`, `whatsapp`, `facebook`, `omil`, `referido_especialista`.
 - `utm_medium`: formato. Ejemplos: `bio`, `story`, `group`, `referral`, `partner`.
 - `utm_campaign`: objetivo. Ejemplos: `primeros_fundadores`, `especialistas_fundadores`, `oficios_comuna`, `piloto_comunal`.
+- `utm_content`: variante de mensaje o pieza. Ejemplos: `bio_principal`, `mensaje_01`, `grupo_nunoa`.
+- `referralCode`: codigo de referido cuando aplica.
 
 ## Reglas
 
@@ -56,6 +64,7 @@ https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_c
    - `utmSource = instagram`
    - `utmMedium = bio` o `story`
    - `utmCampaign = especialistas_fundadores`
+   - `utmContent` si se esta probando una variante.
 
 ## Como medir WhatsApp
 
@@ -65,6 +74,7 @@ https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_c
    - `utmSource = whatsapp`
    - `utmMedium = direct`
    - `utmCampaign = primeros_fundadores`
+   - `utmContent = mensaje_01` si usas variantes de mensaje.
 
 ## Como medir Facebook
 

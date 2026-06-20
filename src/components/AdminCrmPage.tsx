@@ -569,6 +569,7 @@ function AcquisitionView({
   const recentEvents = enrichedEvents.slice(0, 20);
   const topPages = groupCountRows(enrichedEvents.filter((event) => event.isPageView), "path");
   const topCampaigns = groupCountRows(enrichedEvents.filter((event) => event.campaign), "campaign");
+  const topSources = groupCountRows(enrichedEvents.filter((event) => event.source), "source");
   const abandonmentRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_abandoned"), "maxStepName");
   const assistantEvents = enrichedEvents.filter((event) => {
     const eventName = stringValue(event.eventName);
@@ -651,6 +652,7 @@ function AcquisitionView({
 
       <div className="grid gap-5 md:grid-cols-2">
         <BarBreakdown title="Paginas mas vistas" rows={topPages} accent="bg-accent" />
+        <BarBreakdown title="Fuentes UTM" rows={topSources} accent="bg-brand-dark" />
         <BarBreakdown title="Campanas UTM" rows={topCampaigns} accent="bg-sun" />
         <BarBreakdown title="Abandono por paso" rows={abandonmentRows} accent="bg-brand" />
         <BarBreakdown title="Errores de registro" rows={stepErrorRows} accent="bg-amber-500" />
@@ -684,7 +686,7 @@ function AcquisitionView({
       <RowsView
         title="Eventos recientes"
         rows={recentEvents}
-        columns={["id", "eventName", "path", "source", "medium", "campaign", "utmSource", "utmMedium", "utmCampaign", "sourceButton", "createdAt"]}
+        columns={["id", "eventName", "path", "source", "medium", "campaign", "utmSource", "utmMedium", "utmCampaign", "utmContent", "referralCode", "sourceButton", "createdAt"]}
       />
 
       <RowsView
@@ -712,16 +714,17 @@ function AcquisitionView({
 
 function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
   const stages = [
-    { key: "home_view", label: "Home view" },
-    { key: "specialist_home_cta_viewed", label: "CTA especialista visto" },
+    { key: "specialist_home_cta_viewed", label: "Home CTA" },
     { key: "click_offer_services", label: "Click ofrecer servicios" },
     { key: "founder_landing_view", label: "Landing fundadores" },
-    { key: "founder_cta_click", label: "CTA landing" },
     { key: "specialist_application_started", label: "Registro iniciado" },
+    { key: "specialist_application_step_started", label: "Paso oficio", stepName: "Servicios" },
+    { key: "specialist_application_step_started", label: "Paso formalizacion", stepName: "Formalizacion" },
     { key: "specialist_application_submitted", label: "Postulacion enviada" },
   ];
-  const count = (key: string) => events.filter((event) => event.eventName === key).length;
-  const top = Math.max(1, count("home_view"), count("specialist_home_cta_viewed"), count("founder_landing_view"));
+  const count = (key: string, stepName?: string) =>
+    events.filter((event) => event.eventName === key && (!stepName || event.stepName === stepName || event.maxStepName === stepName)).length;
+  const top = Math.max(1, count("specialist_home_cta_viewed"), count("click_offer_services"), count("founder_landing_view"));
   return (
     <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
       <h3 className="text-lg font-black text-ink">Embudo de conversion real</h3>
@@ -729,7 +732,7 @@ function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
       {events.length ? (
         <div className="mt-4 grid gap-3">
           {stages.map((stage) => {
-            const value = count(stage.key);
+            const value = count(stage.key, stage.stepName);
             const pct = Math.round((value / top) * 100);
             return (
               <div key={stage.key}>
@@ -745,7 +748,7 @@ function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
           })}
         </div>
       ) : (
-        <EmptyState title="Aun no hay eventos registrados." text="Comparte links con UTM para medir adquisicion." />
+        <EmptyState title="Aun no hay eventos de adquisicion registrados." text="Comparte links con UTM o prueba el flujo de registro." />
       )}
     </section>
   );
@@ -1029,9 +1032,14 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
   const offerClicks = eventCount(events, "click_offer_services");
   const landingViews = eventCount(events, "founder_landing_view");
   const starts = eventCount(events, "specialist_application_started");
+  const stepsCompleted = eventCount(events, "specialist_application_step_completed");
   const submits = eventCount(events, "specialist_application_submitted");
   const stepErrors = eventCount(events, "specialist_application_step_error");
   const failed = eventCount(events, "specialist_application_failed");
+  const customTrades = eventCount(events, "specialist_custom_trade_requested");
+  const formalizationHelp = eventCount(events, "specialist_formalization_help_requested");
+  const topSource = groupCountRows(events.filter((event) => event.source), "source")[0];
+  const topCampaign = groupCountRows(events.filter((event) => event.campaign), "campaign")[0];
 
   return [
     { label: "Visitas 24h", value: String(visits24h), detail: "Page views medidos", tone: "light" as const },
@@ -1039,8 +1047,13 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
     { label: "Clicks ofrecer", value: String(offerClicks), detail: "CTA especialista", tone: "brand" as const },
     { label: "Landing fundador", value: String(landingViews), detail: "Visitas /especialistas-fundadores", tone: "light" as const },
     { label: "Inicios registro", value: String(starts), detail: `Landing a inicio ${formatPercent(starts, landingViews)}`, tone: "light" as const },
+    { label: "Pasos completos", value: String(stepsCompleted), detail: "Avances registrados", tone: "light" as const },
     { label: "Errores paso", value: String(stepErrors), detail: "Validaciones detenidas", tone: stepErrors ? ("brand" as const) : ("light" as const) },
     { label: "Fallos envio", value: String(failed), detail: "No completaron submit", tone: failed ? ("brand" as const) : ("light" as const) },
+    { label: "Oficios no listados", value: String(customTrades), detail: "Evento de catalogo", tone: customTrades ? ("brand" as const) : ("light" as const) },
+    { label: "Formalizacion", value: String(formalizationHelp), detail: "Ayuda solicitada", tone: formalizationHelp ? ("brand" as const) : ("light" as const) },
+    { label: "Fuente principal", value: topSource?.value ?? "-", detail: topSource ? `${topSource.count} eventos` : "Sin datos", tone: "light" as const },
+    { label: "Campana principal", value: topCampaign?.value ?? "-", detail: topCampaign ? `${topCampaign.count} eventos` : "Sin datos", tone: "light" as const },
     { label: "Envios registro", value: String(submits), detail: `Inicio a envio ${formatPercent(submits, starts)}`, tone: submits ? ("brand" as const) : ("light" as const) },
   ];
 }
@@ -1063,10 +1076,13 @@ function enrichConversionEvent(row: CrmRow): CrmRow {
     utmSource: stringValue(payload.utmSource),
     utmMedium: stringValue(payload.utmMedium),
     utmCampaign: stringValue(payload.utmCampaign),
+    utmContent: stringValue(payload.utmContent),
+    referralCode: stringValue(payload.referralCode),
     sourceButton: stringValue(payload.sourceButton),
     sourceComponent: stringValue(payload.sourceComponent),
     anonymousId: stringValue(payload.anonymousId),
     sessionId: stringValue(payload.sessionId),
+    stepName: stringValue(payload.stepName),
     maxStepName: step || "Sin paso",
     questionSanitized: stringValue(payload.questionSanitized),
     intentGuess: stringValue(payload.intentGuess),

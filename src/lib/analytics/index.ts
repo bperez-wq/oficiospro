@@ -41,6 +41,22 @@ export type AnalyticsEventName = (typeof analyticsEventNames)[number] | (string 
 
 export type AnalyticsMetadata = Record<string, unknown>;
 
+export type AttributionContext = {
+  path: string;
+  referrer: string;
+  utmSource: string;
+  utmMedium: string;
+  utmCampaign: string;
+  utmContent: string;
+  source: string;
+  medium: string;
+  campaign: string;
+  referralCode: string;
+  anonymousId: string;
+  sessionId: string;
+  timestamp: string;
+};
+
 export type AnalyticsEventInput = {
   eventName: AnalyticsEventName;
   source?: string;
@@ -53,6 +69,7 @@ export type AnalyticsEventInput = {
 
 const anonymousIdKey = "oficiospro.analytics.anonymousId";
 const sessionIdKey = "oficiospro.analytics.sessionId";
+const attributionStorageKey = "oficiospro.analytics.attribution";
 const sensitiveMetadataKeys = new Set([
   "rut",
   "password",
@@ -70,6 +87,10 @@ const sensitiveMetadataKeys = new Set([
 ]);
 
 export function analyticsContext() {
+  return getAttributionContext();
+}
+
+export function getAttributionContext(): AttributionContext {
   if (typeof window === "undefined") {
     return {
       path: "",
@@ -77,8 +98,11 @@ export function analyticsContext() {
       utmSource: "",
       utmMedium: "",
       utmCampaign: "",
+      utmContent: "",
       source: "",
+      medium: "",
       campaign: "",
+      referralCode: "",
       anonymousId: "",
       sessionId: "",
       timestamp: new Date().toISOString(),
@@ -86,21 +110,33 @@ export function analyticsContext() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const utmSource = params.get("utm_source") ?? "";
-  const utmMedium = params.get("utm_medium") ?? "";
-  const utmCampaign = params.get("utm_campaign") ?? "";
-  const source = params.get("source") ?? utmSource;
-  const campaign = params.get("campaign") ?? utmCampaign;
+  const stored = readStoredAttribution();
+  const current = {
+    utmSource: params.get("utm_source") ?? "",
+    utmMedium: params.get("utm_medium") ?? "",
+    utmCampaign: params.get("utm_campaign") ?? "",
+    utmContent: params.get("utm_content") ?? params.get("utmContent") ?? "",
+    source: params.get("source") ?? "",
+    campaign: params.get("campaign") ?? "",
+    referralCode: params.get("referralCode") ?? params.get("ref") ?? "",
+  };
+  const hasFreshAttribution = Object.values(current).some(Boolean);
+  const merged = {
+    utmSource: current.utmSource || stored.utmSource || "",
+    utmMedium: current.utmMedium || stored.utmMedium || "",
+    utmCampaign: current.utmCampaign || stored.utmCampaign || "",
+    utmContent: current.utmContent || stored.utmContent || "",
+    source: current.source || current.utmSource || stored.source || stored.utmSource || "direct",
+    campaign: current.campaign || current.utmCampaign || stored.campaign || stored.utmCampaign || "",
+    referralCode: current.referralCode || stored.referralCode || "",
+  };
+  if (hasFreshAttribution) writeStoredAttribution(merged);
 
   return {
     path: window.location.pathname,
     referrer: document.referrer || "",
-    utmSource,
-    utmMedium,
-    utmCampaign,
-    source,
-    medium: utmMedium,
-    campaign,
+    ...merged,
+    medium: merged.utmMedium,
     anonymousId: stableBrowserId(anonymousIdKey, "anon"),
     sessionId: stableBrowserId(sessionIdKey, "sess", true),
     timestamp: new Date().toISOString(),
@@ -123,6 +159,8 @@ export async function trackEvent(input: AnalyticsEventInput) {
     utmSource: context.utmSource,
     utmMedium: context.utmMedium,
     utmCampaign: context.utmCampaign,
+    utmContent: context.utmContent,
+    referralCode: context.referralCode,
     anonymousId: context.anonymousId,
     sessionId: context.sessionId,
     timestamp: context.timestamp,
@@ -135,9 +173,11 @@ export async function trackEvent(input: AnalyticsEventInput) {
       utmSource: context.utmSource,
       utmMedium: context.utmMedium,
       utmCampaign: context.utmCampaign,
+      utmContent: context.utmContent,
       source: input.source ?? context.source,
       medium: input.medium ?? context.medium,
       campaign: input.campaign ?? context.campaign,
+      referralCode: context.referralCode,
       anonymousId: context.anonymousId,
       sessionId: context.sessionId,
       timestamp: context.timestamp,
@@ -178,6 +218,22 @@ export function sanitizeAnalyticsMetadata(value: unknown, depth = 0): unknown {
       .slice(0, 40)
       .map(([key, item]) => [key.slice(0, 60), sanitizeAnalyticsMetadata(item, depth + 1)]),
   );
+}
+
+function readStoredAttribution() {
+  try {
+    return JSON.parse(window.sessionStorage.getItem(attributionStorageKey) ?? "{}") as Partial<AttributionContext>;
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredAttribution(context: Pick<AttributionContext, "utmSource" | "utmMedium" | "utmCampaign" | "utmContent" | "source" | "campaign" | "referralCode">) {
+  try {
+    window.sessionStorage.setItem(attributionStorageKey, JSON.stringify(context));
+  } catch {
+    // Attribution storage is helpful for funnels, but analytics must still work without it.
+  }
 }
 
 function stableBrowserId(key: string, prefix: string, session = false) {

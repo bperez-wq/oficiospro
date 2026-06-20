@@ -60,8 +60,11 @@ Cada evento incluye:
 - `utmSource`
 - `utmMedium`
 - `utmCampaign`
+- `utmContent`
 - `source`
+- `medium`
 - `campaign`
+- `referralCode`
 - `anonymousId`
 - `sessionId`
 - `timestamp`
@@ -118,6 +121,28 @@ Los eventos y postulaciones de especialista deben permitir segmentar sin exponer
 
 El texto libre de "no encuentro mi oficio" se guarda en la postulacion/CRM para operacion, pero analytics evita usarlo como dato sensible masivo y prioriza largo o bandera.
 
+## Test end-to-end del funnel
+
+Para verificar que los eventos lleguen a D1 y aparezcan en la lectura admin:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+$env:APP_BASE_URL="https://www.oficiospro.cl"
+$env:ADMIN_TOKEN="pega_aqui_el_token_real"
+node scripts/test-specialist-funnel-events.mjs
+```
+
+El script:
+
+- valida primero `ADMIN_TOKEN`;
+- crea solo eventos marcados con `source=e2e_test`, `isTest=true` y `testRunId`;
+- simula una postulacion especialista con email `example.com`;
+- consulta `GET /api/admin/conversion-events`;
+- consulta `GET /api/admin/specialists`;
+- resume clicks, landing, inicio, pasos, oficio no listado y ayuda de formalizacion.
+
+Si `ADMIN_TOKEN` no es aceptado, el script no crea datos de prueba.
+
 ## Regla operativa
 
 Si hay visitas pero no clicks: mejorar propuesta y CTA.
@@ -129,3 +154,5 @@ Si hay landing views pero no CTA clicks: simplificar landing y repetir CTA.
 Si hay starts pero no submits: reducir friccion del paso con mas abandono.
 
 Si hay submits pero pocos especialistas publicados: revisar operacion CRM, SLA y aprobacion.
+
+Conversion real del ciclo especialista = `specialist_application_submitted` con `stored=true` y postulacion visible en admin. Los eventos previos son senales de diagnostico, no conversion final.

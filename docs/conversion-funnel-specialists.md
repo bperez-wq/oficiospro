@@ -29,9 +29,12 @@ La ruta `/admin/crm/acquisition` muestra:
 - clicks "Ofrecer mis servicios"
 - visitas landing fundadores
 - inicios de registro
+- pasos iniciados y pasos completados
 - errores de registro por paso
 - fallos de envio
 - registros enviados
+- fuente UTM principal
+- campana principal
 - tasa landing a inicio
 - tasa inicio a envio
 - paginas mas vistas
@@ -83,6 +86,24 @@ El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin g
 8. Postulantes con ayuda de formalizacion.
 9. Fuente con mejor submit rate.
 10. Campana con mas registros enviados.
+
+## Validacion en admin
+
+1. Abrir `/admin/crm/acquisition`.
+2. Ingresar `ADMIN_TOKEN` o tener sesion admin real.
+3. Presionar `Actualizar`.
+4. Revisar:
+   - embudo: Home CTA -> landing fundadores -> registro iniciado -> paso oficio -> paso formalizacion -> postulacion enviada;
+   - KPIs: clicks, landing, inicios, pasos completos, errores, fallos, oficios no listados, formalizacion;
+   - tablas: eventos recientes y postulaciones captadas.
+
+Empty state esperado:
+
+```text
+Aun no hay eventos de adquisicion registrados. Comparte links con UTM o prueba el flujo de registro.
+```
+
+No se deben mostrar datos demo como si fueran reales.
 
 ## Umbrales iniciales
 
