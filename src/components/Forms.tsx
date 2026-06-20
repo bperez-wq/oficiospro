@@ -627,6 +627,20 @@ export function SpecialistRegisterForm() {
         stepName: specialistStepLabels[0],
       },
     });
+    void trackEvent({
+      eventName: "specialist_application_step_started",
+      source: next.source ?? "direct",
+      campaign: next.campaign,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton: "Formulario abierto",
+      metadata: {
+        ...next,
+        funnel: "specialist_acquisition",
+        totalSteps: 6,
+        step: 1,
+        stepName: specialistStepLabels[0],
+      },
+    });
   }, []);
 
   useEffect(() => {
@@ -767,40 +781,92 @@ export function SpecialistRegisterForm() {
     );
   }
 
+  function specialistFunnelMetadata(currentStep = step, extra: Record<string, unknown> = {}) {
+    const primaryTradeMeta = getTradeCategoryById(primaryTradeId);
+    const mainType = getServiceTypeById(primaryTradeId);
+    return {
+      funnel: "specialist_acquisition",
+      totalSteps: 6,
+      step: currentStep,
+      stepName: specialistStepLabels[currentStep - 1],
+      maxStepReached: maxStepReachedRef.current,
+      elapsedMs: Date.now() - startedAtRef.current,
+      source: acquisition.source ?? "direct",
+      acquisitionSource: acquisition.source ?? "direct",
+      sourceDetail: acquisition.sourceDetail ?? "",
+      campaign: acquisition.campaign ?? "founder_specialists",
+      landingPage: acquisition.landingPage ?? "/registro-especialista",
+      trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
+      primaryTrade: primaryTradeMeta?.label ?? mainType?.name ?? primaryTradeId,
+      tradeSegment: primaryTradeId ? tradeSegmentForCategory(primaryTradeId) : "",
+      coverageStatus: primaryTradeMeta?.coverageStatus ?? "",
+      commune: acquisition.commune ?? baseCommune,
+      region: baseRegion,
+      servicesCount: services.length,
+      selectedSpecialties: services
+        .map((service) => (service.isOtherService ? service.otherServiceDescription : service.specialty))
+        .filter(Boolean),
+      hasCustomTradeRequest: Boolean(customTradeRequest.trim()),
+      customTradeRequestLength: customTradeRequest.trim().length,
+      needsFormalizationHelp: formalization.taxType === "unknown",
+      taxType: formalization.taxType,
+      hasIdentityDocuments: Boolean(identityDocuments.idFrontName || identityDocuments.idBackName || identityDocuments.selfieName),
+      hasPortfolio: portfolioPhotos.length > 0,
+      hasCertifications: selectedCertifications.length > 0,
+      hasNoFormalCertifications,
+      ...extra,
+    };
+  }
+
+  function trackSpecialistFunnelEvent(eventName: string, sourceButton: string, currentStep = step, extra: Record<string, unknown> = {}) {
+    void trackEvent({
+      eventName,
+      source: acquisition.source ?? "direct",
+      campaign: acquisition.campaign,
+      sourceComponent: "SpecialistRegisterForm",
+      sourceButton,
+      metadata: specialistFunnelMetadata(currentStep, extra),
+    });
+  }
+
+  function setStepError(currentStep: number, reason: string, message: string) {
+    setStatus(message);
+    trackSpecialistFunnelEvent("specialist_application_step_error", "Validacion paso", currentStep, { reason, message });
+    return false;
+  }
+
+  function markStepStarted(nextStep: number, sourceButton: string, extra: Record<string, unknown> = {}) {
+    const boundedStep = Math.min(6, Math.max(1, nextStep));
+    trackSpecialistFunnelEvent("specialist_application_step_started", sourceButton, boundedStep, extra);
+  }
+
   function validateStep(currentStep = step) {
     if (currentStep === 1) {
       const hasName = `${identity.firstNames} ${identity.lastNames}`.trim().length > 1;
       if (!hasName || !identity.whatsapp || !identity.email) {
-        setStatus("Completa nombre completo o nombre comercial, WhatsApp o telefono y email para continuar.");
-        return false;
+        return setStepError(currentStep, "missing_identity_contact", "Completa nombre completo o nombre comercial, WhatsApp o telefono y email para continuar.");
       }
     }
     if (currentStep === 2) {
       if (!baseRegion || !baseCommune) {
-        setStatus("Selecciona region y comuna principal para revisar cobertura real.");
-        return false;
+        return setStepError(currentStep, "missing_region_commune", "Selecciona region y comuna principal para revisar cobertura real.");
       }
     }
     if (currentStep === 3) {
       if (!services.length) {
-        setStatus("Agrega al menos un servicio principal.");
-        return false;
+        return setStepError(currentStep, "missing_services", "Agrega al menos un servicio principal.");
       }
       if (services.some((service) => !service.name.trim() || !service.description.trim() || !service.duration.trim())) {
-        setStatus("Completa nombre, descripcion breve y duracion estimada de cada servicio.");
-        return false;
+        return setStepError(currentStep, "incomplete_service_details", "Completa nombre, descripcion breve y duracion estimada de cada servicio.");
       }
       if (services.some((service) => service.pricingMode !== "quote_required" && service.pricingMode !== "virtual_diagnosis" && Number(service.specialistExpectedPayoutCLP) <= 0)) {
-        setStatus("Completa el monto esperado en CLP cuando el servicio tenga precio fijo, por hora, rango o visita tecnica.");
-        return false;
+        return setStepError(currentStep, "missing_expected_clp", "Completa el monto esperado en CLP cuando el servicio tenga precio fijo, por hora, rango o visita tecnica.");
       }
       if (services.some((service) => !serviceHasPricingBasis(service))) {
-        setStatus("Completa horas, duracion y tarifa esperada segun la modalidad seleccionada. OficiosPro calculara los creditos cliente.");
-        return false;
+        return setStepError(currentStep, "missing_pricing_basis", "Completa horas, duracion y tarifa esperada segun la modalidad seleccionada. OficiosPro calculara los creditos cliente.");
       }
       if (services.some((service) => service.specialty === OTHER_SERVICE_VALUE && !service.otherServiceDescription.trim())) {
-        setStatus("Describe el servicio cuando selecciones Otro servicio.");
-        return false;
+        return setStepError(currentStep, "missing_other_service_description", "Describe el servicio cuando selecciones Otro servicio.");
       }
     }
     if (
@@ -810,12 +876,10 @@ export function SpecialistRegisterForm() {
         return hasAnyData && (!reference.name || !reference.phone || !reference.work);
       })
     ) {
-      setStatus("Completa nombre, telefono y trabajo realizado en cada referencia iniciada, o dejala vacia para agregarla despues.");
-      return false;
+      return setStepError(currentStep, "incomplete_reference", "Completa nombre, telefono y trabajo realizado en cada referencia iniciada, o dejala vacia para agregarla despues.");
     }
     if (currentStep === 6 && (!consentContact || !consentVerification || !consentDocumentPolicy)) {
-      setStatus("Autoriza el contacto, la revision de antecedentes y la politica documental para enviar tu postulacion.");
-      return false;
+      return setStepError(currentStep, "missing_consents", "Autoriza el contacto, la revision de antecedentes y la politica documental para enviar tu postulacion.");
     }
     setStatus("");
     return true;
@@ -838,11 +902,14 @@ export function SpecialistRegisterForm() {
       },
     });
     setStep(next);
+    markStepStarted(next, "Continuar paso", { previousStep: step, previousStepName: specialistStepLabels[step - 1] });
   }
 
   function previousStep() {
+    const previous = Math.max(1, step - 1);
     setStatus("");
-    setStep((current) => Math.max(1, current - 1));
+    setStep(previous);
+    markStepStarted(previous, "Volver paso", { previousStep: step, previousStepName: specialistStepLabels[step - 1] });
   }
 
   function toggleCertification(certification: string) {
@@ -865,6 +932,7 @@ export function SpecialistRegisterForm() {
     event.preventDefault();
     if (websiteTrap) {
       setStatus("No pudimos completar el envio ahora. Escribenos a bperez@oficiospro.cl y revisaremos tu postulacion.");
+      trackSpecialistFunnelEvent("specialist_application_failed", "Honeypot", step, { reason: "honeypot" });
       return;
     }
     for (const currentStep of [1, 2, 3, 4, 5, 6]) {
@@ -887,6 +955,8 @@ export function SpecialistRegisterForm() {
     const primaryTradeSegment = tradeSegmentForCategory(primaryTradeId);
     const primaryService = services.find((service) => service.serviceTypeId === primaryTradeId) ?? services[0];
     const now = new Date().toISOString();
+    const customTradeRequestText = customTradeRequest.trim();
+    const needsFormalizationHelp = formalization.taxType === "unknown";
     const normalizedServices = services.map((service) => {
       const calculatedClientCredits = estimatedClientCreditsForService(service);
       const rangeMaxCredits = calculatedClientCredits ? calculatedClientCredits + 10 : 0;
@@ -920,6 +990,19 @@ export function SpecialistRegisterForm() {
       trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
       commune: acquisition.commune ?? baseCommune,
     };
+    const selectedSpecialtiesForPayload = normalizedServices
+      .map((service) => (service.isOtherService ? service.otherServiceDescription : service.specialty))
+      .filter(Boolean);
+    if (customTradeRequestText) {
+      trackSpecialistFunnelEvent("specialist_custom_trade_requested", "Crear perfil fundador", 3, {
+        customTradeRequestLength: customTradeRequestText.length,
+      });
+    }
+    if (needsFormalizationHelp) {
+      trackSpecialistFunnelEvent("specialist_formalization_help_requested", "Crear perfil fundador", 4, {
+        taxType: formalization.taxType,
+      });
+    }
     const founderQuality = buildFounderQualityChecklist({
       services: normalizedServices,
       completedReferencesCount: completedReferences.length,
@@ -979,10 +1062,9 @@ export function SpecialistRegisterForm() {
       tradeSegment: primaryTradeSegment,
       tradeCoverageStatus: primaryTradeMeta?.coverageStatus,
       tradeCoverageLabel: primaryTradeCoverageLabel,
-      selectedSpecialties: normalizedServices
-        .map((service) => (service.isOtherService ? service.otherServiceDescription : service.specialty))
-        .filter(Boolean),
-      customTradeRequest: customTradeRequest.trim() || undefined,
+      selectedSpecialties: selectedSpecialtiesForPayload,
+      customTradeRequest: customTradeRequestText || undefined,
+      needsFormalizationHelp,
       specialty: primaryService.isOtherService ? primaryService.otherServiceDescription : primaryService.specialty,
       services: normalizedServices,
       references: completedReferences,
@@ -1073,7 +1155,9 @@ export function SpecialistRegisterForm() {
         tradeSegment: primaryTradeSegment,
         tradeCoverageStatus: primaryTradeMeta?.coverageStatus,
         tradeCoverageLabel: primaryTradeCoverageLabel,
-        customTradeRequest: customTradeRequest.trim() || undefined,
+        customTradeRequest: customTradeRequestText || undefined,
+        needsFormalizationHelp,
+        selectedSpecialties: selectedSpecialtiesForPayload,
         services: servicesPayload,
         yearsExperience: "",
         availability: "Pendiente de coordinar",
@@ -1128,6 +1212,10 @@ export function SpecialistRegisterForm() {
     });
     if (!leadResult.ok && leadResult.error !== "database_not_configured") {
       setStatus(leadResult.message);
+      trackSpecialistFunnelEvent("specialist_application_failed", "Crear perfil fundador", step, {
+        reason: leadResult.error ?? "lead_submission_failed",
+        stored: leadResult.stored,
+      });
       return;
     }
     submittedRef.current = true;
@@ -1145,6 +1233,13 @@ export function SpecialistRegisterForm() {
         founderStatus: "fundador_postulante",
         maxStepReached: maxStepReachedRef.current,
         elapsedMs: Date.now() - startedAtRef.current,
+        primaryTrade: primaryTradeLabel,
+        tradeSegment: primaryTradeSegment,
+        tradeCoverageStatus: primaryTradeMeta?.coverageStatus,
+        tradeCoverageLabel: primaryTradeCoverageLabel,
+        customTradeRequest: customTradeRequestText || undefined,
+        needsFormalizationHelp,
+        selectedSpecialties: selectedSpecialtiesForPayload,
       },
     });
     void trackEvent({
@@ -1157,6 +1252,10 @@ export function SpecialistRegisterForm() {
         campaign: acquisitionPayload.campaign,
         commune: acquisitionPayload.commune,
         trade: acquisitionPayload.trade,
+        primaryTrade: primaryTradeLabel,
+        tradeSegment: primaryTradeSegment,
+        customTradeRequested: Boolean(customTradeRequestText),
+        needsFormalizationHelp,
       },
     });
     clearSpecialistQuickDraft();
@@ -1173,6 +1272,9 @@ export function SpecialistRegisterForm() {
     }, 2500);
     } catch (error) {
       if (process.env.NODE_ENV === "development") console.error(error);
+      trackSpecialistFunnelEvent("specialist_application_failed", "Crear perfil fundador", step, {
+        reason: error instanceof Error ? error.message : "unexpected_error",
+      });
       setStatus("No pudimos completar el envio ahora. Escribenos a bperez@oficiospro.cl y revisaremos tu postulacion.");
     } finally {
       setIsSubmitting(false);
@@ -1201,7 +1303,11 @@ export function SpecialistRegisterForm() {
                 step === index + 1 ? "border-brand bg-brand text-white shadow-lg shadow-brand/20" : "border-line bg-slate-50 text-ink hover:border-brand/40"
               }`}
               type="button"
-              onClick={() => setStep(index + 1)}
+              onClick={() => {
+                setStatus("");
+                setStep(index + 1);
+                markStepStarted(index + 1, "Navegacion pasos", { navigation: "manual" });
+              }}
             >
               <span className="text-xs font-black uppercase">Paso {index + 1}</span>
               <strong className="mt-1 block">{title}</strong>
@@ -1371,7 +1477,16 @@ export function SpecialistRegisterForm() {
           </div>
           <label className="field">
             Documento que puedes emitir
-            <select value={formalization.taxType} onChange={(event) => setFormalization({ ...formalization, taxType: event.target.value as SpecialistFormalizationTaxType })}>
+            <select
+              value={formalization.taxType}
+              onChange={(event) => {
+                const nextTaxType = event.target.value as SpecialistFormalizationTaxType;
+                setFormalization({ ...formalization, taxType: nextTaxType });
+                if (nextTaxType === "unknown") {
+                  trackSpecialistFunnelEvent("specialist_formalization_help_requested", "Documento que puedes emitir", 4, { taxType: nextTaxType });
+                }
+              }}
+            >
               <option value="unknown">{specialistTaxTypeLabels.unknown}</option>
               <option value="boleta_honorarios">{specialistTaxTypeLabels.boleta_honorarios}</option>
               <option value="factura_afecta">{specialistTaxTypeLabels.factura_afecta}</option>

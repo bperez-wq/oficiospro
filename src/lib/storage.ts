@@ -314,6 +314,7 @@ export type PendingSpecialistProfile = {
   tradeCoverageLabel?: string;
   selectedSpecialties?: string[];
   customTradeRequest?: string;
+  needsFormalizationHelp?: boolean;
   specialty: string;
   services: PendingSpecialistService[];
   references: PendingSpecialistReference[];

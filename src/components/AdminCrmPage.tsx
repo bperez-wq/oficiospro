@@ -583,6 +583,10 @@ function AcquisitionView({
   );
   const assistantEscalationReasons = groupCountRows(assistantEscalations, "reason");
   const assistantUnansweredRows = assistantEscalations.filter((event) => ["unknown", "low_confidence", "out_of_scope", "tax_legal", "question_limit", "sensitive"].includes(stringValue(event.reason)));
+  const stepErrorRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_step_error"), "reason");
+  const failedRows = groupCountRows(enrichedEvents.filter((event) => event.eventName === "specialist_application_failed"), "reason");
+  const customTradeRows = groupCountRows(filteredRows.filter((row) => Boolean(row.customTradeRequest)), "customTradeRequest");
+  const formalizationHelpRows = groupCountRows(filteredRows, "formalizationHelpLabel");
   const exportRows = filteredRows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -596,6 +600,9 @@ function AcquisitionView({
     coverageStatus: row.coverageStatus,
     coverageLabel: row.coverageLabel,
     commune: row.commune,
+    customTradeRequest: row.customTradeRequest,
+    needsFormalizationHelp: row.needsFormalizationHelp,
+    selectedSpecialties: row.selectedSpecialties,
     referralCode: row.referralCode,
     referrerSpecialistId: row.referrerSpecialistId,
     founderStatus: row.founderStatus,
@@ -646,9 +653,13 @@ function AcquisitionView({
         <BarBreakdown title="Paginas mas vistas" rows={topPages} accent="bg-accent" />
         <BarBreakdown title="Campanas UTM" rows={topCampaigns} accent="bg-sun" />
         <BarBreakdown title="Abandono por paso" rows={abandonmentRows} accent="bg-brand" />
+        <BarBreakdown title="Errores de registro" rows={stepErrorRows} accent="bg-amber-500" />
+        <BarBreakdown title="Fallos de envio" rows={failedRows} accent="bg-rose-500" />
         <BarBreakdown title="Temas asistente especialistas" rows={assistantTopics} accent="bg-brand-dark" />
         <BarBreakdown title="Escalaciones asistente" rows={assistantEscalationReasons} accent="bg-accent" />
         <BarBreakdown title="Oficios con mas interes" rows={groupCountRows(filteredRows, "trade")} accent="bg-sun" />
+        <BarBreakdown title="No encuentro mi oficio" rows={customTradeRows} accent="bg-accent" />
+        <BarBreakdown title="Ayuda formalizacion" rows={formalizationHelpRows} accent="bg-brand" />
         <BarBreakdown title="Comunas con mas interes" rows={groupCountRows(filteredRows, "commune")} accent="bg-brand" />
         <BarBreakdown title="Capas con mas postulantes" rows={groupCountRows(filteredRows, "tradeSegmentLabel")} accent="bg-ink" />
         <BarBreakdown title="Estado de cobertura" rows={groupCountRows(filteredRows, "coverageLabel")} accent="bg-brand-dark" />
@@ -691,7 +702,7 @@ function AcquisitionView({
       <RowsView
         title="Postulaciones captadas"
         rows={exportRows}
-        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "tradeSegment", "coverageLabel", "commune", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
+        columns={["id", "name", "email", "phone", "acquisitionSource", "sourceDetail", "campaign", "trade", "tradeSegment", "coverageLabel", "commune", "customTradeRequest", "needsFormalizationHelp", "selectedSpecialties", "referralCode", "referrerSpecialistId", "founderStatus", "slaStatus", "createdAt"]}
         onRefresh={onRefresh}
         onExport={() => exportCsv(`crm-captacion-especialistas-${new Date().toISOString().slice(0, 10)}.csv`, exportRows)}
       />
@@ -702,6 +713,7 @@ function AcquisitionView({
 function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
   const stages = [
     { key: "home_view", label: "Home view" },
+    { key: "specialist_home_cta_viewed", label: "CTA especialista visto" },
     { key: "click_offer_services", label: "Click ofrecer servicios" },
     { key: "founder_landing_view", label: "Landing fundadores" },
     { key: "founder_cta_click", label: "CTA landing" },
@@ -709,7 +721,7 @@ function AcquisitionEventFunnel({ events }: { events: CrmRow[] }) {
     { key: "specialist_application_submitted", label: "Postulacion enviada" },
   ];
   const count = (key: string) => events.filter((event) => event.eventName === key).length;
-  const top = Math.max(1, count("home_view"), count("founder_landing_view"));
+  const top = Math.max(1, count("home_view"), count("specialist_home_cta_viewed"), count("founder_landing_view"));
   return (
     <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
       <h3 className="text-lg font-black text-ink">Embudo de conversion real</h3>
@@ -926,6 +938,7 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   const payload = parseJsonRecord(row.payloadJson ?? row.payload_json);
   const acquisition = recordValue(payload.acquisition);
   const founderProgram = recordValue(payload.founderProgram);
+  const taxProfile = recordValue(payload.taxProfile);
   const rawSource = stringValue(acquisition.source ?? payload.source ?? row.source) || "direct";
   const createdAt = stringValue(row.createdAt ?? row.created_at);
   const founderStatus = stringValue(founderProgram.status ?? payload.founderStatus ?? row.status ?? row.publicationStatus) || "fundador_postulante";
@@ -940,6 +953,12 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
   const tradeSegment = stringValue(payload.tradeSegment) || (taxonomyCategory ? tradeSegmentForCategory(taxonomyCategory.id) : "");
   const coverageStatus = stringValue(payload.tradeCoverageStatus) || taxonomyCategory?.coverageStatus || "";
   const coverageLabel = stringValue(payload.tradeCoverageLabel) || (taxonomyCategory ? getTradeCoverageLabel(taxonomyCategory) : "Sin cobertura declarada");
+  const selectedSpecialties = arrayFrom(payload.selectedSpecialties).map((item) => stringValue(item)).filter(Boolean).join(", ");
+  const customTradeRequest = stringValue(payload.customTradeRequest);
+  const needsFormalizationHelp =
+    payload.needsFormalizationHelp === true ||
+    stringValue(taxProfile.status) === "pending_formalization" ||
+    stringValue(taxProfile.taxType) === "unknown";
 
   return {
     ...row,
@@ -955,6 +974,10 @@ function enrichAcquisitionRow(row: CrmRow): CrmRow {
     coverageStatus,
     coverageLabel,
     commune: stringValue(acquisition.commune ?? payload.commune ?? payload.communeName ?? row.comuna) || "Sin comuna",
+    selectedSpecialties,
+    customTradeRequest,
+    needsFormalizationHelp: needsFormalizationHelp ? "si" : "no",
+    formalizationHelpLabel: needsFormalizationHelp ? "Necesita ayuda tributaria" : "Sin ayuda declarada",
     referralCode,
     referrerSpecialistId,
     founderStatus,
@@ -982,6 +1005,8 @@ function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[
   const referrals = rows.filter((row) => Boolean(row.referralCode || row.referrerSpecialistId)).length;
   const institutions = rows.filter((row) => Boolean(row.institution)).length;
   const slaOverdue = rows.filter((row) => row.slaStatus === "SLA vencido").length;
+  const customTrades = rows.filter((row) => Boolean(row.customTradeRequest)).length;
+  const formalizationHelp = rows.filter((row) => row.needsFormalizationHelp === "si").length;
   const openSpecialistOpps = opportunities.filter((row) => String(row.pipeline) === "especialistas" && String(row.status) !== "closed").length;
   const pendingTasks = tasks.filter((row) => String(row.status) !== "done").length;
 
@@ -992,6 +1017,8 @@ function acquisitionKpis(rows: CrmRow[], opportunities: CrmRow[], tasks: CrmRow[
     { label: "Publicados", value: String(founderStatus("publicado")), detail: "Badge visible", tone: "light" as const },
     { label: "Referidos", value: String(referrals), detail: "Con codigo o referente", tone: "light" as const },
     { label: "Instituciones", value: String(institutions), detail: "OMIL/SENCE/CFT/IP", tone: "light" as const },
+    { label: "Oficio no listado", value: String(customTrades), detail: "Solicitudes catalogo", tone: customTrades ? ("brand" as const) : ("light" as const) },
+    { label: "Ayuda tributaria", value: String(formalizationHelp), detail: "Formalizacion pendiente", tone: formalizationHelp ? ("brand" as const) : ("light" as const) },
     { label: "SLA pendiente", value: String(slaOverdue), detail: `${openSpecialistOpps} opps / ${pendingTasks} tareas`, tone: slaOverdue ? ("brand" as const) : ("light" as const) },
   ];
 }
@@ -1003,6 +1030,8 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
   const landingViews = eventCount(events, "founder_landing_view");
   const starts = eventCount(events, "specialist_application_started");
   const submits = eventCount(events, "specialist_application_submitted");
+  const stepErrors = eventCount(events, "specialist_application_step_error");
+  const failed = eventCount(events, "specialist_application_failed");
 
   return [
     { label: "Visitas 24h", value: String(visits24h), detail: "Page views medidos", tone: "light" as const },
@@ -1010,6 +1039,8 @@ function acquisitionGrowthKpis(events: CrmRow[]) {
     { label: "Clicks ofrecer", value: String(offerClicks), detail: "CTA especialista", tone: "brand" as const },
     { label: "Landing fundador", value: String(landingViews), detail: "Visitas /especialistas-fundadores", tone: "light" as const },
     { label: "Inicios registro", value: String(starts), detail: `Landing a inicio ${formatPercent(starts, landingViews)}`, tone: "light" as const },
+    { label: "Errores paso", value: String(stepErrors), detail: "Validaciones detenidas", tone: stepErrors ? ("brand" as const) : ("light" as const) },
+    { label: "Fallos envio", value: String(failed), detail: "No completaron submit", tone: failed ? ("brand" as const) : ("light" as const) },
     { label: "Envios registro", value: String(submits), detail: `Inicio a envio ${formatPercent(submits, starts)}`, tone: submits ? ("brand" as const) : ("light" as const) },
   ];
 }

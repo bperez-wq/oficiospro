@@ -39,6 +39,7 @@ export default function HomePage() {
   return (
     <main>
       <AnalyticsPageView eventName="home_view" metadata={{ funnel: "specialist_acquisition" }} />
+      <AnalyticsPageView eventName="specialist_home_cta_viewed" metadata={{ funnel: "specialist_acquisition", ctas: ["home_hero", "purpose", "role_card"] }} />
       <PostulationToast />
       <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
@@ -94,8 +95,8 @@ export default function HomePage() {
                 />
               ))}
             </div>
-            <FloatingCard className="left-0 top-8 animate-float" label="Calificación promedio" value="4,9★" accent="sun" />
-            <FloatingCard className="right-0 top-24 animate-float [animation-delay:1.5s]" label="Disponible ahora" value="35 min" accent="accent" />
+            <FloatingCard className="left-0 top-8 animate-float" label="Ejemplo piloto" value="4,9★" accent="sun" />
+            <FloatingCard className="right-0 top-24 animate-float [animation-delay:1.5s]" label="Respuesta referencial" value="35 min" accent="accent" />
             <FloatingCard className="bottom-16 left-6 animate-float [animation-delay:0.8s]" label="Precio desde" value="30 créditos" accent="brand" />
             <FloatingCard className="bottom-40 right-2 animate-float [animation-delay:1.1s]" label="Especialista a" value="3,8 km" accent="accent" />
             <div className="absolute bottom-8 right-6 w-64 rounded-[24px] border border-line bg-white/95 p-4 shadow-card backdrop-blur">
@@ -107,7 +108,7 @@ export default function HomePage() {
                   </span>
                 ))}
               </div>
-              <p className="mt-3 text-sm font-bold text-muted">Especialistas con trabajos reales y reputación verificada.</p>
+              <p className="mt-3 text-sm font-bold text-muted">Especialistas fundadores en revision y evidencia antes de publicar.</p>
             </div>
           </div>
         </div>
@@ -121,9 +122,9 @@ export default function HomePage() {
 
       <section className="mx-auto grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
-          ["4,9/5", "satisfacción"],
-          [specialists.length.toString(), "especialistas verificados"],
-          ["35 min", "respuesta rápida"],
+          ["4,9/5", "ejemplo piloto"],
+          [specialists.length.toString(), "perfiles referenciales"],
+          ["35 min", "respuesta referencial"],
           ["Créditos", "acumulables mes a mes"],
           ["Pago seguro", "al finalizar"],
         ].map(([value, label]) => (
@@ -231,9 +232,9 @@ export default function HomePage() {
             <p className="text-lg font-semibold leading-8 text-ink">
               OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
             </p>
-            <ConversionButton type="registro_especialista" sourceButton="Quiero inscribir mi oficio propósito" className="btn-sun justify-self-start">
+            <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_purpose&intent=offer_services" className="btn-sun justify-self-start" eventType="click_offer_services" sourceButton="Quiero inscribir mi oficio proposito" context={{ source: "campana_local", campaign: "founder_specialists_home_purpose", landingPage: "/" }}>
               Quiero inscribir mi oficio
-            </ConversionButton>
+            </AcquisitionTrackingLink>
           </div>
         </div>
         <SectionHeader eyebrow="Confianza antes que precio" title="Los mejores especialistas brillan por evidencia, no por promesas." text="OficiosPro muestra reputación, comentarios reales, trabajos completados y certificaciones para que el precio en créditos no sea la única variable." />

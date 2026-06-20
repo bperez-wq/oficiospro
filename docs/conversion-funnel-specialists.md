@@ -6,14 +6,18 @@ Este playbook traduce los eventos de analytics en decisiones de crecimiento para
 
 ```mermaid
 flowchart TD
-  A["home_view"] --> B["click_offer_services"]
-  B --> C["founder_landing_view"]
-  C --> D["founder_cta_click"]
-  D --> E["specialist_application_started"]
-  E --> F["specialist_application_step_completed"]
-  F --> G["specialist_application_submitted"]
-  E --> H["specialist_application_abandoned"]
-  F --> H
+  A["home_view"] --> B["specialist_home_cta_viewed"]
+  B --> C["click_offer_services"]
+  C --> D["founder_landing_view"]
+  D --> E["founder_cta_click"]
+  E --> F["specialist_application_started"]
+  F --> G["specialist_application_step_started"]
+  G --> H["specialist_application_step_completed"]
+  H --> I["specialist_application_submitted"]
+  G --> J["specialist_application_step_error"]
+  F --> K["specialist_application_abandoned"]
+  H --> K
+  G --> L["specialist_application_failed"]
 ```
 
 ## Vista admin
@@ -25,12 +29,16 @@ La ruta `/admin/crm/acquisition` muestra:
 - clicks "Ofrecer mis servicios"
 - visitas landing fundadores
 - inicios de registro
+- errores de registro por paso
+- fallos de envio
 - registros enviados
 - tasa landing a inicio
 - tasa inicio a envio
 - paginas mas vistas
 - campanas UTM
 - abandono por paso
+- solicitudes "no encuentro mi oficio"
+- postulantes que necesitan ayuda de formalizacion tributaria
 - eventos recientes
 - postulaciones captadas en D1
 
@@ -42,6 +50,9 @@ La ruta `/admin/crm/acquisition` muestra:
 | Clicks altos y landing views bajos | Link, navegacion o carga puede fallar | Revisar href, deploy y mobile |
 | Landing views altas y CTA clicks bajos | Landing no convence rapido | Repetir CTA, reducir texto, mostrar beneficio concreto |
 | Starts altos y submits bajos | Registro tiene friccion | Revisar paso con mas abandono y microcopy |
+| Errores de paso concentrados | Un requisito o texto bloquea conversion | Revisar `reason` y ajustar copy, orden o validacion |
+| Muchas solicitudes de oficio no listado | El catalogo no cubre demanda real | Priorizar nueva especialidad o landing SEO |
+| Mucha ayuda de formalizacion | Hay barrera tributaria | Preparar guia y soporte operativo antes de aprobar |
 | Submits altos y pocos aprobados | Operacion posterior lenta | Revisar CRM, tareas y SLA |
 
 ## Pasos del registro
@@ -49,11 +60,16 @@ La ruta `/admin/crm/acquisition` muestra:
 El registro especialista reporta:
 
 - `specialist_application_started`
+- `specialist_application_step_started`
 - `specialist_application_step_completed`
+- `specialist_application_step_error`
+- `specialist_application_failed`
 - `specialist_application_abandoned`
 - `specialist_application_submitted`
+- `specialist_custom_trade_requested`
+- `specialist_formalization_help_requested`
 
-El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin guardar RUT, documentos ni datos sensibles.
+El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin guardar RUT, documentos ni datos sensibles. Los eventos de error guardan solo el motivo operacional, paso, oficio, comuna y contexto de UTM.
 
 ## Metricas minimas semanales
 
@@ -62,8 +78,11 @@ El evento de abandono guarda el mayor paso alcanzado y el nombre del paso, sin g
 3. Start rate: `specialist_application_started / founder_landing_view`.
 4. Submit rate: `specialist_application_submitted / specialist_application_started`.
 5. Abandono por paso.
-6. Fuente con mejor submit rate.
-7. Campana con mas registros enviados.
+6. Errores por paso y motivo.
+7. Oficios no encontrados.
+8. Postulantes con ayuda de formalizacion.
+9. Fuente con mejor submit rate.
+10. Campana con mas registros enviados.
 
 ## Umbrales iniciales
 

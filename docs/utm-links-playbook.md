@@ -19,7 +19,7 @@ https://www.oficiospro.cl/especialistas-fundadores?utm_source=instagram&utm_medi
 WhatsApp:
 
 ```text
-https://www.oficiospro.cl/especialistas-fundadores?utm_source=whatsapp&utm_medium=referral&utm_campaign=especialistas_fundadores
+https://www.oficiospro.cl/especialistas-fundadores?utm_source=whatsapp&utm_medium=direct&utm_campaign=primeros_fundadores
 ```
 
 Facebook grupos:
@@ -38,7 +38,7 @@ https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_c
 
 - `utm_source`: canal o socio. Ejemplos: `instagram`, `whatsapp`, `facebook`, `omil`, `referido_especialista`.
 - `utm_medium`: formato. Ejemplos: `bio`, `story`, `group`, `referral`, `partner`.
-- `utm_campaign`: objetivo. Ejemplos: `especialistas_fundadores`, `oficios_comuna`, `piloto_comunal`.
+- `utm_campaign`: objetivo. Ejemplos: `primeros_fundadores`, `especialistas_fundadores`, `oficios_comuna`, `piloto_comunal`.
 
 ## Reglas
 
@@ -59,9 +59,12 @@ https://www.oficiospro.cl/instituciones?utm_source=omil&utm_medium=partner&utm_c
 
 ## Como medir WhatsApp
 
-1. Usar el link WhatsApp en mensajes directos o grupos.
-2. Si es referido, preferir `/referidos/especialistas`.
-3. Revisar eventos `referral_link_created` y postulaciones con source de referido.
+1. Usar el link WhatsApp con `utm_medium=direct` para prospeccion uno a uno.
+2. Si es referido formal, preferir `/referidos/especialistas` o agregar `referralCode`.
+3. Revisar en `/admin/crm/acquisition`:
+   - `utmSource = whatsapp`
+   - `utmMedium = direct`
+   - `utmCampaign = primeros_fundadores`
 
 ## Como medir Facebook
 

@@ -7,6 +7,7 @@ import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
 import { getClientMenuGroups } from "@/data/tradeTaxonomy";
+import { trackEvent } from "@/lib/analytics";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
 const quickSuggestions = ["Calefont", "Filtracion", "Electricista SEC", "Camaras", "Riego", "Piscina", "Porton"];
@@ -209,7 +210,20 @@ export function Header() {
             </div>
             <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
             <NavLink href="/empresas" label="Empresas" pathname={pathname} />
-            <Link href="/especialistas-fundadores?source=header&intent=offer_services" className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark">
+            <Link
+              href="/especialistas-fundadores?source=header&intent=offer_services"
+              className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
+              onClick={() => {
+                void trackEvent({
+                  eventName: "click_offer_services",
+                  source: "header",
+                  campaign: "founder_specialists_header",
+                  sourceComponent: "Header",
+                  sourceButton: "Trabaja con nosotros",
+                  metadata: { cta: "header_work_with_us", path: pathname },
+                });
+              }}
+            >
               Trabaja con nosotros
             </Link>
             <NavLink href="/soporte" label="Soporte" pathname={pathname} />
@@ -445,7 +459,22 @@ function MobileMenu({
         </div>
         <MobileLink href="/club-hogar" label="Club Hogar" pathname={pathname} onClick={onClose} />
         <MobileLink href="/empresas" label="Empresas" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/especialistas-fundadores?source=header&intent=offer_services" label="Trabaja con nosotros" pathname={pathname} onClick={onClose} />
+        <MobileLink
+          href="/especialistas-fundadores?source=header&intent=offer_services"
+          label="Trabaja con nosotros"
+          pathname={pathname}
+          onClick={() => {
+            void trackEvent({
+              eventName: "click_offer_services",
+              source: "header_mobile",
+              campaign: "founder_specialists_header",
+              sourceComponent: "HeaderMobile",
+              sourceButton: "Trabaja con nosotros",
+              metadata: { cta: "mobile_header_work_with_us", path: pathname },
+            });
+            onClose();
+          }}
+        />
         <MobileLink href="/soporte" label="Soporte" pathname={pathname} onClick={onClose} />
         <button className="btn-secondary" type="button" onClick={onOpenCart}>
           Mi bolsa

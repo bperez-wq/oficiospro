@@ -32,14 +32,20 @@ No se creo un endpoint nuevo `/api/events` en este ciclo para evitar tocar Worke
 | --- | --- | --- |
 | `page_view` | Paginas publicas de referidos e instituciones | Trafico publico general |
 | `home_view` | Home | Base del funnel |
+| `specialist_home_cta_viewed` | Home | Exposicion temprana a CTA especialista |
 | `click_search_specialist` | Buscador del hero | Intencion cliente |
 | `click_offer_services` | CTA especialista en Home | Intencion especialista |
 | `founder_landing_view` | `/especialistas-fundadores` | Visitas a landing fundadora |
 | `founder_cta_click` | CTAs de landing fundadora | Click hacia registro |
 | `specialist_application_started` | Apertura de registro especialista | Inicio real del formulario |
+| `specialist_application_step_started` | Registro especialista | Paso visto o retomado |
 | `specialist_application_step_completed` | Avance de paso en registro | Friccion por paso |
+| `specialist_application_step_error` | Validacion de paso | Donde se bloquea el registro |
+| `specialist_application_failed` | Envio no completado | Error tecnico o fallback humano |
 | `specialist_application_abandoned` | Salida de registro antes de enviar | Abandono |
 | `specialist_application_submitted` | Envio de postulacion | Conversion principal |
+| `specialist_custom_trade_requested` | Registro especialista | Oficio no encontrado en catalogo |
+| `specialist_formalization_help_requested` | Registro especialista | Barrera tributaria/formalizacion |
 | `search_performed` | Busqueda enviada | Demanda cliente |
 | `lead_submitted` | Lead enviado | Conversion generica |
 | `referral_link_created` | Herramienta de referidos | Activacion de referidores |
@@ -87,11 +93,30 @@ Revisar cada lunes:
 3. `founder_landing_view`.
 4. `founder_cta_click`.
 5. `specialist_application_started`.
-6. `specialist_application_step_completed` por paso.
-7. `specialist_application_abandoned` por paso.
-8. `specialist_application_submitted`.
-9. Top fuentes y campanas UTM.
-10. Acciones para la semana siguiente.
+6. `specialist_application_step_started` y `specialist_application_step_completed` por paso.
+7. `specialist_application_step_error` por motivo.
+8. `specialist_application_failed`.
+9. `specialist_application_abandoned` por paso.
+10. `specialist_application_submitted`.
+11. Oficios no encontrados y solicitudes de ayuda tributaria.
+12. Top fuentes y campanas UTM.
+13. Acciones para la semana siguiente.
+
+## Campos de adquisicion especialista
+
+Los eventos y postulaciones de especialista deben permitir segmentar sin exponer datos sensibles:
+
+- `source`, `medium`, `campaign`
+- `sourceComponent`, `sourceButton`
+- `trade`, `primaryTrade`, `tradeSegment`
+- `commune`, `region`
+- `coverageStatus`
+- `selectedSpecialties`
+- `hasCustomTradeRequest` o `customTradeRequestLength`
+- `needsFormalizationHelp`
+- `step`, `stepName`, `reason`
+
+El texto libre de "no encuentro mi oficio" se guarda en la postulacion/CRM para operacion, pero analytics evita usarlo como dato sensible masivo y prioriza largo o bandera.
 
 ## Regla operativa
 
