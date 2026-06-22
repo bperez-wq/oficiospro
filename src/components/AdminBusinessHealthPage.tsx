@@ -24,10 +24,10 @@ type AdminRow = Record<string, unknown>;
 const tokenStorageKey = "oficiospro.adminBusinessHealthToken";
 
 const STATUS_META: Record<BusinessHealthStatus, { icon: string; tag: string; help: string }> = {
-  healthy: { icon: "✓", tag: "Saludable", help: "En el rango objetivo" },
-  watch: { icon: "•", tag: "En observación", help: "Vigilar de cerca" },
-  warning: { icon: "▲", tag: "Atención", help: "Bajo lo esperado" },
-  critical: { icon: "✕", tag: "Crítico", help: "Riesgo para el modelo" },
+  healthy: { icon: "OK", tag: "Saludable", help: "En el rango objetivo" },
+  watch: { icon: "~", tag: "En observación", help: "Vigilar de cerca" },
+  warning: { icon: "!", tag: "Atención", help: "Bajo lo esperado" },
+  critical: { icon: "X", tag: "Crítico", help: "Riesgo para el modelo" },
   insufficient_data: { icon: "?", tag: "Datos insuficientes", help: "Aún no se puede concluir" },
 };
 
@@ -130,14 +130,14 @@ export function AdminBusinessHealthPage() {
 
       {/* CABECERA EJECUTIVA */}
       <section className={`rounded-[32px] border p-6 shadow-soft md:p-8 ${businessHealthStatusClasses[health.status]}`}>
-        <p className="text-xs font-black uppercase tracking-wide opacity-70">Salud del modelo · OficiosPro</p>
+        <p className="text-xs font-black uppercase tracking-wide opacity-70">Salud del modelo - OficiosPro</p>
         <div className="mt-3 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <span className="grid h-14 w-14 place-items-center rounded-2xl bg-white/70 text-2xl font-black" aria-hidden>{STATUS_META[health.status].icon}</span>
               <div>
                 <h1 className="text-3xl font-black leading-tight md:text-4xl">{STATUS_META[health.status].tag}</h1>
-                <p className="text-sm font-black opacity-75">{businessHealthStatusLabels[health.status]} · {STATUS_META[health.status].help}</p>
+                <p className="text-sm font-black opacity-75">{businessHealthStatusLabels[health.status]} - {STATUS_META[health.status].help}</p>
               </div>
             </div>
             <p className="mt-4 max-w-2xl text-sm font-bold leading-6 opacity-80">
@@ -147,7 +147,7 @@ export function AdminBusinessHealthPage() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <HeaderStat label="Score global" value={health.score === null ? "—" : `${health.score}/100`} hint="0–100" />
+            <HeaderStat label="Score global" value={health.score === null ? "-" : `${health.score}/100`} hint="0-100" />
             <HeaderStat label="Confianza de datos" value={`${dimsWithData}/${totalDims}`} hint="dimensiones con muestra" />
             <HeaderStat label="Ventana" value={`${snapshot.windowDays} días`} hint={formatDateTime(health.generatedAt)} />
             <HeaderStat label="Alertas activas" value={String(health.alerts.length)} hint={`${health.insufficientSignals.length} señales sin dato`} />
@@ -322,10 +322,10 @@ function DimensionCard({ dimension }: { dimension: BusinessHealthDimensionResult
       </div>
       <p className="text-sm font-bold leading-6 text-muted">{dimension.description}</p>
       <div className="flex items-center gap-3">
-        <strong className="text-3xl font-black text-ink">{dimension.score === null ? "—" : dimension.score}</strong>
+        <strong className="text-3xl font-black text-ink">{dimension.score === null ? "-" : dimension.score}</strong>
         <span className="text-xs font-bold leading-4 text-muted">
           {measured} métrica{measured === 1 ? "" : "s"} con dato
-          {dimension.insufficientSignals.length ? ` · ${dimension.insufficientSignals.length} por medir` : ""}
+          {dimension.insufficientSignals.length ? ` - ${dimension.insufficientSignals.length} por medir` : ""}
         </span>
       </div>
       {topAlert ? (
@@ -339,7 +339,7 @@ function DimensionCard({ dimension }: { dimension: BusinessHealthDimensionResult
           <ul className="mt-2 grid gap-1">
             {dimension.insufficientSignals.slice(0, 6).map((signal) => (
               <li key={signal.id} className="text-xs font-bold leading-5 text-muted">
-                {signal.metricKey} — {signal.reason === "missing_metric" ? "sin dato" : `muestra ${signal.sampleSize}/${signal.minimumSampleSize}`}
+                {signal.metricKey} - {signal.reason === "missing_metric" ? "sin dato" : `muestra ${signal.sampleSize}/${signal.minimumSampleSize}`}
               </li>
             ))}
           </ul>
@@ -416,7 +416,7 @@ function PriorityCard({ order, recommendation }: { order: number; recommendation
       </div>
       <DataRow label="Evidencia" value={recommendation.evidence} />
       <DataRow label="Métrica afectada" value={recommendation.metric} />
-      <DataRow label="Acción" value={`${recommendation.experiment} · ${recommendation.durationDays} días`} />
+      <DataRow label="Acción" value={`${recommendation.experiment} - ${recommendation.durationDays} días`} />
       {recommendation.risk ? <DataRow label="Riesgo" value={recommendation.risk} /> : null}
       <span className={`inline-flex w-fit items-center rounded-full px-3 py-1 text-xs font-black uppercase ${needsApproval ? "bg-amber-50 text-amber-800" : "bg-brand-soft text-brand-dark"}`}>
         {needsApproval ? "Requiere aprobación Benjamín" : "IA puede preparar"}
@@ -497,7 +497,7 @@ function AiHandoffCard({ role, block }: { role: { title: string; scope: string[]
       <h3 className="text-lg font-black text-ink">{role.title}</h3>
       <ul className="grid gap-1">
         {role.scope.map((item) => (
-          <li key={item} className="text-sm font-bold leading-5 text-muted">· {item}</li>
+          <li key={item} className="text-sm font-bold leading-5 text-muted">- {item}</li>
         ))}
       </ul>
       <CopyButton text={block} />
@@ -521,7 +521,7 @@ function CopyButton({ text }: { text: string }) {
         }
       }}
     >
-      {copied ? "Copiado ✓" : "Copiar bloque"}
+      {copied ? "Copiado" : "Copiar bloque"}
     </button>
   );
 }
@@ -546,7 +546,7 @@ function collectApprovals(health: BusinessHealthResult, recommendations: ModelRe
 
 function buildHandoffBlock(roleKey: GrowthExperiment["owner"], health: BusinessHealthResult, recommendations: ModelRecommendation[], experiments: GrowthExperiment[]) {
   const lines: string[] = [];
-  lines.push(`# Handoff ${roleKey} — Salud del modelo OficiosPro`);
+  lines.push(`# Handoff ${roleKey} - Salud del modelo OficiosPro`);
   lines.push(`Estado global: ${businessHealthStatusLabels[health.status]}${health.score === null ? "" : ` (score ${health.score}/100)`}`);
   if (health.priorities.length) {
     lines.push("");
@@ -557,14 +557,14 @@ function buildHandoffBlock(roleKey: GrowthExperiment["owner"], health: BusinessH
   if (ownedExperiments.length) {
     lines.push("");
     lines.push("## Experimentos asignados");
-    ownedExperiments.forEach((experiment) => lines.push(`- [${experiment.status}] ${experiment.title} · métrica: ${experiment.primaryMetric}`));
+    ownedExperiments.forEach((experiment) => lines.push(`- [${experiment.status}] ${experiment.title} - métrica: ${experiment.primaryMetric}`));
   }
   if (roleKey === "ChatGPT" || roleKey === "Codex") {
     const relevant = recommendations.filter((recommendation) => (roleKey === "ChatGPT" ? true : recommendation.authorityRequired === "ai_can_prepare"));
     if (relevant.length) {
       lines.push("");
       lines.push("## Recomendaciones");
-      relevant.forEach((recommendation) => lines.push(`- ${recommendation.title} → ${recommendation.experiment}`));
+      relevant.forEach((recommendation) => lines.push(`- ${recommendation.title} -> ${recommendation.experiment}`));
     }
   }
   lines.push("");
@@ -710,7 +710,7 @@ function isPastDate(value: unknown) {
 
 function formatDateTime(iso: string) {
   const date = new Date(iso);
-  if (!Number.isFinite(date.getTime())) return "—";
+  if (!Number.isFinite(date.getTime())) return "-";
   return date.toLocaleDateString("es-CL", { day: "2-digit", month: "short", year: "numeric" });
 }
 
