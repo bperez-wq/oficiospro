@@ -58,6 +58,23 @@ El script puede leer export local desde:
 
 Si no hay export local, el reporte declara `insufficient_data`.
 
+Tambien puede leer endpoints admin existentes sin tocar Worker ni D1 si se configuran variables de entorno:
+
+```powershell
+$env:APP_BASE_URL="https://www.oficiospro.cl"
+$env:ADMIN_TOKEN="TOKEN_ADMIN_REAL"
+node scripts\generate-business-health-report.mjs
+```
+
+Variables admitidas:
+
+- `BUSINESS_HEALTH_BASE_URL` o `APP_BASE_URL`: origen del sitio.
+- `ADMIN_TOKEN` o `ADMIN_API_TOKEN`: token admin para endpoints existentes.
+- `BUSINESS_HEALTH_SOURCE=live`: exige modo live aunque no haya export local.
+- `BUSINESS_HEALTH_REQUIRE_LIVE=true`: falla si faltan base URL o token.
+
+El token no se imprime ni queda guardado en el reporte. El reporte solo persiste metricas agregadas, fuentes y notas de integridad.
+
 ## Uso semanal
 
 ```powershell
@@ -75,3 +92,6 @@ reports/business-health/YYYY-MM-DD.md
 
 El sistema puede automatizar analisis, reportes, backlog y paquetes de trabajo. No puede automatizar cambios de precio, comision, cobros, contratos, legal/tributario, Worker, D1, pagos productivos, alianzas ni lanzamientos masivos.
 
+## Rollback del ciclo de medicion live
+
+Si el modo live falla, borrar variables de entorno y ejecutar el script sin token para volver al comportamiento seguro de `insufficient_data`. El dashboard interno no depende de este script para cargar.

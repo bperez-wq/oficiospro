@@ -10,7 +10,7 @@ const reportDir = path.join(rootDir, "reports", "business-health");
 const outputPath = path.join(reportDir, `${reportDate}.md`);
 
 const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
-const snapshot = loadSnapshot();
+const snapshot = await loadSnapshot();
 const result = calculateBusinessHealth(snapshot, config);
 const recommendations = buildRecommendations(result, snapshot);
 const report = renderReport(result, snapshot, recommendations);
@@ -23,7 +23,10 @@ console.log(`Global status: ${result.status}`);
 console.log(`Alerts: ${result.alerts.length}`);
 console.log(`Insufficient signals: ${result.insufficientSignals.length}`);
 
-function loadSnapshot() {
+async function loadSnapshot() {
+  const liveSnapshot = await maybeLoadLiveSnapshot();
+  if (liveSnapshot) return liveSnapshot;
+
   const explicitInput = process.env.BUSINESS_HEALTH_INPUT;
   const fallbackInput = path.join(rootDir, "reports", "business-health", "input", "latest.json");
   const inputPath = explicitInput ? path.resolve(explicitInput) : fallbackInput;
@@ -63,16 +66,84 @@ function loadSnapshot() {
     windowDays: 7,
     metrics: {},
     sources: [],
-    notes: ["No local export was found. All conclusions with missing evidence are marked as insufficient_data."],
+    notes: [
+      "No local export or live admin source was found.",
+      "Set BUSINESS_HEALTH_BASE_URL (or APP_BASE_URL) and ADMIN_TOKEN to read existing admin endpoints.",
+      "All conclusions with missing evidence are marked as insufficient_data.",
+    ],
   };
 }
 
+async function maybeLoadLiveSnapshot() {
+  const baseUrl = process.env.BUSINESS_HEALTH_BASE_URL || process.env.APP_BASE_URL || process.env.TEST_BASE_URL || "";
+  const adminToken = process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "";
+  const wantsLive = process.env.BUSINESS_HEALTH_SOURCE === "live" || Boolean(baseUrl || adminToken);
+
+  if (!wantsLive) return null;
+
+  if (!baseUrl || !adminToken) {
+    if (process.env.BUSINESS_HEALTH_REQUIRE_LIVE === "true") {
+      throw new Error("BUSINESS_HEALTH_REQUIRE_LIVE requires BUSINESS_HEALTH_BASE_URL/APP_BASE_URL and ADMIN_TOKEN.");
+    }
+    return {
+      generatedAt: new Date().toISOString(),
+      windowDays: 7,
+      metrics: {},
+      sources: [],
+      notes: [
+        "Live source was requested but BUSINESS_HEALTH_BASE_URL/APP_BASE_URL or ADMIN_TOKEN is missing.",
+        "No admin token is printed or stored in the report.",
+      ],
+    };
+  }
+
+  const endpoints = {
+    conversionEvents: "/api/admin/conversion-events?limit=1000",
+    specialists: "/api/admin/specialists?limit=500",
+    opportunities: "/api/admin/crm/opportunities?limit=500",
+    tasks: "/api/admin/crm/tasks?limit=500",
+    overview: "/api/admin/crm/overview",
+  };
+
+  const entries = await Promise.all(
+    Object.entries(endpoints).map(async ([key, endpoint]) => [key, await fetchAdminJson(baseUrl, endpoint, adminToken)]),
+  );
+  const liveData = Object.fromEntries(entries);
+  const origin = new URL(baseUrl).origin;
+  const snapshot = deriveSnapshotFromExport(liveData, `${origin} admin endpoints`);
+  return {
+    ...snapshot,
+    notes: [
+      "Live admin endpoints were read with ADMIN_TOKEN.",
+      "Only aggregate metrics are written to this report; raw rows and personal data are not persisted.",
+    ],
+  };
+}
+
+async function fetchAdminJson(baseUrl, endpoint, adminToken) {
+  const response = await fetch(new URL(endpoint, normalizeBaseUrl(baseUrl)), {
+    headers: {
+      Authorization: `Bearer ${adminToken}`,
+      "x-admin-token": adminToken,
+    },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.ok === false) {
+    throw new Error(`admin_endpoint_failed:${endpoint}:status_${response.status}:${data.error || "unknown_error"}`);
+  }
+  return data;
+}
+
+function normalizeBaseUrl(value) {
+  return value.endsWith("/") ? value : `${value}/`;
+}
+
 function deriveSnapshotFromExport(raw, sourceLabel) {
-  const events = arrayFrom(raw.conversionEvents || raw.events || raw);
-  const specialists = arrayFrom(raw.specialists || raw.specialistApplications);
-  const opportunities = arrayFrom(raw.opportunities);
-  const tasks = arrayFrom(raw.tasks);
-  const overview = raw.overview || {};
+  const events = collectionFrom(raw, "conversionEvents", "events");
+  const specialists = collectionFrom(raw, "specialists", "specialistApplications");
+  const opportunities = collectionFrom(raw, "opportunities");
+  const tasks = collectionFrom(raw, "tasks");
+  const overview = nestedObjectFrom(raw.overview, "overview") || raw.overview || {};
   const eventCount = (names) => events.filter((event) => names.includes(eventName(event))).length;
   const founderLandingViews = eventCount(["founder_landing_view"]);
   const specialistApplicationStarts = eventCount(["specialist_application_started"]);
@@ -324,6 +395,10 @@ ${result.alerts.some((alert) => alert.approvalRequired) || recommendations.some(
 ## Fuentes
 
 ${snapshot.sources?.length ? snapshot.sources.map((source) => `- ${source}`).join("\n") : "- Sin export local. Todavia no medible."}
+
+## Notas de integridad
+
+${snapshot.notes?.length ? snapshot.notes.map((note) => `- ${note}`).join("\n") : "- Sin notas adicionales."}
 `;
 }
 
@@ -348,6 +423,25 @@ function worstStatus(statuses) {
 
 function arrayFrom(value) {
   return Array.isArray(value) ? value : [];
+}
+
+function collectionFrom(raw, ...keys) {
+  for (const key of keys) {
+    const direct = raw?.[key];
+    if (Array.isArray(direct)) return direct;
+    for (const nestedKey of keys) {
+      const nested = direct?.[nestedKey];
+      if (Array.isArray(nested)) return nested;
+    }
+  }
+  return Array.isArray(raw) ? raw : [];
+}
+
+function nestedObjectFrom(value, key) {
+  if (!value || Array.isArray(value) || typeof value !== "object") return null;
+  const nested = value[key];
+  if (nested && !Array.isArray(nested) && typeof nested === "object") return nested;
+  return null;
 }
 
 function eventName(row) {

@@ -38,6 +38,7 @@ Tipos sugeridos:
 | KZ-007 | Eventos del funnel especialista deben verificarse end-to-end contra D1 y admin | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Verify specialist funnel events and acquisition dashboard | validate/build/dry-run/test funnel | pendiente |
 | KZ-008 | Visitantes con oficio necesitan dejar datos antes de completar formulario largo | Benjamin / Kaizen | alto | alta | conversion | Codex | validando | Improve specialist lead generation and profile completion funnel | validate/build/dry-run | pendiente |
 | KZ-009 | El sistema Kaizen necesita evaluar salud del modelo y preparar experimentos sin cambiar precios ni cobros | Benjamin / AI Operating System V2 | alto | alta | growth | Codex | validando | Operationalize business model health and AI Kaizen orchestration | validate/build/report/dry-run | pendiente |
+| KZ-010 | Reporte de salud del modelo queda en insufficient_data si no existe export local manual | Reporte business-health 2026-06-22 | alto | alta | analytics | Codex | validando | Add live admin data source for business health reports | validate/build/report/dry-run | pendiente |
 
 ## Criterios de priorizacion
 
