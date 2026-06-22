@@ -2,6 +2,7 @@ work/
 node_modules/
 .next/
 out/
+reports/business-health/input/*.json
 .env
 .env.local
 .env.production

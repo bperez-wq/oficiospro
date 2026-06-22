@@ -13,6 +13,7 @@ El sistema de salud del modelo evalua semanalmente si OficiosPro esta acumulando
 - `src/lib/businessHealth/modelRecommendations.ts`: reglas transparentes de recomendacion.
 - `src/data/growthExperiments.ts`: registro inicial de experimentos.
 - `scripts/generate-business-health-report.mjs`: genera reporte semanal.
+- `scripts/collect-business-health-input.mjs`: lee endpoints admin live y escribe un snapshot agregado local para reportes posteriores.
 - `/admin/crm/business-health`: dashboard interno con datos reales o insuficiencia de datos.
 
 ## Estados
@@ -74,6 +75,35 @@ Variables admitidas:
 - `BUSINESS_HEALTH_REQUIRE_LIVE=true`: falla si faltan base URL o token.
 
 El token no se imprime ni queda guardado en el reporte. El reporte solo persiste metricas agregadas, fuentes y notas de integridad.
+
+## Collector semanal seguro
+
+Para evitar que el reporte dependa de exports manuales crudos, Codex puede preparar un input agregado desde endpoints admin existentes:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+$env:APP_BASE_URL="https://www.oficiospro.cl"
+$env:ADMIN_TOKEN="TOKEN_ADMIN_REAL"
+npm.cmd run business-health:collect
+npm.cmd run business-health:report
+```
+
+El collector escribe por defecto:
+
+```text
+reports/business-health/input/latest.json
+```
+
+Ese archivo contiene solo metricas agregadas, fuentes y notas. No guarda token admin, filas crudas, nombres, telefonos, emails, RUT, documentos ni datos personales.
+
+La carpeta `reports/business-health/input/*.json` esta ignorada por Git porque tambien puede contener exports manuales temporales. Los reportes markdown semanales siguen siendo versionables.
+
+Si se necesita usar otro archivo de input:
+
+```powershell
+$env:BUSINESS_HEALTH_INPUT="C:\ruta\segura\latest.json"
+npm.cmd run business-health:report
+```
 
 ## Uso semanal
 
