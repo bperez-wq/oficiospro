@@ -1,0 +1,196 @@
+{
+  "dimensions": [
+    {
+      "id": "supply",
+      "label": "Oferta",
+      "description": "Captacion, postulacion, aprobacion, publicacion y calidad de especialistas.",
+      "metricKeys": [
+        "founderLandingViews",
+        "offerServicesClicks",
+        "specialistApplicationStarts",
+        "specialistApplicationsCompleted",
+        "approvedSpecialists",
+        "publishedSpecialists",
+        "coverageByTradeCommune",
+        "specialistsWithCompleteProfileRate",
+        "specialistApplicationSubmitRate",
+        "onboardingFrictionRate",
+        "leadQualityRate"
+      ]
+    },
+    {
+      "id": "demand",
+      "label": "Demanda",
+      "description": "Busqueda, perfiles vistos, Bolsa, cotizacion, solicitudes y servicios completados.",
+      "metricKeys": [
+        "specialistsPageViews",
+        "searchesPerformed",
+        "profilesViewed",
+        "specialistsAddedToBag",
+        "quotesStarted",
+        "requestsSent",
+        "servicesCompleted",
+        "bagToRequestRate"
+      ]
+    },
+    {
+      "id": "liquidity",
+      "label": "Liquidez",
+      "description": "Balance entre oferta y demanda por oficio/comuna, respuesta y conversion de marketplace.",
+      "metricKeys": [
+        "demandWithoutSupplyCount",
+        "specialistsWithoutRequestsRate",
+        "firstResponseMedianHours",
+        "searchesWithResultsRate",
+        "searchToRequestRate",
+        "requestToServiceRate",
+        "supplyGapRequests"
+      ]
+    },
+    {
+      "id": "economics",
+      "label": "Economia",
+      "description": "GMV, comision, costos variables, recurrencia, creditos y planes.",
+      "metricKeys": [
+        "gmvCLP",
+        "platformCommissionNetCLP",
+        "takeRate",
+        "variableCostPerOperationCLP",
+        "contributionMarginCLP",
+        "cacByChannelCLP",
+        "recurrenceRate",
+        "creditsSold",
+        "creditsUsed",
+        "clubRevenueCLP",
+        "businessRevenueCLP",
+        "unitEconomicsCoverageRate",
+        "b2bDemandShare"
+      ]
+    },
+    {
+      "id": "trust",
+      "label": "Confianza y operacion",
+      "description": "Validacion, SLA, errores, reclamos, cancelaciones, documentos, fraude y satisfaccion.",
+      "metricKeys": [
+        "validatedProfileRate",
+        "reviewSlaHours",
+        "errorCount",
+        "complaintsCount",
+        "cancellationsCount",
+        "blockedPaymentsCount",
+        "pendingDocumentsCount",
+        "fraudAlertsCount",
+        "nps"
+      ]
+    }
+  ],
+  "thresholds": [
+    {
+      "id": "specialist_conversion",
+      "dimension": "supply",
+      "label": "Conversion de landing a postulacion completa",
+      "metricKey": "specialistApplicationSubmitRate",
+      "sampleMetricKey": "founderLandingViews",
+      "minimumSampleSize": 1000,
+      "watchThreshold": 0.05,
+      "warningThreshold": 0.02,
+      "criticalThreshold": 0.01,
+      "direction": "min",
+      "evaluationWindowDays": 7,
+      "unit": "rate",
+      "suggestedAction": "Revisar propuesta de valor, lead corto, WhatsApp asistido y seguimiento CRM antes de seguir optimizando solo diseno."
+    },
+    {
+      "id": "onboarding_friction",
+      "dimension": "supply",
+      "label": "Abandono concentrado en onboarding",
+      "metricKey": "onboardingFrictionRate",
+      "sampleMetricKey": "specialistApplicationStarts",
+      "minimumSampleSize": 50,
+      "watchThreshold": 0.4,
+      "warningThreshold": 0.5,
+      "criticalThreshold": 0.7,
+      "direction": "max",
+      "evaluationWindowDays": 7,
+      "unit": "rate",
+      "suggestedAction": "Identificar paso con mayor perdida, simplificar campos, ajustar microcopy y capturar respaldo operativo."
+    },
+    {
+      "id": "supply_gap",
+      "dimension": "liquidity",
+      "label": "Demanda sin especialista disponible",
+      "metricKey": "demandWithoutSupplyCount",
+      "sampleMetricKey": "searchesPerformed",
+      "minimumSampleSize": 50,
+      "watchThreshold": 25,
+      "warningThreshold": 50,
+      "criticalThreshold": 100,
+      "direction": "max",
+      "evaluationWindowDays": 7,
+      "unit": "count",
+      "suggestedAction": "Priorizar campana por oficio/comuna, referidos, OMIL/CFT/ferreterias y waitlist honesta para clientes."
+    },
+    {
+      "id": "demand_gap",
+      "dimension": "liquidity",
+      "label": "Especialistas publicados sin solicitudes",
+      "metricKey": "specialistsWithoutRequestsRate",
+      "sampleMetricKey": "publishedSpecialists",
+      "minimumSampleSize": 20,
+      "watchThreshold": 0.5,
+      "warningThreshold": 0.7,
+      "criticalThreshold": 0.85,
+      "direction": "max",
+      "evaluationWindowDays": 60,
+      "unit": "rate",
+      "suggestedAction": "Aumentar demanda por rubro, mejorar SEO/SEM local y limitar captacion en rubros saturados hasta tener solicitudes."
+    },
+    {
+      "id": "unit_economics",
+      "dimension": "economics",
+      "label": "Costo variable versus comision neta",
+      "metricKey": "contributionMarginCLP",
+      "sampleMetricKey": "servicesCompleted",
+      "minimumSampleSize": 10,
+      "watchThreshold": 5000,
+      "warningThreshold": 0,
+      "criticalThreshold": -10000,
+      "direction": "min",
+      "evaluationWindowDays": 30,
+      "unit": "clp",
+      "approvalRequired": true,
+      "suggestedAction": "No cambiar comision automaticamente. Alertar a Benjamin y probar minimo operacional, B2B, SaaS o servicio gestionado."
+    },
+    {
+      "id": "b2b_first",
+      "dimension": "economics",
+      "label": "Interes B2B superior al hogar",
+      "metricKey": "b2bDemandShare",
+      "sampleMetricKey": "requestsSent",
+      "minimumSampleSize": 20,
+      "watchThreshold": 0.45,
+      "warningThreshold": 0.6,
+      "criticalThreshold": 0.75,
+      "direction": "max",
+      "evaluationWindowDays": 30,
+      "unit": "rate",
+      "type": "opportunity",
+      "suggestedAction": "Proponer experimento B2B-first con empresas/comunidades antes de mover el modelo completo."
+    },
+    {
+      "id": "lead_quality",
+      "dimension": "supply",
+      "label": "Registros altos con baja completitud de perfil",
+      "metricKey": "specialistsWithCompleteProfileRate",
+      "sampleMetricKey": "specialistApplicationsCompleted",
+      "minimumSampleSize": 30,
+      "watchThreshold": 0.7,
+      "warningThreshold": 0.5,
+      "criticalThreshold": 0.35,
+      "direction": "min",
+      "evaluationWindowDays": 30,
+      "unit": "rate",
+      "suggestedAction": "Mejorar ayuda de perfil, checklist de publicacion y seguimiento CRM para completar informacion verificable."
+    }
+  ]
+}

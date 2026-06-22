@@ -1,0 +1,79 @@
+name: Growth experiment
+description: Registrar experimento de crecimiento o conversion.
+title: "[Experiment] "
+labels:
+  - experiment
+  - growth
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidencia
+      description: Reporte, metrica, CRM, feedback o benchmark.
+  - type: input
+    id: metric
+    attributes:
+      label: Metrica primaria
+      placeholder: Ej. specialistApplicationSubmitRate
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hipotesis
+    validations:
+      required: true
+  - type: input
+    id: segment
+    attributes:
+      label: Segmento
+      placeholder: Ej. especialistas fundadores, empresas, comunidades
+  - type: dropdown
+    id: experiment_type
+    attributes:
+      label: Tipo
+      options:
+        - CTA/copy
+        - onboarding
+        - lead corto versus formulario completo
+        - WhatsApp versus formulario
+        - B2B versus hogar
+        - piloto por oficio
+        - piloto por comuna
+        - perfiles premium
+        - leads calificados
+        - plan empresa
+        - SaaS para especialistas
+        - modelo institucional
+        - comision versus lead fee
+  - type: textarea
+    id: tasks
+    attributes:
+      label: Tareas Codex / Claude
+      description: Separar implementacion tecnica, UX, copy y validaciones.
+  - type: textarea
+    id: guardrails
+    attributes:
+      label: Guardrails
+      value: |
+        - No cambiar precios reales.
+        - No cambiar comision 9,5% + IVA.
+        - No activar cobros.
+        - No prometer ingresos.
+        - No tocar Worker/D1/pagos sin aprobacion.
+  - type: checkboxes
+    id: approval
+    attributes:
+      label: Aprobacion
+      options:
+        - label: Requiere aprobacion de Benjamin antes de activar cambios comerciales sensibles.
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado y aprendizaje
