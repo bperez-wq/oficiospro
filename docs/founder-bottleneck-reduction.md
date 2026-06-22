@@ -91,3 +91,11 @@ Cuando una IA detecte una oportunidad, debe agregarla primero como backlog o pro
 - Sabado: aprobar deploy o ajuste.
 - Domingo: leer aprendizaje y siguiente recomendacion.
 
+## Reduccion de cuello de botella con salud del modelo
+
+El reporte semanal debe llegar a Benjamin con decisiones ya separadas:
+
+- IA puede preparar: instrumentacion, UX, docs, scripts, reportes y experimentos de bajo riesgo.
+- Benjamin debe aprobar: precios, comision, cobros, contratos, legal/tributario, alianzas, pagos, Worker, D1 y lanzamientos.
+
+Asi Benjamin no revisa todo desde cero: solo decide sobre prioridades sensibles, mientras las IAs avanzan en medicion, diagnostico y paquetes de trabajo.

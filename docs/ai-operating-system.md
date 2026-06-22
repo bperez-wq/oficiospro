@@ -128,3 +128,17 @@ Un ciclo queda terminado solo cuando:
 - Hay commit claro si hubo archivos modificados.
 - El aprendizaje y la siguiente accion quedan documentados.
 
+## V2 - Salud del modelo y experimentacion continua
+
+El AI Operating System ahora incluye una revision semanal de salud del modelo. Esta revision no cambia precios, comision ni cobros: calcula senales, evita conclusiones con muestra insuficiente y prepara paquetes de trabajo para ChatGPT, Codex, Claude y Grok.
+
+Componentes:
+
+- Dashboard interno: `/admin/crm/business-health`.
+- Calculadora: `src/lib/businessHealth/businessHealthCalculator.ts`.
+- Umbrales: `src/config/businessModelHealthThresholds.json`.
+- Recomendaciones transparentes: `src/lib/businessHealth/modelRecommendations.ts`.
+- Reporte semanal: `scripts/generate-business-health-report.mjs`.
+- Registro de experimentos: `src/data/growthExperiments.ts`.
+
+La pregunta obligatoria de cierre semanal es: Las mejoras de esta semana aumentaron oferta, demanda, liquidez, confianza o economia? Si no existe evidencia, la respuesta debe ser: Todavia no medible.

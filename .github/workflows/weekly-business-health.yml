@@ -1,0 +1,33 @@
+name: Weekly business health report
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 1"
+
+jobs:
+  business-health:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate business health report
+        run: node scripts/generate-business-health-report.mjs
+
+      - name: Upload report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: business-health-report
+          path: reports/business-health/*.md

@@ -1,0 +1,96 @@
+name: Kaizen cycle
+description: Planificar un ciclo Kaizen semanal de mejora continua.
+title: "[Kaizen] "
+labels:
+  - kaizen
+  - operations
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: Que se observo y donde ocurre.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidencia
+      description: Metric as, capturas, CRM, feedback o reporte relacionado.
+    validations:
+      required: true
+  - type: input
+    id: metric
+    attributes:
+      label: Metrica
+      placeholder: Ej. specialistApplicationsCompleted
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hipotesis
+      description: Causa probable y resultado esperado.
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Prioridad
+      options:
+        - alta
+        - media
+        - baja
+    validations:
+      required: true
+  - type: dropdown
+    id: risk
+    attributes:
+      label: Riesgo
+      options:
+        - L1 proponer
+        - L2 bajo riesgo
+        - L3 requiere aprobacion antes de deploy
+        - L4 solo Benjamin
+    validations:
+      required: true
+  - type: input
+    id: owner
+    attributes:
+      label: Responsable
+      placeholder: Codex, Claude, ChatGPT, Grok, Benjamin
+  - type: textarea
+    id: codex_tasks
+    attributes:
+      label: Tareas Codex
+      description: Archivos probables, criterios y validaciones.
+  - type: textarea
+    id: claude_tasks
+    attributes:
+      label: Tareas Claude
+      description: UX, copy, mobile, confianza o conversion.
+  - type: textarea
+    id: grok_audit
+    attributes:
+      label: Auditoria Grok
+      description: Benchmarks, riesgos y contradicciones.
+  - type: checkboxes
+    id: approvals
+    attributes:
+      label: Aprobacion Benjamin
+      options:
+        - label: No cambia precios reales, comision, cobros, contratos, Worker, D1 ni pagos.
+        - label: Si cruza a L3/L4, Benjamin debe aprobar antes de deploy.
+  - type: textarea
+    id: done
+    attributes:
+      label: Definicion de terminado
+      value: |
+        - [ ] Cambio incremental.
+        - [ ] npm.cmd run validate.
+        - [ ] npm.cmd run build si aplica.
+        - [ ] Dry-run si aplica.
+        - [ ] Sin datos demo como reales.
+        - [ ] Commit/deploy documentado.
+        - [ ] Resultado medido o pendiente declarado.
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado
+      description: Commit, deploy, validacion y aprendizaje.

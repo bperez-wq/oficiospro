@@ -1,0 +1,73 @@
+name: Business model alert
+description: Levantar alerta de salud del modelo de negocio.
+title: "[Model Alert] "
+labels:
+  - business-model
+  - alert
+body:
+  - type: input
+    id: metric
+    attributes:
+      label: Metrica observada
+      placeholder: Ej. contributionMarginCLP
+    validations:
+      required: true
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severidad
+      options:
+        - watch
+        - warning
+        - critical
+        - insufficient_data
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidencia
+      description: Muestra, umbral y fuente del dato.
+    validations:
+      required: true
+  - type: textarea
+    id: hypothesis
+    attributes:
+      label: Hipotesis
+  - type: textarea
+    id: risk
+    attributes:
+      label: Riesgo si no se corrige
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas de modelo
+      description: B2B, SaaS, lead fee, plan empresa, freemium u otra variante.
+  - type: textarea
+    id: experiment
+    attributes:
+      label: Experimento de bajo costo
+  - type: input
+    id: success_metric
+    attributes:
+      label: Metrica de exito
+  - type: input
+    id: duration
+    attributes:
+      label: Tiempo de prueba
+      placeholder: Ej. 14 dias
+  - type: textarea
+    id: approvals
+    attributes:
+      label: Que requiere aprobacion de Benjamin
+      value: |
+        - Cambios de precio.
+        - Cambios de comision.
+        - Activacion de cobros.
+        - Legal/tributario/contratos.
+        - Worker/D1/pagos productivos.
+        - Lanzamiento masivo o claims comerciales.
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado

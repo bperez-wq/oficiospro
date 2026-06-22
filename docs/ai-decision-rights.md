@@ -106,3 +106,28 @@ Las IAs no pueden sin aprobacion de Benjamin:
 
 Si una IA detecta que una tarea cruza de L2 a L3 o L4, debe pausar, documentar el riesgo y pedir aprobacion antes de continuar con deploy o cambios productivos.
 
+## Automatizaciones permitidas
+
+Las IAs pueden automatizar:
+
+- calculo de salud del modelo;
+- reportes semanales;
+- backlog;
+- templates de issue;
+- paquetes de trabajo para ChatGPT, Codex, Claude y Grok;
+- recomendaciones transparentes basadas en reglas.
+
+Las IAs no pueden automatizar sin aprobacion:
+
+- cambio de precio;
+- cambio de comision 9,5% + IVA;
+- activacion de cobros;
+- migraciones productivas sensibles;
+- deploy de pagos;
+- contratos;
+- politica legal o tributaria;
+- alianzas;
+- claims de gobierno;
+- lanzamiento masivo;
+- eliminacion de datos;
+- cambios de seguridad.

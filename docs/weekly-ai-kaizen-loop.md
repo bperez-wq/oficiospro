@@ -156,3 +156,34 @@ Cada cierre semanal debe incluir:
 
 Si una metrica clave no se puede medir, el siguiente ciclo debe priorizar instrumentacion antes de seguir optimizando a ciegas.
 
+## Cierre semanal V2
+
+Cada semana debe terminar con:
+
+- estado del modelo;
+- metrica principal;
+- cambios desplegados;
+- experimento activo;
+- resultado observado;
+- aprendizaje;
+- riesgo;
+- proximo ciclo;
+- decision requerida.
+
+Pregunta obligatoria:
+
+```text
+Las mejoras de esta semana aumentaron oferta, demanda, liquidez, confianza o economia?
+```
+
+Si no existe evidencia, declarar:
+
+```text
+Todavia no medible.
+```
+
+El reporte semanal se genera con:
+
+```powershell
+node scripts\generate-business-health-report.mjs
+```

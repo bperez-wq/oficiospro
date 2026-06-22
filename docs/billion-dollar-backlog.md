@@ -107,3 +107,13 @@ Analytics, demanda por comuna, oferta por oficio, pricing, reputacion y matching
 
 Subir prioridad si el item mejora directamente la North Star, desbloquea un cuello de botella real o reduce riesgo operacional. Bajar prioridad si solo mejora apariencia sin conversion, agrega complejidad o requiere aprobacion L3/L4 sin evidencia.
 
+## Entrada desde salud del modelo
+
+El reporte `reports/business-health/YYYY-MM-DD.md` alimenta este backlog. Cada alerta debe convertirse en una de estas salidas:
+
+- ciclo Kaizen L2 si es mejora de bajo riesgo;
+- experimento con guardrails si hay hipotesis de crecimiento;
+- alerta de modelo si afecta unit economics, B2B-first, precios, comision o monetizacion;
+- decision de Benjamin si cruza L3/L4.
+
+No se sube una apuesta de backlog a ejecucion si el reporte declara `insufficient_data`, salvo que el objetivo sea mejorar medicion.

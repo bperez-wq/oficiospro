@@ -91,3 +91,14 @@ Cada cierre semanal Kaizen debe responder:
 
 Si una metrica crece pero no acerca a la North Star, se considera metrica secundaria. El foco semanal debe priorizar el cuello de botella que impide completar servicios reales con especialista validado y cliente satisfecho.
 
+## Implementacion de salud del modelo
+
+Las metricas se agrupan en cinco dimensiones operativas:
+
+- Oferta.
+- Demanda.
+- Liquidez.
+- Economia.
+- Confianza y operacion.
+
+Los umbrales iniciales viven en `src/config/businessModelHealthThresholds.json`. La calculadora usa `insufficient_data` cuando falta evidencia o la muestra no alcanza el minimo. Esto evita declarar saludable o critico un modelo con datos insuficientes.
