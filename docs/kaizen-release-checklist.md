@@ -8,6 +8,7 @@ Usar antes de cada deploy o merge importante.
 git status
 git log --oneline -5
 git branch --show-current
+npm.cmd run kaizen:audit
 ```
 
 Confirmar:
@@ -16,6 +17,14 @@ Confirmar:
 - No hay archivos generados stageados.
 - No aparecen `node_modules/`, `.next/`, `out/` ni `work/`.
 - No hay cambios sorpresa en `worker/index.ts`, `wrangler.toml`, migraciones, pagos o Mercado Pago.
+- Si `kaizen:audit` muestra archivos accidentales como `_synctest.txt`, `tatus --short`, `ersBenjaminoficiosprooficiospro` o `tsconfig.tsbuildinfo`, no usar `git add .`.
+- Para una revision estricta antes de commit:
+
+```powershell
+npm.cmd run kaizen:audit -- --strict
+```
+
+Si hay archivos intencionales pendientes de otro agente, dejarlos fuera del commit y stagear solo rutas explicitas.
 
 ## 2. Regla de ramas
 
