@@ -8,6 +8,7 @@ Usar antes de cada deploy o merge importante.
 git status
 git log --oneline -5
 git branch --show-current
+npm run kaizen:audit
 ```
 
 Confirmar:
@@ -15,6 +16,7 @@ Confirmar:
 - Estas en la rama correcta.
 - No hay archivos generados stageados.
 - No aparecen `node_modules/`, `.next/`, `out/` ni `work/`.
+- `npm run kaizen:audit` no reporta artefactos bloqueantes.
 - No hay cambios sorpresa en `worker/index.ts`, `wrangler.toml`, migraciones, pagos o Mercado Pago.
 
 ## 2. Regla de ramas

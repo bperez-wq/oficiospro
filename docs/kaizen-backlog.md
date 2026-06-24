@@ -41,6 +41,7 @@ Tipos sugeridos:
 | KZ-010 | Reporte de salud del modelo queda en insufficient_data si no existe export local manual | Reporte business-health 2026-06-22 | alto | alta | analytics | Codex | validando | Add live admin data source for business health reports | validate/build/report/dry-run | pendiente |
 | KZ-013 | Intentos de registro especialista deben verse en admin aunque el perfil no se complete | Benjamin / incidente postulantes reales 2026-06-24 | alto | alta | crm | Codex | validando | Improve specialist intake visibility and test coverage | validate/build/dry-run/script intake | pendiente |
 | KZ-014 | Salud del modelo no incorpora intentos tempranos y leads reales como muestra agregada | Reporte business-health 2026-06-22 / incidente postulantes reales | alto | alta | analytics | Codex | validando | Include lead intake evidence in business health reporting | validate/build/report/dry-run | pendiente |
+| KZ-015 | Cambios de Codex y Claude se mezclan con artefactos locales o comandos ejecutados fuera del repo | Incidentes PowerShell / worktree sucio | medio | alta | operacion | Codex | validando | Add Kaizen worktree audit script | audit/validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 
