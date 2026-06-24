@@ -42,6 +42,7 @@ No se presentan conclusiones fuertes si la muestra no alcanza `minimumSampleSize
 El dashboard lee endpoints admin existentes con `ADMIN_TOKEN`:
 
 - `/api/admin/conversion-events`
+- `/api/admin/leads`
 - `/api/admin/specialists`
 - `/api/admin/crm/opportunities`
 - `/api/admin/crm/tasks`
@@ -51,6 +52,7 @@ El script puede leer export local desde:
 
 - `reports/business-health/input/latest.json`
 - `reports/business-health/input/conversion-events.json`
+- `reports/business-health/input/leads.json`
 - `reports/business-health/input/specialists.json`
 - `reports/business-health/input/opportunities.json`
 - `reports/business-health/input/tasks.json`
@@ -74,6 +76,19 @@ Variables admitidas:
 - `BUSINESS_HEALTH_REQUIRE_LIVE=true`: falla si faltan base URL o token.
 
 El token no se imprime ni queda guardado en el reporte. El reporte solo persiste metricas agregadas, fuentes y notas de integridad.
+
+La fuente `/api/admin/leads` se usa solo como evidencia agregada. El reporte excluye registros marcados como `e2e_test`, `isTest=true`, `testRunId` o emails `example.com` para no tratar datos de prueba como traccion real.
+
+Metricas agregadas derivadas de leads:
+
+- `adminLeadsTotal`
+- `specialistRegistrationAttempts`
+- `specialistIncompleteAttempts`
+- `customerLeadRequests`
+- `companyLeadRequests`
+- `serviceLeadRequests`
+- `adminLeadEmailFailures`
+- `testLeadCount`
 
 ## Uso semanal
 

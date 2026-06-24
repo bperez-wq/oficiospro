@@ -192,6 +192,7 @@ export default function AdminLeadsPage() {
       id: lead.id,
       createdAt: getLeadValue(lead, "created_at", "createdAt"),
       type: getLeadValue(lead, "lead_type", "leadType"),
+      operationalStage: operationalStageLabel(lead),
       status: lead.status ?? "",
       name: getLeadValue(lead, "full_name", "fullName"),
       email: lead.email ?? "",
@@ -241,7 +242,7 @@ export default function AdminLeadsPage() {
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-5">
+      <section className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         {leadKpis.map((metric) => (
           <DashboardMetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} tone={metric.tone} />
         ))}
@@ -249,7 +250,7 @@ export default function AdminLeadsPage() {
 
       <section className="rounded-[24px] border border-brand/15 bg-brand-soft p-4 text-sm font-bold leading-6 text-brand-dark">
         <strong className="block text-base text-ink">Usa esta vista como fuente real del piloto.</strong>
-        Revisa nuevos leads todos los dias, cambia estados despues de contactar y exporta CSV para seguimiento operacional. No hay datos de relleno en esta vista.
+        Revisa nuevos leads todos los dias, cambia estados despues de contactar y exporta CSV para seguimiento operacional. Los intentos tempranos de postulacion especialista quedan marcados para seguimiento rapido.
       </section>
 
       <section className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
@@ -303,7 +304,9 @@ export default function AdminLeadsPage() {
       <section className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
         <div className="grid max-h-[720px] gap-3 overflow-y-auto rounded-[28px] border border-line bg-white p-4 shadow-soft">
           {leads.length ? (
-            leads.map((lead) => (
+            leads.map((lead) => {
+              const signals = leadOperationalSignals(lead);
+              return (
               <button
                 key={lead.id}
                 className={`grid gap-2 rounded-2xl border p-4 text-left transition hover:border-brand ${selectedLead?.id === lead.id ? "border-brand bg-brand-soft" : "border-line bg-slate-50"}`}
@@ -314,13 +317,20 @@ export default function AdminLeadsPage() {
                   <strong className="text-ink">{getLeadValue(lead, "full_name", "fullName") || getLeadValue(lead, "company_name", "companyName") || "Lead sin nombre"}</strong>
                   <span className="chip bg-white text-brand-dark">{getLeadValue(lead, "lead_type", "leadType")}</span>
                   <span className={`chip ${statusBadgeClass(lead.status)}`}>{lead.status ?? "nuevo"}</span>
+                  {signals.map((signal) => (
+                    <span key={signal.label} className={`chip ${signal.className}`}>
+                      {signal.label}
+                    </span>
+                  ))}
                 </span>
                 <span className="text-sm font-bold text-muted">
                   {[lead.email, lead.phone, getLeadValue(lead, "commune_name", "communeName"), lead.service ?? lead.trade].filter(Boolean).join(" · ")}
                 </span>
+                {signals[0]?.detail ? <span className="text-xs font-black text-brand-dark">{signals[0].detail}</span> : null}
                 <span className="text-xs font-black uppercase text-muted">{formatDate(getLeadValue(lead, "created_at", "createdAt"))}</span>
               </button>
-            ))
+              );
+            })
           ) : (
             <EmptyState
               eyebrow="Sin datos"
@@ -348,6 +358,7 @@ function LeadDetail({
 }) {
   const payload = parsePayload(getLeadValue(lead, "payload_json", "payloadJson"));
   const pricingRows = internalPricingRows(payload);
+  const operationalSignals = leadOperationalSignals(lead);
 
   if (!lead) {
     return <section className="rounded-[28px] border border-line bg-white p-6 shadow-soft">Selecciona un lead para ver detalle.</section>;
@@ -375,6 +386,7 @@ function LeadDetail({
 
       <div className="mt-6 grid gap-3 sm:grid-cols-2">
         <Info label="Tipo" value={getLeadValue(lead, "lead_type", "leadType")} />
+        <Info label="Etapa operacional" value={operationalStageLabel(lead)} />
         <Info label="Prioridad" value={lead.priority} />
         <Info label="Email" value={lead.email} />
         <Info label="Teléfono" value={lead.phone} />
@@ -387,6 +399,19 @@ function LeadDetail({
       </div>
 
       <div className="mt-5 grid gap-4">
+        {operationalSignals.length ? (
+          <div className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
+            <p className="eyebrow">Seguimiento recomendado</p>
+            <div className="mt-3 grid gap-2">
+              {operationalSignals.map((signal) => (
+                <div key={signal.label} className="flex flex-wrap items-center gap-2 text-sm font-bold text-brand-dark">
+                  <span className={`chip ${signal.className}`}>{signal.label}</span>
+                  <span>{signal.detail}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
         {getLeadValue(lead, "lead_type", "leadType") === "specialist_application" ? (
           <div className="flex flex-wrap gap-2 rounded-2xl border border-line bg-slate-50 p-4">
             <button className="btn-primary" type="button" onClick={() => onSpecialistAction(lead.id, "approve")}>
@@ -445,6 +470,7 @@ function buildLeadKpis(leads: AdminLead[]) {
   const newStatuses = new Set(["nuevo", "pending", "postulado"]);
   const reviewStatuses = new Set(["nuevo", "pending", "postulado", "en_revision", "more_info"]);
   const newLeads = leads.filter((lead) => newStatuses.has((lead.status ?? "nuevo").toLowerCase())).length;
+  const specialistAttempts = leads.filter(isSpecialistRegistrationAttempt).length;
   const specialistPending = leads.filter((lead) => getLeadValue(lead, "lead_type", "leadType") === "specialist_application" && reviewStatuses.has((lead.status ?? "nuevo").toLowerCase())).length;
   const companies = leads.filter((lead) => getLeadValue(lead, "lead_type", "leadType") === "company_request").length;
   const serviceRequests = leads.filter((lead) => ["customer_request", "booking_request", "contact_message"].includes(getLeadValue(lead, "lead_type", "leadType"))).length;
@@ -452,6 +478,7 @@ function buildLeadKpis(leads: AdminLead[]) {
 
   return [
     { label: "Leads nuevos", value: newLeads.toString(), detail: "Pendientes de primera gestion", tone: "brand" as const },
+    { label: "Intentos especialista", value: specialistAttempts.toString(), detail: "Contacto capturado temprano", tone: specialistAttempts ? ("brand" as const) : ("light" as const) },
     { label: "Postulantes", value: specialistPending.toString(), detail: "Especialistas por revisar", tone: "light" as const },
     { label: "Empresas", value: companies.toString(), detail: "Cuentas B2B interesadas", tone: "light" as const },
     { label: "Solicitudes", value: serviceRequests.toString(), detail: "Clientes y reservas", tone: "light" as const },
@@ -476,6 +503,74 @@ function getLeadValue(lead: AdminLead | null | undefined, snake: keyof AdminLead
 function leadFlag(lead: AdminLead, snake: keyof AdminLead, camel: keyof AdminLead) {
   const value = lead[snake] ?? lead[camel];
   return value === true || value === 1 || value === "1";
+}
+
+function leadPayload(lead: AdminLead | null | undefined) {
+  return parsePayload(getLeadValue(lead, "payload_json", "payloadJson"));
+}
+
+function payloadText(payload: Record<string, unknown>, key: string) {
+  const crm = asRecord(payload.crm);
+  return textValue(payload[key]) || textValue(crm[key]);
+}
+
+function isSpecialistRegistrationAttempt(lead: AdminLead | null | undefined) {
+  if (!lead || getLeadValue(lead, "lead_type", "leadType") !== "specialist_application") return false;
+  const payload = leadPayload(lead);
+  const marker = [
+    payloadText(payload, "specialistLeadKind"),
+    payloadText(payload, "leadSubtype"),
+    payloadText(payload, "draftProfileStatus"),
+    payloadText(payload, "founderStatus"),
+    getLeadValue(lead, "source_button", "sourceButton"),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    marker.includes("registration_attempt") ||
+    marker.includes("draft_profile") ||
+    marker.includes("contact_entered") ||
+    marker.includes("lead_capturado") ||
+    marker.includes("captura temprana")
+  );
+}
+
+function isTestLead(lead: AdminLead | null | undefined) {
+  if (!lead) return false;
+  const payload = leadPayload(lead);
+  const email = (lead.email ?? "").toLowerCase();
+  return payload.isTest === true || payloadText(payload, "source") === "e2e_test" || Boolean(payloadText(payload, "testRunId")) || email.endsWith("@example.com");
+}
+
+function operationalStageLabel(lead: AdminLead | null | undefined) {
+  if (!lead) return "";
+  if (isSpecialistRegistrationAttempt(lead)) return "Intento especialista capturado";
+  if (getLeadValue(lead, "lead_type", "leadType") === "specialist_application") return "Postulacion especialista";
+  return "Lead operativo";
+}
+
+function leadOperationalSignals(lead: AdminLead | null | undefined) {
+  const signals: { label: string; detail: string; className: string }[] = [];
+  if (!lead) return signals;
+
+  if (isSpecialistRegistrationAttempt(lead)) {
+    signals.push({
+      label: "Intento capturado",
+      detail: "Contactar antes de 24 h aunque el perfil no este completo.",
+      className: "bg-amber-50 text-amber-800",
+    });
+  }
+
+  if (isTestLead(lead)) {
+    signals.push({
+      label: "Test",
+      detail: "Dato marcado como prueba; no mezclar con seguimiento real.",
+      className: "bg-slate-100 text-slate-700",
+    });
+  }
+
+  return signals;
 }
 
 function parsePayload(value: string) {

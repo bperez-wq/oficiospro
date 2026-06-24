@@ -47,6 +47,7 @@ async function loadSnapshot() {
 
   const exportFiles = [
     ["conversionEvents", path.join(rootDir, "reports", "business-health", "input", "conversion-events.json")],
+    ["leads", path.join(rootDir, "reports", "business-health", "input", "leads.json")],
     ["specialists", path.join(rootDir, "reports", "business-health", "input", "specialists.json")],
     ["opportunities", path.join(rootDir, "reports", "business-health", "input", "opportunities.json")],
     ["tasks", path.join(rootDir, "reports", "business-health", "input", "tasks.json")],
@@ -99,6 +100,7 @@ async function maybeLoadLiveSnapshot() {
 
   const endpoints = {
     conversionEvents: "/api/admin/conversion-events?limit=1000",
+    leads: "/api/admin/leads?limit=100",
     specialists: "/api/admin/specialists?limit=500",
     opportunities: "/api/admin/crm/opportunities?limit=500",
     tasks: "/api/admin/crm/tasks?limit=500",
@@ -115,6 +117,7 @@ async function maybeLoadLiveSnapshot() {
     ...snapshot,
     notes: [
       "Live admin endpoints were read with ADMIN_TOKEN.",
+      "Lead submissions were included as aggregate intake evidence; the Worker currently caps /api/admin/leads at 100 rows.",
       "Only aggregate metrics are written to this report; raw rows and personal data are not persisted.",
     ],
   };
@@ -140,23 +143,37 @@ function normalizeBaseUrl(value) {
 
 function deriveSnapshotFromExport(raw, sourceLabel) {
   const events = collectionFrom(raw, "conversionEvents", "events");
+  const leads = collectionFrom(raw, "leads");
+  const realLeads = leads.filter((lead) => !isTestLead(lead));
   const specialists = collectionFrom(raw, "specialists", "specialistApplications");
   const opportunities = collectionFrom(raw, "opportunities");
   const tasks = collectionFrom(raw, "tasks");
   const overview = nestedObjectFrom(raw.overview, "overview") || raw.overview || {};
   const eventCount = (names) => events.filter((event) => names.includes(eventName(event))).length;
-  const founderLandingViews = eventCount(["founder_landing_view"]);
-  const specialistApplicationStarts = eventCount(["specialist_application_started"]);
+  const specialistLeadRows = realLeads.filter((lead) => leadType(lead) === "specialist_application");
+  const specialistRegistrationAttempts = specialistLeadRows.filter(isSpecialistRegistrationAttempt);
+  const incompleteSpecialistAttempts = specialistRegistrationAttempts.filter((lead) => !isClosedLead(lead)).length;
+  const customerLeadRequests = realLeads.filter((lead) => ["customer_request", "booking_request", "contact_message"].includes(leadType(lead))).length;
+  const companyLeadRequests = realLeads.filter((lead) => leadType(lead) === "company_request").length;
+  const serviceLeadRequests = realLeads.filter((lead) => ["service_request", "booking_request", "jobs_request"].includes(leadType(lead))).length;
+  const adminLeadRequests = customerLeadRequests + companyLeadRequests + serviceLeadRequests;
+  const founderLandingViews = Math.max(eventCount(["founder_landing_view"]), specialistLeadRows.length);
+  const specialistApplicationStarts = Math.max(eventCount(["specialist_application_started"]), specialistLeadRows.length);
   const specialistApplicationsCompleted = Math.max(eventCount(["specialist_application_submitted"]), specialists.length);
-  const onboardingLosses = eventCount(["specialist_application_abandoned", "specialist_application_failed", "specialist_application_step_error"]);
+  const onboardingLosses = Math.max(eventCount(["specialist_application_abandoned", "specialist_application_failed", "specialist_application_step_error"]), incompleteSpecialistAttempts);
   const publishedSpecialists = specialists.filter(isPublishedSpecialist).length;
   const approvedSpecialists = specialists.filter(isApprovedSpecialist).length;
   const completeProfiles = specialists.filter(hasCompleteProfile).length;
   const searchesPerformed = eventCount(["search_performed", "click_search_specialist"]);
-  const requestsSent = number(overview.newLeads) + opportunities.filter((row) => ["clientes", "empresas", "comunidades"].includes(String(row.pipeline || ""))).length;
-  const b2bRequests = opportunities.filter((row) => ["empresas", "comunidades", "b2b"].includes(String(row.pipeline || "")) || String(row.type || "").includes("company")).length;
+  const opportunityRequests = opportunities.filter((row) => ["clientes", "empresas", "comunidades"].includes(String(row.pipeline || ""))).length;
+  const requestsSent = Math.max(number(overview.newLeads) + opportunityRequests, adminLeadRequests);
+  const b2bRequests = Math.max(
+    opportunities.filter((row) => ["empresas", "comunidades", "b2b"].includes(String(row.pipeline || "")) || String(row.type || "").includes("company")).length,
+    companyLeadRequests,
+  );
   const specialistsWithoutRequests = specialists.filter((row) => isPublishedSpecialist(row) && number(row.requestCount || row.requestsCount) === 0).length;
   const errors = eventCount(["specialist_application_failed", "lead_submit_failed", "checkout_failed", "payment_failed"]);
+  const testLeadCount = leads.filter(isTestLead).length;
 
   return {
     generatedAt: new Date().toISOString(),
@@ -165,6 +182,9 @@ function deriveSnapshotFromExport(raw, sourceLabel) {
     metrics: {
       founderLandingViews,
       offerServicesClicks: eventCount(["click_offer_services", "founder_cta_click"]),
+      adminLeadsTotal: realLeads.length,
+      specialistRegistrationAttempts: specialistRegistrationAttempts.length,
+      specialistIncompleteAttempts: incompleteSpecialistAttempts,
       specialistApplicationStarts,
       specialistApplicationsCompleted,
       approvedSpecialists,
@@ -179,6 +199,9 @@ function deriveSnapshotFromExport(raw, sourceLabel) {
       profilesViewed: eventCount(["specialist_profile_view", "profile_view"]),
       specialistsAddedToBag: eventCount(["specialist_reservation_added_to_bag", "specialist_quote_added_to_bag"]),
       quotesStarted: eventCount(["virtual_quote_started", "quote_started"]),
+      customerLeadRequests,
+      companyLeadRequests,
+      serviceLeadRequests,
       requestsSent,
       servicesCompleted: number(overview.completedServices),
       bagToRequestRate: ratio(requestsSent, eventCount(["specialist_reservation_added_to_bag", "specialist_quote_added_to_bag"])),
@@ -197,6 +220,8 @@ function deriveSnapshotFromExport(raw, sourceLabel) {
       b2bDemandShare: ratio(b2bRequests, requestsSent),
       validatedProfileRate: ratio(approvedSpecialists, specialists.length),
       errorCount: errors,
+      adminLeadEmailFailures: realLeads.filter((lead) => !truthy(lead.email_sent ?? lead.emailSent) && Boolean(lead.email_error ?? lead.emailError)).length,
+      testLeadCount,
       complaintsCount: number(overview.complaintsCount),
       cancellationsCount: number(overview.cancellationsCount),
       blockedPaymentsCount: number(overview.paymentIssues),
@@ -446,6 +471,69 @@ function nestedObjectFrom(value, key) {
 
 function eventName(row) {
   return String(row.eventName || row.name || row.type || row.event || "");
+}
+
+function leadType(row) {
+  return String(row.lead_type || row.leadType || "");
+}
+
+function leadPayload(row) {
+  return parseJsonObject(row.payload_json || row.payloadJson);
+}
+
+function payloadText(payload, key) {
+  const crm = objectFrom(payload.crm);
+  return String(payload[key] || crm[key] || "");
+}
+
+function isSpecialistRegistrationAttempt(row) {
+  const payload = leadPayload(row);
+  const marker = [
+    payloadText(payload, "specialistLeadKind"),
+    payloadText(payload, "leadSubtype"),
+    payloadText(payload, "draftProfileStatus"),
+    payloadText(payload, "founderStatus"),
+    row.source_button,
+    row.sourceButton,
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return (
+    marker.includes("registration_attempt") ||
+    marker.includes("draft_profile") ||
+    marker.includes("contact_entered") ||
+    marker.includes("lead_capturado") ||
+    marker.includes("captura temprana")
+  );
+}
+
+function isClosedLead(row) {
+  const status = String(row.status || "").toLowerCase();
+  return ["approved", "aprobado", "published", "publicado", "convertido", "closed", "cerrado", "rejected", "rechazado", "perdido"].includes(status);
+}
+
+function isTestLead(row) {
+  const payload = leadPayload(row);
+  const email = String(row.email || "").toLowerCase();
+  return payload.isTest === true || payloadText(payload, "source") === "e2e_test" || Boolean(payloadText(payload, "testRunId")) || email.endsWith("@example.com");
+}
+
+function truthy(value) {
+  return value === true || value === 1 || value === "1" || String(value).toLowerCase() === "true";
+}
+
+function parseJsonObject(value) {
+  if (!value || typeof value !== "string") return {};
+  try {
+    return objectFrom(JSON.parse(value));
+  } catch {
+    return {};
+  }
+}
+
+function objectFrom(value) {
+  return value && typeof value === "object" && !Array.isArray(value) ? value : {};
 }
 
 function ratio(numerator, denominator) {

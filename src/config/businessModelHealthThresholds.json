@@ -7,6 +7,9 @@
       "metricKeys": [
         "founderLandingViews",
         "offerServicesClicks",
+        "adminLeadsTotal",
+        "specialistRegistrationAttempts",
+        "specialistIncompleteAttempts",
         "specialistApplicationStarts",
         "specialistApplicationsCompleted",
         "approvedSpecialists",
@@ -28,6 +31,9 @@
         "profilesViewed",
         "specialistsAddedToBag",
         "quotesStarted",
+        "customerLeadRequests",
+        "companyLeadRequests",
+        "serviceLeadRequests",
         "requestsSent",
         "servicesCompleted",
         "bagToRequestRate"
