@@ -220,3 +220,32 @@ FROM_EMAIL=OficiosPro <notificaciones@oficiospro.cl>
 Compatibilidad temporal: el Worker tambien acepta `RESEND_API_KEY`, `LEADS_TO_EMAIL`, `LEADS_FROM_EMAIL` y `LEADS_REPLY_TO_EMAIL`.
 
 Si `EMAIL_PROVIDER_API_KEY` no esta configurada, el lead queda guardado en D1, se registra un evento `email_pending_configuration` y la UI no promete correo.
+
+## 13. Captura temprana de postulacion especialista
+
+El registro de especialistas debe capturar oportunidades desde el primer contacto util. Si una persona ingresa email o telefono valido, el frontend puede enviar un lead tipo `specialist_application` aunque el perfil no este completo.
+
+Marcadores esperados en `payload_json`:
+
+- `specialistLeadKind = "registration_attempt"`
+- `leadSubtype = "registration_attempt"`
+- `draftProfileStatus = "contact_entered"`
+- `founderStatus = "lead_capturado"`
+
+En `/admin/leads`, estos registros aparecen con:
+
+- KPI `Intentos especialista`
+- badge `Intento capturado`
+- etapa operacional `Intento especialista capturado`
+- recomendacion de contacto antes de 24 h
+
+Prueba E2E segura:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+$env:APP_BASE_URL="https://www.oficiospro.cl"
+$env:ADMIN_TOKEN="VALOR_REAL_DEL_SECRETO"
+node scripts\test-specialist-intake-capture.mjs
+```
+
+El script valida `ADMIN_TOKEN` antes de crear datos y usa solo registros marcados como `e2e_test`, `isTest=true`, `testRunId` y `example.com`.
