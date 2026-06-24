@@ -107,6 +107,7 @@ const specialistSuccessMessage =
 const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
+const specialistEarlyContactCaptureKey = "oficiospro.specialistRegistrationContactCaptured";
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -564,6 +565,8 @@ export function SpecialistRegisterForm() {
   const [customTradeRequest, setCustomTradeRequest] = useState("");
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
   const submittedRef = useRef(false);
+  const earlyContactLeadInFlightRef = useRef(false);
+  const earlyContactLeadKeyRef = useRef("");
   const maxStepReachedRef = useRef(1);
   const startedAtRef = useRef(Date.now());
 
@@ -695,6 +698,18 @@ export function SpecialistRegisterForm() {
       fromQuickSpecialist: true,
     });
   }, [identity, baseRegion, baseCommune, primaryTradeId]);
+
+  useEffect(() => {
+    if (submitted || submittedRef.current || websiteTrap) return;
+    const contact = earlySpecialistContact();
+    if (!contact) return;
+
+    const timer = window.setTimeout(() => {
+      void captureEarlySpecialistRegistrationAttempt("contact_entered");
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [identity.email, identity.whatsapp, identity.firstNames, identity.lastNames, baseRegion, baseCommune, primaryTradeId, acquisition.source, acquisition.campaign, submitted, websiteTrap]);
 
   useEffect(() => {
     return () => {
@@ -829,6 +844,124 @@ export function SpecialistRegisterForm() {
     });
   }
 
+  function earlySpecialistContact() {
+    const email = identity.email.trim().toLowerCase();
+    const phoneDigits = identity.whatsapp.replace(/\D/g, "");
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { type: "email", value: email };
+    if (phoneDigits.length >= 8) return { type: "phone", value: phoneDigits };
+    return null;
+  }
+
+  function capturedEarlyContactKeys() {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(window.localStorage.getItem(specialistEarlyContactCaptureKey) ?? "[]") as string[];
+    } catch {
+      return [];
+    }
+  }
+
+  function rememberEarlyContactKey(key: string) {
+    if (typeof window === "undefined") return;
+    try {
+      const next = [key, ...capturedEarlyContactKeys().filter((item) => item !== key)].slice(0, 25);
+      window.localStorage.setItem(specialistEarlyContactCaptureKey, JSON.stringify(next));
+    } catch {
+      // Local dedupe is best-effort only; remote/local lead backup must keep working.
+    }
+  }
+
+  async function captureEarlySpecialistRegistrationAttempt(reason: string) {
+    const contact = earlySpecialistContact();
+    if (!contact || earlyContactLeadInFlightRef.current) return;
+    const contactKey = `${contact.type}:${contact.value}`;
+    if (earlyContactLeadKeyRef.current === contactKey || capturedEarlyContactKeys().includes(contactKey)) return;
+
+    earlyContactLeadInFlightRef.current = true;
+    const firstNames = identity.firstNames.trim();
+    const lastNames = identity.lastNames.trim();
+    const fullName = `${firstNames} ${lastNames}`.trim() || (contact.type === "email" ? contact.value.split("@")[0] : "Especialista interesado");
+    const emailValue = identity.email.trim().toLowerCase();
+    const phoneDigits = identity.whatsapp.replace(/\D/g, "");
+    const emailForLead = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? emailValue : undefined;
+    const phoneForLead = phoneDigits.length >= 8 ? identity.whatsapp.trim() : undefined;
+    const mainType = getServiceTypeById(primaryTradeId);
+    const primaryTradeMeta = getTradeCategoryById(primaryTradeId);
+    const tradeLabel = primaryTradeMeta?.label ?? mainType?.name ?? "Registro especialista";
+    const acquisitionPayload = {
+      ...acquisition,
+      source: acquisition.source ?? "direct",
+      campaign: acquisition.campaign ?? "founder_specialists",
+      trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
+      commune: acquisition.commune ?? baseCommune,
+    };
+
+    try {
+      const leadResult = await submitLead({
+        leadType: "specialist_application",
+        fullName,
+        email: emailForLead,
+        phone: phoneForLead,
+        applicantType: "specialist",
+        trade: tradeLabel,
+        service: tradeLabel,
+        regionCode: baseRegion,
+        regionName: regionNameForCode(baseRegion),
+        communeName: baseCommune || acquisition.commune || "Por confirmar",
+        sourceComponent: "SpecialistRegisterForm",
+        sourceButton: "Captura temprana contacto",
+        referralCode: acquisition.referralCode,
+        consentContact: false,
+        consentTerms: false,
+        payload: {
+          specialistLeadKind: "registration_attempt",
+          leadSubtype: "registration_attempt",
+          draftProfileStatus: "contact_entered",
+          founderStatus: "lead_capturado",
+          status: "lead_capturado",
+          captureReason: reason,
+          capturedAtStep: step,
+          capturedAtStepName: specialistStepLabels[step - 1],
+          contactType: contact.type,
+          hasFullName: Boolean(firstNames || lastNames),
+          hasEmail: Boolean(identity.email.trim()),
+          hasPhone: Boolean(identity.whatsapp.trim()),
+          communeWasDefault: baseCommune === "Santiago",
+          acquisition: acquisitionPayload,
+          crm: {
+            pipeline: "especialistas",
+            stage: "lead_capturado",
+            assignedTeam: "Operaciones",
+            taskTitle: "Contactar especialista que inicio registro",
+            slaHours: 24,
+          },
+        },
+      });
+
+      earlyContactLeadKeyRef.current = contactKey;
+      rememberEarlyContactKey(contactKey);
+      void submitConversionEvent({
+        type: "draft_profile_created",
+        source: acquisitionPayload.source,
+        sourceComponent: "SpecialistRegisterForm",
+        sourceButton: "Captura temprana contacto",
+        page: "/registro-especialista",
+        payload: {
+          specialistLeadKind: "registration_attempt",
+          leadId: leadResult.id,
+          stored: leadResult.stored,
+          captureReason: reason,
+          step,
+          stepName: specialistStepLabels[step - 1],
+          contactType: contact.type,
+          acquisition: acquisitionPayload,
+        },
+      });
+    } finally {
+      earlyContactLeadInFlightRef.current = false;
+    }
+  }
+
   function setStepError(currentStep: number, reason: string, message: string) {
     setStatus(message);
     trackSpecialistFunnelEvent("specialist_application_step_error", "Validacion paso", currentStep, { reason, message });
@@ -887,6 +1020,7 @@ export function SpecialistRegisterForm() {
 
   function nextStep() {
     if (!validateStep(step)) return;
+    void captureEarlySpecialistRegistrationAttempt("step_completed");
     const next = Math.min(6, step + 1);
     void trackEvent({
       eventName: "specialist_application_step_completed",
