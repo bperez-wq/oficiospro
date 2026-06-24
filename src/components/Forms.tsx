@@ -1454,29 +1454,39 @@ export function SpecialistRegisterForm() {
             Email
             <input value={identity.email} onChange={(event) => setIdentity({ ...identity, email: event.target.value })} type="email" placeholder="especialista@email.cl" />
           </label>
-          <label className="field">
-            Foto de perfil
+          <label className="field md:col-span-2">
+            Foto de perfil <span className="font-bold text-muted">(recomendada)</span>
             <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("profilePhoto", event.currentTarget.files?.[0])} />
+            <span className="text-xs font-bold text-muted">Ayuda a que tu perfil genere mas confianza. Puedes agregarla despues.</span>
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
-          <label className="field">
-            Foto cédula frontal
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
-          </label>
-          <label className="field">
-            Foto cédula reverso
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
-          </label>
-          <label className="field">
-            Selfie de verificación
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
-          </label>
-          <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
-            Estos documentos se usan solo para validar tu identidad antes de publicar tu perfil. Tu cedula y selfie no seran visibles publicamente; si falta algo, lo pediremos en la revision.
-          </div>
+          <details className="group rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
+            <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-black text-ink [&::-webkit-details-marker]:hidden">
+              <span>Verificacion de identidad <span className="font-bold text-muted">(opcional ahora)</span></span>
+              <span className="text-xs font-black text-brand-dark transition group-open:hidden">Mostrar</span>
+              <span className="hidden text-xs font-black text-brand-dark group-open:inline">Ocultar</span>
+            </summary>
+            <p className="mt-3 text-sm font-bold leading-6 text-muted">
+              No necesitas subir esto para postular. Lo usamos solo para validar tu identidad antes de publicar; tu cedula y selfie nunca son publicas. Si falta algo, lo pedimos en la revision.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="field">
+                Foto cedula frontal <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
+              </label>
+              <label className="field">
+                Foto cedula reverso <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
+              </label>
+              <label className="field md:col-span-2">
+                Selfie de verificacion <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
+              </label>
+            </div>
+          </details>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
@@ -1701,15 +1711,15 @@ export function SpecialistRegisterForm() {
           <fieldset className="grid gap-3 rounded-2xl border border-brand/20 bg-brand-soft p-4 md:col-span-2">
             <legend className="px-2 text-sm font-black text-brand-dark">Consentimiento</legend>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentContact} onChange={(event) => setConsentContact(event.target.checked)} required />
+              <input type="checkbox" checked={consentContact} onChange={(event) => setConsentContact(event.target.checked)} />
               Acepto que OficiosPro me contacte para revisar mi postulacion.
             </label>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} required />
+              <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} />
               Acepto que OficiosPro revise la informacion enviada y pueda solicitar antecedentes adicionales.
             </label>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentDocumentPolicy} onChange={(event) => setConsentDocumentPolicy(event.target.checked)} required />
+              <input type="checkbox" checked={consentDocumentPolicy} onChange={(event) => setConsentDocumentPolicy(event.target.checked)} />
               Acepto emitir documentos tributarios a OP SpA solo cuando exista autorizacion interna previa, y no cederlos, factorizarlos ni transferirlos sin autorizacion escrita de OficiosPro.
             </label>
             <p className="text-xs font-bold leading-5 text-brand-dark/80">
@@ -1727,9 +1737,15 @@ export function SpecialistRegisterForm() {
             <button className="btn-secondary" type="button" onClick={saveIncompleteProfileLead} disabled={isSubmitting}>
               Guardar avance y pedir contacto
             </button>
-            <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
-              Continuar paso
-            </button>
+            {step === 6 ? (
+              <button className="btn-primary" type="submit" disabled={isSubmitting} data-event="specialist_application_submit">
+                {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
+              </button>
+            ) : (
+              <button className="btn-secondary" type="button" onClick={nextStep} disabled={isSubmitting}>
+                Continuar paso
+              </button>
+            )}
           </div>
         </div>
 
@@ -1752,9 +1768,6 @@ export function SpecialistRegisterForm() {
           </div>
         ) : (
           <>
-            <button className="btn-primary" type="submit" disabled={isSubmitting} data-event="specialist_application_submit">
-              {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
-            </button>
             {status ? <SuccessMessage>{status}</SuccessMessage> : null}
           </>
         )}
