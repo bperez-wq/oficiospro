@@ -107,6 +107,7 @@ const specialistSuccessMessage =
 const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
+const specialistEarlyContactCaptureKey = "oficiospro.specialistRegistrationContactCaptured";
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -564,6 +565,8 @@ export function SpecialistRegisterForm() {
   const [customTradeRequest, setCustomTradeRequest] = useState("");
   const [coverageCommunes, setCoverageCommunes] = useState("Santiago, Providencia, Ñuñoa");
   const submittedRef = useRef(false);
+  const earlyContactLeadInFlightRef = useRef(false);
+  const earlyContactLeadKeyRef = useRef("");
   const maxStepReachedRef = useRef(1);
   const startedAtRef = useRef(Date.now());
 
@@ -695,6 +698,18 @@ export function SpecialistRegisterForm() {
       fromQuickSpecialist: true,
     });
   }, [identity, baseRegion, baseCommune, primaryTradeId]);
+
+  useEffect(() => {
+    if (submitted || submittedRef.current || websiteTrap) return;
+    const contact = earlySpecialistContact();
+    if (!contact) return;
+
+    const timer = window.setTimeout(() => {
+      void captureEarlySpecialistRegistrationAttempt("contact_entered");
+    }, 1500);
+
+    return () => window.clearTimeout(timer);
+  }, [identity.email, identity.whatsapp, identity.firstNames, identity.lastNames, baseRegion, baseCommune, primaryTradeId, acquisition.source, acquisition.campaign, submitted, websiteTrap]);
 
   useEffect(() => {
     return () => {
@@ -829,6 +844,124 @@ export function SpecialistRegisterForm() {
     });
   }
 
+  function earlySpecialistContact() {
+    const email = identity.email.trim().toLowerCase();
+    const phoneDigits = identity.whatsapp.replace(/\D/g, "");
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return { type: "email", value: email };
+    if (phoneDigits.length >= 8) return { type: "phone", value: phoneDigits };
+    return null;
+  }
+
+  function capturedEarlyContactKeys() {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(window.localStorage.getItem(specialistEarlyContactCaptureKey) ?? "[]") as string[];
+    } catch {
+      return [];
+    }
+  }
+
+  function rememberEarlyContactKey(key: string) {
+    if (typeof window === "undefined") return;
+    try {
+      const next = [key, ...capturedEarlyContactKeys().filter((item) => item !== key)].slice(0, 25);
+      window.localStorage.setItem(specialistEarlyContactCaptureKey, JSON.stringify(next));
+    } catch {
+      // Local dedupe is best-effort only; remote/local lead backup must keep working.
+    }
+  }
+
+  async function captureEarlySpecialistRegistrationAttempt(reason: string) {
+    const contact = earlySpecialistContact();
+    if (!contact || earlyContactLeadInFlightRef.current) return;
+    const contactKey = `${contact.type}:${contact.value}`;
+    if (earlyContactLeadKeyRef.current === contactKey || capturedEarlyContactKeys().includes(contactKey)) return;
+
+    earlyContactLeadInFlightRef.current = true;
+    const firstNames = identity.firstNames.trim();
+    const lastNames = identity.lastNames.trim();
+    const fullName = `${firstNames} ${lastNames}`.trim() || (contact.type === "email" ? contact.value.split("@")[0] : "Especialista interesado");
+    const emailValue = identity.email.trim().toLowerCase();
+    const phoneDigits = identity.whatsapp.replace(/\D/g, "");
+    const emailForLead = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue) ? emailValue : undefined;
+    const phoneForLead = phoneDigits.length >= 8 ? identity.whatsapp.trim() : undefined;
+    const mainType = getServiceTypeById(primaryTradeId);
+    const primaryTradeMeta = getTradeCategoryById(primaryTradeId);
+    const tradeLabel = primaryTradeMeta?.label ?? mainType?.name ?? "Registro especialista";
+    const acquisitionPayload = {
+      ...acquisition,
+      source: acquisition.source ?? "direct",
+      campaign: acquisition.campaign ?? "founder_specialists",
+      trade: acquisition.trade ?? primaryTradeMeta?.slug ?? mainType?.slug ?? primaryTradeId,
+      commune: acquisition.commune ?? baseCommune,
+    };
+
+    try {
+      const leadResult = await submitLead({
+        leadType: "specialist_application",
+        fullName,
+        email: emailForLead,
+        phone: phoneForLead,
+        applicantType: "specialist",
+        trade: tradeLabel,
+        service: tradeLabel,
+        regionCode: baseRegion,
+        regionName: regionNameForCode(baseRegion),
+        communeName: baseCommune || acquisition.commune || "Por confirmar",
+        sourceComponent: "SpecialistRegisterForm",
+        sourceButton: "Captura temprana contacto",
+        referralCode: acquisition.referralCode,
+        consentContact: false,
+        consentTerms: false,
+        payload: {
+          specialistLeadKind: "registration_attempt",
+          leadSubtype: "registration_attempt",
+          draftProfileStatus: "contact_entered",
+          founderStatus: "lead_capturado",
+          status: "lead_capturado",
+          captureReason: reason,
+          capturedAtStep: step,
+          capturedAtStepName: specialistStepLabels[step - 1],
+          contactType: contact.type,
+          hasFullName: Boolean(firstNames || lastNames),
+          hasEmail: Boolean(identity.email.trim()),
+          hasPhone: Boolean(identity.whatsapp.trim()),
+          communeWasDefault: baseCommune === "Santiago",
+          acquisition: acquisitionPayload,
+          crm: {
+            pipeline: "especialistas",
+            stage: "lead_capturado",
+            assignedTeam: "Operaciones",
+            taskTitle: "Contactar especialista que inicio registro",
+            slaHours: 24,
+          },
+        },
+      });
+
+      earlyContactLeadKeyRef.current = contactKey;
+      rememberEarlyContactKey(contactKey);
+      void submitConversionEvent({
+        type: "draft_profile_created",
+        source: acquisitionPayload.source,
+        sourceComponent: "SpecialistRegisterForm",
+        sourceButton: "Captura temprana contacto",
+        page: "/registro-especialista",
+        payload: {
+          specialistLeadKind: "registration_attempt",
+          leadId: leadResult.id,
+          stored: leadResult.stored,
+          captureReason: reason,
+          step,
+          stepName: specialistStepLabels[step - 1],
+          contactType: contact.type,
+          acquisition: acquisitionPayload,
+        },
+      });
+    } finally {
+      earlyContactLeadInFlightRef.current = false;
+    }
+  }
+
   function setStepError(currentStep: number, reason: string, message: string) {
     setStatus(message);
     trackSpecialistFunnelEvent("specialist_application_step_error", "Validacion paso", currentStep, { reason, message });
@@ -887,6 +1020,7 @@ export function SpecialistRegisterForm() {
 
   function nextStep() {
     if (!validateStep(step)) return;
+    void captureEarlySpecialistRegistrationAttempt("step_completed");
     const next = Math.min(6, step + 1);
     void trackEvent({
       eventName: "specialist_application_step_completed",
@@ -1454,29 +1588,39 @@ export function SpecialistRegisterForm() {
             Email
             <input value={identity.email} onChange={(event) => setIdentity({ ...identity, email: event.target.value })} type="email" placeholder="especialista@email.cl" />
           </label>
-          <label className="field">
-            Foto de perfil
+          <label className="field md:col-span-2">
+            Foto de perfil <span className="font-bold text-muted">(recomendada)</span>
             <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("profilePhoto", event.currentTarget.files?.[0])} />
+            <span className="text-xs font-bold text-muted">Ayuda a que tu perfil genere mas confianza. Puedes agregarla despues.</span>
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
-          <label className="field">
-            Foto cédula frontal
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
-          </label>
-          <label className="field">
-            Foto cédula reverso
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
-          </label>
-          <label className="field">
-            Selfie de verificación
-            <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
-            <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
-          </label>
-          <div className="rounded-2xl border border-brand/10 bg-brand-soft p-4 text-sm font-bold text-brand-dark md:col-span-2">
-            Estos documentos se usan solo para validar tu identidad antes de publicar tu perfil. Tu cedula y selfie no seran visibles publicamente; si falta algo, lo pediremos en la revision.
-          </div>
+          <details className="group rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
+            <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-black text-ink [&::-webkit-details-marker]:hidden">
+              <span>Verificacion de identidad <span className="font-bold text-muted">(opcional ahora)</span></span>
+              <span className="text-xs font-black text-brand-dark transition group-open:hidden">Mostrar</span>
+              <span className="hidden text-xs font-black text-brand-dark group-open:inline">Ocultar</span>
+            </summary>
+            <p className="mt-3 text-sm font-bold leading-6 text-muted">
+              No necesitas subir esto para postular. Lo usamos solo para validar tu identidad antes de publicar; tu cedula y selfie nunca son publicas. Si falta algo, lo pedimos en la revision.
+            </p>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="field">
+                Foto cedula frontal <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
+              </label>
+              <label className="field">
+                Foto cedula reverso <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
+              </label>
+              <label className="field md:col-span-2">
+                Selfie de verificacion <span className="font-bold text-muted">(opcional)</span>
+                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+                <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
+              </label>
+            </div>
+          </details>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
@@ -1701,15 +1845,15 @@ export function SpecialistRegisterForm() {
           <fieldset className="grid gap-3 rounded-2xl border border-brand/20 bg-brand-soft p-4 md:col-span-2">
             <legend className="px-2 text-sm font-black text-brand-dark">Consentimiento</legend>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentContact} onChange={(event) => setConsentContact(event.target.checked)} required />
+              <input type="checkbox" checked={consentContact} onChange={(event) => setConsentContact(event.target.checked)} />
               Acepto que OficiosPro me contacte para revisar mi postulacion.
             </label>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} required />
+              <input type="checkbox" checked={consentVerification} onChange={(event) => setConsentVerification(event.target.checked)} />
               Acepto que OficiosPro revise la informacion enviada y pueda solicitar antecedentes adicionales.
             </label>
             <label className="flex items-start gap-3 text-sm font-bold text-brand-dark">
-              <input type="checkbox" checked={consentDocumentPolicy} onChange={(event) => setConsentDocumentPolicy(event.target.checked)} required />
+              <input type="checkbox" checked={consentDocumentPolicy} onChange={(event) => setConsentDocumentPolicy(event.target.checked)} />
               Acepto emitir documentos tributarios a OP SpA solo cuando exista autorizacion interna previa, y no cederlos, factorizarlos ni transferirlos sin autorizacion escrita de OficiosPro.
             </label>
             <p className="text-xs font-bold leading-5 text-brand-dark/80">
@@ -1727,9 +1871,15 @@ export function SpecialistRegisterForm() {
             <button className="btn-secondary" type="button" onClick={saveIncompleteProfileLead} disabled={isSubmitting}>
               Guardar avance y pedir contacto
             </button>
-            <button className="btn-secondary" type="button" onClick={nextStep} disabled={step === 6 || isSubmitting}>
-              Continuar paso
-            </button>
+            {step === 6 ? (
+              <button className="btn-primary" type="submit" disabled={isSubmitting} data-event="specialist_application_submit">
+                {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
+              </button>
+            ) : (
+              <button className="btn-secondary" type="button" onClick={nextStep} disabled={isSubmitting}>
+                Continuar paso
+              </button>
+            )}
           </div>
         </div>
 
@@ -1752,9 +1902,6 @@ export function SpecialistRegisterForm() {
           </div>
         ) : (
           <>
-            <button className="btn-primary" type="submit" disabled={isSubmitting} data-event="specialist_application_submit">
-              {isSubmitting ? "Enviando..." : "Crear perfil fundador"}
-            </button>
             {status ? <SuccessMessage>{status}</SuccessMessage> : null}
           </>
         )}
