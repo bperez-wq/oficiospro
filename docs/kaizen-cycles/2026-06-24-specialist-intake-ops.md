@@ -51,6 +51,7 @@ Si los intentos tempranos se distinguen en `/admin/leads` y existe un script E2E
 - CSV exporta la etapa operacional.
 - El script valida `ADMIN_TOKEN` antes de crear datos.
 - El script confirma que el lead creado aparece en `/api/admin/leads`.
+- El script limpia datos de prueba por defecto, salvo `--keep-test-data`.
 
 ## Pruebas
 

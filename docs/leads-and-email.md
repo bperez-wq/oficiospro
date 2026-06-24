@@ -249,3 +249,10 @@ node scripts\test-specialist-intake-capture.mjs
 ```
 
 El script valida `ADMIN_TOKEN` antes de crear datos y usa solo registros marcados como `e2e_test`, `isTest=true`, `testRunId` y `example.com`.
+
+Por defecto limpia sus datos de prueba al terminar mediante `/api/admin/crm/cleanup-test-data`. Para inspeccionar el registro antes de limpiar:
+
+```powershell
+node scripts\test-specialist-intake-capture.mjs --keep-test-data
+node scripts\test-specialist-intake-capture.mjs --cleanup-only
+```

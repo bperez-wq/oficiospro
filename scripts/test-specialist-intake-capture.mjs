@@ -5,6 +5,8 @@ const adminToken = validateAdminToken(process.env.ADMIN_TOKEN || process.env.ADM
 const testRunId =
   process.env.SPECIALIST_INTAKE_TEST_RUN_ID ||
   `specialist_intake_${new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14)}_${Math.random().toString(36).slice(2, 8)}`;
+const keepTestData = process.argv.includes("--keep-test-data") || process.env.SPECIALIST_INTAKE_KEEP_TEST_DATA === "1";
+const cleanupOnly = process.argv.includes("--cleanup-only");
 
 const safePerson = {
   fullName: "Juan Perez",
@@ -26,6 +28,7 @@ let failures = 0;
 console.log(`Testing specialist intake capture against ${baseUrl}`);
 console.log(`testRunId=${testRunId}`);
 console.log("Este script valida ADMIN_TOKEN antes de crear un lead de prueba marcado como e2e_test/isTest/example.com.");
+console.log(keepTestData ? "Cleanup automatico desactivado por --keep-test-data o SPECIALIST_INTAKE_KEEP_TEST_DATA=1." : "Cleanup automatico activado al finalizar.");
 console.log("");
 
 const preflight = await requestJson({ label: "validar token admin", method: "GET", endpoint: "/api/admin/leads?limit=1" }, adminToken, { countFailure: false });
@@ -33,6 +36,19 @@ if (!preflight.ok) {
   console.error("");
   console.error("ADMIN_TOKEN no fue aceptado. No se creara ningun intento de postulacion de prueba.");
   process.exit(1);
+}
+
+const cleanupRequest = {
+  label: "limpiar datos de prueba",
+  method: "POST",
+  endpoint: "/api/admin/crm/cleanup-test-data",
+  body: { ...testMarker },
+};
+
+if (cleanupOnly) {
+  await requestJson(cleanupRequest, adminToken);
+  finish();
+  process.exit(0);
 }
 
 const createResult = await requestJson({
@@ -85,13 +101,21 @@ console.log(
   }),
 );
 
-console.log("");
-if (failures) {
-  console.error(`Specialist intake E2E finished with ${failures} failing request(s).`);
-  process.exit(1);
+if (!keepTestData) {
+  await requestJson(cleanupRequest, adminToken);
 }
 
-console.log("Specialist intake E2E finished successfully.");
+console.log("");
+finish();
+
+function finish() {
+  if (failures) {
+    console.error(`Specialist intake E2E finished with ${failures} failing request(s).`);
+    process.exit(1);
+  }
+
+  console.log("Specialist intake E2E finished successfully.");
+}
 
 async function requestJson({ label, method, endpoint, body }, token = "", options = {}) {
   const headers = body ? { "Content-Type": "application/json" } : {};
