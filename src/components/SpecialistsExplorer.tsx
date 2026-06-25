@@ -497,6 +497,14 @@ export function SpecialistsExplorer() {
             <DashboardMetricCard label="Nivel Oro/Platino" value={resultMetrics.premium.toString()} detail="Perfiles con mayor reputacion" tone="brand" />
             <DashboardMetricCard label="Respuesta rapida" value={resultMetrics.fast.toString()} detail="Especialistas con respuesta menor a 1 h" />
           </div>
+          <div className="flex flex-wrap gap-2">
+            {["Perfiles revisados antes de publicarse", "Pago protegido al finalizar", "Red en crecimiento por comuna"].map((item) => (
+              <span key={item} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
+                <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" />
+                {item}
+              </span>
+            ))}
+          </div>
           <div className="rounded-2xl border border-line bg-slate-50 p-4">
             {hasActiveFilters ? (
               <div className="flex flex-wrap gap-2">
@@ -575,7 +583,7 @@ export function SpecialistsExplorer() {
                     href={`/registro-especialista?categoria=${encodeURIComponent(categoryParam || category)}&especialidad=${encodeURIComponent(specialtyParam || specialty)}&sourceSection=empty_search`}
                     onClick={() => recordDemandContext("Postular como especialista")}
                   >
-                    Postular como especialista
+                    Ofrecer mis servicios
                   </Link>
                   <button className="btn-secondary" type="button" onClick={clearFilters}>
                     Limpiar filtros
