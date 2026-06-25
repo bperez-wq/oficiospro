@@ -72,6 +72,14 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
         badges={["Perfil verificado", "Servicios multiples", "Formalizacion asistida", "Sin prometer ingresos"]}
         primaryCta={{ href: founderRegistrationHref(acquisitionContext), label: "Ofrecer mis servicios" }}
         secondaryCta={{ href: searchHref(page.searchParams), label: "Ver especialistas publicados" }}
+        closingCta={{
+          title: `Haz visible tu oficio de ${page.shortTitle}`,
+          text: "Crea tu perfil fundador sin costo inicial. Toma unos minutos y el equipo OficiosPro revisa tu postulacion antes de publicar. Puedes postular aunque tu categoria este en formacion.",
+          primaryLabel: "Ofrecer mis servicios",
+          primaryHref: founderRegistrationHref(acquisitionContext),
+          secondaryLabel: "Ver programa fundador",
+          secondaryHref: "/especialistas-fundadores",
+        }}
         acquisitionSlot={
           <div className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
             <SpecialistQuickLeadForm
@@ -90,7 +98,7 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
                 Puedes postular aunque todavia no tengas todo resuelto. OficiosPro revisa el perfil, oficio, comuna y antecedentes antes de publicar.
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                {["Crear perfil", "Dejenme contacto", "Formalizacion asistida", "Sin ingresos garantizados"].map((item) => (
+                {["Crear perfil", "Dejanos tu contacto", "Formalizacion asistida", "Sin ingresos garantizados"].map((item) => (
                   <span key={item} className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
                     {item}
                   </span>

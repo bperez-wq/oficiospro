@@ -32,6 +32,14 @@ type SeoProgrammaticPageProps = {
   internalLinks: InternalLink[];
   jsonLd?: JsonLd[];
   acquisitionSlot?: ReactNode;
+  closingCta?: {
+    title?: string;
+    text?: string;
+    primaryLabel: string;
+    primaryHref: string;
+    secondaryLabel?: string;
+    secondaryHref?: string;
+  };
 };
 
 export function SeoProgrammaticPage({
@@ -55,6 +63,7 @@ export function SeoProgrammaticPage({
   internalLinks,
   jsonLd = [],
   acquisitionSlot,
+  closingCta,
 }: SeoProgrammaticPageProps) {
   return (
     <main className="bg-slate-50/50">
@@ -168,6 +177,21 @@ export function SeoProgrammaticPage({
           />
         )}
       </section>
+
+      {closingCta ? (
+        <section className="mx-auto max-w-7xl px-4 pb-10 md:px-6">
+          <div className="grid gap-5 rounded-[32px] border border-brand/15 bg-brand-soft p-6 text-center md:p-10">
+            {closingCta.title ? <h2 className="text-2xl font-black leading-tight text-ink md:text-3xl">{closingCta.title}</h2> : null}
+            {closingCta.text ? <p className="mx-auto max-w-2xl text-sm font-bold leading-6 text-brand-dark/80 md:text-base">{closingCta.text}</p> : null}
+            <div className="flex flex-wrap justify-center gap-3">
+              <Link href={closingCta.primaryHref} className="btn-primary">{closingCta.primaryLabel}</Link>
+              {closingCta.secondaryHref && closingCta.secondaryLabel ? (
+                <Link href={closingCta.secondaryHref} className="btn-secondary">{closingCta.secondaryLabel}</Link>
+              ) : null}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="mx-auto grid max-w-7xl gap-5 px-4 pb-12 md:px-6 lg:grid-cols-[1.1fr_0.9fr]">
         <MarketplaceCard hover={false}>
