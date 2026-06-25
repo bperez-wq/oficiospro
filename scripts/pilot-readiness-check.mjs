@@ -11,6 +11,8 @@ const baseUrl = (process.env.PILOT_BASE_URL || process.env.APP_BASE_URL || proce
 const adminTokenCheck = validateAdminToken(process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "");
 const adminToken = adminTokenCheck.ok ? adminTokenCheck.value : "";
 const offline = process.argv.includes("--offline") || process.env.PILOT_READINESS_OFFLINE === "1";
+const readinessRunId = runId();
+const writeTestsEnabled = process.env.PILOT_READINESS_WRITE_TESTS === "1";
 
 const publicChecks = [
   { label: "Home", path: "/", expect: "html", critical: true },
@@ -47,9 +49,11 @@ const writeChecks = [
       regionCode: "13",
       regionName: "Region Metropolitana",
       communeName: "Nunoa",
-      source: "pilot_readiness_check",
+      source: "e2e_test",
+      sourceComponent: "scripts/pilot-readiness-check.mjs",
+      sourceButton: "pilot_readiness_check",
       isTest: true,
-      payload: { source: "pilot_readiness_check", isTest: true, testRunId: runId() },
+      payload: { source: "e2e_test", scenario: "pilot_readiness_check", isTest: true, testRunId: readinessRunId },
     },
   },
 ];
@@ -81,8 +85,11 @@ if (offline) {
   }
 
   for (const check of writeChecks) {
-    if (process.env.PILOT_READINESS_WRITE_TESTS === "1") {
+    if (writeTestsEnabled && adminToken) {
       results.push(await checkWrite(check));
+      results.push(await cleanupWriteTests());
+    } else if (writeTestsEnabled && !adminToken) {
+      results.push({ group: "write", label: check.label, path: check.path, status: "skipped", ok: false, critical: false, note: "real_admin_token_required_for_cleanup" });
     } else {
       results.push({ group: "write", label: check.label, path: check.path, status: "skipped", ok: true, critical: check.critical, note: "set PILOT_READINESS_WRITE_TESTS=1 to run marked e2e write test" });
     }
@@ -173,6 +180,36 @@ async function checkWrite(check) {
   }
 }
 
+async function cleanupWriteTests() {
+  const started = Date.now();
+  const path = "/api/admin/crm/cleanup-test-data";
+  try {
+    const response = await fetch(`${baseUrl}${path}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${adminToken}`,
+        "x-admin-token": adminToken,
+      },
+      body: JSON.stringify({ source: "e2e_test", isTest: true, testRunId: readinessRunId }),
+    });
+    const data = await response.json().catch(() => ({}));
+    const ok = response.ok && data.ok !== false;
+    return {
+      group: "cleanup",
+      label: "Cleanup test data",
+      path,
+      status: response.status,
+      ok,
+      critical: false,
+      durationMs: Date.now() - started,
+      note: ok ? "test_data_cleanup_requested" : data.error || "cleanup_failed",
+    };
+  } catch (error) {
+    return failureResult("cleanup", { label: "Cleanup test data", path, critical: false }, error);
+  }
+}
+
 function renderReport(items, summary) {
   return `# Pilot readiness check - ${reportDate}
 
@@ -200,7 +237,7 @@ ${summary.errors ? "- BLOCKED: critical checks failed." : "- PASS: no critical c
 ## 4. Notes
 
 - No secrets are written to this report.
-- Write checks are disabled by default. Enable only when you intentionally want marked e2e data: \`PILOT_READINESS_WRITE_TESTS=1\`.
+- Write checks are disabled by default. Enable only when you intentionally want marked e2e data: \`PILOT_READINESS_WRITE_TESTS=1\`. A real admin token is required so the script can request cleanup after the write test.
 - Admin checks require a real \`ADMIN_TOKEN\` or \`ADMIN_API_TOKEN\`. Placeholder values such as \`TU_TOKEN_REAL\` are skipped and reported as warnings.
 - This script does not deploy, migrate D1, change payments, or modify production data unless write checks are explicitly enabled.
 `;

@@ -57,11 +57,18 @@ Admin/CRM si existe `ADMIN_TOKEN`:
 Los checks de escritura estan apagados por defecto. Para probar lead capture con datos e2e marcados:
 
 ```powershell
+$env:ADMIN_TOKEN="VALOR_REAL_DEL_SECRETO"
 $env:PILOT_READINESS_WRITE_TESTS="1"
 npm run pilot:readiness
 ```
 
-Usa `example.com`, `isTest=true` y `source=pilot_readiness_check`.
+Usa `example.com`, `isTest=true`, `source=e2e_test` y `testRunId`.
+
+Importante:
+
+- Requiere token admin real para pedir limpieza automatica despues del write check.
+- Si el token falta o es placeholder, el write check se omite con warning.
+- El cleanup usa `/api/admin/crm/cleanup-test-data`.
 
 ## Reglas
 

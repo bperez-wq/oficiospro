@@ -20,6 +20,7 @@ Si el script detecta placeholders y los trata como token ausente, Benjamin puede
 
 - Detectar placeholders comunes en `ADMIN_TOKEN` / `ADMIN_API_TOKEN`.
 - Omitir admin checks con warning cuando el token es placeholder.
+- Exigir token admin real para write checks y pedir cleanup automatico.
 - Agregar alias `npm run pilot:readiness`.
 - Ignorar reportes diarios generados en `reports/pilot-readiness/*.md`.
 - Actualizar documentacion.
@@ -29,6 +30,7 @@ Si el script detecta placeholders y los trata como token ausente, Benjamin puede
 - `TU_TOKEN_REAL`, `VALOR_REAL`, `PEGA_` y similares no disparan requests admin.
 - El reporte muestra warning, no error critico, cuando el admin token es placeholder.
 - El flujo con token real sigue ejecutando checks admin.
+- Los write checks quedan marcados como `e2e_test` y solicitan cleanup.
 - Validate/build/dry-run pasan.
 
 ## Rollback
