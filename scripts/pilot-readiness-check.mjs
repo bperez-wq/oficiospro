@@ -13,6 +13,7 @@ const adminToken = adminTokenCheck.ok ? adminTokenCheck.value : "";
 const offline = process.argv.includes("--offline") || process.env.PILOT_READINESS_OFFLINE === "1";
 const readinessRunId = runId();
 const writeTestsEnabled = process.env.PILOT_READINESS_WRITE_TESTS === "1";
+const requireAdmin = process.argv.includes("--require-admin") || process.env.PILOT_READINESS_REQUIRE_ADMIN === "1";
 
 const publicChecks = [
   { label: "Home", path: "/", expect: "html", critical: true },
@@ -63,6 +64,7 @@ const results = [];
 console.log(`Pilot readiness check for ${baseUrl}`);
 console.log(offline ? "Offline mode: no network requests will be made." : "Live mode: public endpoints will be requested.");
 console.log(adminToken ? "Admin token: configured for read-only admin checks." : `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`);
+console.log(requireAdmin ? "Strict admin gate: enabled." : "Strict admin gate: disabled.");
 console.log("");
 
 if (offline) {
@@ -80,7 +82,7 @@ if (offline) {
     }
   } else {
     for (const check of adminChecks) {
-      results.push(skippedAdminResult(check, adminTokenCheck.reason));
+      results.push(skippedAdminResult(check, adminTokenCheck.reason, requireAdmin));
     }
   }
 
@@ -233,12 +235,13 @@ ${items.map((item) => `| ${item.group} | ${item.label} | \`${item.path}\` | ${it
 ## 3. Release Gate
 
 ${summary.errors ? "- BLOCKED: critical checks failed." : "- PASS: no critical check failed."}
+${summary.adminSkipped && !requireAdmin ? "- CAUTION: admin checks were skipped. Use `--require-admin` before production deploy." : ""}
 
 ## 4. Notes
 
 - No secrets are written to this report.
 - Write checks are disabled by default. Enable only when you intentionally want marked e2e data: \`PILOT_READINESS_WRITE_TESTS=1\`. A real admin token is required so the script can request cleanup after the write test.
-- Admin checks require a real \`ADMIN_TOKEN\` or \`ADMIN_API_TOKEN\`. Placeholder values such as \`TU_TOKEN_REAL\` are skipped and reported as warnings.
+- Admin checks require a real \`ADMIN_TOKEN\` or \`ADMIN_API_TOKEN\`. Placeholder values such as \`TU_TOKEN_REAL\` are skipped and reported as warnings. Use \`--require-admin\` or \`PILOT_READINESS_REQUIRE_ADMIN=1\` to fail the release gate when admin checks cannot run.
 - This script does not deploy, migrate D1, change payments, or modify production data unless write checks are explicitly enabled.
 `;
 }
@@ -249,6 +252,7 @@ function summarize(items) {
     warnings: items.filter((item) => !item.ok && !item.critical).length,
     errors: items.filter((item) => !item.ok && item.critical).length,
     skipped: items.filter((item) => item.status === "skipped" || item.status === "offline").length,
+    adminSkipped: items.some((item) => item.group === "admin" && item.status === "skipped"),
   };
 }
 
@@ -264,15 +268,15 @@ function failureResult(group, check, error) {
   };
 }
 
-function skippedAdminResult(check, reason) {
+function skippedAdminResult(check, reason, strict) {
   return {
     group: "admin",
     label: check.label,
     path: check.path,
     status: "skipped",
     ok: false,
-    critical: false,
-    note: `admin_check_skipped:${reason}`,
+    critical: Boolean(strict),
+    note: strict ? `admin_check_required:${reason}` : `admin_check_skipped:${reason}`,
   };
 }
 

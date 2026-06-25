@@ -24,6 +24,16 @@ npm run pilot:readiness
 
 No uses valores de ejemplo como `TU_TOKEN_REAL`, `VALOR_REAL_DEL_SECRETO` o `PEGA_AQUI_TOKEN`. El script los detecta como placeholder, omite checks admin y los reporta como warnings para no confundirlos con una falla real de Cloudflare.
 
+Modo estricto para gate de deploy:
+
+```powershell
+$env:PILOT_BASE_URL="https://www.oficiospro.cl"
+$env:ADMIN_TOKEN="VALOR_REAL_DEL_SECRETO"
+npm run pilot:readiness:strict
+```
+
+En modo estricto, si falta un token admin real o el token parece placeholder, el release gate falla. Usa este modo antes de deploy productivo.
+
 El reporte queda en:
 
 ```text
