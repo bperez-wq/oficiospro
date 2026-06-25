@@ -12,6 +12,7 @@
     "validate": "node scripts/validate-project.mjs",
     "kaizen:audit": "node scripts/kaizen-worktree-audit.mjs",
     "ops:specialist-intake": "node scripts/generate-specialist-intake-report.mjs",
+    "pilot:readiness": "node scripts/pilot-readiness-check.mjs",
     "test:leads": "node scripts/test-lead-endpoints.mjs",
     "test:payout-calculator": "node scripts/test-specialist-payout-calculator.mjs",
     "test:platform-commission": "node scripts/test-platform-commission-model.mjs",

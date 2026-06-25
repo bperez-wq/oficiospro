@@ -26,6 +26,7 @@ Un script de readiness reduce errores de deploy y hace mas facil decidir si una 
 - Modo offline funciona sin red ni token.
 - Modo live revisa rutas publicas.
 - Admin checks se saltan si no hay token.
+- Admin checks se saltan con warning si el token parece placeholder.
 - Write checks estan desactivados por defecto.
 - El reporte no persiste secretos ni PII.
 

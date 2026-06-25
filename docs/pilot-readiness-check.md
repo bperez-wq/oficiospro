@@ -10,7 +10,7 @@ Modo offline para validar el script sin hacer requests:
 
 ```powershell
 cd C:\Users\Benjamin\oficiospro\oficiospro
-node scripts\pilot-readiness-check.mjs --offline
+npm run pilot:readiness -- --offline
 ```
 
 Modo live contra produccion:
@@ -19,8 +19,10 @@ Modo live contra produccion:
 cd C:\Users\Benjamin\oficiospro\oficiospro
 $env:PILOT_BASE_URL="https://www.oficiospro.cl"
 $env:ADMIN_TOKEN="VALOR_REAL_DEL_SECRETO"
-node scripts\pilot-readiness-check.mjs
+npm run pilot:readiness
 ```
+
+No uses valores de ejemplo como `TU_TOKEN_REAL`, `VALOR_REAL_DEL_SECRETO` o `PEGA_AQUI_TOKEN`. El script los detecta como placeholder, omite checks admin y los reporta como warnings para no confundirlos con una falla real de Cloudflare.
 
 El reporte queda en:
 
@@ -56,7 +58,7 @@ Los checks de escritura estan apagados por defecto. Para probar lead capture con
 
 ```powershell
 $env:PILOT_READINESS_WRITE_TESTS="1"
-node scripts\pilot-readiness-check.mjs
+npm run pilot:readiness
 ```
 
 Usa `example.com`, `isTest=true` y `source=pilot_readiness_check`.

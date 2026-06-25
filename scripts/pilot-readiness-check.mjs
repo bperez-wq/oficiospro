@@ -8,7 +8,8 @@ const reportDate = process.env.PILOT_READINESS_DATE || new Date().toISOString().
 const reportDir = path.join(rootDir, "reports", "pilot-readiness");
 const outputPath = path.join(reportDir, `${reportDate}.md`);
 const baseUrl = (process.env.PILOT_BASE_URL || process.env.APP_BASE_URL || process.env.TEST_BASE_URL || "https://www.oficiospro.cl").replace(/\/$/, "");
-const adminToken = process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "";
+const adminTokenCheck = validateAdminToken(process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "");
+const adminToken = adminTokenCheck.ok ? adminTokenCheck.value : "";
 const offline = process.argv.includes("--offline") || process.env.PILOT_READINESS_OFFLINE === "1";
 
 const publicChecks = [
@@ -57,7 +58,7 @@ const results = [];
 
 console.log(`Pilot readiness check for ${baseUrl}`);
 console.log(offline ? "Offline mode: no network requests will be made." : "Live mode: public endpoints will be requested.");
-console.log(adminToken ? "Admin token: configured for read-only admin checks." : "Admin token: missing; admin checks will be skipped.");
+console.log(adminToken ? "Admin token: configured for read-only admin checks." : `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`);
 console.log("");
 
 if (offline) {
@@ -75,7 +76,7 @@ if (offline) {
     }
   } else {
     for (const check of adminChecks) {
-      results.push({ group: "admin", label: check.label, path: check.path, status: "skipped", ok: true, critical: check.critical, note: "ADMIN_TOKEN missing" });
+      results.push(skippedAdminResult(check, adminTokenCheck.reason));
     }
   }
 
@@ -200,7 +201,7 @@ ${summary.errors ? "- BLOCKED: critical checks failed." : "- PASS: no critical c
 
 - No secrets are written to this report.
 - Write checks are disabled by default. Enable only when you intentionally want marked e2e data: \`PILOT_READINESS_WRITE_TESTS=1\`.
-- Admin checks require \`ADMIN_TOKEN\` or \`ADMIN_API_TOKEN\`.
+- Admin checks require a real \`ADMIN_TOKEN\` or \`ADMIN_API_TOKEN\`. Placeholder values such as \`TU_TOKEN_REAL\` are skipped and reported as warnings.
 - This script does not deploy, migrate D1, change payments, or modify production data unless write checks are explicitly enabled.
 `;
 }
@@ -224,6 +225,42 @@ function failureResult(group, check, error) {
     critical: check.critical,
     note: error instanceof Error ? error.message : "network_error",
   };
+}
+
+function skippedAdminResult(check, reason) {
+  return {
+    group: "admin",
+    label: check.label,
+    path: check.path,
+    status: "skipped",
+    ok: false,
+    critical: false,
+    note: `admin_check_skipped:${reason}`,
+  };
+}
+
+function validateAdminToken(value) {
+  const token = String(value || "").trim();
+  if (!token) return { ok: false, value: "", reason: "missing" };
+
+  const normalized = token.toLowerCase();
+  const placeholderSignals = [
+    "tu_token",
+    "token_real",
+    "valor_real",
+    "pega_",
+    "admin_token",
+    "admin_api_token",
+    "cambia_esta",
+    "example",
+    "xxxx",
+  ];
+
+  if (placeholderSignals.some((signal) => normalized.includes(signal))) {
+    return { ok: false, value: "", reason: "placeholder_detected" };
+  }
+
+  return { ok: true, value: token, reason: "configured" };
 }
 
 function acceptHeader(expect) {
