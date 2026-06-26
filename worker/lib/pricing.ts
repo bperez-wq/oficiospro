@@ -1,30 +1,25 @@
-// Modelo de pricing del worker extraido de worker/index.ts (verbatim).
+// Modelo de pricing del worker. Alineado con src/config/taxConfig (modelo unico
+// de OficiosPro): comision de plataforma 9,5% + IVA, con un minimo por atencion
+// de $3.000 (sobre la comision neta). Todo medido en creditos ($1.000 = 1 credito).
 //
-// NOTA IMPORTANTE: este modelo (margen variable platformFee + paymentFee +
-// riskBuffer + fee fijo) coexiste con el modelo nuevo de comision fija 9.5%
-// en src/lib/finance + src/config/taxConfig. Ver pricing-consistency.test.ts
-// para el guard que documenta esa divergencia pendiente de reconciliar.
+// El especialista declara cuanto quiere recibir (payout). El cliente paga ese
+// payout + la comision de plataforma. Servicios de emergencia aplican un recargo
+// sobre el valor antes de calcular la comision.
 
 export type WorkerPricingConfig = {
   customerCreditValueCLP: number;
-  platformFeePercent: number;
-  paymentFeePercent: number;
-  riskBufferPercent: number;
-  fixedServiceFeeCLP: number;
+  commissionRate: number;
+  ivaRate: number;
+  minimumCommissionCLP: number;
   emergencyMultiplier: number;
-  minimumClientCredits: number;
-  creditRoundingStep: number;
 };
 
 export const workerPricingConfig: WorkerPricingConfig = {
   customerCreditValueCLP: 1000,
-  platformFeePercent: 0.18,
-  paymentFeePercent: 0.035,
-  riskBufferPercent: 0.04,
-  fixedServiceFeeCLP: 2500,
+  commissionRate: 0.095,
+  ivaRate: 0.19,
+  minimumCommissionCLP: 3000,
   emergencyMultiplier: 1.35,
-  minimumClientCredits: 12,
-  creditRoundingStep: 2,
 };
 
 export function normalizeMoney(value: unknown) {
@@ -33,13 +28,15 @@ export function normalizeMoney(value: unknown) {
   return Math.round(amount);
 }
 
+// Comision de plataforma sobre un valor de servicio: 9,5% con minimo $3.000, mas IVA.
+export function platformCommissionCLP(serviceValueCLP: number) {
+  const net = Math.max(serviceValueCLP * workerPricingConfig.commissionRate, workerPricingConfig.minimumCommissionCLP);
+  return Math.round(net * (1 + workerPricingConfig.ivaRate));
+}
+
 export function calculateWorkerClientCredits(specialistExpectedPayoutCLP: number, emergencyAvailable: boolean) {
-  const basePrice =
-    specialistExpectedPayoutCLP +
-    specialistExpectedPayoutCLP * (workerPricingConfig.platformFeePercent + workerPricingConfig.paymentFeePercent + workerPricingConfig.riskBufferPercent) +
-    workerPricingConfig.fixedServiceFeeCLP;
-  const adjustedPrice = emergencyAvailable ? basePrice * workerPricingConfig.emergencyMultiplier : basePrice;
-  const rawCredits = adjustedPrice / workerPricingConfig.customerCreditValueCLP;
-  const roundedCredits = Math.ceil(rawCredits / workerPricingConfig.creditRoundingStep) * workerPricingConfig.creditRoundingStep;
-  return Math.max(workerPricingConfig.minimumClientCredits, roundedCredits);
+  const payout = normalizeMoney(specialistExpectedPayoutCLP);
+  const serviceValue = emergencyAvailable ? payout * workerPricingConfig.emergencyMultiplier : payout;
+  const customerPrice = serviceValue + platformCommissionCLP(serviceValue);
+  return Math.ceil(customerPrice / workerPricingConfig.customerCreditValueCLP);
 }

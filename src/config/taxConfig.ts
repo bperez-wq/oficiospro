@@ -46,7 +46,7 @@ export const chileTaxConfig2026: TaxConfigVersion = {
   platformCommission: {
     standardRate: 0.095,
     ivaApplies: true,
-    minimumCommissionCLP: 0,
+    minimumCommissionCLP: 3000,
     maximumCommissionCLP: null,
     appliesTo: "specialist_document_amount",
     commissionBaseMode: "specialist_gross_document",
