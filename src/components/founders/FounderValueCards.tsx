@@ -99,8 +99,8 @@ export function FounderValueCards() {
       <div className="rounded-[24px] border border-line bg-slate-50 p-5">
         <p className="text-sm font-black text-ink">Oficios que ya estamos sumando</p>
         <div className="mt-3 flex flex-wrap gap-2">
-          {exampleTrades.map((trade) => (
-            <span key={trade} className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-ink">
+          {exampleTrades.map((trade, index) => (
+            <span key={`example-trade-${index}-${trade}`} className="rounded-full border border-line bg-white px-3 py-1.5 text-xs font-bold text-ink">
               {trade}
             </span>
           ))}

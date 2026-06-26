@@ -59,6 +59,7 @@ Tipos sugeridos:
 | KZ-030 | Binding D1 correcto debe quedar protegido por validacion automatica | Incidentes previos DB/oficiospro_leads | alto | media | operacion | Codex | validando | Guard D1 DB binding in project validation | validate/build/dry-run | pendiente |
 | KZ-031 | Validaciones de release estaban dispersas y dependian de memoria operativa | Kaizen / trabajo multiagente 2026-06-26 | alto | alta | operacion | Codex | validando | Add unified platform release gate | release:gate/validate/build/dry-run | pendiente |
 | KZ-032 | Gate de desarrollo no distinguia cambios reales pendientes antes de merge/deploy | Kaizen release gate 2026-06-26 | medio | alta | operacion | Codex | validando | Add strict clean release gate mode | audit strict/validate | pendiente |
+| KZ-033 | Chips de captacion fundadores y opciones de oficio podian volver a generar keys fragiles | Browser local / warning React 2026-06-26 | medio | alta | ux | Codex | validando | Harden founder chip keys and key validation | validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

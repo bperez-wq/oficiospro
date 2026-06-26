@@ -336,6 +336,9 @@ if (assetDirectory === "./out") {
   assertContains("src/lib/analytics/index.ts", "oficiospro.analytics.localConversionEvents");
   assertContains("src/lib/analytics/index.ts", "shouldUseLocalConversionFallback");
   assertContains("src/components/SpecialistQuickLeadForm.tsx", "uniqueTradeOptions");
+  assertContains("src/components/SpecialistQuickLeadForm.tsx", "key={normalizeSearch(option)}");
+  assertContains("src/app/especialistas-fundadores/page.tsx", "popular-founder-trade");
+  assertContains("src/components/founders/FounderValueCards.tsx", "example-trade");
   assertContains("src/lib/leads.ts", "Estamos activando la recepci");
   assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
   for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {
