@@ -269,7 +269,7 @@ if (assetDirectory === "./out") {
     "Garantía OficiosPro",
     "Club Hogar",
     "Soluciones para empresas",
-    "Postular como especialista",
+    "Ofrecer mis servicios",
   ]) {
     assertAnyContains(["src/app/page.tsx", "src/components/HeroSearchPanel.tsx", "src/components/Footer.tsx"], text);
   }

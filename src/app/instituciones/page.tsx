@@ -4,6 +4,7 @@ import { PlatformNav } from "@/components/PlatformNav";
 import { InstitutionContactForm } from "@/components/institutions/InstitutionContactForm";
 import { categoryImages, teamImages } from "@/data/visualAssets";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Instituciones y alianzas | OficiosPro",
@@ -33,6 +34,13 @@ const reportRows = [
   { label: "Carpinteria", pct: 33 },
 ];
 
+const dashboardKpis = [
+  { label: "Especialistas inscritos", value: "Por comuna", hint: "Se contabilizan al activar el piloto" },
+  { label: "Comunas activas", value: "Segun alianza", hint: "Definidas en la convocatoria" },
+  { label: "Postulaciones por fuente", value: "Trazables", hint: "Origen y derivacion identificables" },
+  { label: "Formalizacion por apoyar", value: "Detectada", hint: "Para orientar talleres y acompanamiento" },
+];
+
 export default function InstitutionsPage() {
   return (
     <main className="section grid gap-12">
@@ -40,6 +48,7 @@ export default function InstitutionsPage() {
       <PlatformNav />
 
       {/* HERO */}
+      <Reveal delay={0}>
       <section className="enterprise-shell relative overflow-hidden p-7 md:p-12">
         <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
@@ -51,7 +60,7 @@ export default function InstitutionsPage() {
               Derivacion ordenada, talleres de perfil digital y reportes agregados por comuna y oficio. Sin prometer empleo.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="#contacto-institucional" className="btn-sun">Solicitar reunion</Link>
+              <Link href="#contacto-institucional" className="btn-sun shine">Solicitar reunion</Link>
               <Link href="/contacto?source=instituciones&campaign=institutional_partnerships" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
                 Proponer piloto
               </Link>
@@ -71,8 +80,10 @@ export default function InstitutionsPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
       {/* PARTNER TYPES */}
+      <Reveal delay={70}>
       <section className="grid gap-4">
         <p className="text-center text-sm font-black uppercase tracking-wide text-muted">Pensado para</p>
         <div className="flex flex-wrap justify-center gap-2.5">
@@ -81,8 +92,10 @@ export default function InstitutionsPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
       {/* VALUE CARDS */}
+      <Reveal delay={140}>
       <section className="grid gap-6">
         <div className="max-w-2xl">
           <p className="eyebrow">Como colaborar</p>
@@ -101,8 +114,10 @@ export default function InstitutionsPage() {
           })}
         </div>
       </section>
+      </Reveal>
 
       {/* QUE GANA LA INSTITUCION + REPORT MOCK */}
+      <Reveal delay={210}>
       <section className="grid gap-6 rounded-[32px] border border-line bg-slate-50 p-7 md:p-10 lg:grid-cols-[0.9fr_1.1fr]">
         <div>
           <p className="eyebrow">Que gana la institucion</p>
@@ -124,13 +139,26 @@ export default function InstitutionsPage() {
           </div>
         </div>
 
-        {/* Report mock */}
+        {/* Dashboard mock */}
         <div className="rounded-card border border-line bg-white p-6 shadow-soft">
-          <div className="flex items-center justify-between">
-            <p className="text-sm font-black text-ink">Reporte agregado por oficio</p>
-            <span className="chip-sun px-3 py-1 text-[11px]">Ejemplo referencial</span>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-sm font-black text-ink">Panel institucional</p>
+              <p className="text-xs font-bold text-muted">Resumen por comuna y oficio</p>
+            </div>
+            <span className="chip-sun px-3 py-1 text-[11px]">Vista ilustrativa</span>
           </div>
-          <div className="mt-5 grid gap-4">
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {dashboardKpis.map((kpi) => (
+              <div key={kpi.label} className="rounded-2xl border border-line bg-slate-50 p-3">
+                <p className="text-[11px] font-black uppercase tracking-wide text-muted">{kpi.label}</p>
+                <p className="mt-1 text-2xl font-black text-ink">{kpi.value}</p>
+                <p className="mt-0.5 text-[11px] font-bold leading-4 text-muted">{kpi.hint}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 text-xs font-black uppercase tracking-wide text-muted">Distribucion por oficio</p>
+          <div className="mt-3 grid gap-4">
             {reportRows.map((row) => (
               <div key={row.label}>
                 <div className="flex items-center justify-between text-sm font-black text-ink">
@@ -144,12 +172,14 @@ export default function InstitutionsPage() {
             ))}
           </div>
           <p className="mt-5 text-xs font-bold leading-5 text-muted">
-            Vista ilustrativa. Los reportes reales se generan por comuna y oficio cuando exista volumen, sin exponer datos personales.
+            Vista ilustrativa. Los indicadores reales se generan por comuna y oficio cuando exista volumen, sin exponer datos personales.
           </p>
         </div>
       </section>
+      </Reveal>
 
       {/* CONTACT FORM */}
+      <Reveal delay={280}>
       <section id="contacto-institucional" className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <div>
           <p className="eyebrow">Conversemos</p>
@@ -167,6 +197,7 @@ export default function InstitutionsPage() {
           <InstitutionContactForm />
         </div>
       </section>
+      </Reveal>
 
       <p className="max-w-3xl text-xs font-semibold leading-5 text-muted">
         Esta pagina no declara convenios vigentes: presenta una propuesta de colaboracion para pilotos y conversaciones institucionales. OficiosPro no promete empleo ni ingresos garantizados.

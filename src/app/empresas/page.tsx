@@ -8,6 +8,7 @@ import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "OficiosPro Empresas | Servicios tecnicos con creditos",
@@ -28,7 +29,7 @@ export default function EmpresasPage() {
         title="Centraliza mantenciones, sucursales y créditos corporativos."
         subtitle="Externaliza mantenciones de forma controlada con técnicos verificados, centros de costo, reportes, documentación del servicio, facturación y trazabilidad."
       >
-        <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary">
+        <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary shine">
           Solicitar cuenta empresa
         </ConversionButton>
         <ConversionButton type="contacto_empresa" sourceButton="Hablar con ventas empresa" className="btn-secondary">
@@ -36,6 +37,7 @@ export default function EmpresasPage() {
         </ConversionButton>
       </AppHero>
 
+      <Reveal delay={0}>
       <section>
         <div className="mb-6 max-w-3xl">
           <p className="eyebrow">Casos de uso</p>
@@ -43,7 +45,9 @@ export default function EmpresasPage() {
         </div>
         <HomeBusinessUseCases />
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="enterprise-shell relative overflow-hidden p-6 md:p-8">
         <img
           src="/assets/oficios/industria/industria-tablero-01.jpg"
@@ -91,7 +95,9 @@ export default function EmpresasPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={140}>
       <section>
         <div className="mb-8 max-w-3xl">
           <p className="eyebrow">Planes empresa</p>
@@ -104,7 +110,9 @@ export default function EmpresasPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={210}>
       <section className="grid gap-5 md:grid-cols-3">
         {[
           ["Facturación y trazabilidad", "Documentación preparada para revisión administrativa, contable y tributaria."],
@@ -120,7 +128,9 @@ export default function EmpresasPage() {
           </MarketplaceCard>
         ))}
       </section>
+      </Reveal>
 
+      <Reveal delay={280}>
       <section id="empresa-form" className="grid gap-6 lg:grid-cols-[1fr_0.75fr]">
         <CompanyRequestForm />
         <article className="panel">
@@ -132,6 +142,7 @@ export default function EmpresasPage() {
           <img src="/assets/club-empresas.webp" alt="Equipo técnico trabajando en una empresa" className="mt-6 h-72 w-full rounded-2xl object-cover" />
         </article>
       </section>
+      </Reveal>
 
       <ContactTrustStrip />
     </main>

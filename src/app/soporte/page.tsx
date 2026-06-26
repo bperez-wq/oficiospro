@@ -3,6 +3,7 @@ import { EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { VisualFaqAccordion, type FaqItem } from "@/components/VisualFaqAccordion";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Soporte OficiosPro | Ayuda para clientes y especialistas",
@@ -91,6 +92,7 @@ export default function SupportPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
+      <Reveal delay={0}>
       <section className="overflow-hidden rounded-[32px] border border-line bg-white shadow-card">
         <div className="surface-grid p-6 md:p-10">
           <p className="eyebrow">Soporte</p>
@@ -106,7 +108,7 @@ export default function SupportPage() {
             ))}
           </div>
           <div className="mt-7 flex flex-wrap gap-3">
-            <ConversionButton type="consulta_general" sourceButton="Contactar soporte" className="btn-primary">
+            <ConversionButton type="consulta_general" sourceButton="Contactar soporte" className="btn-primary shine">
               Contactar soporte
             </ConversionButton>
             <ConversionButton type="consulta_general" sourceButton="Quiero que me contacten soporte" className="btn-secondary">
@@ -115,7 +117,9 @@ export default function SupportPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="grid gap-5 rounded-[28px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
         <div>
           <p className="eyebrow">Etapa piloto</p>
@@ -137,7 +141,9 @@ export default function SupportPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={140}>
       <section className="grid items-start gap-5 lg:grid-cols-3">
         {supportBlocks.map((block) => (
           <article key={block.title} className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
@@ -156,6 +162,7 @@ export default function SupportPage() {
           </article>
         ))}
       </section>
+      </Reveal>
 
       <EmptyState
         eyebrow="Ayuda operativa"

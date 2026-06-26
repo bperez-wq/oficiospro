@@ -42,6 +42,10 @@ Tipos sugeridos:
 | KZ-013 | Intentos de registro especialista deben verse en admin aunque el perfil no se complete | Benjamin / incidente postulantes reales 2026-06-24 | alto | alta | crm | Codex | validando | Improve specialist intake visibility and test coverage | validate/build/dry-run/script intake | pendiente |
 | KZ-014 | Salud del modelo no incorpora intentos tempranos y leads reales como muestra agregada | Reporte business-health 2026-06-22 / incidente postulantes reales | alto | alta | analytics | Codex | validando | Include lead intake evidence in business health reporting | validate/build/report/dry-run | pendiente |
 | KZ-015 | Cambios de Codex y Claude se mezclan con artefactos locales o comandos ejecutados fuera del repo | Incidentes PowerShell / worktree sucio | medio | alta | operacion | Codex | validando | Add Kaizen worktree audit script | audit/validate/build/dry-run | pendiente |
+| KZ-016 | Intentos de postulacion necesitan cola diaria de seguimiento sin exponer datos personales en reportes | Incidente postulantes reales / operacion piloto | alto | alta | operacion | Codex | validando | Add specialist intake operations report | validate/build/dry-run/report | pendiente |
+| KZ-017 | Piloto necesita verificacion repetible de rutas publicas, SEO, admin y CRM antes de deploy | Kaizen / trabajo paralelo Codex-Claude | alto | alta | operacion | Codex | validando | Add pilot readiness check script | offline/validate/build/dry-run | pendiente |
+| KZ-018 | Readiness check confundia token placeholder con token real y bloqueaba con 401 admin | Corrida PowerShell 2026-06-25 | medio | alta | operacion | Codex | validando | Harden pilot readiness token handling | offline/validate/build/dry-run | pendiente |
+| KZ-019 | Readiness check necesita modo estricto para bloquear deploy si admin/CRM no se verifican | Kaizen release gate | alto | alta | operacion | Codex | validando | Add strict admin gate to pilot readiness check | strict/offline/validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

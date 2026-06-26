@@ -17,6 +17,7 @@ import {
 import {
   buildAcquisitionContextFromSearch,
   founderQualityChecklist,
+  founderReferralHref,
   isInstitutionalAcquisitionSource,
   normalizeToken,
   sourceLabel,
@@ -24,6 +25,7 @@ import {
 } from "@/data/specialistAcquisition";
 import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/flexiblePricing";
 import { specialistTaxTypeLabels, type SpecialistFormalizationTaxType } from "@/data/specialistFormalization";
+import { nationalSpecialties } from "@/data/serviceCatalog";
 import {
   getTradeCategoryById,
   getTradeCoverageLabel,
@@ -108,6 +110,84 @@ const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
 const specialistEarlyContactCaptureKey = "oficiospro.specialistRegistrationContactCaptured";
+
+// Asistente de servicios (sin LLM, basado en catalogo real). Sugiere un precio de
+// referencia y un borrador de descripcion para reducir la friccion del paso 3.
+// Las sugerencias son editables y se etiquetan como tales: no inventamos datos.
+const assistDiacriticsRegex = new RegExp("[\\u0300-\\u036f]", "g");
+function normalizeAssistName(value: string) {
+  return value.normalize("NFD").replace(assistDiacriticsRegex, "").toLowerCase().trim();
+}
+
+function findSpecialtyDetail(specialtyName: string) {
+  if (!specialtyName || specialtyName === OTHER_SERVICE_VALUE) return null;
+  const target = normalizeAssistName(specialtyName);
+  return nationalSpecialties.find((specialty) => normalizeAssistName(specialty.name) === target) ?? null;
+}
+
+function suggestedSpecialistPayoutCLP(detail: { expectedTicketCLP: { min: number; max: number | null } }) {
+  const { min } = detail.expectedTicketCLP;
+  if (!Number.isFinite(min) || min <= 0) return 0;
+  return Math.round(min / 1000) * 1000;
+}
+
+function buildDraftServiceDescription(detail: { name: string; typicalServices: string[] }) {
+  const tareas = detail.typicalServices.slice(0, 4).join(", ");
+  return `Servicio profesional de ${detail.name.toLowerCase()}.${tareas ? ` Incluye ${tareas}.` : ""} Trabajo prolijo y responsable, coordinado a través de OficiosPro. Los materiales y condiciones se acuerdan según cada caso.`;
+}
+
+// Codigo de referido determinista (sin backend): queda capturado como referralCode
+// cuando el maestro invitado se registra, para honrar el bono de referido fundador.
+function buildSpecialistReferralCode(firstNames: string, lastNames: string, email: string) {
+  const base = `${firstNames}${lastNames}${email}`.toLowerCase();
+  let hash = 0;
+  for (let index = 0; index < base.length; index += 1) hash = (hash * 31 + base.charCodeAt(index)) >>> 0;
+  const initials = `${firstNames.trim()[0] ?? "O"}${lastNames.trim()[0] ?? "P"}`.toUpperCase().replace(/[^A-Z]/g, "");
+  const token = hash.toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
+  return `OP-${initials || "OP"}-${token}`;
+}
+
+// "Fuerza de perfil": completitud ponderada del perfil del especialista. Sube en
+// vivo a medida que completa secciones (Goal Gradient). Los pesos suman 100.
+type ProfileStrengthInput = {
+  fullName: string;
+  whatsapp: string;
+  email: string;
+  region: string;
+  commune: string;
+  hasPhoto: boolean;
+  services: ServiceDraft[];
+  completedReferences: number;
+  hasCertificationDeclared: boolean;
+  portfolioCount: number;
+  rut: string;
+  hasIdentityDoc: boolean;
+};
+
+function computeProfileStrength(input: ProfileStrengthInput) {
+  const firstService = input.services[0];
+  const items = [
+    { label: "tu nombre", weight: 10, done: input.fullName.trim().length > 1 },
+    { label: "tu contacto", weight: 10, done: Boolean(input.whatsapp && input.email) },
+    { label: "tu comuna", weight: 10, done: Boolean(input.region && input.commune) },
+    { label: "una foto de perfil", weight: 15, done: input.hasPhoto },
+    { label: "un servicio con precio", weight: 20, done: Boolean(firstService && firstService.name.trim() && Number(firstService.specialistExpectedPayoutCLP) > 0) },
+    { label: "una descripción de tu servicio", weight: 10, done: Boolean(firstService && firstService.description.trim().length > 10) },
+    { label: "una referencia", weight: 10, done: input.completedReferences > 0 },
+    { label: "tus certificaciones", weight: 5, done: input.hasCertificationDeclared },
+    { label: "una foto de tu trabajo", weight: 5, done: input.portfolioCount > 0 },
+    { label: "tu validación de identidad", weight: 5, done: Boolean(input.rut.trim() && input.hasIdentityDoc) },
+  ];
+  const percent = items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0);
+  const next = items.find((item) => !item.done);
+  const level =
+    percent >= 100 ? "Perfil destacado" :
+    percent >= 85 ? "Perfil verificado" :
+    percent >= 65 ? "Perfil fuerte" :
+    percent >= 40 ? "Perfil en forma" :
+    "Perfil inicial";
+  return { percent, level, nextLabel: next?.label ?? "" };
+}
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -575,6 +655,36 @@ export function SpecialistRegisterForm() {
   const selectedPrimaryTradeCoverage = selectedPrimaryTrade ? getTradeCoverageLabel(selectedPrimaryTrade) : "";
   const selectedPrimaryTradeIsForming = selectedPrimaryTrade ? isTradeForming(selectedPrimaryTrade) : false;
   const estimatedMinutesLeft = Math.max(1, 4 - Math.floor(step / 2));
+  const specialistFullName = `${identity.firstNames} ${identity.lastNames}`.trim();
+  const specialistReferralCode = buildSpecialistReferralCode(identity.firstNames, identity.lastNames, identity.email);
+  const previewServiceNames = services.map((service) => service.name.trim()).filter(Boolean);
+  const previewTrade = previewServiceNames[0] || "Mi oficio";
+  const profileStrength = computeProfileStrength({
+    fullName: specialistFullName,
+    whatsapp: identity.whatsapp,
+    email: identity.email,
+    region: baseRegion,
+    commune: baseCommune,
+    hasPhoto: Boolean(identityDocuments.profilePhotoUrl),
+    services,
+    completedReferences: completedReferences.length,
+    hasCertificationDeclared: hasNoFormalCertifications || selectedCertifications.length > 0,
+    portfolioCount: portfolioPhotos.length,
+    rut: identity.rut,
+    hasIdentityDoc: Boolean(identityDocuments.idFrontUrl || identityDocuments.selfieUrl),
+  });
+
+  function inviteSpecialistViaWhatsApp() {
+    const link = typeof window !== "undefined" ? `${window.location.origin}${founderReferralHref(specialistReferralCode)}` : founderReferralHref(specialistReferralCode);
+    const message = `Compadre, me hice perfil en OficiosPro para que me lleguen pegas. Es gratis y son 5 minutos. Hazte uno con mi link 👇\n${link}`;
+    submitConversionEvent({
+      type: "specialist_referral_invite_shared",
+      sourceButton: "Invitar maestro WhatsApp",
+      sourceComponent: "SpecialistRegisterForm",
+      data: { referralCode: specialistReferralCode },
+    }).catch(() => {});
+    if (typeof window !== "undefined") window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
 
   useEffect(() => {
     const draft = readSpecialistQuickDraft();
@@ -1523,18 +1633,32 @@ export function SpecialistRegisterForm() {
             <div className="h-full rounded-full bg-gradient-to-r from-brand to-brand-dark transition-all duration-300" style={{ width: `${(step / 6) * 100}%` }} />
           </div>
         </div>
+        <div className="grid gap-2 rounded-2xl border border-brand/20 bg-brand-soft p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-black uppercase tracking-wide text-brand-dark">💪 Fuerza de tu perfil · {profileStrength.level}</span>
+            <span className="text-sm font-black text-brand-dark">{profileStrength.percent}%</span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white" role="progressbar" aria-valuenow={profileStrength.percent} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full rounded-full bg-gradient-to-r from-brand to-brand-dark transition-all duration-500" style={{ width: `${profileStrength.percent}%` }} />
+          </div>
+          {profileStrength.nextLabel ? (
+            <span className="text-xs font-bold text-brand-dark/80">Agrega {profileStrength.nextLabel} para subir tu perfil.</span>
+          ) : (
+            <span className="text-xs font-bold text-brand-dark/80">¡Perfil al 100%! Quedas listo para destacar. 🥇</span>
+          )}
+        </div>
         <div className="grid gap-3 md:grid-cols-6">
           {[
             ["Identidad", "Datos y contacto"],
             ["Cobertura", "Comuna y radio"],
             ["Servicios", "Tarifa esperada"],
-            ["Formalizacion", "Documento de cobro"],
+            ["Formalizacion", "Opcional · después"],
             ["Referencias", "Opcional"],
             ["Revision", "Envio final"],
           ].map(([title, text], index) => (
             <button
               key={title}
-              className={`rounded-2xl border p-4 text-left transition ${
+              className={`min-w-0 rounded-2xl border p-3 text-left transition ${
                 step === index + 1 ? "border-brand bg-brand text-white shadow-lg shadow-brand/20" : "border-line bg-slate-50 text-ink hover:border-brand/40"
               }`}
               type="button"
@@ -1545,7 +1669,7 @@ export function SpecialistRegisterForm() {
               }}
             >
               <span className="text-xs font-black uppercase">Paso {index + 1}</span>
-              <strong className="mt-1 block">{title}</strong>
+              <strong className="mt-1 block break-words text-sm leading-tight">{title}</strong>
               <span className={`mt-1 block text-xs font-bold ${step === index + 1 ? "text-white/75" : "text-muted"}`}>{text}</span>
             </button>
           ))}
@@ -1567,7 +1691,12 @@ export function SpecialistRegisterForm() {
           </div>
         ) : null}
         {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
-        <section className={step <= 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <section className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="md:col-span-2">
+            <p className="eyebrow">Identidad</p>
+            <h3 className="text-2xl font-black text-ink">Empecemos por lo básico</h3>
+            <p className="mt-1 text-sm font-bold text-muted">Solo tu nombre y cómo contactarte. El RUT y la verificación van al final.</p>
+          </div>
           <label className="field">
             Nombres
             <input value={identity.firstNames} onChange={(event) => setIdentity({ ...identity, firstNames: event.target.value })} placeholder="Ej: Juan" />
@@ -1575,10 +1704,6 @@ export function SpecialistRegisterForm() {
           <label className="field">
             Apellidos
             <input value={identity.lastNames} onChange={(event) => setIdentity({ ...identity, lastNames: event.target.value })} placeholder="Ej: Pérez" />
-          </label>
-          <label className="field">
-            RUT
-            <input value={identity.rut} onChange={(event) => setIdentity({ ...identity, rut: event.target.value })} placeholder="12.345.678-9" />
           </label>
           <label className="field">
             WhatsApp
@@ -1594,33 +1719,14 @@ export function SpecialistRegisterForm() {
             <span className="text-xs font-bold text-muted">Ayuda a que tu perfil genere mas confianza. Puedes agregarla despues.</span>
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
-          <details className="group rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
-            <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-black text-ink [&::-webkit-details-marker]:hidden">
-              <span>Verificacion de identidad <span className="font-bold text-muted">(opcional ahora)</span></span>
-              <span className="text-xs font-black text-brand-dark transition group-open:hidden">Mostrar</span>
-              <span className="hidden text-xs font-black text-brand-dark group-open:inline">Ocultar</span>
-            </summary>
-            <p className="mt-3 text-sm font-bold leading-6 text-muted">
-              No necesitas subir esto para postular. Lo usamos solo para validar tu identidad antes de publicar; tu cedula y selfie nunca son publicas. Si falta algo, lo pedimos en la revision.
-            </p>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="field">
-                Foto cedula frontal <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
-              </label>
-              <label className="field">
-                Foto cedula reverso <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
-              </label>
-              <label className="field md:col-span-2">
-                Selfie de verificacion <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
-              </label>
-            </div>
-          </details>
+        </section>
+
+        <section className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="md:col-span-2">
+            <p className="eyebrow">Cobertura</p>
+            <h3 className="text-2xl font-black text-ink">¿Dónde trabajas?</h3>
+            <p className="mt-1 text-sm font-bold text-muted">Define tu comuna base y hasta dónde llegas. Así te mostramos a clientes de tu zona.</p>
+          </div>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
@@ -1714,10 +1820,10 @@ export function SpecialistRegisterForm() {
 
         <section className={step === 4 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <div className="md:col-span-2">
-            <p className="eyebrow">Formalizacion y cobro</p>
-            <h3 className="text-2xl font-black">Como documentas tus servicios</h3>
+            <p className="eyebrow">Formalizacion · opcional</p>
+            <h3 className="text-2xl font-black">De boletas y facturas nos preocupamos después, juntos</h3>
             <p className="mt-2 text-sm font-bold text-muted">
-              Esto ayuda a OficiosPro a preparar tu revision de pagos. Es referencial y puede quedar pendiente hasta validacion de contador/SII.
+              No necesitas resolver nada de impuestos para postular. Puedes saltarte este paso: el equipo OficiosPro te guía con boletas, facturas y datos tributarios antes de activar pagos. Si ya lo tienes claro, déjalo declarado abajo.
             </p>
           </div>
           <label className="field">
@@ -1810,7 +1916,34 @@ export function SpecialistRegisterForm() {
         </section>
 
         <section className={step === 6 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="rounded-3xl border border-brand/15 bg-brand-soft p-5 md:col-span-2">
+            <p className="eyebrow text-brand">Último paso · validación</p>
+            <h3 className="text-2xl font-black text-brand-dark">Confirma que eres tú y activa tus pagos</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
+              🔒 Tu RUT, cédula y selfie nunca son públicos. Solo el equipo de validación los usa para proteger a los clientes y a ti. Puedes completarlos ahora o cuando te contactemos.
+            </p>
+          </div>
+          <label className="field md:col-span-2">
+            RUT
+            <input value={identity.rut} onChange={(event) => setIdentity({ ...identity, rut: event.target.value })} placeholder="12.345.678-9" />
+            <span className="text-xs font-bold text-muted">Lo usamos solo para validar tu identidad antes de publicar. Nunca es público.</span>
+          </label>
           <label className="field">
+            Foto cedula frontal <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="environment" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
+          </label>
+          <label className="field">
+            Foto cedula reverso <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="environment" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
+          </label>
+          <label className="field md:col-span-2">
+            Selfie de verificacion <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="user" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
+          </label>
+          <label className="field md:col-span-2">
             Portafolio fotográfico
             <input
               type="file"
@@ -1884,19 +2017,58 @@ export function SpecialistRegisterForm() {
         </div>
 
         {submitted ? (
-          <div className="grid gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
-                <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <div>
-              <h3 className="text-2xl font-black text-emerald-900">Recibimos tu postulación</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-emerald-800">
-                Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te contactará antes de publicar tu perfil.
+          <div className="grid gap-5 rounded-3xl border border-brand/20 bg-gradient-to-br from-brand-soft to-emerald-50 p-6">
+            <div className="text-center">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
+                  <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <h3 className="mt-3 text-2xl font-black text-ink">🎉 ¡Tu perfil quedó increíble!</h3>
+              <p className="mx-auto mt-1 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-black text-brand-dark shadow-soft">
+                🥇 Desbloqueaste el Badge Fundador
               </p>
             </div>
-            <Link className="btn-primary mx-auto" href="/?postulacion=recibida">
+
+            <div className="rounded-2xl border border-line bg-white p-5">
+              <p className="text-xs font-black uppercase tracking-wide text-muted">Así te verán los clientes</p>
+              <div className="mt-3 flex items-center gap-3">
+                {identityDocuments.profilePhotoUrl ? (
+                  <img src={identityDocuments.profilePhotoUrl} alt={specialistFullName || "Perfil"} className="h-14 w-14 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-14 w-14 place-items-center rounded-full bg-brand text-xl font-black text-white">
+                    {(specialistFullName.slice(0, 1) || previewTrade.slice(0, 1) || "★").toUpperCase()}
+                  </span>
+                )}
+                <div>
+                  <strong className="block text-lg text-ink">{specialistFullName || previewTrade}</strong>
+                  <span className="text-xs font-bold text-muted">{previewTrade} · {baseCommune} · Especialista fundador</span>
+                </div>
+              </div>
+              {previewServiceNames.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {previewServiceNames.slice(0, 4).map((name) => (
+                    <span key={name} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-ink">{name}</span>
+                  ))}
+                </div>
+              ) : null}
+              <p className="mt-3 text-xs font-bold text-muted">
+                Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te avisará antes de publicar tu perfil.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-brand/20 bg-white p-5 text-center">
+              <h4 className="text-lg font-black text-ink">¿Conoces a otro maestro bueno?</h4>
+              <p className="mx-auto mt-1 max-w-md text-sm font-semibold leading-6 text-muted">
+                Invítalo y suma reputación de fundador. A los buenos maestros les va mejor cuando llegan recomendados.
+              </p>
+              <button type="button" className="btn-primary mx-auto mt-4 inline-flex items-center gap-2" onClick={inviteSpecialistViaWhatsApp}>
+                <span aria-hidden>📲</span> Invitar a un maestro por WhatsApp
+              </button>
+              <p className="mt-2 text-xs font-bold text-muted">Tu código: {specialistReferralCode}</p>
+            </div>
+
+            <Link className="btn-secondary mx-auto" href="/?postulacion=recibida">
               Volver al inicio
             </Link>
           </div>
@@ -1907,6 +2079,46 @@ export function SpecialistRegisterForm() {
         )}
       </form>
     </FormShell>
+  );
+}
+
+function ServiceAssist({ service, onChange }: { service: ServiceDraft; onChange: (patch: Partial<ServiceDraft>) => void }) {
+  const detail = findSpecialtyDetail(service.specialty);
+  if (!detail) return null;
+  const suggestedPayout = suggestedSpecialistPayoutCLP(detail);
+  const { min, max } = detail.expectedTicketCLP;
+  return (
+    <div className="rounded-2xl border border-brand/20 bg-brand-soft p-4 md:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-black uppercase tracking-wide text-brand-dark">✨ Te ayudamos a completar</span>
+        {min ? (
+          <span className="text-xs font-bold text-brand-dark/70">
+            Referencia al cliente: {formatCLP(min)}{max ? `–${formatCLP(max)}` : "+"}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {suggestedPayout > 0 ? (
+          <button
+            type="button"
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft transition hover:bg-brand hover:text-white"
+            onClick={() => onChange({ specialistExpectedPayoutCLP: suggestedPayout, specialistPayoutCLP: suggestedPayout, name: service.name || detail.name })}
+          >
+            Usar {formatCLP(suggestedPayout)} como punto de partida
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft transition hover:bg-brand hover:text-white"
+          onClick={() => onChange({ description: service.description || buildDraftServiceDescription(detail), name: service.name || detail.name })}
+        >
+          Generar borrador de descripción
+        </button>
+      </div>
+      <p className="mt-2 text-xs font-bold leading-5 text-brand-dark/70">
+        Sugerencias editables del catálogo OficiosPro. Ajusta el precio a lo que tú quieres ganar.
+      </p>
+    </div>
   );
 }
 
@@ -1953,6 +2165,7 @@ function ServiceEditor({
           placeholder="Busca gasfitería, aire, refrigeración..."
           required
         />
+        <ServiceAssist service={service} onChange={onChange} />
         {service.specialty === OTHER_SERVICE_VALUE ? (
           <label className="field md:col-span-2">
             Describe qué necesitas ofrecer

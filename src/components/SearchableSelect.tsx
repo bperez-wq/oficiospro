@@ -36,10 +36,20 @@ export function SearchableSelect({
   const containerRef = useRef<HTMLLabelElement>(null);
   const filtered = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
-    if (!normalizedQuery) return options.slice(0, 80);
-    return options
-      .filter((option) => normalizeSearch(`${option.label} ${option.meta ?? ""}`).includes(normalizedQuery))
-      .slice(0, 80);
+    const matched = normalizedQuery
+      ? options.filter((option) => normalizeSearch(`${option.label} ${option.meta ?? ""}`).includes(normalizedQuery))
+      : options;
+    // Mantener cada grupo contiguo (preservando el orden de aparición) para no
+    // repetir encabezados de grupo ni generar keys de React duplicadas.
+    const groupOrder = new Map<string, number>();
+    for (const option of matched) {
+      const group = option.group ?? "";
+      if (!groupOrder.has(group)) groupOrder.set(group, groupOrder.size);
+    }
+    const grouped = [...matched].sort(
+      (a, b) => (groupOrder.get(a.group ?? "") ?? 0) - (groupOrder.get(b.group ?? "") ?? 0),
+    );
+    return grouped.slice(0, 80);
   }, [options, query]);
   const rows = useMemo(() => {
     const nextRows: Array<{ type: "group"; label: string } | { type: "option"; option: SelectOption; optionIndex: number }> = [];
@@ -101,14 +111,20 @@ export function SearchableSelect({
     <label ref={containerRef} className={`field relative min-w-0 ${disabled ? "opacity-70" : ""} ${className}`}>
       {label}
       {name ? <input type="hidden" name={name} value={value} /> : null}
-      <input
-        value={open ? query : selected?.label ?? ""}
-        onChange={(event) => {
-          if (disabled) return;
-          setQuery(event.target.value);
-          setOpen(true);
-        }}
-        onKeyDown={(event) => {
+      <div className="relative">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-brand" aria-hidden>
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.2-3.2" strokeLinecap="round" />
+        </svg>
+        <input
+          className="!pl-11 !pr-10 truncate"
+          value={open ? query : selected?.label ?? ""}
+          onChange={(event) => {
+            if (disabled) return;
+            setQuery(event.target.value);
+            setOpen(true);
+          }}
+          onKeyDown={(event) => {
           if (disabled) return;
           if (event.key === "ArrowDown") {
             event.preventDefault();
@@ -137,17 +153,21 @@ export function SearchableSelect({
         aria-controls={`${id}-listbox`}
         aria-expanded={open}
         aria-activedescendant={open && filtered[activeIndex] ? `${id}-option-${activeIndex}` : undefined}
-      />
+        />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.6} className={`pointer-events-none absolute right-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted transition-transform duration-200 ${open ? "rotate-180 text-brand" : ""}`} aria-hidden>
+          <path d="m6 9 6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+      </div>
       {open ? (
         <div
           id={`${id}-listbox`}
-          className={`absolute left-0 top-full z-50 mt-2 max-h-80 w-full min-w-full max-w-[calc(100vw-2rem)] overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-line bg-white p-2 shadow-card sm:min-w-[360px] ${dropdownClassName}`}
+          className={`animate-slide-down absolute left-0 top-full z-50 mt-2 max-h-80 w-full min-w-full max-w-[calc(100vw-2rem)] origin-top overflow-y-auto overflow-x-hidden overscroll-contain rounded-2xl border border-line bg-white p-2 shadow-card sm:min-w-[360px] ${dropdownClassName}`}
           role="listbox"
         >
           {filtered.length ? (
-            rows.map((row) =>
+            rows.map((row, rowIndex) =>
               row.type === "group" ? (
-                <div key={`group-${row.label}`} className="px-3 pb-1 pt-3 text-[11px] font-black uppercase tracking-wide text-muted first:pt-1">
+                <div key={`group-${rowIndex}-${row.label}`} className="px-3 pb-1 pt-3 text-[11px] font-black uppercase tracking-wide text-muted first:pt-1">
                   {row.label}
                 </div>
               ) : (

@@ -53,8 +53,10 @@ assert("A commission gross equals net plus IVA", feeReceipt.platformCommissionGr
 assert("A customer gross price is above gross fee receipt", feeReceipt.customerGrossPriceCLP > feeReceipt.specialistDocumentGrossCLP);
 assert("A credits estimate is positive", feeReceipt.totalCreditsEstimate > 0);
 assert("A expected fee receipt gross near reference", between(feeReceipt.specialistDocumentGrossCLP, 29400, 29600));
-assert("A expected commission gross near reference", between(feeReceipt.platformCommissionGrossCLP, 3300, 3400));
-assert("A expected customer price near reference", between(feeReceipt.customerGrossPriceCLP, 32700, 32950));
+// Con el minimo de comision $3.000 + IVA (mínimo por atención): comision gross ~$3.570
+// y precio cliente ~$33.098 para una boleta de honorarios con liquido objetivo $25.000.
+assert("A expected commission gross near reference", between(feeReceipt.platformCommissionGrossCLP, 3500, 3650));
+assert("A expected customer price near reference", between(feeReceipt.customerGrossPriceCLP, 33000, 33200));
 
 const invoice = calculatePayoutFromTarget({ target: 80000, taxType: "factura_afecta", accountantReviewed: true, siiValidated: true });
 assert("B specialist IVA is positive", invoice.specialistIvaAmountCLP > 0);

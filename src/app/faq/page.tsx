@@ -1,5 +1,6 @@
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Preguntas frecuentes OficiosPro",
@@ -21,6 +22,7 @@ export default function FaqPage() {
     <main className="section grid gap-8">
       <PlatformNav />
       <AppHero eyebrow="FAQ" title="Preguntas frecuentes" subtitle="Respuestas iniciales para clientes, empresas y especialistas OficiosPro." />
+      <Reveal delay={0}>
       <section className="grid gap-4 md:grid-cols-2">
         {questions.map(([segment, question, answer]) => (
           <article key={question} className="panel">
@@ -30,6 +32,7 @@ export default function FaqPage() {
           </article>
         ))}
       </section>
+      </Reveal>
     </main>
   );
 }

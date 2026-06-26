@@ -1,7 +1,8 @@
 const steps = [
-  { n: "1", title: "Cuentanos tu oficio", text: "Eliges tu especialidad principal y tus servicios.", ring: "border-brand" },
-  { n: "2", title: "Ubica tu zona", text: "Marcas las comunas donde quieres recibir solicitudes.", ring: "border-sun" },
-  { n: "3", title: "Activa tu perfil", text: "Revisamos y dejamos tu perfil listo para mostrarse.", ring: "border-emerald-500" },
+  { n: "1", title: "Crea tu perfil", text: "Eliges tu oficio principal y completas tus datos básicos.", ring: "border-brand" },
+  { n: "2", title: "Declara tus servicios", text: "Sumas tus servicios, tarifa esperada y las comunas donde trabajas.", ring: "border-sun" },
+  { n: "3", title: "Quedas en revisión", text: "El equipo OficiosPro revisa tu perfil de forma manual en 48 h.", ring: "border-accent" },
+  { n: "4", title: "Apareces como fundador", text: "Activamos tu perfil para que te encuentren y recibas solicitudes.", ring: "border-emerald-500" },
 ];
 
 export function FounderTimeline() {
@@ -9,10 +10,10 @@ export function FounderTimeline() {
     <section id="proceso" className="rounded-[32px] border border-line bg-slate-50 p-7 md:p-10">
       <div className="max-w-2xl">
         <p className="eyebrow">Proceso claro</p>
-        <h2 className="section-title">Tres pasos y tu perfil queda activo</h2>
+        <h2 className="section-title">Cuatro pasos y tu perfil queda activo</h2>
       </div>
-      <div className="relative mt-10 grid gap-8 md:grid-cols-3">
-        <span className="pointer-events-none absolute left-[16%] right-[16%] top-9 hidden h-0.5 bg-gradient-to-r from-brand via-sun to-emerald-500 md:block" />
+      <div className="relative mt-10 grid gap-8 sm:grid-cols-2 md:grid-cols-4">
+        <span className="pointer-events-none absolute left-[12%] right-[12%] top-9 hidden h-0.5 bg-gradient-to-r from-brand via-sun to-emerald-500 md:block" />
         {steps.map((step) => (
           <div key={step.n} className="relative text-center">
             <span

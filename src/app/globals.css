@@ -188,6 +188,69 @@ a {
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Revelado al hacer scroll: el componente <Reveal> agrega .is-visible al entrar en viewport. */
+  .reveal {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    transition-delay: var(--reveal-delay, 0ms);
+  }
+  .reveal-left {
+    transform: translateX(-24px);
+  }
+  .reveal-right {
+    transform: translateX(24px);
+  }
+  .reveal-scale {
+    transform: scale(0.95);
+  }
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* Realce sutil al pasar el mouse (tarjetas, links destacados). */
+  .hover-lift {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+  }
+
+  /* Fondo de gradiente animado (auras de hero, CTAs premium). */
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient-pan 8s ease-in-out infinite;
+  }
+
+  /* Barrido de brillo al pasar el mouse. Envolver en un contenedor relative+overflow-hidden. */
+  .shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+    pointer-events: none;
+  }
+  .shine:hover::after {
+    animation: shimmer 0.9s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .reveal-left,
+  .reveal-right,
+  .reveal-scale {
+    opacity: 1 !important;
+    transform: none !important;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

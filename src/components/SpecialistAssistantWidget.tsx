@@ -158,7 +158,7 @@ export function SpecialistAssistantWidget() {
   }
 
   return (
-    <aside className="fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] right-3 z-40 md:right-6">
+    <aside className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] right-3 z-40 md:bottom-[calc(env(safe-area-inset-bottom)+1.5rem)] md:right-6">
       {open ? (
         <section
           className="mb-3 grid max-h-[72vh] w-[calc(100vw-1.5rem)] max-w-[410px] overflow-hidden rounded-[24px] border border-line bg-white shadow-lift"

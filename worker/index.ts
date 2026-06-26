@@ -1,3 +1,25 @@
+import {
+  escapeHtml,
+  isValidEmail,
+  isValidPhone,
+  isValidRutFormat,
+  priorityFor,
+  redactSensitive,
+  sanitizeEmail,
+  sanitizePayloadObject,
+  sanitizeText,
+} from "./lib/validation";
+import {
+  calculateWorkerClientCredits,
+  normalizeMoney,
+  workerPricingConfig,
+} from "./lib/pricing";
+import {
+  createMemoryRateLimitStore,
+  hitRateLimit,
+  rateLimitKeys,
+} from "./lib/rateLimit";
+
 type AssetsBinding = {
   fetch(request: Request): Promise<Response>;
 };
@@ -133,28 +155,6 @@ type LeadPayload = {
   payload?: Record<string, unknown>;
 };
 
-type WorkerPricingConfig = {
-  customerCreditValueCLP: number;
-  platformFeePercent: number;
-  paymentFeePercent: number;
-  riskBufferPercent: number;
-  fixedServiceFeeCLP: number;
-  emergencyMultiplier: number;
-  minimumClientCredits: number;
-  creditRoundingStep: number;
-};
-
-const workerPricingConfig: WorkerPricingConfig = {
-  customerCreditValueCLP: 1000,
-  platformFeePercent: 0.18,
-  paymentFeePercent: 0.035,
-  riskBufferPercent: 0.04,
-  fixedServiceFeeCLP: 2500,
-  emergencyMultiplier: 1.35,
-  minimumClientCredits: 12,
-  creditRoundingStep: 2,
-};
-
 type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
     leadType: LeadType;
     id: string;
@@ -170,7 +170,7 @@ type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
 const mercadoPagoApi = "https://api.mercadopago.com";
 const legacySpecialistEmailSubject = "Nueva postulación de especialista en OficiosPro";
 const maxJsonBodyBytes = 32_000;
-const memoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+const rateLimitStore = createMemoryRateLimitStore();
 const processedWebhookEvents = new Set<string>();
 const adminSessionCookieName = "oficiospro_admin_session";
 
@@ -2121,18 +2121,14 @@ async function enforceRateLimit(
   scope: string,
   options: { email?: string; phone?: string; limit: number; windowMs: number },
 ) {
-  const ip = clientIp(request);
-  const keys = [
-    `${scope}:ip:${ip}`,
-    options.email ? `${scope}:email:${sanitizeEmail(options.email) ?? "invalid"}` : "",
-    options.phone ? `${scope}:phone:${sanitizeText(options.phone, 40) ?? "invalid"}` : "",
-  ].filter(Boolean);
+  const keys = rateLimitKeys(scope, {
+    ip: clientIp(request),
+    email: options.email ? (sanitizeEmail(options.email) ?? "invalid") : undefined,
+    phone: options.phone ? (sanitizeText(options.phone, 40) ?? "invalid") : undefined,
+  });
   const now = Date.now();
   for (const key of keys) {
-    const current = memoryRateLimits.get(key);
-    const next = !current || current.resetAt <= now ? { count: 1, resetAt: now + options.windowMs } : { count: current.count + 1, resetAt: current.resetAt };
-    memoryRateLimits.set(key, next);
-    if (next.count > options.limit) throw new SafeHttpError(429, "rate_limited");
+    if (hitRateLimit(rateLimitStore, key, options.limit, options.windowMs, now)) throw new SafeHttpError(429, "rate_limited");
   }
 }
 
@@ -2285,23 +2281,6 @@ function safePrivateOrPublicAssetUrl(value: unknown, privateDocument: boolean) {
   if (!text || text.startsWith("blob:") || text.startsWith("data:")) return "";
   if (privateDocument) return text.startsWith("r2://") || text.startsWith("supabase-private://") ? text : "";
   return text.startsWith("/") || text.startsWith("https://") ? text : "";
-}
-
-function normalizeMoney(value: unknown) {
-  const amount = Number(value);
-  if (!Number.isFinite(amount) || amount < 0) return 0;
-  return Math.round(amount);
-}
-
-function calculateWorkerClientCredits(specialistExpectedPayoutCLP: number, emergencyAvailable: boolean) {
-  const basePrice =
-    specialistExpectedPayoutCLP +
-    specialistExpectedPayoutCLP * (workerPricingConfig.platformFeePercent + workerPricingConfig.paymentFeePercent + workerPricingConfig.riskBufferPercent) +
-    workerPricingConfig.fixedServiceFeeCLP;
-  const adjustedPrice = emergencyAvailable ? basePrice * workerPricingConfig.emergencyMultiplier : basePrice;
-  const rawCredits = adjustedPrice / workerPricingConfig.customerCreditValueCLP;
-  const roundedCredits = Math.ceil(rawCredits / workerPricingConfig.creditRoundingStep) * workerPricingConfig.creditRoundingStep;
-  return Math.max(workerPricingConfig.minimumClientCredits, roundedCredits);
 }
 
 async function insertLead(db: D1Database, lead: LeadRecord) {
@@ -2600,84 +2579,6 @@ function leadEmailHtml(lead: LeadRecord, env: Env) {
   const title = subjectForLead(lead);
   const adminUrl = `${(env.APP_BASE_URL ?? "https://oficiospro.cl").replace(/\/$/, "")}/admin/leads`;
   return `<div style="font-family:Arial,sans-serif;color:#0f172a"><!-- ${escapeHtml(legacySpecialistEmailSubject)} --><h1>${escapeHtml(title)}</h1><p>Revisar en admin con ID <strong>${escapeHtml(lead.id)}</strong>: <a href="${escapeHtml(adminUrl)}">${escapeHtml(adminUrl)}</a></p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;max-width:760px">${table}</table></div>`;
-}
-
-function priorityFor(urgency?: string) {
-  const value = (urgency ?? "").toLowerCase();
-  if (value.includes("hoy") || value.includes("urg")) return "alta";
-  return "normal";
-}
-
-function sanitizeText(value: unknown, maxLength: number) {
-  if (typeof value !== "string") return undefined;
-  return value
-    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, "")
-    .replace(/[<>]/g, "")
-    .replace(/[\u0000-\u001f\u007f]/g, " ")
-    .trim()
-    .slice(0, maxLength) || undefined;
-}
-
-function sanitizeEmail(value: unknown) {
-  const text = sanitizeText(value, 180);
-  if (!text) return undefined;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text) ? text.toLowerCase() : undefined;
-}
-
-function isValidEmail(value: unknown) {
-  return Boolean(sanitizeEmail(value));
-}
-
-function isValidPhone(value: unknown) {
-  const text = sanitizeText(value, 40);
-  return Boolean(text && /^[+0-9()\s-]{8,24}$/.test(text));
-}
-
-function isValidRutFormat(value: string) {
-  return /^\d{1,2}\.?\d{3}\.?\d{3}-?[\dkK]$/.test(value.trim());
-}
-
-function sanitizePayloadObject(value: unknown, depth = 0): unknown {
-  if (depth > 6) return undefined;
-  if (typeof value === "string") return sanitizeText(value, 4000) ?? "";
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-  if (typeof value === "boolean" || value === null || value === undefined) return value;
-  if (Array.isArray(value)) return value.slice(0, 50).map((item) => sanitizePayloadObject(item, depth + 1));
-  if (typeof value !== "object") return undefined;
-
-  const dangerousKeys = new Set(["role", "isadmin", "admin", "token", "authorization", "password", "admin_token", "admin_api_token"]);
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>)
-      .filter(([key]) => !dangerousKeys.has(key.toLowerCase()))
-      .slice(0, 80)
-      .map(([key, item]) => [sanitizeText(key, 80) ?? "field", sanitizePayloadObject(item, depth + 1)]),
-  );
-}
-
-function redactSensitive(value: unknown): unknown {
-  if (typeof value === "string") {
-    return value
-      .replace(/\b(\d{1,2})\.?\d{3}\.?\d{3}-?[\dkK]\b/g, "$1.***.***-*")
-      .replace(/\b([^@\s])[^@\s]*@([^@\s]+\.[^@\s]+)\b/g, "$1***@$2")
-      .replace(/(\+?56\s?9\s?)\d{4}\s?(\d{4})/g, "$1**** $2")
-      .replace(/Bearer\s+[A-Za-z0-9._-]+/g, "Bearer [REDACTED]");
-  }
-  if (Array.isArray(value)) return value.map(redactSensitive);
-  if (!value || typeof value !== "object") return value;
-  return Object.fromEntries(
-    Object.entries(value as Record<string, unknown>).map(([key, item]) => [
-      key,
-      /token|secret|password|authorization|rut|phone|whatsapp|email|cedula|selfie|idfront|idback/i.test(key) ? "[REDACTED]" : redactSensitive(item),
-    ]),
-  );
-}
-
-function escapeHtml(value: string) {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 async function createCheckout(request: Request, env: Env) {

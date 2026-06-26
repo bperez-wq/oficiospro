@@ -56,14 +56,19 @@ export function AppHero({
   children?: ReactNode;
 }) {
   return (
-    <section className="surface-grid overflow-hidden rounded-[28px] border border-line bg-white p-7 shadow-soft md:p-10">
-      <div className="grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
-        <div>
+    <section className="surface-grid relative overflow-hidden rounded-[28px] border border-line bg-white p-7 shadow-soft md:p-10">
+      <div aria-hidden className="hero-aura animate-gradient pointer-events-none absolute inset-0 opacity-70" />
+      <div className="relative grid gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div className="animate-fade-up">
           <p className="eyebrow">{eyebrow}</p>
           <h1 className="max-w-5xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">{title}</h1>
           <p className="mt-4 max-w-3xl text-lg font-semibold leading-8 text-muted">{subtitle}</p>
         </div>
-        {children ? <div className="flex flex-wrap gap-3">{children}</div> : null}
+        {children ? (
+          <div className="animate-fade-up flex flex-wrap gap-3" style={{ animationDelay: "120ms" }}>
+            {children}
+          </div>
+        ) : null}
       </div>
     </section>
   );

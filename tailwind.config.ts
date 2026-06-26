@@ -61,11 +61,34 @@ const config: Config = {
           "0%, 100%": { opacity: "1" },
           "50%": { opacity: "0.55" },
         },
+        "scale-in": {
+          "0%": { opacity: "0", transform: "scale(0.96)" },
+          "100%": { opacity: "1", transform: "scale(1)" },
+        },
+        "slide-down": {
+          "0%": { opacity: "0", transform: "translateY(-6px) scale(0.98)" },
+          "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        shimmer: {
+          "100%": { transform: "translateX(100%)" },
+        },
+        "gradient-pan": {
+          "0%, 100%": { "background-position": "0% 50%" },
+          "50%": { "background-position": "100% 50%" },
+        },
+        "bounce-soft": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-4px)" },
+        },
       },
       animation: {
         float: "float 6s ease-in-out infinite",
         "fade-up": "fade-up 0.6s ease-out both",
         "pulse-soft": "pulse-soft 2.4s ease-in-out infinite",
+        "scale-in": "scale-in 0.4s ease-out both",
+        "slide-down": "slide-down 0.18s ease-out both",
+        "gradient-pan": "gradient-pan 8s ease-in-out infinite",
+        "bounce-soft": "bounce-soft 1.6s ease-in-out infinite",
       },
     },
   },

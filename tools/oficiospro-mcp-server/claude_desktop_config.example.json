@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "oficiospro": {
+      "command": "node",
+      "args": ["C:\\Users\\Benjamin\\oficiospro\\oficiospro\\tools\\oficiospro-mcp-server\\dist\\index.js"],
+      "env": {
+        "OFICIOSPRO_BASE_URL": "https://oficiospro.cl",
+        "OFICIOSPRO_ADMIN_TOKEN": "replace-with-your-admin-token"
+      }
+    }
+  }
+}

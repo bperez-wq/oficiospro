@@ -2,6 +2,8 @@ import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
+import { SpecialistOpportunityTeaser } from "@/components/SpecialistOpportunityTeaser";
+import { Reveal } from "@/components/Reveal";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
@@ -17,16 +19,20 @@ export default function SpecialistRegisterPage() {
       <PlatformNav />
       <AppHero
         eyebrow="Especialista fundador"
-        title="Haz visible tu oficio en OficiosPro."
-        subtitle="Crea tu perfil fundador sin costo inicial, declara tus servicios y queda en revision para sumarte a la primera red de especialistas verificados por comuna."
+        title="Crea tu perfil de especialista."
+        subtitle="Sin costo inicial, declara tus servicios y queda en revisión para sumarte a la primera red por comuna. Puedes postular aunque tu categoría esté en formación."
       />
-      <section className="grid gap-3 md:grid-cols-4">
-        <DashboardMetricCard label="Piloto" value="Fundador" detail="Primera red por comuna" />
-        <DashboardMetricCard label="Costo inicial" value="$0" detail="Postulacion sin cobro" tone="brand" />
-        <DashboardMetricCard label="Perfil" value="Multiservicio" detail="Un perfil, varios servicios" />
-        <DashboardMetricCard label="Reputación" value="Acumulable" detail="Trabajos y calificaciones" />
-      </section>
-      <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+      <SpecialistOpportunityTeaser />
+      <Reveal>
+        <section className="grid gap-3 md:grid-cols-4">
+          <DashboardMetricCard label="Piloto" value="Fundador" detail="Primera red por comuna" />
+          <DashboardMetricCard label="Costo inicial" value="$0" detail="Postulacion sin cobro" tone="brand" />
+          <DashboardMetricCard label="Perfil" value="Multiservicio" detail="Un perfil, varios servicios" />
+          <DashboardMetricCard label="Reputación" value="Acumulable" detail="Trabajos y calificaciones" />
+        </section>
+      </Reveal>
+      <Reveal delay={80}>
+        <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <MarketplaceCard hover={false}>
           <p className="eyebrow">Por que postular</p>
           <h2 className="text-3xl font-black text-ink">Un perfil profesional para que te encuentren mejor.</h2>
@@ -60,8 +66,9 @@ export default function SpecialistRegisterPage() {
             ))}
           </div>
         </MarketplaceCard>
-      </section>
-      <section className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
+        </section>
+      </Reveal>
+      <section id="registro-form" className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <SpecialistRegisterForm />
         <MarketplaceCard className="overflow-hidden p-0" hover={false}>
           <div className="relative">
