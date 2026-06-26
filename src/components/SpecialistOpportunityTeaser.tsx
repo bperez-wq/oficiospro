@@ -113,7 +113,7 @@ export function SpecialistOpportunityTeaser() {
   }
 
   return (
-    <section className="overflow-hidden rounded-[32px] border border-brand/20 bg-gradient-to-br from-brand-soft to-white p-6 shadow-soft md:p-8">
+    <section className="animate-gradient overflow-hidden rounded-[32px] border border-brand/20 bg-gradient-to-br from-brand-soft via-white to-sun-soft/40 p-6 shadow-soft md:p-8">
       <p className="eyebrow text-brand">Descúbrelo en 20 segundos</p>
       <h2 className="mt-1 text-2xl font-black text-ink md:text-3xl">¿Cuánto podrías ganar con tu oficio en tu comuna?</h2>
       <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">
@@ -138,10 +138,10 @@ export function SpecialistOpportunityTeaser() {
       </div>
 
       {ready && pricing ? (
-        <div className="mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
+        <div className="animate-scale-in mt-6 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
           <div className="grid gap-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-2xl border border-line bg-white p-4">
+              <div className="hover-lift rounded-2xl border border-line bg-white p-4">
                 <p className="text-xs font-black uppercase tracking-wide text-muted">Precio de referencia</p>
                 <p className="mt-1 text-2xl font-black text-ink">
                   {clp.format(pricing.minTicket)} – {clp.format(pricing.maxTicket)}
@@ -152,7 +152,7 @@ export function SpecialistOpportunityTeaser() {
                     : "por servicio, rango general de referencia en OficiosPro."}
                 </p>
               </div>
-              <div className="rounded-2xl border border-line bg-white p-4">
+              <div className="hover-lift rounded-2xl border border-line bg-white p-4">
                 <p className="text-xs font-black uppercase tracking-wide text-muted">Demanda en {commune}</p>
                 <p className={`mt-1 text-2xl font-black ${highDemand ? "text-emerald-600" : "text-brand-dark"}`}>
                   {highDemand ? "Alta" : "Activa"}
@@ -212,7 +212,7 @@ export function SpecialistOpportunityTeaser() {
                 <p className="mt-1 text-xs font-bold text-muted">Tu perfil parte aquí. Complétalo para destacar y subir de nivel.</p>
               </div>
             </div>
-            <button type="button" className="btn-primary w-full" onClick={continueToForm}>
+            <button type="button" className="btn-primary shine w-full" onClick={continueToForm}>
               Quiero recibir estos clientes →
             </button>
           </div>
