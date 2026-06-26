@@ -258,6 +258,7 @@ if (assetDirectory === "./out") {
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
   assertRegex("next.config.ts", /output\s*:\s*["']export["']/, 'Next static export output = "export"');
+  assertRegex("next.config.ts", /turbopack\s*:\s*\{[\s\S]*root\s*:\s*process\.cwd\(\)/, "explicit Turbopack root for stable builds");
 
   if (packageJson) {
     if (!/\bnext\s+build\b/.test(packageJson.scripts?.build ?? "")) fail('package.json scripts.build must run "next build" for ./out deployments');
