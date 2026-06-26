@@ -360,6 +360,7 @@ if (assetDirectory === "./out") {
   assertContains("src/components/Forms.tsx", "Enviando...");
   assertContains("src/components/Forms.tsx", "specialist_application_submit");
   assertContains("src/components/Forms.tsx", "/?postulacion=recibida");
+  assertContains("src/components/Forms.tsx", "if (leadResult.stored)");
   assertContains("src/components/PostulationToast.tsx", "Postulación recibida");
   assertContains("src/data/commercialConfig.ts", "customerCreditValueCLP");
   assertContains("src/data/commercialConfig.ts", "certificationRequiredByCategory");

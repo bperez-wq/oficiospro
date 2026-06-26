@@ -49,6 +49,7 @@ Tipos sugeridos:
 | KZ-020 | Tracking de conversion muestra 404 en desarrollo local y listas de oficios generan keys duplicadas | Browser local / captura Benjamin 2026-06-26 | alto | alta | conversion | Codex | validando | Harden conversion event fallback and trade option dedupe | validate/build/dry-run | pendiente |
 | KZ-021 | Build Next infiere una raiz superior por lockfile externo y puede confundir Cloudflare/local | Warning Next build 2026-06-26 | medio | alta | operacion | Codex | validando | Pin Turbopack root for stable Next builds | validate/build/dry-run | pendiente |
 | KZ-022 | Rutas API con trailing slash pueden caer en endpoint_not_found por comparaciones exactas en Worker | trailingSlash=true / captura browser 2026-06-26 | alto | alta | estabilidad | Codex | validando | Normalize API trailing slashes in Worker routing | validate/test/build/dry-run | pendiente |
+| KZ-023 | Captura temprana de especialista no debe darse por deduplicada si D1 no confirmo stored=true | Incidente postulantes reales / auditoria Forms.tsx | alto | alta | crm | Codex | validando | Retry early specialist capture until remote store succeeds | validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 
