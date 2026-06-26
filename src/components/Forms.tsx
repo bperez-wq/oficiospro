@@ -17,6 +17,7 @@ import {
 import {
   buildAcquisitionContextFromSearch,
   founderQualityChecklist,
+  founderReferralHref,
   isInstitutionalAcquisitionSource,
   normalizeToken,
   sourceLabel,
@@ -108,6 +109,17 @@ const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
 const specialistEarlyContactCaptureKey = "oficiospro.specialistRegistrationContactCaptured";
+
+// Codigo de referido determinista (sin backend): queda capturado como referralCode
+// cuando el maestro invitado se registra, para honrar el bono de referido fundador.
+function buildSpecialistReferralCode(firstNames: string, lastNames: string, email: string) {
+  const base = `${firstNames}${lastNames}${email}`.toLowerCase();
+  let hash = 0;
+  for (let index = 0; index < base.length; index += 1) hash = (hash * 31 + base.charCodeAt(index)) >>> 0;
+  const initials = `${firstNames.trim()[0] ?? "O"}${lastNames.trim()[0] ?? "P"}`.toUpperCase().replace(/[^A-Z]/g, "");
+  const token = hash.toString(36).toUpperCase().slice(0, 4).padStart(4, "0");
+  return `OP-${initials || "OP"}-${token}`;
+}
 
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
@@ -575,6 +587,22 @@ export function SpecialistRegisterForm() {
   const selectedPrimaryTradeCoverage = selectedPrimaryTrade ? getTradeCoverageLabel(selectedPrimaryTrade) : "";
   const selectedPrimaryTradeIsForming = selectedPrimaryTrade ? isTradeForming(selectedPrimaryTrade) : false;
   const estimatedMinutesLeft = Math.max(1, 4 - Math.floor(step / 2));
+  const specialistFullName = `${identity.firstNames} ${identity.lastNames}`.trim();
+  const specialistReferralCode = buildSpecialistReferralCode(identity.firstNames, identity.lastNames, identity.email);
+  const previewServiceNames = services.map((service) => service.name.trim()).filter(Boolean);
+  const previewTrade = previewServiceNames[0] || "Mi oficio";
+
+  function inviteSpecialistViaWhatsApp() {
+    const link = typeof window !== "undefined" ? `${window.location.origin}${founderReferralHref(specialistReferralCode)}` : founderReferralHref(specialistReferralCode);
+    const message = `Compadre, me hice perfil en OficiosPro para que me lleguen pegas. Es gratis y son 5 minutos. Hazte uno con mi link 👇\n${link}`;
+    submitConversionEvent({
+      type: "specialist_referral_invite_shared",
+      sourceButton: "Invitar maestro WhatsApp",
+      sourceComponent: "SpecialistRegisterForm",
+      data: { referralCode: specialistReferralCode },
+    }).catch(() => {});
+    if (typeof window !== "undefined") window.open(`https://wa.me/?text=${encodeURIComponent(message)}`, "_blank", "noopener,noreferrer");
+  }
 
   useEffect(() => {
     const draft = readSpecialistQuickDraft();
@@ -1880,19 +1908,58 @@ export function SpecialistRegisterForm() {
         </div>
 
         {submitted ? (
-          <div className="grid gap-4 rounded-3xl border border-emerald-200 bg-emerald-50 p-6 text-center">
-            <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
-              <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
-                <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </span>
-            <div>
-              <h3 className="text-2xl font-black text-emerald-900">Recibimos tu postulación</h3>
-              <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-emerald-800">
-                Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te contactará antes de publicar tu perfil.
+          <div className="grid gap-5 rounded-3xl border border-brand/20 bg-gradient-to-br from-brand-soft to-emerald-50 p-6">
+            <div className="text-center">
+              <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
+                <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
+                  <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </span>
+              <h3 className="mt-3 text-2xl font-black text-ink">🎉 ¡Tu perfil quedó increíble!</h3>
+              <p className="mx-auto mt-1 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-black text-brand-dark shadow-soft">
+                🥇 Desbloqueaste el Badge Fundador
               </p>
             </div>
-            <Link className="btn-primary mx-auto" href="/?postulacion=recibida">
+
+            <div className="rounded-2xl border border-line bg-white p-5">
+              <p className="text-xs font-black uppercase tracking-wide text-muted">Así te verán los clientes</p>
+              <div className="mt-3 flex items-center gap-3">
+                {identityDocuments.profilePhotoUrl ? (
+                  <img src={identityDocuments.profilePhotoUrl} alt={specialistFullName || "Perfil"} className="h-14 w-14 rounded-full object-cover" />
+                ) : (
+                  <span className="grid h-14 w-14 place-items-center rounded-full bg-brand text-xl font-black text-white">
+                    {(specialistFullName.slice(0, 1) || previewTrade.slice(0, 1) || "★").toUpperCase()}
+                  </span>
+                )}
+                <div>
+                  <strong className="block text-lg text-ink">{specialistFullName || previewTrade}</strong>
+                  <span className="text-xs font-bold text-muted">{previewTrade} · {baseCommune} · Especialista fundador</span>
+                </div>
+              </div>
+              {previewServiceNames.length ? (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {previewServiceNames.slice(0, 4).map((name) => (
+                    <span key={name} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-ink">{name}</span>
+                  ))}
+                </div>
+              ) : null}
+              <p className="mt-3 text-xs font-bold text-muted">
+                Quedas en revisión para el programa fundador. El equipo OficiosPro revisará tus antecedentes (normalmente en 48 h) y te avisará antes de publicar tu perfil.
+              </p>
+            </div>
+
+            <div className="rounded-2xl border border-brand/20 bg-white p-5 text-center">
+              <h4 className="text-lg font-black text-ink">¿Conoces a otro maestro bueno?</h4>
+              <p className="mx-auto mt-1 max-w-md text-sm font-semibold leading-6 text-muted">
+                Invítalo y suma reputación de fundador. A los buenos maestros les va mejor cuando llegan recomendados.
+              </p>
+              <button type="button" className="btn-primary mx-auto mt-4 inline-flex items-center gap-2" onClick={inviteSpecialistViaWhatsApp}>
+                <span aria-hidden>📲</span> Invitar a un maestro por WhatsApp
+              </button>
+              <p className="mt-2 text-xs font-bold text-muted">Tu código: {specialistReferralCode}</p>
+            </div>
+
+            <Link className="btn-secondary mx-auto" href="/?postulacion=recibida">
               Volver al inicio
             </Link>
           </div>
