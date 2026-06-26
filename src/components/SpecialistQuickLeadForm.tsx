@@ -39,6 +39,11 @@ const popularTrades = [
   "Control de plagas",
 ];
 
+const datalistTradeOptions = uniqueTradeOptions([
+  ...popularTrades,
+  ...registrationServiceTypeOptions.map((option) => option.label),
+]);
+
 export function SpecialistQuickLeadForm({
   title = "Tienes un oficio? Te ayudamos a crear tu perfil.",
   text = "Deja tus datos basicos y el equipo OficiosPro te contacta para orientar tu postulacion.",
@@ -270,8 +275,8 @@ export function SpecialistQuickLeadForm({
           </label>
         </div>
         <datalist id={formId}>
-          {[...popularTrades, ...registrationServiceTypeOptions.map((option) => option.label)].map((option) => (
-            <option key={option} value={option} />
+          {datalistTradeOptions.map((option) => (
+            <option key={normalizeSearch(option)} value={option} />
           ))}
         </datalist>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -294,4 +299,14 @@ export function SpecialistQuickLeadForm({
 function findTrade(value: string) {
   const normalized = normalizeSearch(value);
   return registrationServiceTypeOptions.find((option) => normalizeSearch(option.label) === normalized || normalizeSearch(option.value) === normalized);
+}
+
+function uniqueTradeOptions(options: string[]) {
+  const seen = new Set<string>();
+  return options.filter((option) => {
+    const key = normalizeSearch(option);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }

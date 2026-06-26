@@ -317,6 +317,10 @@ if (assetDirectory === "./out") {
   assertContains("worker/index.ts", "communeName");
   assertContains("src/lib/leadClient.ts", "fetch(endpoint");
   assertContains("src/lib/leadClient.ts", "oficiospro.leadSubmissions.localBackup");
+  assertContains("src/lib/leadClient.ts", "submitConversionPayload");
+  assertContains("src/lib/analytics/index.ts", "oficiospro.analytics.localConversionEvents");
+  assertContains("src/lib/analytics/index.ts", "shouldUseLocalConversionFallback");
+  assertContains("src/components/SpecialistQuickLeadForm.tsx", "uniqueTradeOptions");
   assertContains("src/lib/leads.ts", "Estamos activando la recepci");
   assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
   for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {

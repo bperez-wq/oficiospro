@@ -46,6 +46,7 @@ Tipos sugeridos:
 | KZ-017 | Piloto necesita verificacion repetible de rutas publicas, SEO, admin y CRM antes de deploy | Kaizen / trabajo paralelo Codex-Claude | alto | alta | operacion | Codex | validando | Add pilot readiness check script | offline/validate/build/dry-run | pendiente |
 | KZ-018 | Readiness check confundia token placeholder con token real y bloqueaba con 401 admin | Corrida PowerShell 2026-06-25 | medio | alta | operacion | Codex | validando | Harden pilot readiness token handling | offline/validate/build/dry-run | pendiente |
 | KZ-019 | Readiness check necesita modo estricto para bloquear deploy si admin/CRM no se verifican | Kaizen release gate | alto | alta | operacion | Codex | validando | Add strict admin gate to pilot readiness check | strict/offline/validate/build/dry-run | pendiente |
+| KZ-020 | Tracking de conversion muestra 404 en desarrollo local y listas de oficios generan keys duplicadas | Browser local / captura Benjamin 2026-06-26 | alto | alta | conversion | Codex | validando | Harden conversion event fallback and trade option dedupe | validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

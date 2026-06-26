@@ -79,6 +79,8 @@ export type AnalyticsEventInput = {
 const anonymousIdKey = "oficiospro.analytics.anonymousId";
 const sessionIdKey = "oficiospro.analytics.sessionId";
 const attributionStorageKey = "oficiospro.analytics.attribution";
+const conversionEventsEndpoint = "/api/conversion-events/create";
+const localConversionEventsKey = "oficiospro.analytics.localConversionEvents";
 const sensitiveMetadataKeys = new Set([
   "rut",
   "password",
@@ -195,18 +197,7 @@ export async function trackEvent(input: AnalyticsEventInput) {
     }),
   };
 
-  try {
-    const response = await fetch("/api/conversion-events/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-      keepalive: true,
-    });
-    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; id?: string; stored?: boolean; error?: string };
-    return { ok: Boolean(data.ok) && response.ok, id: data.id, stored: Boolean(data.stored), error: data.error };
-  } catch (error) {
-    return { ok: false, stored: false, error: error instanceof Error ? error.message : "network_error" };
-  }
+  return submitConversionPayload(body, { keepalive: true });
 }
 
 export function trackPageView(eventName: AnalyticsEventName, metadata: AnalyticsMetadata = {}) {
@@ -227,6 +218,56 @@ export function sanitizeAnalyticsMetadata(value: unknown, depth = 0): unknown {
       .slice(0, 40)
       .map(([key, item]) => [key.slice(0, 60), sanitizeAnalyticsMetadata(item, depth + 1)]),
   );
+}
+
+export async function submitConversionPayload(
+  body: Record<string, unknown>,
+  options: { keepalive?: boolean } = {},
+) {
+  if (typeof window === "undefined") return { ok: false, stored: false, error: "server_context" };
+  if (shouldUseLocalConversionFallback()) return storeLocalConversionEvent(body, "local_dev");
+
+  try {
+    const response = await fetch(conversionEventsEndpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      keepalive: options.keepalive,
+    });
+    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; id?: string; stored?: boolean; error?: string };
+    if (response.ok && data.ok) return { ok: true, id: data.id, stored: Boolean(data.stored), error: data.error };
+
+    const fallback = storeLocalConversionEvent(body, data.error ?? `http_${response.status}`);
+    return { ...fallback, ok: false, error: data.error ?? `http_${response.status}`, remoteStatus: response.status };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "network_error";
+    const fallback = storeLocalConversionEvent(body, message);
+    return { ...fallback, ok: false, error: message };
+  }
+}
+
+function shouldUseLocalConversionFallback() {
+  const hostname = window.location.hostname;
+  return hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1" || hostname.endsWith(".localhost");
+}
+
+function storeLocalConversionEvent(body: Record<string, unknown>, reason: string) {
+  const id = `local_evt_${crypto.randomUUID()}`;
+  const event = {
+    ...body,
+    id,
+    stored: true,
+    localOnly: true,
+    fallbackReason: reason,
+    localCreatedAt: new Date().toISOString(),
+  };
+  try {
+    const current = JSON.parse(window.localStorage.getItem(localConversionEventsKey) ?? "[]") as unknown[];
+    window.localStorage.setItem(localConversionEventsKey, JSON.stringify([event, ...current].slice(0, 100)));
+    return { ok: true, id, stored: true, fallback: reason };
+  } catch {
+    return { ok: false, id, stored: false, error: "local_storage_unavailable", fallback: reason };
+  }
 }
 
 function readStoredAttribution() {
