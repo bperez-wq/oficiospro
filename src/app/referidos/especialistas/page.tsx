@@ -4,6 +4,7 @@ import { ReferralTool } from "@/components/referrals/ReferralTool";
 import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { femaleProfileImages } from "@/data/visualAssets";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Referidos de especialistas | OficiosPro",
@@ -47,6 +48,7 @@ export default function SpecialistReferralsPage() {
       <PlatformNav />
 
       {/* HERO */}
+      <Reveal delay={0}>
       <section className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
         <div>
           <p className="eyebrow">Referidos de especialistas</p>
@@ -77,7 +79,9 @@ export default function SpecialistReferralsPage() {
         </div>
         <ReferralTool />
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
         <SpecialistQuickLeadForm
           title="Recomienda a un buen especialista."
@@ -96,7 +100,7 @@ export default function SpecialistReferralsPage() {
             Invita a un buen especialista. Si postula y es aprobado, ayudas a fortalecer la red OficiosPro.
           </p>
           <a
-            className="btn-sun mt-5 inline-flex"
+            className="btn-sun shine mt-5 inline-flex"
             href={`https://wa.me/?text=${encodeURIComponent("Invita a un buen especialista a crear su perfil fundador en OficiosPro: https://www.oficiospro.cl/referidos/especialistas?source=referido_especialista&utm_source=whatsapp&utm_medium=share&utm_campaign=founder_specialist_referrals")}`}
             target="_blank"
             rel="noopener noreferrer"
@@ -105,8 +109,10 @@ export default function SpecialistReferralsPage() {
           </a>
         </div>
       </section>
+      </Reveal>
 
       {/* SEGUIMIENTO */}
+      <Reveal delay={140}>
       <section className="rounded-[32px] border border-line bg-slate-50 p-7 md:p-10">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
@@ -126,8 +132,10 @@ export default function SpecialistReferralsPage() {
           Las cifras apareceran cuando existan datos reales asociados a tu cuenta o codigo de referido.
         </p>
       </section>
+      </Reveal>
 
       {/* STEPS */}
+      <Reveal delay={210}>
       <section className="grid gap-6">
         <div className="max-w-2xl">
           <p className="eyebrow">Como funciona</p>
@@ -143,8 +151,10 @@ export default function SpecialistReferralsPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
       {/* FAQ con disclaimers */}
+      <Reveal delay={280}>
       <section className="grid gap-4 rounded-[32px] border border-line bg-white p-7 shadow-soft md:p-10">
         <p className="eyebrow">Preguntas frecuentes</p>
         <div className="grid gap-3">
@@ -161,6 +171,7 @@ export default function SpecialistReferralsPage() {
           ))}
         </div>
       </section>
+      </Reveal>
     </main>
   );
 }

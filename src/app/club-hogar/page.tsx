@@ -12,6 +12,7 @@ import { defaultTransactions, workStories } from "@/data/mock";
 import { formatCLP, subscriptionPlans } from "@/data/marketplace";
 import { shouldShowDemoData } from "@/lib/demoData";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Club Hogar OficiosPro | Creditos para mantenciones",
@@ -87,6 +88,7 @@ export default function ClubHogarPage() {
         </div>
       </VisualRail>
 
+      <Reveal delay={0}>
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="rounded-[28px] border border-line bg-white p-6 shadow-soft">
           <span className="chip bg-slate-100 text-muted">Sin suscripción</span>
@@ -125,17 +127,20 @@ export default function ClubHogarPage() {
               </div>
             ))}
           </div>
-          <ConversionButton type="lead_cliente" sourceButton="Elegir plan comparador Club Hogar" className="btn-primary mt-5 w-full">
+          <ConversionButton type="lead_cliente" sourceButton="Elegir plan comparador Club Hogar" className="btn-primary shine mt-5 w-full">
             Elegir plan
           </ConversionButton>
         </article>
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="grid gap-5 md:grid-cols-3" id="planes">
         {clientPlans.map((plan) => (
           <PlanActionCard key={plan.id} plan={plan} featured={plan.id === "plus"} />
         ))}
       </section>
+      </Reveal>
 
       <CreditExplainer
         availableCredits={featuredPlan.monthlyCredits}
@@ -144,6 +149,7 @@ export default function ClubHogarPage() {
         clubServiceCredits={10}
       />
 
+      <Reveal delay={140}>
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <article className="panel">
           <p className="eyebrow">Simulador visual</p>
@@ -182,7 +188,9 @@ export default function ClubHogarPage() {
           </div>
         </article>
       </section>
+      </Reveal>
 
+      <Reveal delay={210}>
       <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="panel">
           <p className="eyebrow">Casos de uso</p>
@@ -222,7 +230,9 @@ export default function ClubHogarPage() {
           <TransactionList transactions={visibleTransactions} />
         </article>
       </section>
+      </Reveal>
 
+      <Reveal delay={280}>
       <section>
         <div className="mb-6 max-w-3xl">
           <p className="eyebrow">Preguntas frecuentes</p>
@@ -230,6 +240,7 @@ export default function ClubHogarPage() {
         </div>
         <VisualFaqAccordion items={clubFaq} />
       </section>
+      </Reveal>
 
       <StickyMobileCTA>
         <a className="btn-primary min-h-11 flex-1 px-3 text-sm" href="#planes">

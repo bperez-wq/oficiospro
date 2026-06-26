@@ -4,6 +4,7 @@ import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem"
 import { PlatformNav } from "@/components/PlatformNav";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Piloto OficiosPro | Primeras comunas y especialistas",
@@ -32,6 +33,7 @@ export default function PilotPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
+      <Reveal delay={0}>
       <section className="overflow-hidden rounded-[34px] border border-line bg-white shadow-card">
         <div className="surface-grid grid gap-8 p-6 md:p-10 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
           <div>
@@ -44,7 +46,7 @@ export default function PilotPage() {
               <Link className="btn-primary" href="/especialistas">
                 Buscar especialistas
               </Link>
-              <AcquisitionTrackingLink href={founderHref} className="btn-sun" sourceButton="Crear perfil fundador piloto" context={founderContext}>
+              <AcquisitionTrackingLink href={founderHref} className="btn-sun shine" sourceButton="Crear perfil fundador piloto" context={founderContext}>
                 Crear perfil fundador
               </AcquisitionTrackingLink>
             </div>
@@ -57,7 +59,9 @@ export default function PilotPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="grid gap-5 lg:grid-cols-3">
         {pilotAudiences.map(([title, text]) => (
           <MarketplaceCard key={title} hover={false}>
@@ -67,7 +71,9 @@ export default function PilotPage() {
           </MarketplaceCard>
         ))}
       </section>
+      </Reveal>
 
+      <Reveal delay={140}>
       <section className="rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:p-8">
         <p className="eyebrow">Como funciona</p>
         <div className="mt-5 grid gap-3 md:grid-cols-4">
@@ -79,7 +85,9 @@ export default function PilotPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={210}>
       <section className="grid gap-5 lg:grid-cols-[1fr_0.8fr]">
         <MarketplaceCard hover={false}>
           <p className="eyebrow">Especialistas fundadores</p>
@@ -108,6 +116,7 @@ export default function PilotPage() {
           </div>
         </MarketplaceCard>
       </section>
+      </Reveal>
     </main>
   );
 }

@@ -15,6 +15,7 @@ import {
 } from "@/data/specialistAcquisition";
 import { seoWorkerAcquisitionPages } from "@/data/seoRoutes";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Especialistas Fundadores OficiosPro | Crea tu perfil",
@@ -52,6 +53,7 @@ export default function FounderSpecialistsPage() {
       <FounderHero registerHref={registerHref} context={founderContext} />
       <FounderStickyCta href={registerHref} />
 
+      <Reveal delay={0}>
       <section className="grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
         <SpecialistQuickLeadForm
           title="Tienes un oficio? Te ayudamos a crear tu perfil."
@@ -76,11 +78,13 @@ export default function FounderSpecialistsPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
       <div id="beneficios">
         <FounderValueCards />
       </div>
 
+      <Reveal delay={70}>
       <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-5 shadow-sm md:flex md:items-center md:justify-between md:gap-6">
         <div>
           <p className="text-sm font-black uppercase text-brand-dark">Perfil fundador sin costo inicial</p>
@@ -90,7 +94,7 @@ export default function FounderSpecialistsPage() {
         </div>
         <AcquisitionTrackingLink
           href={registerHref}
-          className="btn-primary mt-4 md:mt-0"
+          className="btn-primary shine mt-4 md:mt-0"
           sourceButton="CTA beneficios - Crear perfil sin costo"
           sourceComponent="FounderBenefitsCta"
           context={founderContext}
@@ -98,6 +102,7 @@ export default function FounderSpecialistsPage() {
           Crear perfil sin costo
         </AcquisitionTrackingLink>
       </section>
+      </Reveal>
 
       <FounderTimeline />
 
@@ -105,6 +110,7 @@ export default function FounderSpecialistsPage() {
 
       <FounderWizard context={founderContext} />
 
+      <Reveal delay={140}>
       <section id="referidos" className="rounded-[32px] border border-line bg-white p-7 shadow-soft md:p-8">
         <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
@@ -124,6 +130,7 @@ export default function FounderSpecialistsPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
       <FounderFinalCta registerHref={registerHref} referralHref={referralHref} context={founderContext} />
 

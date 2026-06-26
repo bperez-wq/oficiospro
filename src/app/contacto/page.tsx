@@ -1,6 +1,7 @@
 import { ContactForm } from "@/components/ContactForm";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Contacto OficiosPro | Solicitudes y soporte inicial",
@@ -18,6 +19,7 @@ export default function ContactoPage() {
         title="Hablemos de tu solicitud"
         subtitle="Escríbenos si necesitas un especialista para tu hogar, cobertura para empresa o postular como técnico verificado."
       />
+      <Reveal delay={0}>
       <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
         <article className="panel">
           <p className="eyebrow">Correo institucional</p>
@@ -36,6 +38,7 @@ export default function ContactoPage() {
         </article>
         <ContactForm />
       </section>
+      </Reveal>
     </main>
   );
 }

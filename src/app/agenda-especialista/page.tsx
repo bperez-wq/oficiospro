@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { SpecialistAgendaPanel } from "@/components/SpecialistAgendaPanel";
 import { specialists } from "@/data/mock";
+import { Reveal } from "@/components/Reveal";
 
 export default function AgendaEspecialistaPage() {
   const specialist = specialists[0];
@@ -17,11 +18,12 @@ export default function AgendaEspecialistaPage() {
         <Link className="btn-secondary" href={`/especialistas/${specialist.id}`}>
           Ver perfil público
         </Link>
-        <Link className="btn-primary" href="/registro-especialista">
+        <Link className="btn-primary shine" href="/registro-especialista">
           Crear mi perfil verificado
         </Link>
       </AppHero>
 
+      <Reveal delay={0}>
       <section className="grid gap-4 rounded-[28px] border border-line bg-white p-5 shadow-soft md:grid-cols-3">
         <article className="rounded-2xl bg-brand-soft p-4">
           <span className="text-xs font-black uppercase text-brand-dark">Control</span>
@@ -39,6 +41,7 @@ export default function AgendaEspecialistaPage() {
           <p className="mt-2 text-sm font-bold leading-6 text-muted">La estructura local queda preparada para conectar D1 y validaciones reales.</p>
         </article>
       </section>
+      </Reveal>
 
       <SpecialistAgendaPanel specialist={specialist} />
     </main>

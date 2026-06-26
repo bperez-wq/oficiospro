@@ -9,6 +9,7 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { PlatformNav } from "@/components/PlatformNav";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Impacto OficiosPro | Confianza para el trabajo tecnico",
@@ -72,6 +73,7 @@ export default function ImpactPage() {
         </ConversionButton>
       </PageHero>
 
+      <Reveal delay={0}>
       <section className="grid gap-4 md:grid-cols-4">
         {impactStats.map(([title, text]) => (
           <PremiumCard key={title} className="min-h-44">
@@ -80,7 +82,9 @@ export default function ImpactPage() {
           </PremiumCard>
         ))}
       </section>
+      </Reveal>
 
+      <Reveal delay={70}>
       <section className="grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
           <SectionHeader
@@ -98,7 +102,9 @@ export default function ImpactPage() {
         </div>
         <OperationalDashboardMock />
       </section>
+      </Reveal>
 
+      <Reveal delay={140}>
       <section>
         <SectionHeader
           eyebrow="Beneficios"
@@ -121,7 +127,9 @@ export default function ImpactPage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={210}>
       <section className="enterprise-shell p-6 md:p-8">
         <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
@@ -144,13 +152,15 @@ export default function ImpactPage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={280}>
       <section className="grid gap-5 lg:grid-cols-3">
         <PremiumCard>
           <p className="eyebrow">Hogares</p>
           <h2 className="text-2xl font-black">Créditos acumulables para servicios reales.</h2>
           <p className="mt-3 font-semibold leading-7 text-muted">Planifica mantenciones, reserva especialistas y conserva historial de uso sujeto a términos de vigencia.</p>
-          <ConversionButton type="lead_cliente" sourceButton="Impacto hogares bloque" className="btn-primary mt-5">
+          <ConversionButton type="lead_cliente" sourceButton="Impacto hogares bloque" className="btn-primary shine mt-5">
             Quiero usar OficiosPro
           </ConversionButton>
         </PremiumCard>
@@ -171,9 +181,11 @@ export default function ImpactPage() {
           </ConversionButton>
         </PremiumCard>
       </section>
+      </Reveal>
 
       <ContactTrustStrip email="bperez@oficiospro.cl" />
 
+      <Reveal delay={350}>
       <section className="rounded-[28px] border border-line bg-white p-6 shadow-soft md:p-8">
         <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
@@ -188,6 +200,7 @@ export default function ImpactPage() {
           </Link>
         </div>
       </section>
+      </Reveal>
 
       <StickyMobileCTA>
         <ConversionButton type="lead_cliente" sourceButton="Impacto sticky hogares" className="btn-primary flex-1 px-3">
