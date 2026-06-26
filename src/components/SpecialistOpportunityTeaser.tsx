@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 
 import { SearchableSelect } from "@/components/SearchableSelect";
+import { SpecialistRegisterModal } from "@/components/SpecialistRegisterModal";
 import { communeOptions, registrationServiceTypeOptions, specialtyOptionsForType } from "@/lib/catalog";
 import { nationalSpecialties } from "@/data/serviceCatalog";
 import { submitConversionEvent } from "@/lib/leadClient";
@@ -99,7 +100,9 @@ export function SpecialistOpportunityTeaser() {
 
   const monthlyEstimate = pricing ? pricing.medianTicket * jobsPerWeek * 4 : 0;
 
-  function continueToForm() {
+  // Guarda el borrador (el formulario lo precarga) y registra el lead antes de
+  // abrir el popup de inscripcion.
+  function prepareRegistration() {
     saveSpecialistQuickDraft({ serviceTypeId, baseCommuneName: commune, fromQuickSpecialist: true });
     submitConversionEvent({
       type: "specialist_opportunity_teaser_cta",
@@ -107,9 +110,6 @@ export function SpecialistOpportunityTeaser() {
       sourceComponent: "SpecialistOpportunityTeaser",
       data: { serviceTypeId, trade: tradeLabel, commune, jobsPerWeek },
     }).catch(() => {});
-    if (typeof document !== "undefined") {
-      document.getElementById("registro-form")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
   }
 
   return (
@@ -212,9 +212,11 @@ export function SpecialistOpportunityTeaser() {
                 <p className="mt-1 text-xs font-bold text-muted">Tu perfil parte aquí. Complétalo para destacar y subir de nivel.</p>
               </div>
             </div>
-            <button type="button" className="btn-primary shine w-full" onClick={continueToForm}>
-              Quiero recibir estos clientes →
-            </button>
+            <SpecialistRegisterModal
+              label="Quiero recibir estos clientes →"
+              className="btn-primary shine w-full"
+              onOpen={prepareRegistration}
+            />
           </div>
         </div>
       ) : (
