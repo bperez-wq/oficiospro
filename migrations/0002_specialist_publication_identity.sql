@@ -1,11 +1,8 @@
-ALTER TABLE specialist_applications ADD COLUMN slug TEXT;
-ALTER TABLE specialist_applications ADD COLUMN publicationStatus TEXT DEFAULT 'pending_review';
-ALTER TABLE specialist_applications ADD COLUMN identityVerificationJson TEXT;
-ALTER TABLE specialist_applications ADD COLUMN approvedAt TEXT;
-ALTER TABLE specialist_applications ADD COLUMN publishedAt TEXT;
-ALTER TABLE specialist_applications ADD COLUMN unpublishedAt TEXT;
-ALTER TABLE specialist_applications ADD COLUMN suspendedAt TEXT;
-ALTER TABLE specialist_applications ADD COLUMN deletedAt TEXT;
-
+-- Las columnas de publicacion/identidad de specialist_applications
+-- (slug, publicationStatus, identityVerificationJson, approvedAt, publishedAt,
+-- unpublishedAt, suspendedAt, deletedAt) forman parte del CREATE TABLE en
+-- 0001_leads.sql. Esta migracion solo conserva los indices (idempotentes); los
+-- ALTER TABLE ADD COLUMN se eliminaron porque duplicaban columnas existentes y
+-- rompian la aplicacion desde cero (duplicate column name: slug).
 CREATE INDEX IF NOT EXISTS idx_specialist_applications_slug ON specialist_applications (slug);
 CREATE INDEX IF NOT EXISTS idx_specialist_applications_publicationStatus ON specialist_applications (publicationStatus);
