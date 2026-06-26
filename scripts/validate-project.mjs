@@ -311,6 +311,7 @@ if (assetDirectory === "./out") {
   for (const endpoint of ["/api/leads", "/api/jobs/request", "/api/specialists/apply", "/api/companies/request", "/api/bookings/request", "/api/contact", "/api/admin/leads"]) {
     assertContains("worker/index.ts", endpoint);
   }
+  assertContains("worker/index.ts", "normalizeApiPathname");
   assertContains("worker/index.ts", "database_not_configured");
   assertContains("worker/index.ts", "RESEND_API_KEY");
   assertContains("worker/index.ts", "emailError");

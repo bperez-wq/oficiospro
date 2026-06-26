@@ -48,6 +48,7 @@ Tipos sugeridos:
 | KZ-019 | Readiness check necesita modo estricto para bloquear deploy si admin/CRM no se verifican | Kaizen release gate | alto | alta | operacion | Codex | validando | Add strict admin gate to pilot readiness check | strict/offline/validate/build/dry-run | pendiente |
 | KZ-020 | Tracking de conversion muestra 404 en desarrollo local y listas de oficios generan keys duplicadas | Browser local / captura Benjamin 2026-06-26 | alto | alta | conversion | Codex | validando | Harden conversion event fallback and trade option dedupe | validate/build/dry-run | pendiente |
 | KZ-021 | Build Next infiere una raiz superior por lockfile externo y puede confundir Cloudflare/local | Warning Next build 2026-06-26 | medio | alta | operacion | Codex | validando | Pin Turbopack root for stable Next builds | validate/build/dry-run | pendiente |
+| KZ-022 | Rutas API con trailing slash pueden caer en endpoint_not_found por comparaciones exactas en Worker | trailingSlash=true / captura browser 2026-06-26 | alto | alta | estabilidad | Codex | validando | Normalize API trailing slashes in Worker routing | validate/test/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 
