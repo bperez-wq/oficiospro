@@ -104,7 +104,7 @@ export const specialistTaxTypeLabels: Record<SpecialistFormalizationTaxType, str
   factura_afecta: "Emito factura afecta",
   boleta_honorarios: "Emito boleta de honorarios",
   factura_exenta: "Emito factura exenta",
-  unknown: "No se como documentar aun",
+  unknown: "No sé / necesito ayuda",
 };
 
 export const requiredDocumentLabels: Record<RequiredSpecialistDocumentKind, string> = {

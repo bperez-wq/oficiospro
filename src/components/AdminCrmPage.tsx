@@ -647,6 +647,15 @@ function AcquisitionView({
         </div>
       </section>
 
+      {enrichedRows.length === 0 && enrichedEvents.length === 0 ? (
+        <div className="rounded-[28px] border border-dashed border-brand/30 bg-brand-soft/40 p-6 text-center">
+          <p className="text-base font-black text-ink">Aun no hay datos de captacion</p>
+          <p className="mx-auto mt-2 max-w-xl text-sm font-bold leading-6 text-muted">
+            Cuando lleguen visitas con UTM, eventos del flujo de registro o postulaciones reales desde D1, este panel se poblara automaticamente. Comparte links con <span className="font-black text-brand-dark">?source=</span> o prueba el flujo de registro para generar los primeros eventos.
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
         {kpis.map((metric) => (
           <DashboardMetricCard key={metric.label} label={metric.label} value={metric.value} detail={metric.detail} tone={metric.tone} />
@@ -913,7 +922,9 @@ function SourceBreakdown({ rows }: { rows: { value: string; count: number }[] })
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm font-bold text-muted">Sin datos de fuentes todavia.</p>
+        <div className="mt-4 rounded-2xl border border-dashed border-line bg-slate-50/70 p-4 text-center text-sm font-bold text-muted">
+          Sin datos de fuentes todavia. Apareceran al recibir visitas con UTM o postulaciones.
+        </div>
       )}
     </section>
   );
@@ -937,7 +948,9 @@ function BarBreakdown({ title, rows, accent }: { title: string; rows: { value: s
           ))}
         </div>
       ) : (
-        <p className="mt-4 text-sm font-bold text-muted">Sin datos todavia.</p>
+        <div className="mt-4 rounded-2xl border border-dashed border-line bg-slate-50/70 p-4 text-center text-sm font-bold text-muted">
+          Sin datos todavia.
+        </div>
       )}
     </section>
   );
