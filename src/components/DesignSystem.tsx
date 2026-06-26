@@ -59,7 +59,7 @@ export function DashboardMetricCard({
         ? "border-brand/15 bg-brand-soft text-ink"
         : "border-line bg-white text-ink";
   return (
-    <article className={`rounded-2xl border ${compact ? "p-3" : "p-4"} shadow-sm ${toneClass}`}>
+    <article className={`hover-lift rounded-2xl border ${compact ? "p-3" : "p-4"} shadow-sm ${toneClass}`}>
       <span className={`text-xs font-black uppercase ${tone === "dark" ? "text-white/70" : "text-muted"}`}>{label}</span>
       <strong className={`mt-1 block font-black ${compact ? "text-lg" : "text-2xl"}`}>{value}</strong>
       {detail ? <p className={`mt-1 text-xs font-bold leading-5 ${tone === "dark" ? "text-white/70" : "text-muted"}`}>{detail}</p> : null}
