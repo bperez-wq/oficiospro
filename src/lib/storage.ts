@@ -16,6 +16,16 @@ import {
 } from "@/data/flexiblePricing";
 import { defaultCommercialConfig, getServiceTypeById, serviceTypes, type CommercialConfig, type SubscriptionPlan } from "@/data/marketplace";
 import { getTradeCategoryById } from "@/data/tradeTaxonomy";
+import {
+  isPublicSpecialistStatus,
+  specialistPublicationReadiness,
+  specialistSlug,
+  uniqueSpecialistSlug,
+} from "@/lib/specialists/profileHelpers";
+
+// Helpers puros del perfil de especialista (definidos en ./specialists/profileHelpers).
+// Se re-exportan para mantener la compatibilidad de imports `@/lib/storage`.
+export { isPublicSpecialistStatus, specialistPublicationReadiness, specialistSlug, uniqueSpecialistSlug };
 
 const keys = {
   wallet: "oficiospro.creditsWallet",
@@ -1655,25 +1665,6 @@ export function defaultIdentityVerification(): SpecialistIdentityVerification {
   };
 }
 
-export function specialistSlug(name: string, specialty?: string, commune?: string, fallback?: string) {
-  const base = [name, specialty, commune].filter(Boolean).join(" ");
-  const slug = (base || fallback || `especialista-${Date.now()}`)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "");
-  return slug || fallback || `especialista-${Date.now()}`;
-}
-
-export function uniqueSpecialistSlug(baseSlug: string, existingSlugs: string[]) {
-  const existing = new Set(existingSlugs.filter(Boolean));
-  if (!existing.has(baseSlug)) return baseSlug;
-  let suffix = 2;
-  while (existing.has(`${baseSlug}-${suffix}`)) suffix += 1;
-  return `${baseSlug}-${suffix}`;
-}
-
 export function getSpecialistBySlugOrId(idOrSlug: string, extraSpecialists: Specialist[] = []) {
   const needle = idOrSlug.trim();
   const publicPublished = getPublishedSpecialists();
@@ -1699,30 +1690,6 @@ export function getSpecialistBySlugOrId(idOrSlug: string, extraSpecialists: Spec
       availableCount: specialists.length,
     },
   };
-}
-
-export function isPublicSpecialistStatus(status?: SpecialistPublicationStatus) {
-  return status === undefined || status === "published";
-}
-
-export function specialistPublicationReadiness(request: PendingSpecialistProfile) {
-  const identity = request.identityVerification;
-  const completeReferences = (request.references ?? []).filter((reference) => reference.name && reference.phone && reference.work);
-  const services = request.services ?? [];
-  const missing = [
-    identity?.verificationStatus === "approved" ? "" : "Identidad aprobada",
-    completeReferences.length >= 3 ? "" : "3 referencias completas",
-    request.profilePhoto || identity?.profilePhotoUrl ? "" : "Foto pública",
-    identity?.idFrontUrl ? "" : "Cédula frontal",
-    identity?.idBackUrl ? "" : "Cédula reverso",
-    identity?.selfieUrl ? "" : "Selfie de verificación",
-    services.length ? "" : "Servicios declarados",
-    request.commune && request.coverageRadiusKm ? "" : "Comuna y cobertura",
-    services.some((service) => service.pricingMode === "quote_required" || Number(service.specialistExpectedPayoutCLP ?? service.specialistPayoutCLP ?? service.clientCredits ?? 0) > 0)
-      ? ""
-      : "Precios o modalidad de cotización",
-  ].filter(Boolean);
-  return { ok: missing.length === 0, missing };
 }
 
 function pendingServiceToFlexibleService(service: PendingSpecialistService, request: PendingSpecialistProfile, index: number): FlexibleService {
