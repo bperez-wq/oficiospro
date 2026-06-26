@@ -85,7 +85,7 @@ const results = [];
 
 console.log(`Pilot readiness check for ${baseUrl}`);
 console.log(offline ? "Offline mode: no network requests will be made." : "Live mode: public endpoints will be requested.");
-console.log(adminToken ? "Admin token: configured for read-only admin checks." : `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`);
+console.log(adminStatusMessage());
 console.log(requireAdmin ? "Strict admin gate: enabled." : "Strict admin gate: disabled.");
 console.log("");
 
@@ -368,6 +368,12 @@ function acceptHeader(expect) {
   if (expect === "xml") return "application/xml,text/xml,*/*";
   if (expect === "text") return "text/plain,*/*";
   return "text/html,*/*";
+}
+
+function adminStatusMessage() {
+  if (adminToken) return "Admin token: configured for read-only admin checks.";
+  if (offline) return `Admin token: ${adminTokenCheck.reason}; admin/API checks will use local route evidence only.`;
+  return `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`;
 }
 
 function contentLooksValid(text, expect) {

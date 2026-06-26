@@ -16,7 +16,9 @@
 - Implementado: `npm.cmd run release:gate`.
 - Incluye: auditoria Kaizen, `validate`, tests unitarios, auditoria SEO, readiness offline sin escribir reporte, build y Cloudflare dry-run.
 - No toca: pagos, precios, D1 remoto, migraciones, Mercado Pago ni deploy real.
-- Validar: ejecutar `npm.cmd run release:gate` antes de PR, merge o deploy sensible.
+- Validar durante desarrollo: ejecutar `npm.cmd run release:gate`.
+- Validar antes de merge/deploy: ejecutar `npm.cmd run release:gate:strict`.
+- Readiness offline ahora valida evidencia local de rutas publicas y rutas API del Worker.
 
 ## Claude
 
@@ -31,5 +33,5 @@
 
 ## Benjamin
 
-- Decision requerida: aprobar merge/deploy cuando el PR tenga `release:gate` en verde.
+- Decision requerida: aprobar merge/deploy cuando el PR tenga `release:gate:strict` en verde.
 - Nota: `/api/health` solo respondera en produccion despues de desplegar la rama que lo incluye.
