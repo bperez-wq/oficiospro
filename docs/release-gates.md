@@ -26,7 +26,7 @@ Requerido para cambios de codigo:
 
 - `npm.cmd run validate`.
 - `npm.cmd run build`.
-- `npx.cmd wrangler deploy --dry-run --assets ./out` si afecta deploy o build.
+- `npm.cmd run deploy:dry-run` si afecta deploy o build.
 
 Para cambios solo docs:
 
@@ -107,4 +107,3 @@ Un release se bloquea si:
 - Hay credenciales o datos sensibles.
 - Hay datos demo en vistas operativas de produccion.
 - El cambio puede afectar cobros reales sin prueba.
-

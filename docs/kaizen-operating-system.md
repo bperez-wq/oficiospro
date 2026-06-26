@@ -73,7 +73,7 @@ El objetivo no es hacer mas cambios, sino hacer mejores cambios: pequenos, traza
 5. Validacion
    - Ejecutar validaciones proporcionales al cambio.
    - Para codigo: `npm run validate`, `npm run build`.
-   - Para Cloudflare: `wrangler deploy --dry-run --assets ./out`.
+   - Para Cloudflare: `npm run deploy:dry-run`.
    - Para docs-only: validar formato, links internos y que no haya cambios funcionales.
 
 6. Despliegue
@@ -129,7 +129,7 @@ Un cambio esta terminado cuando:
 - Commit existe y el mensaje explica el cambio.
 - `npm run validate` pasa cuando aplica.
 - `npm run build` pasa cuando aplica.
-- `wrangler deploy --dry-run --assets ./out` pasa cuando aplica.
+- `npm run deploy:dry-run` pasa cuando aplica.
 - No existe `public/_redirects`.
 - No hay carpetas generadas en Git.
 - Cloudflare tiene variables/secrets requeridos.

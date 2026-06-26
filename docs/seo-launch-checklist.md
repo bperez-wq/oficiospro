@@ -10,7 +10,7 @@
 - Ejecutar `node scripts/seo-live-audit.mjs` contra produccion despues de desplegar.
 - Ejecutar `npm run validate`.
 - Ejecutar `npm run build`.
-- Ejecutar `wrangler deploy --dry-run --assets ./out`.
+- Ejecutar `npm run deploy:dry-run`.
 
 ## Rutas a probar
 

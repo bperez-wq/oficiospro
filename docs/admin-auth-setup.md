@@ -24,8 +24,7 @@ npx.cmd wrangler secret put ADMIN_API_TOKEN
 Deploy after changing secrets:
 
 ```powershell
-npm.cmd run build
-npx.cmd wrangler deploy --assets ./out
+npm.cmd run deploy
 ```
 
 ## How it works

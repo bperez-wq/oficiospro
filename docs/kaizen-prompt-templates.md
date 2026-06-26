@@ -43,7 +43,7 @@ Reglas:
 Validar:
 - npm run validate si aplica.
 - npm run build si aplica.
-- wrangler deploy --dry-run --assets ./out si aplica.
+- npm run deploy:dry-run si aplica.
 
 Commit:
 [mensaje de commit]
