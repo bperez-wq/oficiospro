@@ -110,6 +110,9 @@ console.log(`Report: ${path.relative(rootDir, outputPath)}`);
 console.log(`OK: ${summary.ok}`);
 console.log(`Warnings: ${summary.warnings}`);
 console.log(`Errors: ${summary.errors}`);
+if (summary.adminSkipped && !requireAdmin) {
+  console.log("Admin/CRM checks were skipped because no real admin token was provided. Use --require-admin before production deploy.");
+}
 
 if (summary.errors) process.exit(1);
 
