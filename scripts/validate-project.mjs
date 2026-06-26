@@ -261,6 +261,7 @@ if (assetDirectory === "./out") {
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
+  assertRegex("wrangler.toml", /binding\s*=\s*["']DB["'][\s\S]*database_name\s*=\s*["']oficiospro-leads["']/, "D1 binding DB for oficiospro-leads");
   assertRegex("next.config.ts", /output\s*:\s*["']export["']/, 'Next static export output = "export"');
   assertRegex("next.config.ts", /turbopack\s*:\s*\{[\s\S]*root\s*:\s*process\.cwd\(\)/, "explicit Turbopack root for stable builds");
 
