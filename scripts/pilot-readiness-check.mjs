@@ -64,6 +64,23 @@ const writeChecks = [
   },
 ];
 
+const offlineRouteEvidence = new Map([
+  ["/", { file: "src/app/page.tsx" }],
+  ["/especialistas", { file: "src/app/especialistas/page.tsx" }],
+  ["/registro-especialista", { file: "src/app/registro-especialista/page.tsx" }],
+  ["/especialistas-fundadores", { file: "src/app/especialistas-fundadores/page.tsx" }],
+  ["/bolsa", { file: "src/app/bolsa/page.tsx" }],
+  ["/club-hogar", { file: "src/app/club-hogar/page.tsx" }],
+  ["/empresas", { file: "src/app/empresas/page.tsx" }],
+  ["/sitemap.xml", { file: "public/sitemap.xml", text: "<urlset" }],
+  ["/robots.txt", { file: "public/robots.txt", text: "Sitemap:" }],
+  ["/api/health", { file: "worker/index.ts", text: "/api/health" }],
+  ["/api/leads", { file: "worker/index.ts", text: "/api/leads" }],
+  ["/api/admin/leads", { file: "worker/index.ts", text: "/api/admin/leads" }],
+  ["/api/admin/virtual-quotes", { file: "worker/index.ts", text: "virtual-quotes" }],
+  ["/api/admin/conversion-events", { file: "worker/index.ts", text: "/api/admin/conversion-events" }],
+]);
+
 const results = [];
 
 console.log(`Pilot readiness check for ${baseUrl}`);
@@ -74,7 +91,7 @@ console.log("");
 
 if (offline) {
   for (const check of [...publicChecks, ...adminChecks, ...writeChecks]) {
-    results.push({ group: groupFor(check), label: check.label, path: check.path, status: "offline", ok: true, critical: check.critical, note: "offline_check_skipped" });
+    results.push(checkOffline(check));
   }
 } else {
   for (const check of publicChecks) {
@@ -139,6 +156,22 @@ async function checkPublic(check) {
   } catch (error) {
     return failureResult("public", check, error);
   }
+}
+
+function checkOffline(check) {
+  const routePath = check.path.split("?")[0];
+  const evidence = offlineEvidenceFor(routePath);
+  const ok = Boolean(evidence) && offlineEvidenceExists(evidence);
+  return {
+    group: groupFor(check),
+    label: check.label,
+    path: check.path,
+    status: "offline",
+    ok,
+    critical: check.critical,
+    durationMs: 0,
+    note: ok ? `local_evidence:${evidence.file}` : "local_evidence_missing",
+  };
 }
 
 async function checkAdmin(check) {
@@ -258,12 +291,28 @@ ${summary.adminSkipped && !requireAdmin ? "- CAUTION: admin checks were skipped.
 
 function summarize(items) {
   return {
-    ok: items.filter((item) => item.ok && item.status !== "skipped" && item.status !== "offline").length,
+    ok: items.filter((item) => item.ok && item.status !== "skipped").length,
     warnings: items.filter((item) => !item.ok && !item.critical).length,
     errors: items.filter((item) => !item.ok && item.critical).length,
-    skipped: items.filter((item) => item.status === "skipped" || item.status === "offline").length,
+    skipped: items.filter((item) => item.status === "skipped").length,
     adminSkipped: items.some((item) => item.group === "admin" && item.status === "skipped"),
   };
+}
+
+function offlineEvidenceFor(routePath) {
+  if (offlineRouteEvidence.has(routePath)) return offlineRouteEvidence.get(routePath);
+  if (routePath.startsWith("/api/admin/crm/")) {
+    const resource = routePath.replace("/api/admin/crm/", "");
+    return { file: "worker/index.ts", text: resource };
+  }
+  return null;
+}
+
+function offlineEvidenceExists(evidence) {
+  const filePath = path.join(rootDir, evidence.file);
+  if (!fs.existsSync(filePath)) return false;
+  if (!evidence.text) return true;
+  return fs.readFileSync(filePath, "utf8").includes(evidence.text);
 }
 
 function failureResult(group, check, error) {

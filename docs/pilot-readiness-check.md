@@ -49,6 +49,8 @@ reports/pilot-readiness/YYYY-MM-DD.md
 
 Cuando se usa `--no-report`, el check imprime resultados en consola pero no modifica `reports/pilot-readiness/`.
 
+En modo offline no se hacen requests. El script revisa evidencia local: archivos de rutas publicas, `public/sitemap.xml`, `public/robots.txt` y rutas API declaradas en `worker/index.ts`.
+
 ## Checks incluidos
 
 Publicos:
