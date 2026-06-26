@@ -22,6 +22,7 @@ import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { Reveal } from "@/components/Reveal";
 
 export const metadata: Metadata = buildPublicRouteMetadata({
   title: "OficiosPro Chile | Especialistas verificados para hogar y empresas",
@@ -127,6 +128,7 @@ export default function HomePage() {
 
       <QuickProblemLinks />
 
+      <Reveal delay={0}>
       <section className="mx-auto grid max-w-7xl gap-3 px-5 md:grid-cols-5">
         {[
           ["4,9/5", "ejemplo piloto"],
@@ -141,7 +143,9 @@ export default function HomePage() {
           </article>
         ))}
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="section-compact">
         <SectionHeader
           eyebrow="Cómo funciona"
@@ -150,14 +154,18 @@ export default function HomePage() {
         />
         <HowItWorksFlow />
       </section>
+      </Reveal>
 
+      <Reveal delay={0}>
       <section className="section-compact">
         <div className="rounded-[32px] bg-slate-50 p-5 md:p-8">
           <SectionHeader eyebrow="Trabajos realizados" title="Evidencia visual antes de reservar." text="La confianza mejora cuando puedes ver trabajos, comunas, créditos usados y calificaciones." />
           <WorkProofGallery stories={workStories} />
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="section-compact" id="club-hogar">
         <div className="grid gap-6 rounded-[32px] border border-line bg-white p-6 shadow-soft lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
           <div>
@@ -188,11 +196,15 @@ export default function HomePage() {
           </div>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={0}>
       <section className="section-compact">
         <HomeCreditPreview />
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="bg-enterprise py-20 text-white" id="empresas">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
@@ -228,7 +240,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={0}>
       <section className="section">
         <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
           <div>
@@ -262,7 +276,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="section-compact" id="especialistas">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
@@ -298,7 +314,9 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={0}>
       <section className="section-compact">
         <div className="grid gap-6 rounded-[32px] border border-line bg-white p-6 shadow-soft md:grid-cols-[1fr_auto] md:items-center md:p-10">
           <div>
@@ -313,7 +331,9 @@ export default function HomePage() {
           </ConversionButton>
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="section-compact">
         <div className="grid gap-5 md:grid-cols-3">
           <CTA title="Soy cliente" text="Busca técnicos, compara reputación y reserva con créditos." type="lead_cliente" label="Crear cuenta" />
@@ -328,12 +348,16 @@ export default function HomePage() {
           />
         </div>
       </section>
+      </Reveal>
 
+      <Reveal delay={0}>
       <section className="section-compact">
         <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="Explora por rubro: cada grupo despliega sus especialidades." />
         <HomeCategoryAccordion />
       </section>
+      </Reveal>
 
+      <Reveal delay={80}>
       <section className="section-compact grid gap-3">
         <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">Más sobre la red OficiosPro</h2>
         <CollapsiblePanel title="Cobertura nacional" detail="Regiones y comunas donde opera la red.">
@@ -349,6 +373,7 @@ export default function HomePage() {
           <LocalSeoPanel />
         </CollapsiblePanel>
       </section>
+      </Reveal>
     </main>
   );
 }
