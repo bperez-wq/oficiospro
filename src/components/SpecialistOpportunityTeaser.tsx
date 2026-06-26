@@ -113,7 +113,7 @@ export function SpecialistOpportunityTeaser() {
   }
 
   return (
-    <section className="animate-gradient overflow-hidden rounded-[32px] border border-brand/20 bg-gradient-to-br from-brand-soft via-white to-sun-soft/40 p-6 shadow-soft md:p-8">
+    <section className="animate-gradient relative rounded-[32px] border border-brand/20 bg-gradient-to-br from-brand-soft via-white to-sun-soft/40 p-6 shadow-soft md:p-8">
       <p className="eyebrow text-brand">Descúbrelo en 20 segundos</p>
       <h2 className="mt-1 text-2xl font-black text-ink md:text-3xl">¿Cuánto podrías ganar con tu oficio en tu comuna?</h2>
       <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-muted">

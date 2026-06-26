@@ -1658,7 +1658,7 @@ export function SpecialistRegisterForm() {
           ].map(([title, text], index) => (
             <button
               key={title}
-              className={`rounded-2xl border p-4 text-left transition ${
+              className={`min-w-0 rounded-2xl border p-3 text-left transition ${
                 step === index + 1 ? "border-brand bg-brand text-white shadow-lg shadow-brand/20" : "border-line bg-slate-50 text-ink hover:border-brand/40"
               }`}
               type="button"
@@ -1669,7 +1669,7 @@ export function SpecialistRegisterForm() {
               }}
             >
               <span className="text-xs font-black uppercase">Paso {index + 1}</span>
-              <strong className="mt-1 block">{title}</strong>
+              <strong className="mt-1 block break-words text-sm leading-tight">{title}</strong>
               <span className={`mt-1 block text-xs font-bold ${step === index + 1 ? "text-white/75" : "text-muted"}`}>{text}</span>
             </button>
           ))}
@@ -1691,7 +1691,12 @@ export function SpecialistRegisterForm() {
           </div>
         ) : null}
         {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
-        <section className={step <= 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <section className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="md:col-span-2">
+            <p className="eyebrow">Identidad</p>
+            <h3 className="text-2xl font-black text-ink">Empecemos por lo básico</h3>
+            <p className="mt-1 text-sm font-bold text-muted">Solo tu nombre y cómo contactarte. El RUT y la verificación van al final.</p>
+          </div>
           <label className="field">
             Nombres
             <input value={identity.firstNames} onChange={(event) => setIdentity({ ...identity, firstNames: event.target.value })} placeholder="Ej: Juan" />
@@ -1714,6 +1719,14 @@ export function SpecialistRegisterForm() {
             <span className="text-xs font-bold text-muted">Ayuda a que tu perfil genere mas confianza. Puedes agregarla despues.</span>
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
+        </section>
+
+        <section className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="md:col-span-2">
+            <p className="eyebrow">Cobertura</p>
+            <h3 className="text-2xl font-black text-ink">¿Dónde trabajas?</h3>
+            <p className="mt-1 text-sm font-bold text-muted">Define tu comuna base y hasta dónde llegas. Así te mostramos a clientes de tu zona.</p>
+          </div>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
