@@ -25,6 +25,7 @@ import {
 } from "@/data/specialistAcquisition";
 import { pricingModeLabels, pricingModeOptions, type PricingMode } from "@/data/flexiblePricing";
 import { specialistTaxTypeLabels, type SpecialistFormalizationTaxType } from "@/data/specialistFormalization";
+import { nationalSpecialties } from "@/data/serviceCatalog";
 import {
   getTradeCategoryById,
   getTradeCoverageLabel,
@@ -109,6 +110,31 @@ const specialistDbFallbackMessage =
   "Estamos activando la recepción automática. Escríbenos a bperez@oficiospro.cl.";
 const specialistStepLabels = ["Identidad", "Cobertura", "Servicios", "Formalizacion", "Referencias", "Revision"];
 const specialistEarlyContactCaptureKey = "oficiospro.specialistRegistrationContactCaptured";
+
+// Asistente de servicios (sin LLM, basado en catalogo real). Sugiere un precio de
+// referencia y un borrador de descripcion para reducir la friccion del paso 3.
+// Las sugerencias son editables y se etiquetan como tales: no inventamos datos.
+const assistDiacriticsRegex = new RegExp("[\\u0300-\\u036f]", "g");
+function normalizeAssistName(value: string) {
+  return value.normalize("NFD").replace(assistDiacriticsRegex, "").toLowerCase().trim();
+}
+
+function findSpecialtyDetail(specialtyName: string) {
+  if (!specialtyName || specialtyName === OTHER_SERVICE_VALUE) return null;
+  const target = normalizeAssistName(specialtyName);
+  return nationalSpecialties.find((specialty) => normalizeAssistName(specialty.name) === target) ?? null;
+}
+
+function suggestedSpecialistPayoutCLP(detail: { expectedTicketCLP: { min: number; max: number | null } }) {
+  const { min } = detail.expectedTicketCLP;
+  if (!Number.isFinite(min) || min <= 0) return 0;
+  return Math.round(min / 1000) * 1000;
+}
+
+function buildDraftServiceDescription(detail: { name: string; typicalServices: string[] }) {
+  const tareas = detail.typicalServices.slice(0, 4).join(", ");
+  return `Servicio profesional de ${detail.name.toLowerCase()}.${tareas ? ` Incluye ${tareas}.` : ""} Trabajo prolijo y responsable, coordinado a través de OficiosPro. Los materiales y condiciones se acuerdan según cada caso.`;
+}
 
 // Codigo de referido determinista (sin backend): queda capturado como referralCode
 // cuando el maestro invitado se registra, para honrar el bono de referido fundador.
@@ -1973,6 +1999,46 @@ export function SpecialistRegisterForm() {
   );
 }
 
+function ServiceAssist({ service, onChange }: { service: ServiceDraft; onChange: (patch: Partial<ServiceDraft>) => void }) {
+  const detail = findSpecialtyDetail(service.specialty);
+  if (!detail) return null;
+  const suggestedPayout = suggestedSpecialistPayoutCLP(detail);
+  const { min, max } = detail.expectedTicketCLP;
+  return (
+    <div className="rounded-2xl border border-brand/20 bg-brand-soft p-4 md:col-span-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-xs font-black uppercase tracking-wide text-brand-dark">✨ Te ayudamos a completar</span>
+        {min ? (
+          <span className="text-xs font-bold text-brand-dark/70">
+            Referencia al cliente: {formatCLP(min)}{max ? `–${formatCLP(max)}` : "+"}
+          </span>
+        ) : null}
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {suggestedPayout > 0 ? (
+          <button
+            type="button"
+            className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft transition hover:bg-brand hover:text-white"
+            onClick={() => onChange({ specialistExpectedPayoutCLP: suggestedPayout, specialistPayoutCLP: suggestedPayout, name: service.name || detail.name })}
+          >
+            Usar {formatCLP(suggestedPayout)} como punto de partida
+          </button>
+        ) : null}
+        <button
+          type="button"
+          className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft transition hover:bg-brand hover:text-white"
+          onClick={() => onChange({ description: service.description || buildDraftServiceDescription(detail), name: service.name || detail.name })}
+        >
+          Generar borrador de descripción
+        </button>
+      </div>
+      <p className="mt-2 text-xs font-bold leading-5 text-brand-dark/70">
+        Sugerencias editables del catálogo OficiosPro. Ajusta el precio a lo que tú quieres ganar.
+      </p>
+    </div>
+  );
+}
+
 function ServiceEditor({
   service,
   index,
@@ -2016,6 +2082,7 @@ function ServiceEditor({
           placeholder="Busca gasfitería, aire, refrigeración..."
           required
         />
+        <ServiceAssist service={service} onChange={onChange} />
         {service.specialty === OTHER_SERVICE_VALUE ? (
           <label className="field md:col-span-2">
             Describe qué necesitas ofrecer
