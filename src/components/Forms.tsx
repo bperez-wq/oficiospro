@@ -147,6 +147,48 @@ function buildSpecialistReferralCode(firstNames: string, lastNames: string, emai
   return `OP-${initials || "OP"}-${token}`;
 }
 
+// "Fuerza de perfil": completitud ponderada del perfil del especialista. Sube en
+// vivo a medida que completa secciones (Goal Gradient). Los pesos suman 100.
+type ProfileStrengthInput = {
+  fullName: string;
+  whatsapp: string;
+  email: string;
+  region: string;
+  commune: string;
+  hasPhoto: boolean;
+  services: ServiceDraft[];
+  completedReferences: number;
+  hasCertificationDeclared: boolean;
+  portfolioCount: number;
+  rut: string;
+  hasIdentityDoc: boolean;
+};
+
+function computeProfileStrength(input: ProfileStrengthInput) {
+  const firstService = input.services[0];
+  const items = [
+    { label: "tu nombre", weight: 10, done: input.fullName.trim().length > 1 },
+    { label: "tu contacto", weight: 10, done: Boolean(input.whatsapp && input.email) },
+    { label: "tu comuna", weight: 10, done: Boolean(input.region && input.commune) },
+    { label: "una foto de perfil", weight: 15, done: input.hasPhoto },
+    { label: "un servicio con precio", weight: 20, done: Boolean(firstService && firstService.name.trim() && Number(firstService.specialistExpectedPayoutCLP) > 0) },
+    { label: "una descripción de tu servicio", weight: 10, done: Boolean(firstService && firstService.description.trim().length > 10) },
+    { label: "una referencia", weight: 10, done: input.completedReferences > 0 },
+    { label: "tus certificaciones", weight: 5, done: input.hasCertificationDeclared },
+    { label: "una foto de tu trabajo", weight: 5, done: input.portfolioCount > 0 },
+    { label: "tu validación de identidad", weight: 5, done: Boolean(input.rut.trim() && input.hasIdentityDoc) },
+  ];
+  const percent = items.reduce((sum, item) => sum + (item.done ? item.weight : 0), 0);
+  const next = items.find((item) => !item.done);
+  const level =
+    percent >= 100 ? "Perfil destacado" :
+    percent >= 85 ? "Perfil verificado" :
+    percent >= 65 ? "Perfil fuerte" :
+    percent >= 40 ? "Perfil en forma" :
+    "Perfil inicial";
+  return { percent, level, nextLabel: next?.label ?? "" };
+}
+
 function createEmptyService(): ServiceDraft {
   const type = serviceTypes[0];
   return {
@@ -617,6 +659,20 @@ export function SpecialistRegisterForm() {
   const specialistReferralCode = buildSpecialistReferralCode(identity.firstNames, identity.lastNames, identity.email);
   const previewServiceNames = services.map((service) => service.name.trim()).filter(Boolean);
   const previewTrade = previewServiceNames[0] || "Mi oficio";
+  const profileStrength = computeProfileStrength({
+    fullName: specialistFullName,
+    whatsapp: identity.whatsapp,
+    email: identity.email,
+    region: baseRegion,
+    commune: baseCommune,
+    hasPhoto: Boolean(identityDocuments.profilePhotoUrl),
+    services,
+    completedReferences: completedReferences.length,
+    hasCertificationDeclared: hasNoFormalCertifications || selectedCertifications.length > 0,
+    portfolioCount: portfolioPhotos.length,
+    rut: identity.rut,
+    hasIdentityDoc: Boolean(identityDocuments.idFrontUrl || identityDocuments.selfieUrl),
+  });
 
   function inviteSpecialistViaWhatsApp() {
     const link = typeof window !== "undefined" ? `${window.location.origin}${founderReferralHref(specialistReferralCode)}` : founderReferralHref(specialistReferralCode);
@@ -1576,6 +1632,20 @@ export function SpecialistRegisterForm() {
           <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100" role="progressbar" aria-valuenow={step} aria-valuemin={1} aria-valuemax={6}>
             <div className="h-full rounded-full bg-gradient-to-r from-brand to-brand-dark transition-all duration-300" style={{ width: `${(step / 6) * 100}%` }} />
           </div>
+        </div>
+        <div className="grid gap-2 rounded-2xl border border-brand/20 bg-brand-soft p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-xs font-black uppercase tracking-wide text-brand-dark">💪 Fuerza de tu perfil · {profileStrength.level}</span>
+            <span className="text-sm font-black text-brand-dark">{profileStrength.percent}%</span>
+          </div>
+          <div className="h-2.5 w-full overflow-hidden rounded-full bg-white" role="progressbar" aria-valuenow={profileStrength.percent} aria-valuemin={0} aria-valuemax={100}>
+            <div className="h-full rounded-full bg-gradient-to-r from-brand to-brand-dark transition-all duration-500" style={{ width: `${profileStrength.percent}%` }} />
+          </div>
+          {profileStrength.nextLabel ? (
+            <span className="text-xs font-bold text-brand-dark/80">Agrega {profileStrength.nextLabel} para subir tu perfil.</span>
+          ) : (
+            <span className="text-xs font-bold text-brand-dark/80">¡Perfil al 100%! Quedas listo para destacar. 🥇</span>
+          )}
         </div>
         <div className="grid gap-3 md:grid-cols-6">
           {[
