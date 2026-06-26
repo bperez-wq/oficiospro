@@ -57,6 +57,7 @@ Tipos sugeridos:
 | KZ-028 | Readiness live sin token muestra warnings que pueden confundirse con falla real | Corrida live sin ADMIN_TOKEN 2026-06-26 | bajo | media | operacion | Codex | validando | Clarify skipped admin checks in pilot readiness output | offline/live/validate | pendiente |
 | KZ-029 | Readiness no distinguia si el Worker/API estaba vivo aunque las paginas estaticas cargaran | Operacion Cloudflare / piloto | alto | alta | estabilidad | Codex | validando | Add safe Worker health check to readiness gates | test/validate/build/dry-run | pendiente |
 | KZ-030 | Binding D1 correcto debe quedar protegido por validacion automatica | Incidentes previos DB/oficiospro_leads | alto | media | operacion | Codex | validando | Guard D1 DB binding in project validation | validate/build/dry-run | pendiente |
+| KZ-031 | Validaciones de release estaban dispersas y dependian de memoria operativa | Kaizen / trabajo multiagente 2026-06-26 | alto | alta | operacion | Codex | validando | Add unified platform release gate | release:gate/validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

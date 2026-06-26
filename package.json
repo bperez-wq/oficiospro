@@ -10,6 +10,7 @@
     "predeploy": "npm run validate && npm run build",
     "deploy": "wrangler deploy",
     "deploy:dry-run": "wrangler deploy --dry-run --assets ./out",
+    "release:gate": "node scripts/platform-release-gate.mjs",
     "start": "next start",
     "validate": "node scripts/validate-project.mjs",
     "test": "npm run test:unit",

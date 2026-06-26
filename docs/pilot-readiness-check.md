@@ -13,6 +13,13 @@ cd C:\Users\Benjamin\oficiospro\oficiospro
 npm run pilot:readiness -- --offline
 ```
 
+Modo offline sin escribir reporte, util para gates automatizados:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+npm run pilot:readiness -- --offline --no-report
+```
+
 Modo live contra produccion:
 
 ```powershell
@@ -39,6 +46,8 @@ El reporte queda en:
 ```text
 reports/pilot-readiness/YYYY-MM-DD.md
 ```
+
+Cuando se usa `--no-report`, el check imprime resultados en consola pero no modifica `reports/pilot-readiness/`.
 
 ## Checks incluidos
 

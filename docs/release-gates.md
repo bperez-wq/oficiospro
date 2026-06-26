@@ -28,6 +28,15 @@ Requerido para cambios de codigo:
 - `npm.cmd run build`.
 - `npm.cmd run deploy:dry-run` si afecta deploy o build.
 
+Gate completo recomendado antes de PR, merge o deploy:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+npm.cmd run release:gate
+```
+
+Este comando ejecuta auditoria Kaizen, validacion, tests unitarios, auditoria SEO, readiness offline sin escribir reporte, build y dry-run de Cloudflare. No hace deploy real ni migraciones.
+
 Para cambios solo docs:
 
 - `npm.cmd run validate` si es rapido.

@@ -174,6 +174,9 @@ if (existsSync(fullPath("package.json"))) {
       fail("package.json scripts.predeploy must run validate and build before deploy");
     }
     if (!scripts["deploy:dry-run"] || !scripts["deploy:dry-run"].includes("--dry-run")) fail("package.json missing scripts.deploy:dry-run");
+    if (!scripts["release:gate"] || !scripts["release:gate"].includes("scripts/platform-release-gate.mjs")) {
+      fail("package.json missing scripts.release:gate");
+    }
   } catch (error) {
     fail(`package.json is not valid JSON: ${error.message}`);
   }

@@ -11,6 +11,7 @@ const baseUrl = (process.env.PILOT_BASE_URL || process.env.APP_BASE_URL || proce
 const adminTokenCheck = validateAdminToken(process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "");
 const adminToken = adminTokenCheck.ok ? adminTokenCheck.value : "";
 const offline = process.argv.includes("--offline") || process.env.PILOT_READINESS_OFFLINE === "1";
+const noReport = process.argv.includes("--no-report") || process.env.PILOT_READINESS_NO_REPORT === "1";
 const readinessRunId = runId();
 const writeTestsEnabled = process.env.PILOT_READINESS_WRITE_TESTS === "1";
 const requireAdmin = process.argv.includes("--require-admin") || process.env.PILOT_READINESS_REQUIRE_ADMIN === "1";
@@ -104,10 +105,12 @@ if (offline) {
 
 const summary = summarize(results);
 const report = renderReport(results, summary);
-fs.mkdirSync(reportDir, { recursive: true });
-fs.writeFileSync(outputPath, report);
+if (!noReport) {
+  fs.mkdirSync(reportDir, { recursive: true });
+  fs.writeFileSync(outputPath, report);
+}
 
-console.log(`Report: ${path.relative(rootDir, outputPath)}`);
+console.log(noReport ? "Report: skipped (--no-report)" : `Report: ${path.relative(rootDir, outputPath)}`);
 console.log(`OK: ${summary.ok}`);
 console.log(`Warnings: ${summary.warnings}`);
 console.log(`Errors: ${summary.errors}`);
