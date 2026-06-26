@@ -60,6 +60,9 @@ Admin/CRM si existe `ADMIN_TOKEN`:
 - `/api/admin/crm/overview`
 - `/api/admin/crm/opportunities?limit=1`
 - `/api/admin/crm/tasks?limit=1`
+- `/api/admin/crm/work-queue`
+- `/api/admin/crm/reports`
+- `/api/admin/virtual-quotes?limit=1`
 - `/api/admin/conversion-events?limit=1`
 
 ## Write checks

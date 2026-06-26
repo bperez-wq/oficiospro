@@ -32,6 +32,9 @@ const adminChecks = [
   { label: "CRM overview", path: "/api/admin/crm/overview", critical: true },
   { label: "CRM opportunities", path: "/api/admin/crm/opportunities?limit=1", critical: false },
   { label: "CRM tasks", path: "/api/admin/crm/tasks?limit=1", critical: false },
+  { label: "CRM work queue", path: "/api/admin/crm/work-queue", critical: false },
+  { label: "CRM reports", path: "/api/admin/crm/reports", critical: false },
+  { label: "Admin virtual quotes", path: "/api/admin/virtual-quotes?limit=1", critical: false },
   { label: "Conversion events", path: "/api/admin/conversion-events?limit=1", critical: false },
 ];
 

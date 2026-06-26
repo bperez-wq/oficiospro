@@ -51,6 +51,7 @@ Tipos sugeridos:
 | KZ-022 | Rutas API con trailing slash pueden caer en endpoint_not_found por comparaciones exactas en Worker | trailingSlash=true / captura browser 2026-06-26 | alto | alta | estabilidad | Codex | validando | Normalize API trailing slashes in Worker routing | validate/test/build/dry-run | pendiente |
 | KZ-023 | Captura temprana de especialista no debe darse por deduplicada si D1 no confirmo stored=true | Incidente postulantes reales / auditoria Forms.tsx | alto | alta | crm | Codex | validando | Retry early specialist capture until remote store succeeds | validate/build/dry-run | pendiente |
 | KZ-024 | Deploy manual puede publicar assets antiguos si no se corre validate/build antes | Incidentes PowerShell / rutina Cloudflare | alto | alta | operacion | Codex | validando | Add safe npm deploy gates for Cloudflare assets | validate/build/deploy:dry-run | pendiente |
+| KZ-025 | Readiness check no cubria endpoints CRM que historicamente fallaron con 404 | CRM E2E / incidente work-queue reports | medio | alta | operacion | Codex | validando | Expand pilot readiness coverage for CRM operations | offline/validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 
