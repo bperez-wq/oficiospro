@@ -170,6 +170,10 @@ if (existsSync(fullPath("package.json"))) {
       if (!scripts[scriptName]) fail(`package.json missing scripts.${scriptName}`);
     }
     if (!scripts["test:leads"]) fail("package.json missing scripts.test:leads");
+    if (!scripts.predeploy || !scripts.predeploy.includes("npm run validate") || !scripts.predeploy.includes("npm run build")) {
+      fail("package.json scripts.predeploy must run validate and build before deploy");
+    }
+    if (!scripts["deploy:dry-run"] || !scripts["deploy:dry-run"].includes("--dry-run")) fail("package.json missing scripts.deploy:dry-run");
   } catch (error) {
     fail(`package.json is not valid JSON: ${error.message}`);
   }

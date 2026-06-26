@@ -44,7 +44,7 @@ Para cambios de codigo:
 ```powershell
 npm run validate
 npm run build
-npx.cmd wrangler deploy --dry-run --assets ./out
+npm run deploy:dry-run
 ```
 
 Para cambios solo docs:
@@ -67,7 +67,7 @@ Confirmar:
 ## 5. Dry-run Cloudflare
 
 ```powershell
-npx.cmd wrangler deploy --dry-run --assets ./out
+npm run deploy:dry-run
 ```
 
 Confirmar:
@@ -82,7 +82,7 @@ Confirmar:
 Solo con aprobacion de Benjamin:
 
 ```powershell
-npx.cmd wrangler deploy --assets ./out
+npm run deploy
 ```
 
 Despues:
