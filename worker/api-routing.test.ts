@@ -24,6 +24,17 @@ test("conversion events API accepts trailing slash", async () => {
   assert.equal(data.error, "database_not_configured");
 });
 
+test("health check returns safe Worker readiness metadata", async () => {
+  const response = await worker.fetch(new Request("https://www.oficiospro.cl/api/health"), env);
+  const data = (await response.json()) as { ok?: boolean; service?: string; dbConfigured?: boolean; assetsConfigured?: boolean };
+
+  assert.equal(response.status, 200);
+  assert.equal(data.ok, true);
+  assert.equal(data.service, "oficiospro-web");
+  assert.equal(data.dbConfigured, false);
+  assert.equal(data.assetsConfigured, true);
+});
+
 test("CRM work queue API accepts trailing slash", async () => {
   const response = await worker.fetch(
     new Request("https://www.oficiospro.cl/api/admin/crm/work-queue/", {

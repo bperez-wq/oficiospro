@@ -209,6 +209,9 @@ export default {
       if (request.method === "OPTIONS") return withCors(new Response(null, { status: 204 }));
 
       try {
+        if (url.pathname === "/api/health" && request.method === "GET") {
+          return withCors(healthCheck(env));
+        }
         if ((url.pathname === "/api/auth/admin-login" || url.pathname === "/api/admin/auth/login") && request.method === "POST") {
           return withCors(await loginAdmin(request, env));
         }
@@ -369,6 +372,16 @@ export default {
 
 function normalizeApiPathname(pathname: string) {
   return pathname.startsWith("/api/") ? pathname.replace(/\/+$/, "") : pathname;
+}
+
+function healthCheck(env: Env) {
+  return json({
+    ok: true,
+    service: "oficiospro-web",
+    dbConfigured: Boolean(env.DB),
+    assetsConfigured: Boolean(env.ASSETS),
+    timestamp: new Date().toISOString(),
+  });
 }
 
 async function loginAdmin(request: Request, env: Env) {

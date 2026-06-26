@@ -53,6 +53,7 @@ Publicos:
 - `/empresas`
 - `/sitemap.xml`
 - `/robots.txt`
+- `/api/health`
 
 Admin/CRM si existe `ADMIN_TOKEN`:
 

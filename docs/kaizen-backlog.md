@@ -55,6 +55,7 @@ Tipos sugeridos:
 | KZ-026 | Docs y prompts todavia indicaban comandos Wrangler directos que saltan el gate npm seguro | Auditoria docs 2026-06-26 | medio | media | documentacion | Codex | validando | Align release docs with safe npm deploy scripts | validate/build/deploy:dry-run | pendiente |
 | KZ-027 | Normalizacion de trailing slash en API necesitaba cobertura automatica real | Worker routing guard | medio | media | testing | Codex | validando | Add Worker API trailing slash routing tests | test/validate/build/dry-run | pendiente |
 | KZ-028 | Readiness live sin token muestra warnings que pueden confundirse con falla real | Corrida live sin ADMIN_TOKEN 2026-06-26 | bajo | media | operacion | Codex | validando | Clarify skipped admin checks in pilot readiness output | offline/live/validate | pendiente |
+| KZ-029 | Readiness no distinguia si el Worker/API estaba vivo aunque las paginas estaticas cargaran | Operacion Cloudflare / piloto | alto | alta | estabilidad | Codex | validando | Add safe Worker health check to readiness gates | test/validate/build/dry-run | pendiente |
 
 ## Criterios de priorizacion
 

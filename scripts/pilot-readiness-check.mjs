@@ -25,6 +25,7 @@ const publicChecks = [
   { label: "Empresas", path: "/empresas", expect: "html", critical: false },
   { label: "Sitemap", path: "/sitemap.xml", expect: "xml", critical: true },
   { label: "Robots", path: "/robots.txt", expect: "text", critical: true },
+  { label: "Worker health", path: "/api/health", expect: "json", critical: true },
 ];
 
 const adminChecks = [
@@ -311,6 +312,7 @@ function validateAdminToken(value) {
 }
 
 function acceptHeader(expect) {
+  if (expect === "json") return "application/json,*/*";
   if (expect === "xml") return "application/xml,text/xml,*/*";
   if (expect === "text") return "text/plain,*/*";
   return "text/html,*/*";
@@ -318,6 +320,14 @@ function acceptHeader(expect) {
 
 function contentLooksValid(text, expect) {
   if (!text) return false;
+  if (expect === "json") {
+    try {
+      const data = JSON.parse(text);
+      return Boolean(data?.ok);
+    } catch {
+      return false;
+    }
+  }
   if (expect === "xml") return text.includes("<urlset") || text.includes("<sitemapindex");
   if (expect === "text") return text.toLowerCase().includes("user-agent");
   return text.includes("<html") || text.includes("<!DOCTYPE html");
