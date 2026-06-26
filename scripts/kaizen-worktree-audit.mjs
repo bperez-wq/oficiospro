@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
 
+const requireClean = process.argv.includes("--require-clean") || process.env.KAIZEN_REQUIRE_CLEAN === "1";
+
 const generatedOrLocalArtifacts = [
   /^node_modules\//,
   /^\.next\//,
@@ -23,6 +25,7 @@ const branch = git(["branch", "--show-current"]).trim() || "(sin branch)";
 const lastCommits = git(["log", "--oneline", "-5"]).trim();
 const porcelain = git(["status", "--short"]).split(/\r?\n/).filter(Boolean);
 const staged = git(["diff", "--cached", "--name-only"]).split(/\r?\n/).filter(Boolean);
+const meaningfulChanges = porcelain.filter(meaningfulStatusLine);
 
 const warnings = [];
 const errors = [];
@@ -44,14 +47,19 @@ for (const file of staged) {
 if (branch === "main") warnings.push("Estas en main. Para cambios Kaizen normalmente usa una rama feature.");
 if (porcelain.length > 20) warnings.push(`Worktree con ${porcelain.length} archivos cambiados. Revisa scope antes de commit.`);
 if (staged.length && staged.length > 12) warnings.push(`Hay ${staged.length} archivos staged. Confirma que no sea un git add accidental.`);
+if (requireClean && meaningfulChanges.length) {
+  errors.push(`require_clean: hay ${meaningfulChanges.length} cambio(s) reales sin cerrar`);
+}
 
 console.log("Kaizen worktree audit");
 console.log(`Branch: ${branch}`);
+console.log(`Require clean: ${requireClean ? "yes" : "no"}`);
 console.log("");
 console.log("Last commits:");
 console.log(lastCommits || "- sin commits");
 console.log("");
 console.log(`Changed files: ${porcelain.length}`);
+console.log(`Meaningful changed files: ${meaningfulChanges.length}`);
 console.log(`Staged files: ${staged.length}`);
 console.log("");
 console.log("Worktree:");
@@ -71,6 +79,27 @@ if (errors.length) {
 
 function git(args) {
   return execFileSync("git", args, { encoding: "utf8" });
+}
+
+function gitQuiet(args) {
+  try {
+    execFileSync("git", args, { encoding: "utf8", stdio: "ignore" });
+    return true;
+  } catch (error) {
+    if (typeof error?.status === "number") return false;
+    throw error;
+  }
+}
+
+function meaningfulStatusLine(line) {
+  const status = line.slice(0, 2);
+  const file = statusPath(line);
+  if (!file) return false;
+  if (status === "??") return true;
+  if (/[ADRCTU]/.test(status)) return true;
+  if (status[0] !== " " && !gitQuiet(["diff", "--cached", "--quiet", "--", file])) return true;
+  if (status[1] !== " " && !gitQuiet(["diff", "--quiet", "--", file])) return true;
+  return false;
 }
 
 function statusPath(line) {

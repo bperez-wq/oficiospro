@@ -177,6 +177,9 @@ if (existsSync(fullPath("package.json"))) {
     if (!scripts["release:gate"] || !scripts["release:gate"].includes("scripts/platform-release-gate.mjs")) {
       fail("package.json missing scripts.release:gate");
     }
+    if (!scripts["release:gate:strict"] || !scripts["release:gate:strict"].includes("--require-clean")) {
+      fail("package.json missing scripts.release:gate:strict");
+    }
   } catch (error) {
     fail(`package.json is not valid JSON: ${error.message}`);
   }

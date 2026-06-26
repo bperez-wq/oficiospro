@@ -2,12 +2,13 @@ import { spawnSync } from "node:child_process";
 
 const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
 const startedAt = Date.now();
+const requireClean = process.argv.includes("--require-clean") || process.env.RELEASE_GATE_REQUIRE_CLEAN === "1";
 
 const steps = [
   {
     label: "Kaizen worktree audit",
     command: npmCommand,
-    args: ["run", "kaizen:audit"],
+    args: requireClean ? ["run", "kaizen:audit", "--", "--require-clean"] : ["run", "kaizen:audit"],
   },
   {
     label: "Project validation",
@@ -45,6 +46,7 @@ const steps = [
 console.log("OficiosPro platform release gate");
 console.log("This gate validates code, tests, SEO, pilot readiness, build and Cloudflare dry-run.");
 console.log("It never deploys production, migrates D1, or writes secrets.");
+console.log(`Strict clean worktree: ${requireClean ? "enabled" : "disabled"}`);
 console.log("");
 
 for (const [index, step] of steps.entries()) {

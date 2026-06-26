@@ -37,6 +37,15 @@ npm.cmd run release:gate
 
 Este comando ejecuta auditoria Kaizen, validacion, tests unitarios, auditoria SEO, readiness offline sin escribir reporte, build y dry-run de Cloudflare. No hace deploy real ni migraciones.
 
+Gate estricto recomendado justo antes de merge/deploy:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+npm.cmd run release:gate:strict
+```
+
+El modo estricto falla si quedan cambios reales sin commitear. Ignora ruido sin diff real, por ejemplo archivos marcados por line endings sin contenido modificado.
+
 Para cambios solo docs:
 
 - `npm.cmd run validate` si es rapido.
