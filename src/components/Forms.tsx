@@ -1528,7 +1528,7 @@ export function SpecialistRegisterForm() {
             ["Identidad", "Datos y contacto"],
             ["Cobertura", "Comuna y radio"],
             ["Servicios", "Tarifa esperada"],
-            ["Formalizacion", "Documento de cobro"],
+            ["Formalizacion", "Opcional · después"],
             ["Referencias", "Opcional"],
             ["Revision", "Envio final"],
           ].map(([title, text], index) => (
@@ -1577,10 +1577,6 @@ export function SpecialistRegisterForm() {
             <input value={identity.lastNames} onChange={(event) => setIdentity({ ...identity, lastNames: event.target.value })} placeholder="Ej: Pérez" />
           </label>
           <label className="field">
-            RUT
-            <input value={identity.rut} onChange={(event) => setIdentity({ ...identity, rut: event.target.value })} placeholder="12.345.678-9" />
-          </label>
-          <label className="field">
             WhatsApp
             <input value={identity.whatsapp} onChange={(event) => setIdentity({ ...identity, whatsapp: event.target.value })} type="tel" placeholder="+56 9 1234 5678" />
           </label>
@@ -1594,33 +1590,6 @@ export function SpecialistRegisterForm() {
             <span className="text-xs font-bold text-muted">Ayuda a que tu perfil genere mas confianza. Puedes agregarla despues.</span>
             <IdentityPreview src={identityDocuments.profilePhotoUrl} name={identityDocuments.profilePhotoName} />
           </label>
-          <details className="group rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
-            <summary className="flex cursor-pointer items-center justify-between gap-3 text-sm font-black text-ink [&::-webkit-details-marker]:hidden">
-              <span>Verificacion de identidad <span className="font-bold text-muted">(opcional ahora)</span></span>
-              <span className="text-xs font-black text-brand-dark transition group-open:hidden">Mostrar</span>
-              <span className="hidden text-xs font-black text-brand-dark group-open:inline">Ocultar</span>
-            </summary>
-            <p className="mt-3 text-sm font-bold leading-6 text-muted">
-              No necesitas subir esto para postular. Lo usamos solo para validar tu identidad antes de publicar; tu cedula y selfie nunca son publicas. Si falta algo, lo pedimos en la revision.
-            </p>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="field">
-                Foto cedula frontal <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
-              </label>
-              <label className="field">
-                Foto cedula reverso <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
-              </label>
-              <label className="field md:col-span-2">
-                Selfie de verificacion <span className="font-bold text-muted">(opcional)</span>
-                <input type="file" accept="image/*" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
-                <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
-              </label>
-            </div>
-          </details>
           <label className="field">
             Dirección base
             <input value={baseAddress} onChange={(event) => setBaseAddress(event.target.value)} placeholder="Dirección de referencia" />
@@ -1714,10 +1683,10 @@ export function SpecialistRegisterForm() {
 
         <section className={step === 4 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
           <div className="md:col-span-2">
-            <p className="eyebrow">Formalizacion y cobro</p>
-            <h3 className="text-2xl font-black">Como documentas tus servicios</h3>
+            <p className="eyebrow">Formalizacion · opcional</p>
+            <h3 className="text-2xl font-black">De boletas y facturas nos preocupamos después, juntos</h3>
             <p className="mt-2 text-sm font-bold text-muted">
-              Esto ayuda a OficiosPro a preparar tu revision de pagos. Es referencial y puede quedar pendiente hasta validacion de contador/SII.
+              No necesitas resolver nada de impuestos para postular. Puedes saltarte este paso: el equipo OficiosPro te guía con boletas, facturas y datos tributarios antes de activar pagos. Si ya lo tienes claro, déjalo declarado abajo.
             </p>
           </div>
           <label className="field">
@@ -1810,7 +1779,34 @@ export function SpecialistRegisterForm() {
         </section>
 
         <section className={step === 6 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+          <div className="rounded-3xl border border-brand/15 bg-brand-soft p-5 md:col-span-2">
+            <p className="eyebrow text-brand">Último paso · validación</p>
+            <h3 className="text-2xl font-black text-brand-dark">Confirma que eres tú y activa tus pagos</h3>
+            <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
+              🔒 Tu RUT, cédula y selfie nunca son públicos. Solo el equipo de validación los usa para proteger a los clientes y a ti. Puedes completarlos ahora o cuando te contactemos.
+            </p>
+          </div>
+          <label className="field md:col-span-2">
+            RUT
+            <input value={identity.rut} onChange={(event) => setIdentity({ ...identity, rut: event.target.value })} placeholder="12.345.678-9" />
+            <span className="text-xs font-bold text-muted">Lo usamos solo para validar tu identidad antes de publicar. Nunca es público.</span>
+          </label>
           <label className="field">
+            Foto cedula frontal <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="environment" onChange={(event) => updateIdentityDocument("idFront", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idFrontUrl} name={identityDocuments.idFrontName} privateDocument />
+          </label>
+          <label className="field">
+            Foto cedula reverso <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="environment" onChange={(event) => updateIdentityDocument("idBack", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.idBackUrl} name={identityDocuments.idBackName} privateDocument />
+          </label>
+          <label className="field md:col-span-2">
+            Selfie de verificacion <span className="font-bold text-muted">(opcional ahora)</span>
+            <input type="file" accept="image/*" capture="user" onChange={(event) => updateIdentityDocument("selfie", event.currentTarget.files?.[0])} />
+            <IdentityPreview src={identityDocuments.selfieUrl} name={identityDocuments.selfieName} privateDocument />
+          </label>
+          <label className="field md:col-span-2">
             Portafolio fotográfico
             <input
               type="file"
