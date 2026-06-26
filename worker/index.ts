@@ -14,6 +14,11 @@ import {
   normalizeMoney,
   workerPricingConfig,
 } from "./lib/pricing";
+import {
+  createMemoryRateLimitStore,
+  hitRateLimit,
+  rateLimitKeys,
+} from "./lib/rateLimit";
 
 type AssetsBinding = {
   fetch(request: Request): Promise<Response>;
@@ -165,7 +170,7 @@ type LeadRecord = Omit<LeadPayload, "leadType" | "honeypot" | "payload"> & {
 const mercadoPagoApi = "https://api.mercadopago.com";
 const legacySpecialistEmailSubject = "Nueva postulación de especialista en OficiosPro";
 const maxJsonBodyBytes = 32_000;
-const memoryRateLimits = new Map<string, { count: number; resetAt: number }>();
+const rateLimitStore = createMemoryRateLimitStore();
 const processedWebhookEvents = new Set<string>();
 const adminSessionCookieName = "oficiospro_admin_session";
 
@@ -2116,18 +2121,14 @@ async function enforceRateLimit(
   scope: string,
   options: { email?: string; phone?: string; limit: number; windowMs: number },
 ) {
-  const ip = clientIp(request);
-  const keys = [
-    `${scope}:ip:${ip}`,
-    options.email ? `${scope}:email:${sanitizeEmail(options.email) ?? "invalid"}` : "",
-    options.phone ? `${scope}:phone:${sanitizeText(options.phone, 40) ?? "invalid"}` : "",
-  ].filter(Boolean);
+  const keys = rateLimitKeys(scope, {
+    ip: clientIp(request),
+    email: options.email ? (sanitizeEmail(options.email) ?? "invalid") : undefined,
+    phone: options.phone ? (sanitizeText(options.phone, 40) ?? "invalid") : undefined,
+  });
   const now = Date.now();
   for (const key of keys) {
-    const current = memoryRateLimits.get(key);
-    const next = !current || current.resetAt <= now ? { count: 1, resetAt: now + options.windowMs } : { count: current.count + 1, resetAt: current.resetAt };
-    memoryRateLimits.set(key, next);
-    if (next.count > options.limit) throw new SafeHttpError(429, "rate_limited");
+    if (hitRateLimit(rateLimitStore, key, options.limit, options.windowMs, now)) throw new SafeHttpError(429, "rate_limited");
   }
 }
 
