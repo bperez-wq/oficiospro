@@ -36,10 +36,20 @@ export function SearchableSelect({
   const containerRef = useRef<HTMLLabelElement>(null);
   const filtered = useMemo(() => {
     const normalizedQuery = normalizeSearch(query);
-    if (!normalizedQuery) return options.slice(0, 80);
-    return options
-      .filter((option) => normalizeSearch(`${option.label} ${option.meta ?? ""}`).includes(normalizedQuery))
-      .slice(0, 80);
+    const matched = normalizedQuery
+      ? options.filter((option) => normalizeSearch(`${option.label} ${option.meta ?? ""}`).includes(normalizedQuery))
+      : options;
+    // Mantener cada grupo contiguo (preservando el orden de aparición) para no
+    // repetir encabezados de grupo ni generar keys de React duplicadas.
+    const groupOrder = new Map<string, number>();
+    for (const option of matched) {
+      const group = option.group ?? "";
+      if (!groupOrder.has(group)) groupOrder.set(group, groupOrder.size);
+    }
+    const grouped = [...matched].sort(
+      (a, b) => (groupOrder.get(a.group ?? "") ?? 0) - (groupOrder.get(b.group ?? "") ?? 0),
+    );
+    return grouped.slice(0, 80);
   }, [options, query]);
   const rows = useMemo(() => {
     const nextRows: Array<{ type: "group"; label: string } | { type: "option"; option: SelectOption; optionIndex: number }> = [];
@@ -155,9 +165,9 @@ export function SearchableSelect({
           role="listbox"
         >
           {filtered.length ? (
-            rows.map((row) =>
+            rows.map((row, rowIndex) =>
               row.type === "group" ? (
-                <div key={`group-${row.label}`} className="px-3 pb-1 pt-3 text-[11px] font-black uppercase tracking-wide text-muted first:pt-1">
+                <div key={`group-${rowIndex}-${row.label}`} className="px-3 pb-1 pt-3 text-[11px] font-black uppercase tracking-wide text-muted first:pt-1">
                   {row.label}
                 </div>
               ) : (
