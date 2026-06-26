@@ -11,7 +11,7 @@
     "start": "next start",
     "validate": "node scripts/validate-project.mjs",
     "test": "npm run test:unit",
-    "test:unit": "node --import tsx --test \"src/**/*.test.ts\"",
+    "test:unit": "node --import tsx --test \"src/**/*.test.ts\" \"worker/**/*.test.ts\"",
     "kaizen:audit": "node scripts/kaizen-worktree-audit.mjs",
     "ops:specialist-intake": "node scripts/generate-specialist-intake-report.mjs",
     "pilot:readiness": "node scripts/pilot-readiness-check.mjs",
