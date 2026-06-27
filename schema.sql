@@ -160,3 +160,27 @@ CREATE INDEX IF NOT EXISTS idx_service_requests_status ON service_requests (stat
 CREATE INDEX IF NOT EXISTS idx_service_requests_createdAt ON service_requests (createdAt);
 CREATE INDEX IF NOT EXISTS idx_conversion_events_type ON conversion_events (type);
 CREATE INDEX IF NOT EXISTS idx_conversion_events_createdAt ON conversion_events (createdAt);
+
+-- External provider discovery (see migrations/0010). Operational metadata only;
+-- never stores Places restricted content (reviews, photos, phones, addresses).
+CREATE TABLE IF NOT EXISTS external_provider_suggestions (
+  id TEXT PRIMARY KEY,
+  source TEXT NOT NULL DEFAULT 'google_places',
+  externalPlaceId TEXT NOT NULL,
+  trade TEXT,
+  commune TEXT,
+  region TEXT,
+  searchQuery TEXT,
+  suggestedByUserId TEXT,
+  opportunityId TEXT,
+  invitations INTEGER NOT NULL DEFAULT 1,
+  status TEXT NOT NULL DEFAULT 'suggested'
+    CHECK (status IN ('suggested', 'invited', 'contacted', 'claimed', 'rejected', 'archived')),
+  createdAt TEXT NOT NULL,
+  updatedAt TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_external_provider_suggestions_place ON external_provider_suggestions (source, externalPlaceId);
+CREATE INDEX IF NOT EXISTS idx_external_provider_suggestions_status ON external_provider_suggestions (status);
+CREATE INDEX IF NOT EXISTS idx_external_provider_suggestions_trade_commune ON external_provider_suggestions (trade, commune);
+CREATE INDEX IF NOT EXISTS idx_external_provider_suggestions_created ON external_provider_suggestions (createdAt);
