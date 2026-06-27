@@ -80,6 +80,14 @@ export default async function ServiceLocalPage({ params }: PageProps) {
       badges={[commune.name, commune.region, localPage.hasEnoughSpecialists ? "Oferta publicada" : "Cobertura en activacion"]}
       primaryCta={{ href: primaryCtaHref, label: "Buscar en especialistas" }}
       secondaryCta={{ href: "/contacto", label: "Solicitar contacto" }}
+      closingCta={{
+        title: `${service.shortTitle} en ${commune.name}: encuentra o solicita`,
+        text: "Compara especialistas publicados o deja tu solicitud y revisamos disponibilidad en tu comuna. Consultar no tiene costo.",
+        primaryLabel: "Buscar en especialistas",
+        primaryHref: primaryCtaHref,
+        secondaryLabel: "Solicitar contacto",
+        secondaryHref: "/contacto",
+      }}
       includedTitle={`Servicios frecuentes en ${commune.name}`}
       includedItems={service.includedServices}
       creditRange={service.creditRange}
