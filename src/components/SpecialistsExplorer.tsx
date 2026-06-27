@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { categoryImages } from "@/data/visualAssets";
+import { getCommuneCenter } from "@/data/communeCenters";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { distanceInKm } from "@/data/marketplace";
 import { getTradeCategoryById, getTradeCoverageLabel, getTradeSpecialtyBySlugOrLabel, isTradeForming } from "@/data/tradeTaxonomy";
@@ -203,6 +204,8 @@ export function SpecialistsExplorer() {
     : "Agrega tu comuna para ver especialistas cerca de ti";
   const routeCategory = categoryParam ? categoryRoutes[categoryParam] : null;
   const routeSpecialty = specialtyParam ? specialtyRoutes[specialtyParam] : null;
+  const selectedMapCenter = getCommuneCenter(zone, region !== ALL_REGIONS_VALUE ? regionNameForCode(region) : undefined);
+  const selectedMapLabel = selectedMapCenter?.commune ?? (zone && zone !== ALL_COMMUNES_VALUE ? zone : "");
   const taxonomyCategory = getTradeCategoryById(categoryParam || (category !== "all" ? category : ""));
   const taxonomySpecialty = specialtyParam ? getTradeSpecialtyBySlugOrLabel(specialtyParam, taxonomyCategory?.id) : null;
   const taxonomyCoverage = taxonomySpecialty ?? taxonomyCategory;
@@ -523,7 +526,14 @@ export function SpecialistsExplorer() {
                   Ocultar mapa
                 </button>
               </div>
-              <NearbyMap className="h-full" minHeightClass="min-h-[320px]" />
+              <NearbyMap
+                className="h-full"
+                minHeightClass="min-h-[320px]"
+                center={selectedMapCenter ? { lat: selectedMapCenter.lat, lng: selectedMapCenter.lng } : null}
+                centerLabel={selectedMapLabel}
+                preferGeolocation={!selectedMapCenter}
+                trade={categoryParam || (category !== "all" ? category : "") || query}
+              />
             </section>
           ) : null}
           {categoryImages[categoryParam] || categoryImages[category] ? (
