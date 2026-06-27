@@ -448,6 +448,13 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
   if (env.DB) {
     await insertLead(env.DB, lead);
     await insertOperationalRecord(env.DB, lead);
+    // Best-effort: turn each new lead into a CRM contact + opportunity right away,
+    // so the CRM works in real time without a manual sync. Never blocks lead capture.
+    try {
+      await autoCreateCrmFromLead(env.DB, lead.id);
+    } catch {
+      // CRM tables may not be migrated yet; ignore and keep lead capture working.
+    }
   }
 
   const emailResult = await notifyLead(env, lead);
@@ -1645,6 +1652,64 @@ async function syncCrmLeads(request: Request, db: D1Database) {
   }
   await crmActivity(db, request, { entityType: "crm", entityId: "sync-leads", action: "crm_sync_leads", metadata: { contacts, companies, opportunities } });
   return json({ ok: true, synced: { contacts, companies, opportunities } });
+}
+
+// Create the CRM contact + opportunity for a single lead as soon as it arrives.
+// Mirrors the per-row logic of syncCrmLeads so the CRM stays consistent, but runs
+// in real time. Best-effort: callers wrap this in try/catch.
+async function autoCreateCrmFromLead(db: D1Database, leadId: string): Promise<void> {
+  if (!db || !leadId) return;
+  const row = await db.prepare("SELECT * FROM lead_submissions WHERE id = ? LIMIT 1").bind(leadId).first<Record<string, unknown>>();
+  if (!row) return;
+  const id = String(row.id ?? "");
+  if (!id) return;
+  const leadType = String(row.lead_type ?? "customer_request");
+  const companyId = row.company_name ? `crm_company_lead_${id}` : null;
+  const now = new Date().toISOString();
+  const contactId = await upsertCrmContact(db, {
+    id: crmContactIdFor("lead", row, id),
+    name: String(row.full_name ?? row.company_name ?? "Contacto OficiosPro"),
+    email: String(row.email ?? ""),
+    phone: String(row.phone ?? ""),
+    contactType: leadType === "specialist_application" ? "specialist" : row.company_name ? "company_contact" : "customer",
+    source: sourceFromRow(row),
+    commune: String(row.commune_name ?? row.commune_code ?? ""),
+    region: String(row.region_name ?? row.region_code ?? ""),
+    tags: crmTagsFromRow(row),
+    status: String(row.status ?? "new"),
+    createdAt: String(row.created_at ?? now),
+    updatedAt: now,
+  });
+  if (companyId) {
+    await db.prepare("INSERT OR IGNORE INTO crm_companies (id, companyName, rut, industry, contactName, email, phone, commune, region, status, source, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+      .bind(companyId, row.company_name, null, null, row.full_name ?? null, row.email ?? null, row.phone ?? null, row.commune_name ?? row.commune_code ?? null, row.region_name ?? row.region_code ?? null, "new", sourceFromRow(row), row.created_at ?? now, now)
+      .run();
+  }
+  const oppType = opportunityTypeFromLeadType(leadType);
+  const pipeline = defaultPipelineForOpportunityType(oppType);
+  const stage = stageFromLead(leadType, String(row.status ?? "nuevo"));
+  await insertCrmOpportunityIfMissing(db, {
+    id: `crm_opp_lead_${id}`,
+    contactId,
+    companyId,
+    specialistId: row.specialist_id ? String(row.specialist_id) : null,
+    serviceRequestId: ["booking_request", "customer_request"].includes(leadType) ? id : null,
+    virtualQuoteId: null,
+    title: String(row.service ?? row.trade ?? row.company_name ?? row.full_name ?? "Lead OficiosPro"),
+    type: oppType,
+    pipeline,
+    stage,
+    priority: priorityFor(String(row.urgency ?? "")) === "alta" ? "alta" : "media",
+    estimatedCredits: numberFrom(row.credits_estimate),
+    estimatedAmountCLP: numberFrom(row.credits_estimate) * 1000,
+    assignedTo: null,
+    nextActionAt: null,
+    status: ["cerrado", "convertido", "perdido"].includes(String(row.status ?? "")) ? "closed" : "open",
+    sourceEntityType: "lead_submission",
+    sourceEntityId: id,
+    createdAt: String(row.created_at ?? now),
+    updatedAt: now,
+  });
 }
 
 async function syncCrmSpecialists(request: Request, db: D1Database) {

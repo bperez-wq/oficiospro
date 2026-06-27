@@ -9,15 +9,25 @@
 --   wrangler d1 migrations apply oficiospro-leads --remote
 -- (run manually after review; do NOT auto-apply on deploy).
 
+-- `source` is free text: 'osm' (default, OpenStreetMap open data),
+-- 'community' / 'user_recommendation' (user recommended someone they trust),
+-- or 'google_places' (optional, disabled by default).
+-- Recommendation columns hold data a user VOLUNTEERS about a tradesperson they
+-- vouch for; this is a normal referral lead (unlike map-discovery results, where
+-- no personal content is stored).
 CREATE TABLE IF NOT EXISTS external_provider_suggestions (
   id TEXT PRIMARY KEY,
-  source TEXT NOT NULL DEFAULT 'google_places',
-  externalPlaceId TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'osm',
+  externalPlaceId TEXT,
   trade TEXT,
   commune TEXT,
   region TEXT,
   searchQuery TEXT,
   suggestedByUserId TEXT,
+  recommendedName TEXT,
+  recommendedContact TEXT,
+  recommenderContact TEXT,
+  reason TEXT,
   opportunityId TEXT,
   invitations INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'suggested'
@@ -26,7 +36,10 @@ CREATE TABLE IF NOT EXISTS external_provider_suggestions (
   updatedAt TEXT NOT NULL
 );
 
--- One row per external place per source (invites increment `invitations`).
+-- Dedupe map-discovery results by place id (invites increment `invitations`).
+-- Plain unique index: SQLite treats NULLs as distinct, so user recommendations
+-- without a place id are never collapsed, and ON CONFLICT(source, externalPlaceId)
+-- upserts work for the map-discovery rows.
 CREATE UNIQUE INDEX IF NOT EXISTS idx_external_provider_suggestions_place
   ON external_provider_suggestions (source, externalPlaceId);
 

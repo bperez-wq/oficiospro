@@ -11,6 +11,8 @@ import { availabilityLabels, type Specialist } from "@/data/mock";
 import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed } from "@/lib/bag";
 import { formatDisplayDate, getAvailabilitySummary, type AvailabilitySummary } from "@/lib/availability";
+import { creditsToCLPLabel } from "@/lib/credits/creditInfo";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
@@ -146,13 +148,16 @@ export function SpecialistCard({
           <strong className="block text-2xl font-black text-ink">{highlightedCreditPrice ?? pricingSummary(displayService)}</strong>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <span className="rounded-2xl bg-white p-3 text-sm font-black text-ink">
-              Normal: {creditPair.baseCredits} creditos
+              Normal: {creditPair.baseCredits} creditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.baseCredits)})</span>
             </span>
             <span className="rounded-2xl bg-white p-3 text-sm font-black text-brand-dark">
-              Club Hogar: {creditPair.clubCredits} creditos
+              Club Hogar: {creditPair.clubCredits} creditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.clubCredits)})</span>
             </span>
           </div>
           <p className="text-sm font-bold text-muted">{pricingModeLabel(displayService.pricingMode)} · {pricingDetail(displayService)}</p>
+          <CreditsHelpTrigger className="mt-2 inline-block text-xs font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
+            ¿Cómo funcionan los créditos?
+          </CreditsHelpTrigger>
           {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} creditos por solicitud con Club Hogar.</p> : null}
           {specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
@@ -175,6 +180,9 @@ export function SpecialistCard({
             <span>Puedes calificar despues del servicio.</span>
             <span>Los adicionales requieren aprobacion.</span>
           </div>
+          <CreditsHelpTrigger className="mt-3 inline-block text-xs font-black text-emerald-900 underline underline-offset-2 hover:opacity-80">
+            Que es el pago protegido
+          </CreditsHelpTrigger>
         </div>
 
         <div className="flex flex-col gap-2 border-t border-line pt-4 sm:flex-row">

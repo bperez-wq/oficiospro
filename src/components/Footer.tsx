@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 
 const groups = [
   {
@@ -9,6 +10,7 @@ const groups = [
       { href: "/especialistas-fundadores", label: "Especialistas fundadores" },
       { href: "/club-hogar", label: "Club Hogar" },
       { href: "/empresas", label: "Empresas" },
+      { href: "/#recomienda-gana", label: "Recomienda y gana" },
       { href: "/impacto", label: "Impacto" },
     ],
   },
@@ -62,6 +64,9 @@ export function Footer() {
           <p className="mt-4 max-w-xl text-sm font-black leading-6 text-white">
             Contacto: bperez@oficiospro.cl
           </p>
+          <CreditsHelpTrigger className="mt-3 text-sm font-black text-white underline underline-offset-2 hover:text-white/80">
+            ¿Cómo funcionan los créditos?
+          </CreditsHelpTrigger>
           <div className="mt-6 flex flex-wrap gap-2">
             {["Pago seguro", "Garantía OficiosPro", "Técnicos verificados", "Cobertura nacional"].map((item) => (
               <span key={item} className="chip bg-white/10 text-white">

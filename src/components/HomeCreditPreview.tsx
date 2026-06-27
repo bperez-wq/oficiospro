@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { defaultCommercialConfig } from "@/data/commercialConfig";
+import { creditsToCLPLabel } from "@/lib/credits/creditInfo";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 
 const examples = [
   { service: "Mantención calefont", credits: 25, image: "/assets/oficios/calefont/calefont-revision-01.jpg" },
@@ -28,6 +30,9 @@ export function HomeCreditPreview() {
           <Link href="/checkout" className="btn-secondary" data-event="home_credit_preview_buy">
             Comprar créditos
           </Link>
+          <CreditsHelpTrigger className="btn-ghost text-sm font-black text-brand-dark underline-offset-2 hover:underline">
+            ¿Cómo funcionan los créditos?
+          </CreditsHelpTrigger>
         </div>
       </div>
       <div className="grid gap-3">
@@ -37,7 +42,7 @@ export function HomeCreditPreview() {
               <img src={example.image} alt={example.service} loading="lazy" className="h-14 w-14 shrink-0 rounded-xl object-cover" />
               <div className="min-w-0">
                 <strong className="block text-base font-black text-ink">{example.service}</strong>
-                <span className="text-sm font-bold text-muted">{example.credits} créditos</span>
+                <span className="text-sm font-bold text-muted">{example.credits} créditos <span className="text-xs">({creditsToCLPLabel(example.credits)})</span></span>
               </div>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">

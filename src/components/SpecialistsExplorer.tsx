@@ -15,6 +15,7 @@ import { SpecialistGridCard } from "@/components/SpecialistGridCard";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
 import { ExternalProvidersSection } from "@/components/ExternalProvidersSection";
+import { NearbyMap } from "@/components/NearbyMap";
 import {
   getClientProfile,
   getMockSession,
@@ -89,6 +90,7 @@ export function SpecialistsExplorer() {
   const [sort, setSort] = useState("recommended");
   const [withinCoverage, setWithinCoverage] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(false);
   const [categoryParam, setCategoryParam] = useState("");
   const [specialtyParam, setSpecialtyParam] = useState("");
   const [sourceSection, setSourceSection] = useState("");
@@ -132,6 +134,7 @@ export function SpecialistsExplorer() {
     const requestedPrice = searchParams.get("precio");
     const requestedLevel = searchParams.get("nivel");
     const requestedQuickResponse = searchParams.get("respuesta") ?? searchParams.get("respuesta_rapida");
+    const requestedMap = searchParams.get("mapa") ?? searchParams.get("modo");
 
     if (requestedType) {
       setCategoryParam(normalizeRouteParam(requestedType));
@@ -162,6 +165,7 @@ export function SpecialistsExplorer() {
     if (requestedPrice) setMaxCredits(Math.max(10, Number(requestedPrice) || 999));
     if (requestedLevel && levelOptions.some((item) => item.value === requestedLevel)) setLevel(requestedLevel);
     setQuickResponse(requestedQuickResponse === "rapida" || requestedQuickResponse === "true");
+    setMapOpen(requestedMap === "1" || requestedMap === "mapa");
   }, [searchParamsKey]);
 
   useEffect(() => {
@@ -243,6 +247,7 @@ export function SpecialistsExplorer() {
     level !== "all" ? { label: `Nivel ${level}`, clear: () => setLevel("all") } : null,
     quickResponse ? { label: "Respuesta rapida", clear: () => setQuickResponse(false) } : null,
     withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
+    mapOpen ? { label: "Mapa cercano", clear: () => setMapOpen(false) } : null,
   ].filter(Boolean) as { label: string; clear: () => void }[];
   const hasActiveFilters = activeFilters.length > 0;
 
@@ -311,6 +316,7 @@ export function SpecialistsExplorer() {
     setCategoryParam("");
     setSpecialtyParam("");
     setWithinCoverage(false);
+    setMapOpen(false);
     setSort("recommended");
   }
 
@@ -384,6 +390,9 @@ export function SpecialistsExplorer() {
           <div className="flex flex-col gap-2 sm:flex-row lg:pb-1">
             <button className="btn-primary" type="button" onClick={() => setQuery(query.trim())}>
               Aplicar filtros
+            </button>
+            <button className="btn-secondary" type="button" onClick={() => setMapOpen((current) => !current)} aria-pressed={mapOpen}>
+              <span aria-hidden>🗺️</span> {mapOpen ? "Ocultar mapa" : "Ver mapa"}
             </button>
             <button className="btn-secondary" type="button" onClick={clearFilters}>
               Limpiar y ver toda la red
@@ -502,6 +511,21 @@ export function SpecialistsExplorer() {
         </aside>
 
         <div id="especialistas-results" className="grid gap-5">
+          {mapOpen ? (
+            <section id="mapa-especialistas" className="overflow-hidden rounded-[24px] border border-brand/15 bg-white p-4 shadow-soft">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <p className="eyebrow">Busqueda por mapa</p>
+                  <h3 className="text-xl font-black text-ink">Explora cobertura cercana sin salir de especialistas.</h3>
+                  <p className="mt-1 text-sm font-bold text-muted">Mapa referencial para orientar busqueda por zona. Los puntos externos no son especialistas verificados por OficiosPro.</p>
+                </div>
+                <button className="btn-secondary px-4 py-2 text-sm" type="button" onClick={() => setMapOpen(false)}>
+                  Ocultar mapa
+                </button>
+              </div>
+              <NearbyMap className="h-full" minHeightClass="min-h-[320px]" />
+            </section>
+          ) : null}
           {categoryImages[categoryParam] || categoryImages[category] ? (
             <div className="relative h-24 overflow-hidden rounded-[24px] border border-line md:h-32">
               <img
