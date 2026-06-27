@@ -83,7 +83,8 @@ const KEYWORD_FILTERS: Array<{ match: RegExp; filters: OsmFilter[] }> = [
 
 const DEFAULT_FILTERS: OsmFilter[] = [
   { key: "craft" }, // any craft business
-  { key: "shop", value: "hardware|doityourself|trade" },
+  { key: "shop", value: "hardware|doityourself|trade|electrical|paint|garden_centre|appliance|tool_hire|tiles|furniture" },
+  { key: "office", value: "company|contractor" },
 ];
 
 /** Resolve OSM filters for a trade (category id or free-text query). */
@@ -128,6 +129,10 @@ export function labelForOsmTag(craft?: string, shop?: string, office?: string): 
     paint: "Pinturas",
     appliance: "Electrodomesticos",
     electrical: "Materiales electricos",
+    tool_hire: "Arriendo de herramientas",
+    tiles: "Ceramicas y revestimientos",
+    company: "Empresa local",
+    contractor: "Contratista",
   };
   return dict[raw] ?? raw.replace(/_/g, " ");
 }

@@ -8,7 +8,7 @@ const DEFAULT_CENTER: [number, number] = [-33.4489, -70.6693];
 const LEAFLET_CSS = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css";
 const LEAFLET_JS = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
 
-type Status = "loading" | "ready" | "error";
+type Status = "loading" | "ready" | "searching" | "error";
 type MapCenter = { lat: number; lng: number };
 
 function loadLeaflet(): Promise<any> {
@@ -55,14 +55,17 @@ export function NearbyMap({
 }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
+  const requestSeqRef = useRef(0);
   const [status, setStatus] = useState<Status>("loading");
   const [count, setCount] = useState(0);
+  const [mapLabel, setMapLabel] = useState(centerLabel || "");
 
   useEffect(() => {
     let cancelled = false;
     let L: any;
     setStatus("loading");
     setCount(0);
+    setMapLabel(centerLabel || "");
 
     async function getCenter(): Promise<{ coords: [number, number]; approximate: boolean; label: string }> {
       if (center && Number.isFinite(center.lat) && Number.isFinite(center.lng)) {
@@ -107,28 +110,46 @@ export function NearbyMap({
           iconSize: [16, 16],
           iconAnchor: [8, 8],
         });
-        L.marker(coords, { icon: youIcon }).addTo(map).bindPopup(label);
-
-        setStatus("ready");
-
-        const points: OsmGeoPoint[] = await fetchOsmPointsAround({ lat: coords[0], lng: coords[1], radius: 4000, trade, limit: 24 });
-        if (cancelled) return;
         const bizIcon = L.divIcon({
           html: '<span style="display:block;width:12px;height:12px;border-radius:50%;background:#f59e0b;border:2px solid #fff;box-shadow:0 0 0 1px #b45309"></span>',
           className: "",
           iconSize: [12, 12],
           iconAnchor: [6, 6],
         });
-        for (const p of points) {
-          L.marker([p.lat, p.lng], { icon: bizIcon })
-            .addTo(map)
-            .bindPopup(
-              `<strong>${p.name}</strong>${p.category ? `<br/>${p.category}` : ""}<br/>` +
-                `<span style="font-size:11px;color:#64748b">No verificado por OficiosPro</span><br/>` +
-                `<a href="${p.mapsUrl}" target="_blank" rel="noopener noreferrer nofollow">Ver en el mapa</a>`,
-            );
+
+        const searchMarker = L.marker(coords, { icon: youIcon }).addTo(map).bindPopup(label);
+        const businessLayer = L.layerGroup().addTo(map);
+
+        async function renderBusinesses(nextCoords: [number, number], nextLabel: string) {
+          const requestId = ++requestSeqRef.current;
+          setStatus("searching");
+          setMapLabel(nextLabel);
+          setCount(0);
+          businessLayer.clearLayers();
+          const points: OsmGeoPoint[] = await fetchOsmPointsAround({ lat: nextCoords[0], lng: nextCoords[1], radius: 4000, trade, limit: 36 });
+          if (cancelled || requestId !== requestSeqRef.current) return;
+          for (const p of points) {
+            L.marker([p.lat, p.lng], { icon: bizIcon })
+              .addTo(businessLayer)
+              .bindPopup(
+                `<strong>${p.name}</strong>${p.category ? `<br/>${p.category}` : ""}<br/>` +
+                  `<span style="font-size:11px;color:#64748b">No verificado por OficiosPro</span><br/>` +
+                  `<a href="${p.mapsUrl}" target="_blank" rel="noopener noreferrer nofollow">Ver en el mapa</a>`,
+              );
+          }
+          setCount(points.length);
+          setStatus("ready");
         }
-        setCount(points.length);
+
+        await renderBusinesses(coords, centerLabel || label);
+
+        map.on("moveend", () => {
+          const nextCenter = map.getCenter();
+          const nextCoords: [number, number] = [nextCenter.lat, nextCenter.lng];
+          const nextLabel = "Zona visible";
+          searchMarker.setLatLng(nextCoords).bindPopup("Centro de busqueda actualizado");
+          void renderBusinesses(nextCoords, nextLabel);
+        });
       } catch {
         if (!cancelled) setStatus("error");
       }
@@ -138,6 +159,7 @@ export function NearbyMap({
     return () => {
       cancelled = true;
       if (mapRef.current) {
+        mapRef.current.off();
         mapRef.current.remove();
         mapRef.current = null;
       }
@@ -158,12 +180,13 @@ export function NearbyMap({
   return (
     <div className={`relative overflow-hidden rounded-[28px] border border-line shadow-card ${className ?? ""}`}>
       <div ref={containerRef} className={`h-full w-full ${minHeightClass}`} aria-label="Mapa de negocios y especialistas cercanos" />
+      <div className="pointer-events-none absolute left-1/2 top-1/2 z-[400] h-7 w-7 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-brand/90 shadow-card ring-2 ring-brand/30" aria-hidden />
       <div className="pointer-events-none absolute left-3 top-3 z-[400] rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-black text-ink shadow-sm">
-        {status === "loading" ? "Cargando mapa..." : `${centerLabel ? `Mapa en ${centerLabel}` : "Cerca de ti"}${count ? ` · ${count} negocios` : ""}`}
+        {status === "loading" ? "Cargando mapa..." : `${status === "searching" ? "Actualizando" : mapLabel ? `Mapa en ${mapLabel}` : "Cerca de ti"}${count ? ` · ${count} negocios` : ""}`}
       </div>
       <div className="absolute inset-x-3 bottom-3 z-[400] flex flex-wrap items-center justify-between gap-2">
         <span className="pointer-events-none rounded-full bg-white/95 px-3 py-1.5 text-[10px] font-black text-muted shadow-sm">
-          Negocios de OpenStreetMap. No verificados por OficiosPro.
+          Mueve el mapa para buscar negocios cercanos. Datos OpenStreetMap, no verificados por OficiosPro.
         </span>
         <Link href="/especialistas" className="btn-primary px-3 py-1.5 text-xs shadow-sm">
           Ver especialistas OficiosPro
