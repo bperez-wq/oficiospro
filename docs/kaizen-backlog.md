@@ -62,6 +62,7 @@ Tipos sugeridos:
 | KZ-033 | Chips de captacion fundadores y opciones de oficio podian volver a generar keys fragiles | Browser local / warning React 2026-06-26 | medio | alta | ux | Codex | validando | Harden founder chip keys and key validation | validate/build/dry-run | pendiente |
 | KZ-034 | Readiness offline pasaba aunque no verificara rutas locales ni APIs del Worker | Kaizen release gate 2026-06-26 | alto | media | operacion | Codex | validando | Make offline readiness verify local route evidence | release:gate/strict | pendiente |
 | KZ-035 | Mensaje de readiness offline decia que admin se saltaba aunque ahora valida evidencia local | Kaizen release gate 2026-06-26 | bajo | media | operacion | Codex | validando | Clarify offline admin readiness messaging | validate/pilot offline | pendiente |
+| KZ-036 | Filtros mobile de especialistas empujaban el contenido y no se comportaban como drawer premium | Auditoria UX Codex 2026-06-26 | alto | alta | ux | Codex | completado | Upgrade specialists mobile filter drawer UX | release:gate + Browser mobile | Drawer fijo dentro del viewport, scroll interno, Escape/backdrop/X y CTA con conteo |
 
 ## Criterios de priorizacion
 

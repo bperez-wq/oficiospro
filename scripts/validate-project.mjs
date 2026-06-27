@@ -339,6 +339,11 @@ if (assetDirectory === "./out") {
   assertContains("src/components/SpecialistQuickLeadForm.tsx", "key={normalizeSearch(option)}");
   assertContains("src/app/especialistas-fundadores/page.tsx", "popular-founder-trade");
   assertContains("src/components/founders/FounderValueCards.tsx", "example-trade");
+  assertContains("src/components/SpecialistsExplorer.tsx", "document.body.style.overflow");
+  assertContains("src/components/SpecialistsExplorer.tsx", "filterDrawerRef.current?.focus()");
+  assertContains("src/components/SpecialistsExplorer.tsx", "aria-label=\"Cerrar filtros\"");
+  assertContains("src/components/SpecialistsExplorer.tsx", "maxHeight: \"calc(100vh - 10rem)\"");
+  assertContains("src/components/SpecialistsExplorer.tsx", "Ver {visible.length} resultados");
   assertContains("src/lib/leads.ts", "Estamos activando la recepci");
   assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
   for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {
