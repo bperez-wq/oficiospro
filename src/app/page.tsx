@@ -9,6 +9,7 @@ import { HeroSearchPanel } from "@/components/HeroSearchPanel";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
+import { CreditsHeroBadge, CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { QuickProblemLinks } from "@/components/QuickProblemLinks";
 import { heroCollageImages } from "@/data/visualAssets";
@@ -74,9 +75,9 @@ export default function HomePage() {
                 <span className="text-[13px] font-semibold leading-5 text-muted">Crea tu perfil, muestra tus servicios y recibe solicitudes.</span>
               </div>
             </div>
-            <Link href="#club-hogar" className="mt-4 inline-block text-sm font-black text-brand-dark transition hover:text-brand" data-event="home_hero_credits_link">
+            <CreditsHelpTrigger className="mt-4 inline-block text-sm font-black text-brand-dark transition hover:text-brand">
               ¿Cómo funcionan los créditos? →
-            </Link>
+            </CreditsHelpTrigger>
             <div className="mt-7 flex flex-wrap gap-2.5">
               {[
                 ["*", "Piloto fundador", "chip-sun"],
@@ -100,25 +101,25 @@ export default function HomePage() {
                   key={image.src}
                   src={image.src}
                   alt={image.alt}
-                  loading={index === 0 ? undefined : "lazy"}
-                  className="h-full w-full rounded-[24px] object-cover shadow-card"
+                  loading="eager"
+                  fetchPriority={index === 0 ? "high" : "auto"}
+                  className="h-full w-full rounded-[24px] object-cover object-center shadow-card"
                 />
               ))}
             </div>
-            <FloatingCard className="left-0 top-8 animate-float" label="Ejemplo piloto" value="4,9★" accent="sun" />
-            <FloatingCard className="right-0 top-24 animate-float [animation-delay:1.5s]" label="Respuesta referencial" value="35 min" accent="accent" />
-            <FloatingCard className="bottom-16 left-6 animate-float [animation-delay:0.8s]" label="Precio desde" value="30 créditos" accent="brand" />
-            <FloatingCard className="bottom-40 right-2 animate-float [animation-delay:1.1s]" label="Especialista a" value="3,8 km" accent="accent" />
-            <div className="absolute bottom-8 right-6 w-64 rounded-[24px] border border-line bg-white/95 p-4 shadow-card backdrop-blur">
-              <p className="text-xs font-black uppercase text-muted">Técnicos cercanos</p>
-              <div className="mt-3 flex -space-x-3">
-                {specialists.slice(0, 5).map((specialist) => (
-                  <span key={specialist.id} className="grid h-10 w-10 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-brand to-brand-dark text-xs font-black text-white shadow-sm">
+            <FloatingCard className="left-0 top-6 animate-float" label="Ejemplo piloto" value="4,9★" accent="sun" />
+            <FloatingCard className="right-0 top-20 animate-float [animation-delay:1.5s]" label="Respuesta referencial" value="35 min" accent="accent" />
+            <CreditsHeroBadge className="bottom-16 left-4 animate-float [animation-delay:0.8s]" />
+            <div className="absolute bottom-4 right-4 w-48 rounded-[20px] border border-line bg-white/95 p-3 shadow-card backdrop-blur">
+              <p className="text-[11px] font-black uppercase text-muted">Técnicos cercanos</p>
+              <div className="mt-2 flex -space-x-2.5">
+                {specialists.slice(0, 4).map((specialist) => (
+                  <span key={specialist.id} className="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-brand to-brand-dark text-[11px] font-black text-white shadow-sm">
                     {specialist.initials}
                   </span>
                 ))}
               </div>
-              <p className="mt-3 text-sm font-bold text-muted">Especialistas fundadores en revision y evidencia antes de publicar.</p>
+              <p className="mt-2 text-xs font-bold leading-4 text-muted">Fundadores en revisión antes de publicar.</p>
             </div>
           </div>
         </div>

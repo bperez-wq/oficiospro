@@ -150,6 +150,40 @@ export function CreditsHelpTrigger({ children, className }: { children?: ReactNo
 }
 
 /**
+ * Floating hero badge ("Precio desde / 30 creditos") that opens the explainer
+ * modal on click. Positioned by the `className` passed in (absolute utilities).
+ */
+export function CreditsHeroBadge({
+  className,
+  label = "Precio desde",
+  value = "30 créditos",
+}: {
+  className?: string;
+  label?: string;
+  value?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className={`absolute rounded-[22px] border border-line bg-white/95 p-4 text-left shadow-card backdrop-blur transition hover:-translate-y-0.5 hover:shadow-soft ${className ?? ""}`}
+        aria-label="Como funcionan los creditos"
+      >
+        <span className="flex items-center gap-2 text-xs font-black uppercase text-muted">
+          <span className="h-2 w-2 rounded-full bg-brand" />
+          {label}
+        </span>
+        <strong className="mt-1 block text-2xl font-black text-ink">{value}</strong>
+        <span className="mt-1 block text-[11px] font-black text-brand-dark">Ver como funciona &rarr;</span>
+      </button>
+      <CreditsExplainerModal open={open} onClose={() => setOpen(false)} />
+    </>
+  );
+}
+
+/**
  * Inline credit price with CLP hint and an info trigger. Drop-in for any place
  * that shows a price in credits.
  */
