@@ -26,7 +26,25 @@ Requerido para cambios de codigo:
 
 - `npm.cmd run validate`.
 - `npm.cmd run build`.
-- `npx.cmd wrangler deploy --dry-run --assets ./out` si afecta deploy o build.
+- `npm.cmd run deploy:dry-run` si afecta deploy o build.
+
+Gate completo recomendado antes de PR, merge o deploy:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+npm.cmd run release:gate
+```
+
+Este comando ejecuta auditoria Kaizen, validacion, tests unitarios, auditoria SEO, readiness offline sin escribir reporte, build y dry-run de Cloudflare. No hace deploy real ni migraciones.
+
+Gate estricto recomendado justo antes de merge/deploy:
+
+```powershell
+cd C:\Users\Benjamin\oficiospro\oficiospro
+npm.cmd run release:gate:strict
+```
+
+El modo estricto falla si quedan cambios reales sin commitear. Ignora ruido sin diff real, por ejemplo archivos marcados por line endings sin contenido modificado.
 
 Para cambios solo docs:
 
@@ -107,4 +125,3 @@ Un release se bloquea si:
 - Hay credenciales o datos sensibles.
 - Hay datos demo en vistas operativas de produccion.
 - El cambio puede afectar cobros reales sin prueba.
-

@@ -170,6 +170,16 @@ if (existsSync(fullPath("package.json"))) {
       if (!scripts[scriptName]) fail(`package.json missing scripts.${scriptName}`);
     }
     if (!scripts["test:leads"]) fail("package.json missing scripts.test:leads");
+    if (!scripts.predeploy || !scripts.predeploy.includes("npm run validate") || !scripts.predeploy.includes("npm run build")) {
+      fail("package.json scripts.predeploy must run validate and build before deploy");
+    }
+    if (!scripts["deploy:dry-run"] || !scripts["deploy:dry-run"].includes("--dry-run")) fail("package.json missing scripts.deploy:dry-run");
+    if (!scripts["release:gate"] || !scripts["release:gate"].includes("scripts/platform-release-gate.mjs")) {
+      fail("package.json missing scripts.release:gate");
+    }
+    if (!scripts["release:gate:strict"] || !scripts["release:gate:strict"].includes("--require-clean")) {
+      fail("package.json missing scripts.release:gate:strict");
+    }
   } catch (error) {
     fail(`package.json is not valid JSON: ${error.message}`);
   }
@@ -257,7 +267,9 @@ if (assetDirectory === "./out") {
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
+  assertRegex("wrangler.toml", /binding\s*=\s*["']DB["'][\s\S]*database_name\s*=\s*["']oficiospro-leads["']/, "D1 binding DB for oficiospro-leads");
   assertRegex("next.config.ts", /output\s*:\s*["']export["']/, 'Next static export output = "export"');
+  assertRegex("next.config.ts", /turbopack\s*:\s*\{[\s\S]*root\s*:\s*process\.cwd\(\)/, "explicit Turbopack root for stable builds");
 
   if (packageJson) {
     if (!/\bnext\s+build\b/.test(packageJson.scripts?.build ?? "")) fail('package.json scripts.build must run "next build" for ./out deployments');
@@ -310,6 +322,9 @@ if (assetDirectory === "./out") {
   for (const endpoint of ["/api/leads", "/api/jobs/request", "/api/specialists/apply", "/api/companies/request", "/api/bookings/request", "/api/contact", "/api/admin/leads"]) {
     assertContains("worker/index.ts", endpoint);
   }
+  assertContains("worker/index.ts", "/api/health");
+  assertContains("worker/index.ts", "dbConfigured");
+  assertContains("worker/index.ts", "normalizeApiPathname");
   assertContains("worker/index.ts", "database_not_configured");
   assertContains("worker/index.ts", "RESEND_API_KEY");
   assertContains("worker/index.ts", "emailError");
@@ -317,6 +332,18 @@ if (assetDirectory === "./out") {
   assertContains("worker/index.ts", "communeName");
   assertContains("src/lib/leadClient.ts", "fetch(endpoint");
   assertContains("src/lib/leadClient.ts", "oficiospro.leadSubmissions.localBackup");
+  assertContains("src/lib/leadClient.ts", "submitConversionPayload");
+  assertContains("src/lib/analytics/index.ts", "oficiospro.analytics.localConversionEvents");
+  assertContains("src/lib/analytics/index.ts", "shouldUseLocalConversionFallback");
+  assertContains("src/components/SpecialistQuickLeadForm.tsx", "uniqueTradeOptions");
+  assertContains("src/components/SpecialistQuickLeadForm.tsx", "key={normalizeSearch(option)}");
+  assertContains("src/app/especialistas-fundadores/page.tsx", "popular-founder-trade");
+  assertContains("src/components/founders/FounderValueCards.tsx", "example-trade");
+  assertContains("src/components/SpecialistsExplorer.tsx", "document.body.style.overflow");
+  assertContains("src/components/SpecialistsExplorer.tsx", "filterDrawerRef.current?.focus()");
+  assertContains("src/components/SpecialistsExplorer.tsx", "aria-label=\"Cerrar filtros\"");
+  assertContains("src/components/SpecialistsExplorer.tsx", "maxHeight: \"calc(100vh - 10rem)\"");
+  assertContains("src/components/SpecialistsExplorer.tsx", "Ver {visible.length} resultados");
   assertContains("src/lib/leads.ts", "Estamos activando la recepci");
   assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
   for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {
@@ -354,6 +381,7 @@ if (assetDirectory === "./out") {
   assertContains("src/components/Forms.tsx", "Enviando...");
   assertContains("src/components/Forms.tsx", "specialist_application_submit");
   assertContains("src/components/Forms.tsx", "/?postulacion=recibida");
+  assertContains("src/components/Forms.tsx", "if (leadResult.stored)");
   assertContains("src/components/PostulationToast.tsx", "Postulación recibida");
   assertContains("src/data/commercialConfig.ts", "customerCreditValueCLP");
   assertContains("src/data/commercialConfig.ts", "certificationRequiredByCategory");

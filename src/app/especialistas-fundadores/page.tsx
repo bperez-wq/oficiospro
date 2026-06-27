@@ -70,8 +70,8 @@ export default function FounderSpecialistsPage() {
             Estamos priorizando especialistas por comuna. Puedes ofrecer mas de un servicio y pedir ayuda si no sabes que documento tributario corresponde.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
-            {popularFounderTrades.map((trade) => (
-              <span key={trade} className="rounded-full border border-brand/15 bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
+            {popularFounderTrades.map((trade, index) => (
+              <span key={`popular-founder-trade-${index}-${trade}`} className="rounded-full border border-brand/15 bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
                 {trade}
               </span>
             ))}

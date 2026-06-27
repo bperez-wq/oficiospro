@@ -26,6 +26,12 @@ Medir el camino completo desde visita hasta postulacion enviada:
 
 No se creo un endpoint nuevo `/api/events` en este ciclo para evitar tocar Worker. La capa cliente ya deja el payload con forma de analytics y puede migrarse a `/api/events` cuando se apruebe tocar Worker.
 
+## Fallback local de desarrollo
+
+En desarrollo local con `next dev`, el Worker no siempre esta levantado junto al frontend. Para evitar ruido operacional y falsos 404 en consola, la capa cliente guarda eventos en `localStorage` bajo `oficiospro.analytics.localConversionEvents` cuando detecta `localhost`, `127.0.0.1`, `::1` o dominios `.localhost`.
+
+En produccion, el cliente intenta enviar a `POST /api/conversion-events/create`. Si el endpoint remoto responde error o hay una falla de red, el evento queda respaldado localmente con `fallbackReason` para no romper la experiencia del usuario. Ese respaldo no reemplaza D1, pero evita perder contexto durante pruebas locales y permite diagnosticar incidentes sin bloquear conversion.
+
 ## Eventos medidos
 
 | Evento | Donde ocurre | Uso |

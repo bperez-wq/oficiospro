@@ -1,6 +1,6 @@
 "use client";
 
-import { analyticsContext, getAttributionContext, sanitizeAnalyticsMetadata } from "@/lib/analytics";
+import { analyticsContext, getAttributionContext, sanitizeAnalyticsMetadata, submitConversionPayload } from "@/lib/analytics";
 import { leadMessageForResult, type LeadSubmissionPayload, type LeadSubmitResult } from "@/lib/leads";
 
 const localLeadBackupKey = "oficiospro.leadSubmissions.localBackup";
@@ -137,15 +137,5 @@ export async function submitConversionEvent(event: { type: string; source?: stri
     }),
   };
 
-  try {
-    const response = await fetch("/api/conversion-events/create", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
-    const data = (await response.json().catch(() => ({}))) as { ok?: boolean; id?: string; stored?: boolean; error?: string };
-    return { ok: Boolean(data.ok) && response.ok, id: data.id, stored: Boolean(data.stored), error: data.error };
-  } catch (error) {
-    return { ok: false, error: error instanceof Error ? error.message : "network_error" };
-  }
+  return submitConversionPayload(body);
 }

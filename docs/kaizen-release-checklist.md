@@ -9,6 +9,7 @@ git status
 git log --oneline -5
 git branch --show-current
 npm run kaizen:audit
+npm run kaizen:audit -- --require-clean
 ```
 
 Confirmar:
@@ -17,6 +18,7 @@ Confirmar:
 - No hay archivos generados stageados.
 - No aparecen `node_modules/`, `.next/`, `out/` ni `work/`.
 - `npm run kaizen:audit` no reporta artefactos bloqueantes.
+- Antes de merge/deploy, `npm run kaizen:audit -- --require-clean` no reporta cambios reales pendientes.
 - No hay cambios sorpresa en `worker/index.ts`, `wrangler.toml`, migraciones, pagos o Mercado Pago.
 
 ## 2. Regla de ramas
@@ -42,9 +44,13 @@ Todo PR debe apuntar a `main`, salvo instruccion explicita.
 Para cambios de codigo:
 
 ```powershell
-npm run validate
-npm run build
-npx.cmd wrangler deploy --dry-run --assets ./out
+npm run release:gate
+```
+
+Antes de merge/deploy, usar:
+
+```powershell
+npm run release:gate:strict
 ```
 
 Para cambios solo docs:
@@ -67,7 +73,7 @@ Confirmar:
 ## 5. Dry-run Cloudflare
 
 ```powershell
-npx.cmd wrangler deploy --dry-run --assets ./out
+npm run deploy:dry-run
 ```
 
 Confirmar:
@@ -82,7 +88,7 @@ Confirmar:
 Solo con aprobacion de Benjamin:
 
 ```powershell
-npx.cmd wrangler deploy --assets ./out
+npm run deploy
 ```
 
 Despues:

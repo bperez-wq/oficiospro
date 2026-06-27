@@ -64,7 +64,7 @@ Tareas:
 Validaciones:
 - npm.cmd run validate
 - npm.cmd run build si aplica
-- npx.cmd wrangler deploy --dry-run --assets ./out si aplica
+- npm.cmd run deploy:dry-run si aplica
 
 Commit:
 [COMMIT]
@@ -162,4 +162,3 @@ Resume:
 
 No maquilles resultados. Si no hay evidencia, dilo.
 ```
-

@@ -1048,8 +1048,10 @@ export function SpecialistRegisterForm() {
         },
       });
 
-      earlyContactLeadKeyRef.current = contactKey;
-      rememberEarlyContactKey(contactKey);
+      if (leadResult.stored) {
+        earlyContactLeadKeyRef.current = contactKey;
+        rememberEarlyContactKey(contactKey);
+      }
       void submitConversionEvent({
         type: "draft_profile_created",
         source: acquisitionPayload.source,

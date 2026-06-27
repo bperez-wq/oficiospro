@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { specialists, type Specialist } from "@/data/mock";
 import { categoryImages } from "@/data/visualAssets";
 import type { FlexibleService } from "@/data/flexiblePricing";
@@ -95,6 +95,7 @@ export function SpecialistsExplorer() {
   const [clientLng, setClientLng] = useState(-70.5673);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
   const [notice, setNotice] = useState("");
+  const filterDrawerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     seedMockState();
@@ -165,6 +166,21 @@ export function SpecialistsExplorer() {
   useEffect(() => {
     setSpecialty("all");
   }, [category]);
+
+  useEffect(() => {
+    if (!filtersOpen) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") setFiltersOpen(false);
+    }
+    filterDrawerRef.current?.focus();
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [filtersOpen]);
 
   const specialtyOptions =
     category === "all"
@@ -387,12 +403,39 @@ export function SpecialistsExplorer() {
         </button>
       </div>
 
+      {filtersOpen ? (
+        <button
+          type="button"
+          className="fixed inset-0 z-40 bg-ink/45 backdrop-blur-sm lg:hidden"
+          aria-label="Cerrar filtros"
+          onClick={() => setFiltersOpen(false)}
+        />
+      ) : null}
+
       <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[240px_1fr]">
-        <aside className={`${filtersOpen ? "grid" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 lg:sticky lg:top-28 lg:grid`}>
-          <div>
-            <p className="eyebrow">Busca por confianza</p>
-            <h2 className="text-2xl font-black">Filtra especialistas</h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y creditos.</p>
+        <aside
+          ref={filterDrawerRef}
+          className={`${filtersOpen ? "fixed inset-x-3 bottom-20 top-20 z-50 grid overflow-y-auto" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 shadow-card lg:sticky lg:inset-x-auto lg:bottom-auto lg:top-28 lg:z-auto lg:grid lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:shadow-none`}
+          style={filtersOpen ? { maxHeight: "calc(100vh - 10rem)" } : undefined}
+          aria-label="Filtros de especialistas"
+          role={filtersOpen ? "dialog" : undefined}
+          aria-modal={filtersOpen ? true : undefined}
+          tabIndex={filtersOpen ? -1 : undefined}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">Busca por confianza</p>
+              <h2 className="text-2xl font-black">Filtra especialistas</h2>
+              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y creditos.</p>
+            </div>
+            <button
+              type="button"
+              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-white text-sm font-black text-muted lg:hidden"
+              aria-label="Cerrar filtros"
+              onClick={() => setFiltersOpen(false)}
+            >
+              X
+            </button>
           </div>
           <SearchableSelect
             label="Tipo de servicio"
@@ -449,7 +492,7 @@ export function SpecialistsExplorer() {
           </label>
           <div className="grid gap-2">
             <button className="btn-primary w-full" type="button" onClick={() => setQuery(query.trim())}>
-              Aplicar filtros
+              Ver {visible.length} resultados
             </button>
             <button className="btn-secondary w-full" type="button" onClick={clearFilters}>
               Limpiar y ver toda la red
@@ -507,7 +550,14 @@ export function SpecialistsExplorer() {
           </div>
           <div className="rounded-2xl border border-line bg-slate-50 p-4">
             {hasActiveFilters ? (
-              <div className="flex flex-wrap gap-2">
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase text-muted">Filtros activos</p>
+                  <button type="button" className="text-xs font-black text-brand-dark underline-offset-4 hover:underline" onClick={clearFilters}>
+                    Limpiar todo
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-2">
                 {activeFilters.map((filter) => (
                   <button
                     key={filter.label}
@@ -518,6 +568,7 @@ export function SpecialistsExplorer() {
                     {filter.label} x
                   </button>
                 ))}
+                </div>
               </div>
             ) : (
               <p className="text-sm font-bold text-muted">Explora todos los especialistas verificados disponibles en OficiosPro.</p>
@@ -628,7 +679,7 @@ export function SpecialistsExplorer() {
           Filtros
         </button>
         <a className="btn-primary min-h-11 flex-1 px-3 text-sm" href="#especialistas-results">
-          Ver resultados
+          Ver {visible.length} resultados
         </a>
       </StickyMobileCTA>
     </div>

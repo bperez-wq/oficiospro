@@ -11,6 +11,7 @@ const baseUrl = (process.env.PILOT_BASE_URL || process.env.APP_BASE_URL || proce
 const adminTokenCheck = validateAdminToken(process.env.ADMIN_TOKEN || process.env.ADMIN_API_TOKEN || "");
 const adminToken = adminTokenCheck.ok ? adminTokenCheck.value : "";
 const offline = process.argv.includes("--offline") || process.env.PILOT_READINESS_OFFLINE === "1";
+const noReport = process.argv.includes("--no-report") || process.env.PILOT_READINESS_NO_REPORT === "1";
 const readinessRunId = runId();
 const writeTestsEnabled = process.env.PILOT_READINESS_WRITE_TESTS === "1";
 const requireAdmin = process.argv.includes("--require-admin") || process.env.PILOT_READINESS_REQUIRE_ADMIN === "1";
@@ -25,6 +26,7 @@ const publicChecks = [
   { label: "Empresas", path: "/empresas", expect: "html", critical: false },
   { label: "Sitemap", path: "/sitemap.xml", expect: "xml", critical: true },
   { label: "Robots", path: "/robots.txt", expect: "text", critical: true },
+  { label: "Worker health", path: "/api/health", expect: "json", critical: true },
 ];
 
 const adminChecks = [
@@ -32,6 +34,9 @@ const adminChecks = [
   { label: "CRM overview", path: "/api/admin/crm/overview", critical: true },
   { label: "CRM opportunities", path: "/api/admin/crm/opportunities?limit=1", critical: false },
   { label: "CRM tasks", path: "/api/admin/crm/tasks?limit=1", critical: false },
+  { label: "CRM work queue", path: "/api/admin/crm/work-queue", critical: false },
+  { label: "CRM reports", path: "/api/admin/crm/reports", critical: false },
+  { label: "Admin virtual quotes", path: "/api/admin/virtual-quotes?limit=1", critical: false },
   { label: "Conversion events", path: "/api/admin/conversion-events?limit=1", critical: false },
 ];
 
@@ -59,17 +64,34 @@ const writeChecks = [
   },
 ];
 
+const offlineRouteEvidence = new Map([
+  ["/", { file: "src/app/page.tsx" }],
+  ["/especialistas", { file: "src/app/especialistas/page.tsx" }],
+  ["/registro-especialista", { file: "src/app/registro-especialista/page.tsx" }],
+  ["/especialistas-fundadores", { file: "src/app/especialistas-fundadores/page.tsx" }],
+  ["/bolsa", { file: "src/app/bolsa/page.tsx" }],
+  ["/club-hogar", { file: "src/app/club-hogar/page.tsx" }],
+  ["/empresas", { file: "src/app/empresas/page.tsx" }],
+  ["/sitemap.xml", { file: "public/sitemap.xml", text: "<urlset" }],
+  ["/robots.txt", { file: "public/robots.txt", text: "Sitemap:" }],
+  ["/api/health", { file: "worker/index.ts", text: "/api/health" }],
+  ["/api/leads", { file: "worker/index.ts", text: "/api/leads" }],
+  ["/api/admin/leads", { file: "worker/index.ts", text: "/api/admin/leads" }],
+  ["/api/admin/virtual-quotes", { file: "worker/index.ts", text: "virtual-quotes" }],
+  ["/api/admin/conversion-events", { file: "worker/index.ts", text: "/api/admin/conversion-events" }],
+]);
+
 const results = [];
 
 console.log(`Pilot readiness check for ${baseUrl}`);
 console.log(offline ? "Offline mode: no network requests will be made." : "Live mode: public endpoints will be requested.");
-console.log(adminToken ? "Admin token: configured for read-only admin checks." : `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`);
+console.log(adminStatusMessage());
 console.log(requireAdmin ? "Strict admin gate: enabled." : "Strict admin gate: disabled.");
 console.log("");
 
 if (offline) {
   for (const check of [...publicChecks, ...adminChecks, ...writeChecks]) {
-    results.push({ group: groupFor(check), label: check.label, path: check.path, status: "offline", ok: true, critical: check.critical, note: "offline_check_skipped" });
+    results.push(checkOffline(check));
   }
 } else {
   for (const check of publicChecks) {
@@ -100,13 +122,18 @@ if (offline) {
 
 const summary = summarize(results);
 const report = renderReport(results, summary);
-fs.mkdirSync(reportDir, { recursive: true });
-fs.writeFileSync(outputPath, report);
+if (!noReport) {
+  fs.mkdirSync(reportDir, { recursive: true });
+  fs.writeFileSync(outputPath, report);
+}
 
-console.log(`Report: ${path.relative(rootDir, outputPath)}`);
+console.log(noReport ? "Report: skipped (--no-report)" : `Report: ${path.relative(rootDir, outputPath)}`);
 console.log(`OK: ${summary.ok}`);
 console.log(`Warnings: ${summary.warnings}`);
 console.log(`Errors: ${summary.errors}`);
+if (summary.adminSkipped && !requireAdmin) {
+  console.log("Admin/CRM checks were skipped because no real admin token was provided. Use --require-admin before production deploy.");
+}
 
 if (summary.errors) process.exit(1);
 
@@ -129,6 +156,22 @@ async function checkPublic(check) {
   } catch (error) {
     return failureResult("public", check, error);
   }
+}
+
+function checkOffline(check) {
+  const routePath = check.path.split("?")[0];
+  const evidence = offlineEvidenceFor(routePath);
+  const ok = Boolean(evidence) && offlineEvidenceExists(evidence);
+  return {
+    group: groupFor(check),
+    label: check.label,
+    path: check.path,
+    status: "offline",
+    ok,
+    critical: check.critical,
+    durationMs: 0,
+    note: ok ? `local_evidence:${evidence.file}` : "local_evidence_missing",
+  };
 }
 
 async function checkAdmin(check) {
@@ -248,12 +291,28 @@ ${summary.adminSkipped && !requireAdmin ? "- CAUTION: admin checks were skipped.
 
 function summarize(items) {
   return {
-    ok: items.filter((item) => item.ok && item.status !== "skipped" && item.status !== "offline").length,
+    ok: items.filter((item) => item.ok && item.status !== "skipped").length,
     warnings: items.filter((item) => !item.ok && !item.critical).length,
     errors: items.filter((item) => !item.ok && item.critical).length,
-    skipped: items.filter((item) => item.status === "skipped" || item.status === "offline").length,
+    skipped: items.filter((item) => item.status === "skipped").length,
     adminSkipped: items.some((item) => item.group === "admin" && item.status === "skipped"),
   };
+}
+
+function offlineEvidenceFor(routePath) {
+  if (offlineRouteEvidence.has(routePath)) return offlineRouteEvidence.get(routePath);
+  if (routePath.startsWith("/api/admin/crm/")) {
+    const resource = routePath.replace("/api/admin/crm/", "");
+    return { file: "worker/index.ts", text: resource };
+  }
+  return null;
+}
+
+function offlineEvidenceExists(evidence) {
+  const filePath = path.join(rootDir, evidence.file);
+  if (!fs.existsSync(filePath)) return false;
+  if (!evidence.text) return true;
+  return fs.readFileSync(filePath, "utf8").includes(evidence.text);
 }
 
 function failureResult(group, check, error) {
@@ -305,13 +364,28 @@ function validateAdminToken(value) {
 }
 
 function acceptHeader(expect) {
+  if (expect === "json") return "application/json,*/*";
   if (expect === "xml") return "application/xml,text/xml,*/*";
   if (expect === "text") return "text/plain,*/*";
   return "text/html,*/*";
 }
 
+function adminStatusMessage() {
+  if (adminToken) return "Admin token: configured for read-only admin checks.";
+  if (offline) return `Admin token: ${adminTokenCheck.reason}; admin/API checks will use local route evidence only.`;
+  return `Admin token: ${adminTokenCheck.reason}; admin checks will be skipped.`;
+}
+
 function contentLooksValid(text, expect) {
   if (!text) return false;
+  if (expect === "json") {
+    try {
+      const data = JSON.parse(text);
+      return Boolean(data?.ok);
+    } catch {
+      return false;
+    }
+  }
   if (expect === "xml") return text.includes("<urlset") || text.includes("<sitemapindex");
   if (expect === "text") return text.toLowerCase().includes("user-agent");
   return text.includes("<html") || text.includes("<!DOCTYPE html");
