@@ -14,6 +14,7 @@ import { SearchableSelect } from "@/components/SearchableSelect";
 import { SpecialistGridCard } from "@/components/SpecialistGridCard";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
+import { ExternalProvidersSection } from "@/components/ExternalProvidersSection";
 import {
   getClientProfile,
   getMockSession,
@@ -645,6 +646,13 @@ export function SpecialistsExplorer() {
               </div>
             )}
           </div>
+          <ExternalProvidersSection
+            trade={categoryParam || (category !== "all" ? category : "") || query}
+            commune={zone && zone !== ALL_COMMUNES_VALUE ? zone : undefined}
+            region={region !== ALL_REGIONS_VALUE ? regionNameForCode(region) : undefined}
+            query={query}
+            ownResultCount={visible.length}
+          />
           <section className="rounded-[24px] border border-line bg-white p-4 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
