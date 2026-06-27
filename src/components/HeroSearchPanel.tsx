@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
@@ -24,20 +25,28 @@ export function HeroSearchPanel() {
   const [commune, setCommune] = useState("");
   const [otherServiceDescription, setOtherServiceDescription] = useState("");
   const [locationStatus, setLocationStatus] = useState("");
+  const finalQuery = serviceTypeId === OTHER_SERVICE_VALUE && otherServiceDescription.trim() ? otherServiceDescription.trim() : query.trim();
+
+  function buildSpecialistsHref(includeMap = false) {
+    const params = new URLSearchParams();
+    if (finalQuery) params.set("q", finalQuery);
+    if (serviceTypeId && serviceTypeId !== OTHER_SERVICE_VALUE) params.set("tipo", serviceTypeId);
+    if (region) params.set("region", region);
+    if (commune) params.set("comuna", commune);
+    if (includeMap) {
+      params.set("mapa", "1");
+      params.set("sourceSection", "home_map_icon");
+    }
+    const queryString = params.toString();
+    return queryString ? `/especialistas?${queryString}` : "/especialistas";
+  }
 
   async function submit() {
     if (region && !commune) {
       setLocationStatus("Elige una comuna para buscar disponibilidad real en esa región.");
       return;
     }
-    const params = new URLSearchParams();
-    const finalQuery = serviceTypeId === OTHER_SERVICE_VALUE && otherServiceDescription.trim() ? otherServiceDescription.trim() : query.trim();
-    if (finalQuery) params.set("q", finalQuery);
-    if (serviceTypeId && serviceTypeId !== OTHER_SERVICE_VALUE) params.set("tipo", serviceTypeId);
-    if (region) params.set("region", region);
-    if (commune) params.set("comuna", commune);
-    const queryString = params.toString();
-    const destination = queryString ? `/especialistas?${queryString}` : "/especialistas";
+    const destination = buildSpecialistsHref();
     void trackEvent({
       eventName: "click_search_specialist",
       sourceComponent: "HeroSearchPanel",
@@ -78,6 +87,8 @@ export function HeroSearchPanel() {
     });
     window.location.href = destination;
   }
+
+  const mapHref = buildSpecialistsHref(true);
 
   return (
     <div className="relative z-20 mt-8 rounded-[28px] border border-line bg-white/95 p-5 shadow-card backdrop-blur md:p-6">
@@ -136,6 +147,22 @@ export function HeroSearchPanel() {
         <button className="btn-primary h-12 w-full px-6 lg:w-auto" type="button" onClick={submit}>
           Buscar especialista
         </button>
+        <Link
+          className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-brand/20 bg-white px-4 text-sm font-black text-brand-dark shadow-sm transition hover:-translate-y-0.5 hover:border-brand hover:bg-brand-soft lg:w-auto"
+          href={mapHref}
+          aria-label="Buscar especialistas usando mapa"
+          onClick={() => {
+            void trackEvent({
+              eventName: "click_search_map",
+              sourceComponent: "HeroSearchPanel",
+              sourceButton: "Mapa hero",
+              metadata: { hasQuery: Boolean(finalQuery), serviceTypeId, region, commune },
+            });
+          }}
+        >
+          <span aria-hidden>🗺️</span>
+          Mapa
+        </Link>
       </div>
       {serviceTypeId === OTHER_SERVICE_VALUE ? (
         <label className="field mt-4">

@@ -39,7 +39,7 @@ function loadLeaflet(): Promise<any> {
   });
 }
 
-export function NearbyMap({ className }: { className?: string }) {
+export function NearbyMap({ className, minHeightClass = "min-h-[420px]" }: { className?: string; minHeightClass?: string }) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<any>(null);
   const [status, setStatus] = useState<Status>("loading");
@@ -133,7 +133,7 @@ export function NearbyMap({ className }: { className?: string }) {
 
   return (
     <div className={`relative overflow-hidden rounded-[28px] border border-line shadow-card ${className ?? ""}`}>
-      <div ref={containerRef} className="h-full min-h-[420px] w-full" aria-label="Mapa de negocios y especialistas cercanos" />
+      <div ref={containerRef} className={`h-full w-full ${minHeightClass}`} aria-label="Mapa de negocios y especialistas cercanos" />
       <div className="pointer-events-none absolute left-3 top-3 z-[400] rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-black text-ink shadow-sm">
         {status === "loading" ? "Cargando mapa..." : `Cerca de ti${count ? ` · ${count} negocios` : ""}`}
       </div>
