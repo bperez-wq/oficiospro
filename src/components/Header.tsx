@@ -342,11 +342,11 @@ function MegaCategoryMenu({ open, onClose }: { open: boolean; onClose: () => voi
   if (!open) return null;
 
   return (
-    <div id="header-category-menu" className="absolute left-1/2 top-full z-[90] w-[min(1120px,calc(100vw-40px))] -translate-x-1/2 pt-3" role="menu">
-      <div className="rounded-[28px] border border-line bg-white p-5 shadow-card">
-        <div className="grid gap-4 xl:grid-cols-5">
+    <div id="header-category-menu" className="fixed inset-x-0 top-20 z-[90] px-4 pt-3" role="menu">
+      <div className="mx-auto max-h-[calc(100vh-7rem)] w-full max-w-7xl overflow-y-auto rounded-[28px] border border-line bg-white p-4 shadow-card md:p-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {categoryGroups.map((group) => (
-            <section key={group.title} className="rounded-2xl bg-slate-50 p-4">
+            <section key={group.title} className="min-w-0 rounded-2xl bg-slate-50 p-4">
               <Link href={group.href} role="menuitem" className="block rounded-xl px-2 py-2 text-sm font-black text-ink transition hover:bg-white hover:text-brand" onClick={onClose}>
                 {group.title}
               </Link>
