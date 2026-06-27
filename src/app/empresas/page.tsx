@@ -73,6 +73,10 @@ export default function EmpresasPage() {
             </div>
           </div>
           <div className="rounded-[26px] bg-white p-5 text-ink">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <p className="text-sm font-black text-ink">Dashboard empresa</p>
+              <span className="rounded-full bg-sun-soft px-3 py-1 text-[11px] font-black text-sun-dark">Vista de ejemplo</span>
+            </div>
             <div className="grid gap-3 md:grid-cols-4">
               <DashboardMetricCard label="Créditos" value={companyDashboard.creditsAvailable.toString()} />
               <DashboardMetricCard label="Usados" value={companyDashboard.creditsUsed.toString()} />
