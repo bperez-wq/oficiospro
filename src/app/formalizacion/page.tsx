@@ -21,6 +21,18 @@ export default function FormalizacionPage() {
         title="Formalizacion clara antes de cobrar servicios."
         subtitle="OficiosPro ordena el flujo para que el cliente pague con creditos y el especialista emita su documento a OP SpA antes de liberar liquidaciones."
       />
+      <section className="rounded-[28px] border border-brand/15 bg-white p-6 shadow-soft">
+        <p className="eyebrow">Tranquilo</p>
+        <h2 className="text-2xl font-black text-ink">No necesitas saber de impuestos para empezar.</h2>
+        <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-muted">
+          La formalizacion es asistida: puedes crear tu perfil y postular aunque todavia no emitas boletas o facturas. Te guiamos con los documentos y datos tributarios antes de activar pagos. Inscribirte no tiene costo.
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {["Sin costo inicial", "Formalizacion asistida", "Puedes postular sin todo resuelto"].map((item) => (
+            <span key={item} className="chip-brand px-3.5 py-2">{item}</span>
+          ))}
+        </div>
+      </section>
       <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-6 shadow-soft">
         <p className="eyebrow">Comision OficiosPro</p>
         <h2 className="text-3xl font-black text-ink">9,5% + IVA sobre la base configurada del servicio.</h2>
@@ -53,7 +65,7 @@ export default function FormalizacionPage() {
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
           <Link className="btn-primary" href="/registro-especialista">
-            Postular como especialista
+            Ofrecer mis servicios
           </Link>
           <Link className="btn-secondary" href="/soporte">
             Ver soporte
