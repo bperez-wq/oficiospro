@@ -36,6 +36,35 @@ export function websiteSchema(): JsonLd {
   };
 }
 
+export function webPageSchema({
+  name,
+  description,
+  path,
+}: {
+  name: string;
+  description: string;
+  path: string;
+}): JsonLd {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    name,
+    description,
+    url: absoluteUrl(path),
+    isPartOf: {
+      "@type": "WebSite",
+      name: siteName,
+      url: siteUrl,
+    },
+    publisher: {
+      "@type": "Organization",
+      name: siteName,
+      url: siteUrl,
+      logo: absoluteUrl("/brand/logo-worker-tile.svg"),
+    },
+  };
+}
+
 export function breadcrumbSchema(items: BreadcrumbItem[]): JsonLd {
   return {
     "@context": "https://schema.org",

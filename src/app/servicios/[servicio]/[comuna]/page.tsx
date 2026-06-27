@@ -4,7 +4,7 @@ import { SeoProgrammaticPage } from "@/components/SeoProgrammaticPage";
 import { findSeoCommune, findSeoService, seoServices } from "@/data/seoRoutes";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 import { localTitle, policyContextForLocalRoute, searchHref, specialistsForSeo } from "@/lib/seo/pageData";
-import { breadcrumbSchema, faqPageSchema, itemListSchema, serviceSchema } from "@/lib/seo/schema";
+import { breadcrumbSchema, faqPageSchema, itemListSchema, organizationSchema, serviceSchema, webPageSchema } from "@/lib/seo/schema";
 
 type PageProps = {
   params: Promise<{ servicio: string; comuna: string }>;
@@ -63,27 +63,45 @@ export default async function ServiceLocalPage({ params }: PageProps) {
   const primaryCtaHref = searchHref({ ...service.searchParams, comuna: commune.slug });
   const nearbyLinks = commune.nearby.slice(0, 4).map((slug) => ({
     href: `/servicios/${service.slug}/${slug}`,
-    label: `${service.shortTitle} en ${slug.replace(/-/g, " ")}`,
+    label: `${service.shortTitle} en ${findSeoCommune(slug)?.name ?? slug.replace(/-/g, " ")}`,
     description: "Comuna cercana en revision editorial.",
   }));
+  const pageTitle = localPage.h1 ?? localPage.title ?? localTitle(service.shortTitle, commune);
+  const pageDescription =
+    localPage.intro ??
+    localPage.description ??
+    `${service.description} En ${commune.name} mostramos disponibilidad con criterio editorial: especialistas publicados cuando existen y una alternativa honesta si la cobertura aun esta creciendo.`;
+  const primaryLabel = localPage.ctaLabel ?? "Buscar en especialistas";
+  const localGuidance =
+    localPage.localNotes?.length
+      ? localPage.localNotes
+      : [
+          `Indica direccion aproximada o sector de ${commune.name} para validar cobertura.`,
+          "Adjunta fotos y urgencia para que el especialista entienda el alcance.",
+          "Si no hay oferta publicada, OficiosPro puede recibir tu solicitud y revisar disponibilidad.",
+        ];
 
   return (
     <SeoProgrammaticPage
       eyebrow="Servicio local"
-      title={localPage.title ?? localTitle(service.shortTitle, commune)}
-      description={
-        localPage.description ??
-        `${service.description} En ${commune.name} mostramos disponibilidad con criterio editorial: especialistas publicados cuando existen y una alternativa honesta si la cobertura aun esta creciendo.`
-      }
+      title={pageTitle}
+      description={pageDescription}
       image={service.image}
       imageAlt={`${service.shortTitle} en ${commune.name}`}
+      breadcrumbs={[
+        { href: "/", label: "Inicio" },
+        { href: "/servicios", label: "Servicios" },
+        { href: `/servicios/${service.slug}`, label: service.shortTitle },
+        { href: path, label: commune.name },
+      ]}
       badges={[commune.name, commune.region, localPage.hasEnoughSpecialists ? "Oferta publicada" : "Cobertura en activacion"]}
-      primaryCta={{ href: primaryCtaHref, label: "Buscar en especialistas" }}
+      trustText={localPage.trustText}
+      primaryCta={{ href: primaryCtaHref, label: primaryLabel }}
       secondaryCta={{ href: "/contacto", label: "Solicitar contacto" }}
       closingCta={{
         title: `${service.shortTitle} en ${commune.name}: encuentra o solicita`,
         text: "Compara especialistas publicados o deja tu solicitud y revisamos disponibilidad en tu comuna. Consultar no tiene costo.",
-        primaryLabel: "Buscar en especialistas",
+        primaryLabel,
         primaryHref: primaryCtaHref,
         secondaryLabel: "Solicitar contacto",
         secondaryHref: "/contacto",
@@ -91,11 +109,7 @@ export default async function ServiceLocalPage({ params }: PageProps) {
       includedTitle={`Servicios frecuentes en ${commune.name}`}
       includedItems={service.includedServices}
       creditRange={service.creditRange}
-      guidanceItems={[
-        `Indica direccion aproximada o sector de ${commune.name} para validar cobertura.`,
-        "Adjunta fotos y urgencia para que el especialista entienda el alcance.",
-        "Si no hay oferta publicada, OficiosPro puede recibir tu solicitud y revisar disponibilidad.",
-      ]}
+      guidanceItems={localGuidance}
       specialists={specialists}
       emptySpecialistsText={`Estamos sumando especialistas en ${commune.name} para ${service.shortTitle}. Puedes solicitar contacto y te avisaremos cuando tengamos disponibilidad.`}
       faqs={localPage.faqs ?? service.faqs}
@@ -106,13 +120,15 @@ export default async function ServiceLocalPage({ params }: PageProps) {
         { href: "/registro-especialista", label: "Postular como especialista", description: "Para profesionales con cobertura en la zona." },
       ].slice(0, 8)}
       jsonLd={[
+        organizationSchema(),
+        webPageSchema({ name: pageTitle, description: pageDescription, path }),
         breadcrumbSchema([
           { name: "Inicio", path: "/" },
-          { name: "Servicios", path: "/especialistas" },
+          { name: "Servicios", path: "/servicios" },
           { name: service.shortTitle, path: `/servicios/${service.slug}` },
           { name: commune.name, path },
         ]),
-        serviceSchema({ name: `${service.shortTitle} en ${commune.name}`, description: service.description, path, image: service.image, areaServed: commune.name }),
+        serviceSchema({ name: `${service.shortTitle} en ${commune.name}`, description: pageDescription, path, image: service.image, areaServed: commune.name }),
         ...(faqPageSchema(localPage.faqs ?? service.faqs) ? [faqPageSchema(localPage.faqs ?? service.faqs)!] : []),
         ...(itemListSchema({
           name: `${service.shortTitle} en ${commune.name}`,

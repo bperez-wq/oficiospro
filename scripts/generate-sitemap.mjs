@@ -13,6 +13,7 @@ const routes = JSON.parse(fs.readFileSync(dataPath, "utf8"));
 const publicBaseRoutes = [
   { path: "/", priority: 1, changefreq: "weekly" },
   { path: "/especialistas", priority: 0.9, changefreq: "weekly" },
+  { path: "/servicios", priority: 0.86, changefreq: "weekly" },
   { path: "/club-hogar", priority: 0.78, changefreq: "monthly" },
   { path: "/empresas", priority: 0.78, changefreq: "monthly" },
   { path: "/registro-especialista", priority: 0.74, changefreq: "monthly" },

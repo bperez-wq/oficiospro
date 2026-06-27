@@ -1,0 +1,391 @@
+import type { SeoCommune, SeoFaq, SeoSearchParams } from "@/data/seoRoutes";
+
+export type SeoLocalServiceSeed = {
+  slug: string;
+  title: string;
+  shortTitle: string;
+  searchLabel: string;
+  professionalPlural: string;
+  description: string;
+  categoryId: string;
+  specialty: string;
+  synonyms: string[];
+  searchParams: SeoSearchParams;
+  includedServices: string[];
+  creditRange: string;
+  relatedProblems: string[];
+  faqs: SeoFaq[];
+  minimumContentScore: number;
+  contentScore: number;
+  priority: number;
+  image: string;
+  lastReviewedAt: string;
+  trustAngle: string;
+  preparationHint: string;
+};
+
+export const seoLocalCommunes: SeoCommune[] = [
+  { slug: "santiago", name: "Santiago", region: "Region Metropolitana", nearby: ["providencia", "nunoa", "independencia", "recoleta"], demandSignal: "Departamentos, comercio y oficinas con alta frecuencia de mantenciones." },
+  { slug: "providencia", name: "Providencia", region: "Region Metropolitana", nearby: ["nunoa", "las-condes", "santiago", "recoleta"], demandSignal: "Edificios, locales y hogares con demanda recurrente de respuesta ordenada." },
+  { slug: "las-condes", name: "Las Condes", region: "Region Metropolitana", nearby: ["vitacura", "providencia", "lo-barnechea", "la-reina"], demandSignal: "Hogares, oficinas y comunidades que priorizan evidencia y especialistas verificados." },
+  { slug: "nunoa", name: "Nunoa", region: "Region Metropolitana", nearby: ["providencia", "la-reina", "macul", "santiago"], demandSignal: "Departamentos y casas con demanda de mantencion preventiva y reparaciones puntuales." },
+  { slug: "vitacura", name: "Vitacura", region: "Region Metropolitana", nearby: ["las-condes", "lo-barnechea", "providencia", "la-reina"], demandSignal: "Servicios domiciliarios y de comunidad donde pesa la confianza y la trazabilidad." },
+  { slug: "la-florida", name: "La Florida", region: "Region Metropolitana", nearby: ["macul", "penalolen", "puente-alto", "san-miguel"], demandSignal: "Cobertura residencial amplia y solicitudes frecuentes de hogar." },
+  { slug: "maipu", name: "Maipu", region: "Region Metropolitana", nearby: ["santiago", "san-miguel", "puente-alto", "la-florida"], demandSignal: "Demanda residencial de reparaciones, terminaciones y mantencion." },
+  { slug: "puente-alto", name: "Puente Alto", region: "Region Metropolitana", nearby: ["la-florida", "penalolen", "macul", "san-miguel"], demandSignal: "Alta poblacion residencial y oportunidad de activar especialistas locales." },
+  { slug: "san-miguel", name: "San Miguel", region: "Region Metropolitana", nearby: ["santiago", "macul", "la-florida", "maipu"], demandSignal: "Departamentos, casas y comercio barrial con necesidades de mantencion." },
+  { slug: "penalolen", name: "Penalolen", region: "Region Metropolitana", nearby: ["la-reina", "nunoa", "macul", "la-florida"], demandSignal: "Hogares y condominios con demanda de servicios domiciliarios y exterior." },
+  { slug: "lo-barnechea", name: "Lo Barnechea", region: "Region Metropolitana", nearby: ["vitacura", "las-condes", "la-reina", "providencia"], demandSignal: "Hogares y comunidades con busqueda de especialistas confiables y agenda clara." },
+  { slug: "independencia", name: "Independencia", region: "Region Metropolitana", nearby: ["santiago", "recoleta", "providencia", "san-miguel"], demandSignal: "Comercio, arriendos y edificios con oportunidades de mantencion rapida." },
+  { slug: "recoleta", name: "Recoleta", region: "Region Metropolitana", nearby: ["independencia", "santiago", "providencia", "nunoa"], demandSignal: "Demanda mixta de vivienda, comercio y mantenciones puntuales." },
+  { slug: "macul", name: "Macul", region: "Region Metropolitana", nearby: ["nunoa", "san-miguel", "la-florida", "penalolen"], demandSignal: "Zona residencial con necesidad de agenda y cotizaciones con contexto." },
+  { slug: "la-reina", name: "La Reina", region: "Region Metropolitana", nearby: ["nunoa", "las-condes", "penalolen", "vitacura"], demandSignal: "Casas, jardines y mantenciones donde el historial de trabajo ayuda a decidir." },
+];
+
+export const seoLocalServices: SeoLocalServiceSeed[] = [
+  {
+    slug: "gasfiteria",
+    title: "Gasfiteres verificados para filtraciones, calefont y redes de agua",
+    shortTitle: "Gasfiteria",
+    searchLabel: "gasfiter",
+    professionalPlural: "gasfiteres",
+    description: "Encuentra especialistas para filtraciones, calefont, destapes, redes de agua y reparaciones sanitarias con cotizacion clara en creditos.",
+    categoryId: "hogar",
+    specialty: "gasfiteria",
+    synonyms: ["gasfiter", "plomero", "filtraciones", "destapes", "calefont"],
+    searchParams: { categoria: "hogar", especialidad: "gasfiteria" },
+    includedServices: ["Filtraciones visibles y ocultas", "Calefont y conexiones de agua", "Destapes y griferia", "Redes sanitarias menores"],
+    creditRange: "Visitas y diagnosticos desde creditos de entrada; trabajos mayores se cotizan segun alcance.",
+    relatedProblems: ["filtracion-de-agua", "calefont-no-enciende"],
+    faqs: [
+      { question: "Cuando conviene pedir un gasfiter?", answer: "Cuando hay humedad, baja presion, goteos persistentes, problemas de calefont o una reparacion que requiere revisar conexiones de agua o gas." },
+      { question: "OficiosPro publica precios exactos?", answer: "Mostramos creditos de referencia y el especialista confirma el alcance antes de avanzar, especialmente si hay materiales o una visita tecnica." },
+      { question: "Que informacion preparo antes de solicitar ayuda?", answer: "Fotos del problema, comuna, urgencia, tipo de artefacto y si la filtracion afecta muros, vecinos o espacios comunes." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 94,
+    priority: 0.9,
+    image: "/assets/oficios/gasfiteria/gasfiteria-trabajo-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "OficiosPro prioriza diagnosticos con fotos, alcance claro y especialistas con identidad revisada antes de publicar perfiles.",
+    preparationHint: "Ten fotos de la filtracion, llaves de paso, artefacto afectado y urgencia real.",
+  },
+  {
+    slug: "electricidad",
+    title: "Electricistas verificados para tableros, enchufes y fallas domiciliarias",
+    shortTitle: "Electricidad",
+    searchLabel: "electricista",
+    professionalPlural: "electricistas",
+    description: "Busca electricistas para diagnostico, tableros, enchufes, luminarias y normalizacion segura en hogares, locales y comunidades.",
+    categoryId: "hogar",
+    specialty: "electricidad",
+    synonyms: ["electricista", "tableros electricos", "enchufes", "luminarias", "cortes electricos"],
+    searchParams: { categoria: "hogar", especialidad: "electricidad" },
+    includedServices: ["Revision de tableros", "Cambio de enchufes y luminarias", "Diagnostico de cortes", "Normalizacion electrica menor"],
+    creditRange: "Servicios simples pueden partir con creditos base; fallas complejas requieren diagnostico y cotizacion.",
+    relatedProblems: ["corte-electrico"],
+    faqs: [
+      { question: "Puedo reparar una falla electrica por mi cuenta?", answer: "No recomendamos intervenir tableros ni cableado. Si hay olor a quemado, chispas o cortes repetidos, corta el suministro y contacta a un especialista." },
+      { question: "Que significa electricista SEC?", answer: "La certificacion SEC aplica a instalaciones y trabajos que requieren cumplimiento normativo. OficiosPro permite revisar credenciales cuando el servicio lo exige." },
+      { question: "Que datos ayudan a diagnosticar?", answer: "Describe si el corte afecta toda la vivienda, un circuito, enchufes especificos o un artefacto puntual." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 94,
+    priority: 0.88,
+    image: "/assets/oficios/electricidad/electricidad-tablero-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "La red prioriza seguridad, credenciales cuando correspondan y contexto antes de intervenir tableros o circuitos.",
+    preparationHint: "Indica si la falla afecta todo el inmueble, un circuito o un artefacto puntual.",
+  },
+  {
+    slug: "pintura",
+    title: "Pintores para interior, fachadas y terminaciones",
+    shortTitle: "Pintura",
+    searchLabel: "maestro pintor",
+    professionalPlural: "pintores",
+    description: "Compara especialistas para pintura interior, cielos, fachadas, retoques y terminaciones con presupuesto por alcance.",
+    categoryId: "hogar",
+    specialty: "pintura",
+    synonyms: ["maestro pintor", "pintor", "pintura interior", "fachadas", "terminaciones"],
+    searchParams: { categoria: "construccion", especialidad: "pintura" },
+    includedServices: ["Pintura interior", "Fachadas y muros", "Preparacion de superficies", "Retoques y terminaciones"],
+    creditRange: "El costo depende de metros, estado de muros, materiales y preparacion.",
+    relatedProblems: [],
+    faqs: [
+      { question: "El especialista incluye materiales?", answer: "Puede incluirlos o cotizarlos aparte. La pagina debe dejar claro el alcance antes de reservar." },
+      { question: "Como se estima un trabajo de pintura?", answer: "Se revisan metros, numero de manos, estado de superficie, altura y preparacion necesaria." },
+      { question: "Puedo pedir solo retoques?", answer: "Si, pero conviene enviar fotos para validar si el color y terminacion son replicables." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 90,
+    priority: 0.82,
+    image: "/assets/oficios/pintura/pintura-interior-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "OficiosPro ayuda a ordenar metros, preparacion, materiales y evidencia para comparar propuestas sin perder contexto.",
+    preparationHint: "Prepara fotos de muros, metros aproximados, color esperado y si hay humedad o reparaciones previas.",
+  },
+  {
+    slug: "climatizacion",
+    title: "Tecnicos HVAC para aire acondicionado y climatizacion",
+    shortTitle: "Climatizacion",
+    searchLabel: "tecnico aire acondicionado",
+    professionalPlural: "tecnicos de climatizacion",
+    description: "Agenda especialistas para mantencion, instalacion y diagnostico de aire acondicionado residencial y comercial.",
+    categoryId: "empresas-industria",
+    specialty: "climatizacion",
+    synonyms: ["tecnico aire acondicionado", "climatizacion", "HVAC", "mantencion aire acondicionado", "instalacion split"],
+    searchParams: { categoria: "empresas-industria", especialidad: "climatizacion" },
+    includedServices: ["Mantencion de equipos", "Instalacion split", "Limpieza de filtros", "Diagnostico de fallas"],
+    creditRange: "Visitas tecnicas y mantenciones tienen referencia en creditos; instalaciones se cotizan por equipo y complejidad.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Cada cuanto hacer mantencion?", answer: "Depende del uso y ambiente. En hogares suele ser preventiva; en locales y oficinas puede requerir agenda recurrente." },
+      { question: "Puedo cotizar instalacion?", answer: "Si. Se revisa potencia, ubicacion, distancia de tuberias, acceso electrico y drenaje." },
+      { question: "Sirve para empresas?", answer: "Si, especialmente para oficinas, comercio y mantenciones programadas." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 91,
+    priority: 0.8,
+    image: "/assets/oficios/climatizacion/aire-acondicionado-instalacion-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "Las solicitudes se ordenan por equipo, sintomas, acceso y uso para evitar visitas sin informacion suficiente.",
+    preparationHint: "Ten marca/modelo del equipo, sintomas, fotos de unidad interior/exterior y tipo de inmueble.",
+  },
+  {
+    slug: "cerrajeria",
+    title: "Cerrajeros para cerraduras, accesos y apertura segura",
+    shortTitle: "Cerrajeria",
+    searchLabel: "cerrajero",
+    professionalPlural: "cerrajeros",
+    description: "Solicita cerrajeros para cerraduras, puertas, cambios de cilindro y accesos con identidad revisada y alcance claro.",
+    categoryId: "emergencias",
+    specialty: "cerrajeria",
+    synonyms: ["cerrajero", "cerraduras", "apertura de puerta", "cambio de chapa", "llaves"],
+    searchParams: { categoria: "emergencias", especialidad: "cerrajeria" },
+    includedServices: ["Cambio de cilindro", "Apertura de puertas", "Revision de cerraduras", "Accesos y chapas"],
+    creditRange: "El valor depende de horario, tipo de cerradura, urgencia y repuestos.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Que datos debo entregar?", answer: "Tipo de puerta, cerradura, urgencia, fotos si es posible y una forma de acreditar acceso legitimo al inmueble." },
+      { question: "Puede ser urgencia?", answer: "Si, pero la disponibilidad depende de agenda y zona. OficiosPro prioriza solicitudes con contexto y seguridad." },
+      { question: "Se publica precio fijo?", answer: "No siempre. Algunas cerraduras requieren diagnostico, repuesto o traslado especial." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 89,
+    priority: 0.78,
+    image: "/assets/oficios/cerrajeria/cerrajeria-cerradura-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "La plataforma cuida identidad, contexto de acceso y trazabilidad para servicios sensibles como cerraduras.",
+    preparationHint: "Prepara foto de la cerradura, tipo de puerta, horario requerido y respaldo de que eres responsable del acceso.",
+  },
+  {
+    slug: "limpieza",
+    title: "Limpieza domiciliaria y mantencion para hogares",
+    shortTitle: "Limpieza",
+    searchLabel: "limpieza domiciliaria",
+    professionalPlural: "especialistas de limpieza",
+    description: "Encuentra apoyo para limpieza domiciliaria, mantencion, aseo post trabajo y preparacion de espacios con solicitud clara.",
+    categoryId: "hogar",
+    specialty: "limpieza",
+    synonyms: ["limpieza domiciliaria", "aseo hogar", "limpieza profunda", "aseo post obra", "mantencion"],
+    searchParams: { categoria: "hogar", especialidad: "limpieza" },
+    includedServices: ["Limpieza domiciliaria", "Aseo profundo", "Mantencion por zonas", "Limpieza posterior a trabajos menores"],
+    creditRange: "Se estima segun metros, zonas, nivel de suciedad, frecuencia y materiales incluidos.",
+    relatedProblems: [],
+    faqs: [
+      { question: "La limpieza incluye materiales?", answer: "Debe confirmarse antes de reservar. Algunas solicitudes incluyen materiales del cliente y otras se cotizan con insumos." },
+      { question: "Puedo pedir limpieza recurrente?", answer: "Si, pero el alcance, frecuencia y zonas deben quedar claros para evitar diferencias." },
+      { question: "Que informacion ayuda?", answer: "Metros aproximados, cantidad de banos, cocina, mascotas, estacionamiento y fotos si hay limpieza profunda." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 88,
+    priority: 0.74,
+    image: "/assets/oficios/pintura/pintura-interior-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "OficiosPro estructura la solicitud por zonas, frecuencia y evidencia para que el servicio sea claro desde el inicio.",
+    preparationHint: "Indica metros, cantidad de habitaciones, banos, si hay mascotas y si buscas una limpieza unica o recurrente.",
+  },
+  {
+    slug: "remodelaciones",
+    title: "Remodelaciones menores, terminaciones y obras acotadas",
+    shortTitle: "Remodelaciones",
+    searchLabel: "remodelaciones",
+    professionalPlural: "maestros de remodelacion",
+    description: "Cotiza remodelaciones menores, terminaciones, reparaciones de muro, banos, pisos y mejoras interiores con alcance controlado.",
+    categoryId: "construccion",
+    specialty: "remodelaciones",
+    synonyms: ["remodelaciones", "obra menor", "maestro de construccion", "terminaciones", "reparaciones"],
+    searchParams: { categoria: "construccion", especialidad: "remodelaciones" },
+    includedServices: ["Obras menores", "Terminaciones interiores", "Reparacion de muros", "Mejoras de banos y pisos"],
+    creditRange: "Normalmente requiere visita o cotizacion por alcance, materiales, tiempos y retiro de escombros.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Puedo cotizar sin visita?", answer: "Para trabajos simples puede bastar con fotos, pero remodelaciones suelen requerir diagnostico y alcance escrito." },
+      { question: "Incluye materiales?", answer: "Debe definirse caso a caso. OficiosPro busca que materiales, mano de obra y plazos queden separados." },
+      { question: "Como evitar malos entendidos?", answer: "Comparte fotos, medidas, referencias y prioridades; confirma que la propuesta detalle lo incluido y excluido." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 89,
+    priority: 0.76,
+    image: "/assets/oficios/pintura/terminaciones-ceramica-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "La plataforma promueve alcance escrito, fotos y evidencia para que una obra menor no crezca sin control.",
+    preparationHint: "Ten medidas, fotos, idea de materiales, urgencia y si el espacio estara habitado durante el trabajo.",
+  },
+  {
+    slug: "carpinteria",
+    title: "Carpinteros para muebles, reparaciones y trabajos a medida",
+    shortTitle: "Carpinteria",
+    searchLabel: "carpintero",
+    professionalPlural: "carpinteros",
+    description: "Busca carpinteros para reparaciones, muebles, puertas, ajustes y trabajos a medida con fotos y medidas claras.",
+    categoryId: "muebleria-carpinteria",
+    specialty: "carpinteria",
+    synonyms: ["carpintero", "muebles a medida", "puertas", "reparacion madera", "muebleria"],
+    searchParams: { categoria: "muebleria-carpinteria", especialidad: "carpinteria" },
+    includedServices: ["Reparacion de muebles", "Ajuste de puertas", "Trabajos a medida", "Cubiertas y terminaciones en madera"],
+    creditRange: "Se cotiza por medidas, material, terminacion, retiro e instalacion.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Que necesito para cotizar carpinteria?", answer: "Medidas, fotos del espacio, tipo de madera o terminacion esperada y si requiere instalacion." },
+      { question: "El especialista fabrica e instala?", answer: "Depende del perfil. La solicitud debe separar fabricacion, transporte, instalacion y terminaciones." },
+      { question: "Puedo pedir reparaciones pequenas?", answer: "Si, especialmente puertas, bisagras, muebles sueltos o ajustes de uso diario." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 87,
+    priority: 0.72,
+    image: "/assets/oficios/carpinteria/carpinteria-maestro-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "OficiosPro ayuda a comparar perfiles por trabajos, medidas claras y evidencia antes de confirmar una fabricacion o reparacion.",
+    preparationHint: "Prepara fotos, medidas, referencia visual, material deseado y si necesitas retiro o instalacion.",
+  },
+  {
+    slug: "techumbre",
+    title: "Reparacion de techumbres, filtraciones de techo y mantencion",
+    shortTitle: "Techumbre",
+    searchLabel: "techumbre",
+    professionalPlural: "especialistas en techumbre",
+    description: "Solicita revision de techumbres, filtraciones, canaletas, sellos y mantencion exterior con foco en seguridad.",
+    categoryId: "construccion",
+    specialty: "techumbre",
+    synonyms: ["techumbre", "reparacion techo", "filtracion techo", "canaletas", "mantencion cubierta"],
+    searchParams: { categoria: "construccion", especialidad: "techumbre" },
+    includedServices: ["Revision de filtraciones", "Mantencion de canaletas", "Sellos y reparaciones menores", "Diagnostico de cubierta"],
+    creditRange: "Requiere evaluar acceso, altura, seguridad, materiales y clima antes de confirmar.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Se puede revisar con lluvia?", answer: "Depende de seguridad y acceso. Muchas veces conviene diagnosticar con fotos y coordinar una visita segura." },
+      { question: "Que informacion preparo?", answer: "Fotos del interior, exterior visible, canaletas, antiguedad del techo y si la filtracion aparece con viento o lluvia." },
+      { question: "Incluye trabajo en altura?", answer: "Solo especialistas con condiciones y equipamiento adecuados deben trabajar en altura. El alcance debe confirmarse." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 86,
+    priority: 0.7,
+    image: "/assets/oficios/industria/industria-mantencion-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "La seguridad y el acceso son parte del alcance: OficiosPro no incentiva intervenciones improvisadas en altura.",
+    preparationHint: "Indica tipo de techo, altura aproximada, fotos del punto de filtracion y acceso disponible.",
+  },
+  {
+    slug: "jardineria",
+    title: "Jardineros para mantencion, poda y riego",
+    shortTitle: "Jardineria",
+    searchLabel: "jardinero",
+    professionalPlural: "jardineros",
+    description: "Encuentra especialistas para poda, mantencion de jardines, riego, recuperacion de areas verdes y trabajos de temporada.",
+    categoryId: "hogar",
+    specialty: "jardineria",
+    synonyms: ["jardinero", "poda", "mantencion jardin", "riego", "paisajismo"],
+    searchParams: { categoria: "hogar", especialidad: "jardineria" },
+    includedServices: ["Poda y limpieza", "Mantencion periodica", "Riego y pasto", "Recuperacion de jardines"],
+    creditRange: "La mantencion se puede estimar por tamano, frecuencia y retiro de residuos.",
+    relatedProblems: [],
+    faqs: [
+      { question: "Puedo pedir mantencion recurrente?", answer: "Si. OficiosPro permite coordinar solicitudes periodicas y ordenar el pago por creditos segun alcance." },
+      { question: "Que cambia entre poda y mantencion?", answer: "La poda suele requerir herramientas y retiro de ramas; la mantencion incluye limpieza, pasto, riego y orden general." },
+      { question: "Conviene enviar fotos?", answer: "Si, ayudan a estimar tamano, acceso, estado del jardin y volumen de residuos." },
+    ],
+    minimumContentScore: 80,
+    contentScore: 88,
+    priority: 0.73,
+    image: "/assets/oficios/jardineria/jardineria-poda-01.jpg",
+    lastReviewedAt: "2026-06-26",
+    trustAngle: "OficiosPro ordena frecuencia, tamano del jardin, retiro de residuos y evidencia para facilitar una cotizacion realista.",
+    preparationHint: "Indica metros aproximados, estado del jardin, acceso a agua, residuos y frecuencia deseada.",
+  },
+];
+
+function localScore(service: SeoLocalServiceSeed, commune: SeoCommune, index: number) {
+  const demandBoost = commune.slug === "santiago" || commune.slug === "providencia" || commune.slug === "las-condes" ? 4 : 0;
+  const serviceBoost = service.slug === "gasfiteria" || service.slug === "electricidad" ? 3 : 0;
+  return Math.min(98, 86 + demandBoost + serviceBoost + (index % 3));
+}
+
+function buildLocalFaqs(service: SeoLocalServiceSeed, commune: SeoCommune): SeoFaq[] {
+  return [
+    {
+      question: `Como encuentro ${service.searchLabel} en ${commune.name}?`,
+      answer: `En OficiosPro puedes partir desde esta pagina local, revisar especialistas publicados para ${commune.name} o dejar una solicitud si la cobertura aun esta creciendo.`,
+    },
+    {
+      question: `Cuanto cuesta ${service.shortTitle.toLowerCase()} en ${commune.name}?`,
+      answer: `${service.creditRange} El valor final depende del alcance, fotos, urgencia y materiales, por eso se confirma antes de avanzar.`,
+    },
+    {
+      question: `Que debo preparar antes de pedir ${service.shortTitle.toLowerCase()}?`,
+      answer: service.preparationHint,
+    },
+  ];
+}
+
+export function buildSeoLocalPage(service: SeoLocalServiceSeed, commune: SeoCommune, index: number) {
+  const h1 = `${service.searchLabel.charAt(0).toUpperCase()}${service.searchLabel.slice(1)} en ${commune.name}`;
+  return {
+    communeSlug: commune.slug,
+    regionSlug: "region-metropolitana",
+    title: `${h1}: especialistas verificados`,
+    description: `${service.description} Cobertura OficiosPro en ${commune.name}: ${commune.demandSignal.toLowerCase()}`,
+    h1,
+    intro: `${service.shortTitle} en ${commune.name} para solicitudes con contexto, fotos, alcance claro y disponibilidad honesta. ${commune.demandSignal}`,
+    trustText: `${service.trustAngle} En ${commune.name}, mostramos perfiles publicados cuando existen y mantenemos una alternativa de contacto si la red esta en activacion.`,
+    ctaLabel: `Buscar ${service.searchLabel}`,
+    editorialStatus: "approved" as const,
+    indexPolicy: "index" as const,
+    contentScore: localScore(service, commune, index),
+    hasEnoughSpecialists: ["santiago", "providencia", "las-condes", "nunoa", "vitacura", "la-reina"].includes(commune.slug),
+    hasEnoughDemand: true,
+    pilotStatus: "active" as const,
+    localNotes: [
+      `${service.includedServices[0]} y ${service.includedServices[1]} son solicitudes frecuentes que conviene describir con fotos.`,
+      `${commune.name} queda vinculada a comunas cercanas como ${commune.nearby.slice(0, 2).join(" y ")} para ampliar opciones sin perder foco local.`,
+      "Si no hay especialista publicado al momento de buscar, la solicitud puede entrar por contacto para seguimiento operativo.",
+    ],
+    faqs: buildLocalFaqs(service, commune),
+  };
+}
+
+export function buildSeoLocalServiceRoutes() {
+  return seoLocalServices.map((service) => ({
+    slug: service.slug,
+    title: service.title,
+    shortTitle: service.shortTitle,
+    description: service.description,
+    categoryId: service.categoryId,
+    specialty: service.specialty,
+    synonyms: service.synonyms,
+    searchParams: service.searchParams,
+    includedServices: service.includedServices,
+    creditRange: service.creditRange,
+    relatedProblems: service.relatedProblems,
+    popularCommunes: seoLocalCommunes.slice(0, 8).map((commune) => commune.slug),
+    localPages: seoLocalCommunes.map((commune, index) => buildSeoLocalPage(service, commune, index)),
+    faqs: service.faqs,
+    minimumContentScore: service.minimumContentScore,
+    contentScore: service.contentScore,
+    indexPolicy: "index" as const,
+    priority: service.priority,
+    image: service.image,
+    lastReviewedAt: service.lastReviewedAt,
+    editorialStatus: "approved" as const,
+  }));
+}

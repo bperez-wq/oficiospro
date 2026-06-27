@@ -20,8 +20,13 @@ export type SeoCommune = {
 
 export type SeoLocalPage = {
   communeSlug: string;
+  regionSlug?: string;
   title?: string;
   description?: string;
+  h1?: string;
+  intro?: string;
+  trustText?: string;
+  ctaLabel?: string;
   editorialStatus: EditorialStatus;
   indexPolicy: IndexPolicy;
   contentScore: number;
@@ -39,6 +44,7 @@ export type SeoBaseRoute = {
   description: string;
   categoryId: string;
   specialty: string;
+  synonyms?: string[];
   searchParams: SeoSearchParams;
   relatedProblems?: string[];
   faqs: SeoFaq[];

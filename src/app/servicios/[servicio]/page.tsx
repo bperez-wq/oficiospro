@@ -104,7 +104,7 @@ export default async function ServicePage({ params }: PageProps) {
         websiteSchema(),
         breadcrumbSchema([
           { name: "Inicio", path: "/" },
-          { name: "Servicios", path: "/especialistas" },
+          { name: "Servicios", path: "/servicios" },
           { name: service.shortTitle, path },
         ]),
         serviceSchema({ name: service.title, description: service.description, path, image: service.image }),
