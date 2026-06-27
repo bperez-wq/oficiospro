@@ -31,6 +31,21 @@ export function CreditsExplainerContent() {
         </p>
       </section>
 
+      <section className="rounded-2xl border border-line bg-slate-50 p-4">
+        <h3 className="text-lg font-black text-ink">Por que usamos creditos</h3>
+        <p className="mt-1 text-sm font-bold leading-6 text-muted">
+          Los creditos funcionan como una <strong className="text-ink">cuenta de ahorro para las emergencias del
+          hogar</strong>: vas acumulando saldo y lo usas cuando lo necesitas, sin tener que cotizar y juntar plata
+          a ultima hora cuando se rompe el calefont o se tapa una caneria.
+        </p>
+        <ul className="mt-3 grid gap-1.5 text-sm font-bold text-ink">
+          <li>- Los usas cuando quieras: no vencen al instante, quedan disponibles.</li>
+          <li>- Listo para emergencias: ya tienes saldo para resolver al toque.</li>
+          <li>- Precio claro por adelantado: sabes cuanto cuesta antes de reservar.</li>
+          <li>- Pago en un solo lugar, con respaldo y proteccion OficiosPro.</li>
+        </ul>
+      </section>
+
       <section>
         <h3 className="text-lg font-black text-ink">Ejemplos referenciales</h3>
         <p className="mt-1 text-xs font-bold text-muted">
@@ -114,13 +129,18 @@ export function CreditsExplainerModal({ open, onClose }: { open: boolean; onClos
       if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open, onClose]);
 
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center bg-ink/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Como funcionan los creditos" onClick={onClose}>
-      <div className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-card sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-[120] flex items-end justify-center bg-ink/50 p-0 sm:items-center sm:p-4" role="dialog" aria-modal="true" aria-label="Como funcionan los creditos" onClick={onClose}>
+      <div className="max-h-[88vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-card sm:my-auto sm:max-h-[85vh] sm:rounded-3xl" onClick={(e) => e.stopPropagation()}>
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="eyebrow">OficiosPro</p>
