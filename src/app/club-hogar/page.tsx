@@ -207,6 +207,7 @@ export default function ClubHogarPage() {
               </span>
             ))}
           </div>
+          <p className="mb-3 text-xs font-bold text-muted">Trabajos de ejemplo del set del proyecto; se reemplazan por casos reales al publicar.</p>
           <div className="grid gap-4 md:grid-cols-2">
             {workStories.map((work) => (
               <article key={work.title} className="flex gap-4 rounded-2xl border border-line bg-slate-50 p-3">
