@@ -14,6 +14,7 @@ import { preserveSpecialistIntent } from "@/lib/intendedAction";
 import { cartTotals, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
 import { getPublishedSpecialists, seedMockState } from "@/lib/storage";
 import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import {
   createVirtualQuote,
   getVirtualQuoteRequests,
@@ -247,7 +248,10 @@ export default function BolsaPage() {
                 </Link>
               </div>
               <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-                Precio total en creditos. Incluye gestion de plataforma y pago protegido: al reservar, tus creditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.
+                Precio total en creditos. Incluye gestion de plataforma y pago protegido: al reservar, tus creditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.{" "}
+                <CreditsHelpTrigger className="font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
+                  ¿Cómo funcionan los créditos?
+                </CreditsHelpTrigger>
               </p>
               <p className="rounded-2xl bg-brand-soft p-3 text-xs font-bold leading-5 text-brand-dark">
                 Piloto OficiosPro: tu seleccion queda guardada para comparar. Algunas solicitudes pueden requerir confirmacion operacional antes de cerrar agenda o pago.

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { CreditExplainer } from "@/components/CreditExplainer";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, VisualRail } from "@/components/DesignSystem";
 import { StickyMobileCTA } from "@/components/StickyMobileCTA";
@@ -71,6 +72,9 @@ export default function ClubHogarPage() {
         <ConversionButton type="lead_cliente" sourceButton="Crear cuenta Club Hogar" className="btn-secondary">
           Crear cuenta
         </ConversionButton>
+        <CreditsHelpTrigger className="text-sm font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
+          ¿Cómo funcionan los créditos?
+        </CreditsHelpTrigger>
       </AppHero>
 
       <VisualRail

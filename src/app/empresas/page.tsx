@@ -8,6 +8,7 @@ import { PlanActionCard } from "@/components/PlanActionCard";
 import { companyDashboard, companyUseCases } from "@/data/mock";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
+import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
@@ -83,6 +84,9 @@ export default function EmpresasPage() {
               <DashboardMetricCard label="Respuesta" value={companyDashboard.responseTime} tone="brand" />
               <DashboardMetricCard label="Sucursales" value={companyDashboard.activeBranches.toString()} />
             </div>
+            <CreditsHelpTrigger className="mt-3 inline-block text-xs font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
+              ¿Cómo funcionan los créditos? (1 crédito = $1.000)
+            </CreditsHelpTrigger>
             <div className="mt-5 grid gap-3">
               {companyDashboard.services.map((service) => (
                 <article key={`${service.service}-${service.branch}`} className="flex items-center justify-between rounded-2xl bg-slate-50 p-4">
