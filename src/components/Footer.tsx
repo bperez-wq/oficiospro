@@ -10,6 +10,7 @@ const groups = [
       { href: "/especialistas-fundadores", label: "Especialistas fundadores" },
       { href: "/club-hogar", label: "Club Hogar" },
       { href: "/empresas", label: "Empresas" },
+      { href: "/#recomienda-gana", label: "Recomienda y gana" },
       { href: "/impacto", label: "Impacto" },
     ],
   },

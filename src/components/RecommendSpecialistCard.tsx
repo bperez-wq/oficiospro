@@ -28,6 +28,7 @@ export function RecommendSpecialistCard({
   const [name, setName] = useState(defaultName);
   const [contact, setContact] = useState("");
   const [reason, setReason] = useState("");
+  const [recommenderName, setRecommenderName] = useState("");
   const [recommenderContact, setRecommenderContact] = useState("");
   const [state, setState] = useState<"idle" | "sending" | "done" | "error">("idle");
 
@@ -45,6 +46,7 @@ export function RecommendSpecialistCard({
       region,
       recommendedContact: contact,
       reason,
+      recommenderName,
       recommenderContact,
       source,
       externalPlaceId,
@@ -57,10 +59,10 @@ export function RecommendSpecialistCard({
       <div className="rounded-2xl border border-brand/30 bg-brand-soft/60 p-5 text-center">
         <p className="text-sm font-black text-brand-dark">Gracias por recomendar</p>
         <p className="mt-1 text-sm font-bold leading-6 text-ink">
-          Vamos a contactar a {name.trim()} para sumarlo a OficiosPro. Damos prioridad a quienes hacen buen
-          trabajo y reconocemos a quienes recomiendan.
+          Vamos a contactar a {name.trim()} para sumarlo a OficiosPro. Cuando se incorpore, te acreditamos
+          1 crédito como gracias por recomendar.
         </p>
-        <button className="btn-secondary mt-3 px-4 py-2 text-xs" type="button" onClick={() => { setName(""); setContact(""); setReason(""); setRecommenderContact(""); setState("idle"); }}>
+        <button className="btn-secondary mt-3 px-4 py-2 text-xs" type="button" onClick={() => { setName(""); setContact(""); setReason(""); setRecommenderName(""); setRecommenderContact(""); setState("idle"); }}>
           Recomendar a otro
         </button>
       </div>
@@ -76,6 +78,9 @@ export function RecommendSpecialistCard({
           Si conoces a alguien que hace bien el trabajo, recomiendalo. Lo invitamos a OficiosPro y le damos mas
           oportunidades de trabajo.
         </p>
+        <p className="mt-3 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700">
+          <span aria-hidden>+1</span> Gana 1 crédito cuando el especialista se incorpore
+        </p>
       </div>
 
       <label className="grid gap-1 text-xs font-black text-muted">
@@ -83,14 +88,19 @@ export function RecommendSpecialistCard({
         <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} placeholder="Ej: Juan Perez / Gasfiteria Sur" required />
       </label>
 
+      <label className="grid gap-1 text-xs font-black text-muted">
+        Contacto del especialista (opcional)
+        <input className={inputClass} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telefono, WhatsApp o correo" />
+      </label>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-1 text-xs font-black text-muted">
-          Contacto del especialista (opcional)
-          <input className={inputClass} value={contact} onChange={(e) => setContact(e.target.value)} placeholder="Telefono, WhatsApp o correo" />
+          Tu nombre (opcional)
+          <input className={inputClass} value={recommenderName} onChange={(e) => setRecommenderName(e.target.value)} placeholder="Para saber quien recomienda" />
         </label>
         <label className="grid gap-1 text-xs font-black text-muted">
-          Tu contacto para reconocerte (opcional)
-          <input className={inputClass} value={recommenderContact} onChange={(e) => setRecommenderContact(e.target.value)} placeholder="Para avisarte y premiarte" />
+          Tu contacto para premiarte (opcional)
+          <input className={inputClass} value={recommenderContact} onChange={(e) => setRecommenderContact(e.target.value)} placeholder="Te avisamos al acreditar tu credito" />
         </label>
       </div>
 

@@ -44,23 +44,20 @@ export function NearbyMap({ className }: { className?: string }) {
   const mapRef = useRef<any>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [count, setCount] = useState(0);
-  const [approxLocation, setApproxLocation] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     let L: any;
 
-    async function getCenter(): Promise<[number, number]> {
+    async function getCenter(): Promise<{ coords: [number, number]; approximate: boolean }> {
       return new Promise((resolve) => {
         if (!navigator.geolocation) {
-          setApproxLocation(true);
-          return resolve(DEFAULT_CENTER);
+          return resolve({ coords: DEFAULT_CENTER, approximate: true });
         }
         navigator.geolocation.getCurrentPosition(
-          (pos) => resolve([pos.coords.latitude, pos.coords.longitude]),
+          (pos) => resolve({ coords: [pos.coords.latitude, pos.coords.longitude], approximate: false }),
           () => {
-            setApproxLocation(true);
-            resolve(DEFAULT_CENTER);
+            resolve({ coords: DEFAULT_CENTER, approximate: true });
           },
           { timeout: 7000, maximumAge: 600000 },
         );
@@ -71,7 +68,7 @@ export function NearbyMap({ className }: { className?: string }) {
       try {
         L = await loadLeaflet();
         if (cancelled || !containerRef.current) return;
-        const center = await getCenter();
+        const { coords: center, approximate } = await getCenter();
         if (cancelled || !containerRef.current) return;
 
         const map = L.map(containerRef.current, { scrollWheelZoom: false, attributionControl: true }).setView(center, 14);
@@ -87,7 +84,7 @@ export function NearbyMap({ className }: { className?: string }) {
           iconSize: [16, 16],
           iconAnchor: [8, 8],
         });
-        L.marker(center, { icon: youIcon }).addTo(map).bindPopup(approxLocation ? "Ubicacion aproximada" : "Estas aqui");
+        L.marker(center, { icon: youIcon }).addTo(map).bindPopup(approximate ? "Ubicacion aproximada" : "Estas aqui");
 
         setStatus("ready");
 

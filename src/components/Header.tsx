@@ -210,6 +210,7 @@ export function Header() {
             </div>
             <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
             <NavLink href="/empresas" label="Empresas" pathname={pathname} />
+            <NavLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} />
             <Link
               href="/especialistas-fundadores?source=header&intent=offer_services"
               className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
@@ -459,6 +460,7 @@ function MobileMenu({
         </div>
         <MobileLink href="/club-hogar" label="Club Hogar" pathname={pathname} onClick={onClose} />
         <MobileLink href="/empresas" label="Empresas" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} onClick={onClose} />
         <MobileLink
           href="/especialistas-fundadores?source=header&intent=offer_services"
           label="Trabaja con nosotros"
