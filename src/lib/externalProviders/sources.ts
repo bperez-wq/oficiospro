@@ -1,8 +1,10 @@
-// Alternative external provider sources (stubs).
-// Prepared behind the same interface so we are not coupled to Google. Disabled
-// by default; do not implement live calls until reviewed (legal/cost/risk).
+// External provider sources, behind one interface so we are not coupled to any
+// single provider. The DEFAULT is OpenStreetMap: free, open data (ODbL), key-less
+// and runs from the client, with no Terms-of-Service risk of building a competing
+// database. Google Places stays as an optional, disabled-by-default alternative.
 
 import { GooglePlacesSource } from "./googlePlacesDiscovery";
+import { OpenStreetMapSource } from "./openStreetMapDiscovery";
 import {
   DISABLED_RESULT,
   type DiscoveryResult,
@@ -10,23 +12,6 @@ import {
   type ExternalProviderSearchInput,
   type ExternalProviderSource,
 } from "./types";
-
-/** OpenStreetMap / Overpass source - stub (open data alternative). */
-export const OpenStreetMapSource: ExternalProviderSource = {
-  id: "osm",
-  isEnabled() {
-    return false;
-  },
-  async search(_input: ExternalProviderSearchInput): Promise<DiscoveryResult> {
-    return DISABLED_RESULT;
-  },
-  async getDetails(_externalPlaceId: string): Promise<ExternalProviderPreview | null> {
-    return null;
-  },
-  buildExternalUrl(externalPlaceId: string): string {
-    return `https://www.openstreetmap.org/?mlat=0&mlon=0#${encodeURIComponent(externalPlaceId)}`;
-  },
-};
 
 /** Manually curated directory loaded by operations - stub. */
 export const ManualDirectorySource: ExternalProviderSource = {
@@ -45,11 +30,11 @@ export const ManualDirectorySource: ExternalProviderSource = {
   },
 };
 
-/** Default source used by the UI. Swap here to change provider. */
-export const defaultExternalProviderSource: ExternalProviderSource = GooglePlacesSource;
+/** Default source used by the UI. OpenStreetMap (open data, no cost, no key). */
+export const defaultExternalProviderSource: ExternalProviderSource = OpenStreetMapSource;
 
 export const externalProviderSources: ExternalProviderSource[] = [
-  GooglePlacesSource,
   OpenStreetMapSource,
+  GooglePlacesSource,
   ManualDirectorySource,
 ];

@@ -165,13 +165,17 @@ CREATE INDEX IF NOT EXISTS idx_conversion_events_createdAt ON conversion_events 
 -- never stores Places restricted content (reviews, photos, phones, addresses).
 CREATE TABLE IF NOT EXISTS external_provider_suggestions (
   id TEXT PRIMARY KEY,
-  source TEXT NOT NULL DEFAULT 'google_places',
-  externalPlaceId TEXT NOT NULL,
+  source TEXT NOT NULL DEFAULT 'osm',
+  externalPlaceId TEXT,
   trade TEXT,
   commune TEXT,
   region TEXT,
   searchQuery TEXT,
   suggestedByUserId TEXT,
+  recommendedName TEXT,
+  recommendedContact TEXT,
+  recommenderContact TEXT,
+  reason TEXT,
   opportunityId TEXT,
   invitations INTEGER NOT NULL DEFAULT 1,
   status TEXT NOT NULL DEFAULT 'suggested'
