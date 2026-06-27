@@ -11,6 +11,17 @@ const LEAFLET_JS = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet
 type Status = "loading" | "ready" | "searching" | "error";
 type MapCenter = { lat: number; lng: number };
 
+function searchRadiusForMap(map: any) {
+  try {
+    const center = map.getCenter();
+    const northEast = map.getBounds().getNorthEast();
+    const visibleRadius = center.distanceTo(northEast);
+    return Math.min(10000, Math.max(4000, Math.round(visibleRadius * 0.8)));
+  } catch {
+    return 5000;
+  }
+}
+
 function loadLeaflet(): Promise<any> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined") return reject(new Error("no_window"));
@@ -63,6 +74,7 @@ export function NearbyMap({
   useEffect(() => {
     let cancelled = false;
     let L: any;
+    let moveTimer: number | null = null;
     setStatus("loading");
     setCount(0);
     setMapLabel(centerLabel || "");
@@ -120,14 +132,19 @@ export function NearbyMap({
         const searchMarker = L.marker(coords, { icon: youIcon }).addTo(map).bindPopup(label);
         const businessLayer = L.layerGroup().addTo(map);
 
-        async function renderBusinesses(nextCoords: [number, number], nextLabel: string) {
+        async function renderBusinesses(nextCoords: [number, number], nextLabel: string, radius = searchRadiusForMap(map)) {
           const requestId = ++requestSeqRef.current;
           setStatus("searching");
           setMapLabel(nextLabel);
-          setCount(0);
-          businessLayer.clearLayers();
-          const points: OsmGeoPoint[] = await fetchOsmPointsAround({ lat: nextCoords[0], lng: nextCoords[1], radius: 4000, trade, limit: 36 });
+          let points: OsmGeoPoint[] = await fetchOsmPointsAround({ lat: nextCoords[0], lng: nextCoords[1], radius, trade, limit: 36 });
+          if (!points.length && trade) {
+            points = await fetchOsmPointsAround({ lat: nextCoords[0], lng: nextCoords[1], radius: Math.max(radius, 7000), trade: "", limit: 36 });
+          }
+          if (!points.length) {
+            points = await fetchOsmPointsAround({ lat: nextCoords[0], lng: nextCoords[1], radius: 10000, trade: "", limit: 36 });
+          }
           if (cancelled || requestId !== requestSeqRef.current) return;
+          businessLayer.clearLayers();
           for (const p of points) {
             L.marker([p.lat, p.lng], { icon: bizIcon })
               .addTo(businessLayer)
@@ -148,7 +165,10 @@ export function NearbyMap({
           const nextCoords: [number, number] = [nextCenter.lat, nextCenter.lng];
           const nextLabel = "Zona visible";
           searchMarker.setLatLng(nextCoords).bindPopup("Centro de busqueda actualizado");
-          void renderBusinesses(nextCoords, nextLabel);
+          if (moveTimer) window.clearTimeout(moveTimer);
+          moveTimer = window.setTimeout(() => {
+            void renderBusinesses(nextCoords, nextLabel, searchRadiusForMap(map));
+          }, 450);
         });
       } catch {
         if (!cancelled) setStatus("error");
@@ -158,6 +178,7 @@ export function NearbyMap({
     void init();
     return () => {
       cancelled = true;
+      if (moveTimer) window.clearTimeout(moveTimer);
       if (mapRef.current) {
         mapRef.current.off();
         mapRef.current.remove();
