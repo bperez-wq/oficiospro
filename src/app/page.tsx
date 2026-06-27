@@ -59,13 +59,15 @@ export default function HomePage() {
             </p>
             <HeroSearchPanel />
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2 rounded-3xl border border-line bg-white/80 p-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-soft">
+                <span className="text-xs font-black uppercase tracking-wide text-brand">Soy cliente</span>
                 <Link href="/especialistas" className="btn-primary w-full" data-event="browse_specialists_home_hero">
                   Buscar especialista
                 </Link>
                 <span className="text-[13px] font-semibold leading-5 text-muted">Encuentra técnicos y especialistas por comuna.</span>
               </div>
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2 rounded-3xl border border-sun/30 bg-sun-soft/50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+                <span className="text-xs font-black uppercase tracking-wide text-sun-dark">Soy especialista</span>
                 <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun w-full" eventType="click_offer_services" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
                   Ofrecer mis servicios
                 </AcquisitionTrackingLink>
