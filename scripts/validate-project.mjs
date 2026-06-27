@@ -264,6 +264,10 @@ if (assetDirectory === "./out") {
   assertExists("docs/internal-page-design-audit.md");
   assertExists("src/data/financeModel.ts");
   assertExists("src/lib/creditLedger.ts");
+  assertExists("src/data/seoLocal.ts");
+  assertExists("src/app/servicios/page.tsx");
+  assertExists("scripts/sync-seo-local-data.mjs");
+  assertExists("scripts/verify-seo-local-landings.mjs");
 
   assertRegex("wrangler.toml", /directory\s*=\s*["']\.\/out["']/, 'assets directory = "./out"');
   assertRegex("wrangler.toml", /binding\s*=\s*["']ASSETS["']/, "ASSETS binding for Worker static assets");
@@ -344,6 +348,15 @@ if (assetDirectory === "./out") {
   assertContains("src/components/SpecialistsExplorer.tsx", "aria-label=\"Cerrar filtros\"");
   assertContains("src/components/SpecialistsExplorer.tsx", "maxHeight: \"calc(100vh - 10rem)\"");
   assertContains("src/components/SpecialistsExplorer.tsx", "Ver {visible.length} resultados");
+  assertContains("src/data/seoLocal.ts", "buildSeoLocalServiceRoutes");
+  assertContains("src/data/seoLocal.ts", "gasfiteria");
+  assertContains("src/data/seoLocal.ts", "techumbre");
+  assertContains("src/app/servicios/page.tsx", "Servicios OficiosPro por comuna");
+  assertContains("src/components/SeoProgrammaticPage.tsx", "aria-label=\"Breadcrumb\"");
+  assertContains("src/lib/seo/schema.ts", "export function webPageSchema");
+  assertContains("scripts/generate-sitemap.mjs", "{ path: \"/servicios\"");
+  assertContains("scripts/verify-seo-local-landings.mjs", "SEO local landings:");
+  assertContains("scripts/verify-seo-local-landings.mjs", "targetServices");
   assertContains("src/lib/leads.ts", "Estamos activando la recepci");
   assertContains("scripts/test-lead-endpoints.mjs", "TEST_BASE_URL");
   for (const endpoint of ["/api/leads", "/api/contact", "/api/specialists/apply", "/api/jobs/request", "/api/companies/request", "/api/bookings/request"]) {

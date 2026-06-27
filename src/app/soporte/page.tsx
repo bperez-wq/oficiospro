@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
@@ -14,9 +15,14 @@ export const metadata = buildPublicRouteMetadata({
 
 const supportTopics = ["Créditos", "Reservas", "Pagos", "Adicionales", "Documentos", "Cuenta"];
 
-const supportBlocks: { icon: string; image: string; imageAlt: string; title: string; detail: string; faqs: FaqItem[] }[] = [
+const supportBlocks: { icon: ReactNode; image: string; imageAlt: string; title: string; detail: string; faqs: FaqItem[] }[] = [
   {
-    icon: "🏠",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 11.5 12 4l9 7.5" />
+        <path d="M5 10v9h14v-9" />
+      </svg>
+    ),
     image: "/assets/oficios/pintura/pintura-interior-01.jpg",
     imageAlt: "Pintor realizando un trabajo de interior en un hogar",
     title: "Soy cliente",
@@ -41,7 +47,11 @@ const supportBlocks: { icon: string; image: string; imageAlt: string; title: str
     ],
   },
   {
-    icon: "🛠️",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+      </svg>
+    ),
     image: "/assets/oficios/carpinteria/carpinteria-taller-01.jpg",
     imageAlt: "Carpintero trabajando en su taller",
     title: "Soy especialista",
@@ -66,7 +76,12 @@ const supportBlocks: { icon: string; image: string; imageAlt: string; title: str
     ],
   },
   {
-    icon: "🏢",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <rect x="4" y="3" width="16" height="18" rx="1" />
+        <path d="M9 7h.01M15 7h.01M9 11h.01M15 11h.01M9 15h.01M15 15h.01M10 21v-3h4v3" />
+      </svg>
+    ),
     image: "/assets/oficios/electricidad/electricidad-medidor-01.jpg",
     imageAlt: "Técnico revisando un medidor en una instalación comercial",
     title: "Soy empresa o comunidad",
@@ -150,7 +165,7 @@ export default function SupportPage() {
             <div className="relative h-24">
               <img src={block.image} alt={block.imageAlt} loading="lazy" className="h-full w-full object-cover" />
               <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/60 to-ink/10" />
-              <span aria-hidden className="absolute bottom-3 left-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/95 text-lg shadow-soft backdrop-blur">{block.icon}</span>
+              <span aria-hidden className="absolute bottom-3 left-4 grid h-10 w-10 place-items-center rounded-2xl bg-white/95 text-brand-dark shadow-soft backdrop-blur">{block.icon}</span>
             </div>
             <div className="p-5 md:p-6">
               <div className="mb-4">

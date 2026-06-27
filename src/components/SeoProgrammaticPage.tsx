@@ -17,7 +17,9 @@ type SeoProgrammaticPageProps = {
   description: string;
   image: string;
   imageAlt: string;
+  breadcrumbs?: Array<{ href: string; label: string }>;
   badges?: string[];
+  trustText?: string;
   primaryCta: { href: string; label: string };
   secondaryCta?: { href: string; label: string };
   includedTitle?: string;
@@ -48,7 +50,9 @@ export function SeoProgrammaticPage({
   description,
   image,
   imageAlt,
+  breadcrumbs,
   badges = [],
+  trustText,
   primaryCta,
   secondaryCta,
   includedTitle = "Que puedes resolver",
@@ -77,6 +81,21 @@ export function SeoProgrammaticPage({
         />
       ))}
 
+      {breadcrumbs?.length ? (
+        <nav aria-label="Breadcrumb" className="mx-auto max-w-7xl px-4 pt-6 text-xs font-black uppercase tracking-wide text-muted md:px-6">
+          <ol className="flex flex-wrap items-center gap-2">
+            {breadcrumbs.map((breadcrumb, index) => (
+              <li key={`${breadcrumb.href}-${breadcrumb.label}`} className="flex items-center gap-2">
+                {index > 0 ? <span className="text-line">/</span> : null}
+                <Link href={breadcrumb.href} className={index === breadcrumbs.length - 1 ? "text-ink" : "transition hover:text-brand-dark"}>
+                  {breadcrumb.label}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </nav>
+      ) : null}
+
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-8 md:px-6 lg:grid-cols-[1.02fr_0.98fr] lg:py-12">
         <div className="flex flex-col justify-center">
           <p className="eyebrow">{eyebrow}</p>
@@ -91,6 +110,10 @@ export function SeoProgrammaticPage({
                 </span>
               ))}
             </div>
+          ) : null}
+
+          {trustText ? (
+            <p className="mt-5 rounded-2xl border border-brand/15 bg-white p-4 text-sm font-bold leading-6 text-brand-dark shadow-sm">{trustText}</p>
           ) : null}
 
           <div className="mt-6 flex flex-wrap gap-3">
