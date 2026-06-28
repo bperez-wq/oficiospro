@@ -168,6 +168,12 @@ const es = {
     suggestions: "Sugerencias:",
     chooseCommune: "Elige una comuna para buscar disponibilidad real en esa región.",
   },
+  homeHeroVisual: {
+    examplePilot: "Ejemplo piloto",
+    responseRef: "Respuesta referencial",
+    nearbyTechs: "Técnicos cercanos",
+    foundersReview: "Fundadores en revisión antes de publicar.",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -341,6 +347,12 @@ const en: Dictionary = {
     suggestions: "Suggestions:",
     chooseCommune: "Choose a city to check real availability in that region.",
   },
+  homeHeroVisual: {
+    examplePilot: "Pilot example",
+    responseRef: "Reference response",
+    nearbyTechs: "Nearby pros",
+    foundersReview: "Founders under review before going live.",
+  },
 };
 
 const pt: Dictionary = {
@@ -503,6 +515,12 @@ const pt: Dictionary = {
     describePlaceholder: "Conte o serviço que não encontrou para verificarmos cobertura e disponibilidade.",
     suggestions: "Sugestões:",
     chooseCommune: "Escolha uma cidade para verificar disponibilidade real nessa região.",
+  },
+  homeHeroVisual: {
+    examplePilot: "Exemplo piloto",
+    responseRef: "Resposta referencial",
+    nearbyTechs: "Profissionais próximos",
+    foundersReview: "Fundadores em revisão antes de publicar.",
   },
 };
 
@@ -667,6 +685,12 @@ const fr: Dictionary = {
     suggestions: "Suggestions :",
     chooseCommune: "Choisissez une ville pour vérifier la disponibilité réelle dans cette région.",
   },
+  homeHeroVisual: {
+    examplePilot: "Exemple pilote",
+    responseRef: "Réponse de référence",
+    nearbyTechs: "Pros à proximité",
+    foundersReview: "Fondateurs en vérification avant publication.",
+  },
 };
 
 const de: Dictionary = {
@@ -830,6 +854,12 @@ const de: Dictionary = {
     suggestions: "Vorschläge:",
     chooseCommune: "Wählen Sie eine Stadt, um die echte Verfügbarkeit in dieser Region zu prüfen.",
   },
+  homeHeroVisual: {
+    examplePilot: "Pilotbeispiel",
+    responseRef: "Richtwert Antwort",
+    nearbyTechs: "Fachleute in der Nähe",
+    foundersReview: "Gründer in Prüfung vor der Freischaltung.",
+  },
 };
 
 const it: Dictionary = {
@@ -992,6 +1022,12 @@ const it: Dictionary = {
     describePlaceholder: "Indicaci il servizio che non hai trovato per verificare copertura e disponibilità.",
     suggestions: "Suggerimenti:",
     chooseCommune: "Scegli una città per verificare la disponibilità reale in quella regione.",
+  },
+  homeHeroVisual: {
+    examplePilot: "Esempio pilota",
+    responseRef: "Risposta di riferimento",
+    nearbyTechs: "Professionisti vicini",
+    foundersReview: "Fondatori in verifica prima della pubblicazione.",
   },
 };
 
