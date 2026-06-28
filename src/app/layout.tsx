@@ -4,6 +4,7 @@ import { ConversionModalProvider } from "@/components/ConversionModal";
 import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { SpecialistAssistantWidget } from "@/components/SpecialistAssistantWidget";
+import { I18nProvider } from "@/lib/i18n/I18nProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -53,12 +54,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
-        <ConversionModalProvider>
-          <Header />
-          {children}
-          <Footer />
-          <SpecialistAssistantWidget />
-        </ConversionModalProvider>
+        <I18nProvider>
+          <ConversionModalProvider>
+            <Header />
+            {children}
+            <Footer />
+            <SpecialistAssistantWidget />
+          </ConversionModalProvider>
+        </I18nProvider>
       </body>
     </html>
   );
