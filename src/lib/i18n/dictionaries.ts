@@ -64,7 +64,15 @@ const es = {
   },
 } as const;
 
-export type Dictionary = typeof es;
+type WidenDictionary<T> = T extends string
+  ? string
+  : T extends readonly (infer Item)[]
+    ? readonly WidenDictionary<Item>[]
+    : T extends object
+      ? { [Key in keyof T]: WidenDictionary<T[Key]> }
+      : T;
+
+export type Dictionary = WidenDictionary<typeof es>;
 
 const en: Dictionary = {
   nav: {
