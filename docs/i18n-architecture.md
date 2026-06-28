@@ -55,13 +55,20 @@ Fallback: si falta una clave en el idioma activo, `t()` cae a `es` y, si tampoco
 
 ## Estado actual (traducido)
 
-- Shell completo: Header (nav, búsqueda, login, switcher) y Footer (tagline, chips, CTA global, switcher).
-- Home hero (`HomeHero`).
-- Landing `/global` completa.
+- Shell completo: Header (nav, búsqueda, login, switcher) y Footer completo (tagline, frases de marca,
+  créditos, títulos de grupo, chips, CTA global, switcher).
+- Home: hero (`HomeHero`), "Cómo funciona" (`HowItWorksFlow`) y los 5 encabezados de sección
+  (`TranslatedSectionHeader` + `homeSections.*`).
+- `/especialistas`: hero (`SpecialistsHero` + `specialistsPage.*`).
+- Landing `/global` y Market Lab `/market-lab` + `/market-lab/[country]/[city]/[trade]`.
 
-Pendiente (incremental, no bloqueante): resto de Home, páginas de contenido (`/club-hogar`, `/empresas`,
-`/faq`, etc.), modales y dashboards. El menú de categorías viene de `tradeTaxonomy` (es) y requiere
-estrategia aparte de localización de oficios (ver Market Lab de Codex).
+Patrón para server components: como i18n es client-side, los encabezados que viven en server components
+se traducen con un wrapper client (`TranslatedSectionHeader`, `SpecialistsHero`, `HomeHero`) que lee `t()`.
+
+Pendiente (incremental, no bloqueante): bloques inline restantes de Home (Club Hogar, Empresas, propósito,
+referidos, CTAs), páginas de contenido (`/club-hogar`, `/empresas`, `/faq`, `/registro-especialista`),
+modales (ConversionModal) y dashboards. El menú de categorías viene de `tradeTaxonomy` (es) y requiere
+estrategia aparte de localización de oficios (alimentar desde `marketLab.tradeCatalog`).
 
 ## Captura de demanda global (honesta)
 
