@@ -174,6 +174,14 @@ const es = {
     nearbyTechs: "Técnicos cercanos",
     foundersReview: "Fundadores en revisión antes de publicar.",
   },
+  homeSpecialists: {
+    viewAll: "Ver todos",
+    quickLeadTitle: "¿Quieres ofrecer tus servicios en OficiosPro?",
+    quickLeadText: "Deja tus datos básicos y te ayudamos a preparar tu perfil fundador sin costo inicial.",
+    founderEyebrow: "Etapa fundador abierta",
+    founderTitle: "No necesitas tener todo resuelto para empezar.",
+    founderChips: ["Perfil sin costo inicial", "Revisión en 48 h", "Puedes ofrecer más de un servicio", "Categorías nuevas en formación"],
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -353,6 +361,14 @@ const en: Dictionary = {
     nearbyTechs: "Nearby pros",
     foundersReview: "Founders under review before going live.",
   },
+  homeSpecialists: {
+    viewAll: "View all",
+    quickLeadTitle: "Want to offer your services on OficiosPro?",
+    quickLeadText: "Leave your basic details and we'll help you prepare your founder profile at no upfront cost.",
+    founderEyebrow: "Founder stage open",
+    founderTitle: "You don't need everything figured out to start.",
+    founderChips: ["Profile at no upfront cost", "Review within 48 h", "You can offer more than one service", "New categories forming"],
+  },
 };
 
 const pt: Dictionary = {
@@ -521,6 +537,14 @@ const pt: Dictionary = {
     responseRef: "Resposta referencial",
     nearbyTechs: "Profissionais próximos",
     foundersReview: "Fundadores em revisão antes de publicar.",
+  },
+  homeSpecialists: {
+    viewAll: "Ver todos",
+    quickLeadTitle: "Quer oferecer seus serviços na OficiosPro?",
+    quickLeadText: "Deixe seus dados básicos e ajudamos a preparar seu perfil fundador sem custo inicial.",
+    founderEyebrow: "Etapa fundador aberta",
+    founderTitle: "Você não precisa ter tudo resolvido para começar.",
+    founderChips: ["Perfil sem custo inicial", "Revisão em 48 h", "Pode oferecer mais de um serviço", "Novas categorias em formação"],
   },
 };
 
@@ -691,6 +715,14 @@ const fr: Dictionary = {
     nearbyTechs: "Pros à proximité",
     foundersReview: "Fondateurs en vérification avant publication.",
   },
+  homeSpecialists: {
+    viewAll: "Voir tout",
+    quickLeadTitle: "Vous voulez proposer vos services sur OficiosPro ?",
+    quickLeadText: "Laissez vos coordonnées de base et nous vous aidons à préparer votre profil fondateur sans frais initiaux.",
+    founderEyebrow: "Étape fondateur ouverte",
+    founderTitle: "Pas besoin de tout maîtriser pour commencer.",
+    founderChips: ["Profil sans frais initiaux", "Vérification sous 48 h", "Vous pouvez proposer plusieurs services", "Nouvelles catégories en formation"],
+  },
 };
 
 const de: Dictionary = {
@@ -860,6 +892,14 @@ const de: Dictionary = {
     nearbyTechs: "Fachleute in der Nähe",
     foundersReview: "Gründer in Prüfung vor der Freischaltung.",
   },
+  homeSpecialists: {
+    viewAll: "Alle ansehen",
+    quickLeadTitle: "Möchten Sie Ihre Leistungen auf OficiosPro anbieten?",
+    quickLeadText: "Hinterlassen Sie Ihre Basisdaten und wir helfen Ihnen, Ihr Gründerprofil ohne Anfangskosten vorzubereiten.",
+    founderEyebrow: "Gründerphase offen",
+    founderTitle: "Sie müssen nicht alles geklärt haben, um zu starten.",
+    founderChips: ["Profil ohne Anfangskosten", "Prüfung in 48 h", "Sie können mehrere Leistungen anbieten", "Neue Kategorien im Aufbau"],
+  },
 };
 
 const it: Dictionary = {
@@ -1028,6 +1068,14 @@ const it: Dictionary = {
     responseRef: "Risposta di riferimento",
     nearbyTechs: "Professionisti vicini",
     foundersReview: "Fondatori in verifica prima della pubblicazione.",
+  },
+  homeSpecialists: {
+    viewAll: "Vedi tutti",
+    quickLeadTitle: "Vuoi offrire i tuoi servizi su OficiosPro?",
+    quickLeadText: "Lascia i tuoi dati di base e ti aiutiamo a preparare il tuo profilo fondatore senza costi iniziali.",
+    founderEyebrow: "Fase fondatori aperta",
+    founderTitle: "Non devi avere tutto pronto per iniziare.",
+    founderChips: ["Profilo senza costi iniziali", "Verifica in 48 h", "Puoi offrire più di un servizio", "Nuove categorie in formazione"],
   },
 };
 

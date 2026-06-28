@@ -7,6 +7,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HomeClubHogarBlock } from "@/components/HomeClubHogarBlock";
 import { HomeEnterpriseIntro } from "@/components/HomeEnterpriseIntro";
+import { HomeFounderStage, ViewAllSpecialistsLink } from "@/components/HomeFounderStage";
 import { HomeHero } from "@/components/HomeHero";
 import { HomeHeroVisual } from "@/components/HomeHeroVisual";
 import { HomeReferralBlock } from "@/components/HomeReferralBlock";
@@ -24,7 +25,6 @@ import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, Validati
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
-import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
@@ -168,32 +168,9 @@ export default function HomePage() {
       <section className="section-compact" id="especialistas">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <TranslatedSectionHeader sectionKey="specialists" />
-          <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
-            Ver todos
-          </Link>
+          <ViewAllSpecialistsLink />
         </div>
-        <div className="mb-6 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <SpecialistQuickLeadForm
-            title="Quieres ofrecer tus servicios en OficiosPro?"
-            text="Deja tus datos basicos y te ayudamos a preparar tu perfil fundador sin costo inicial."
-            context={{ source: "campana_local", campaign: "founder_specialists_home_section", landingPage: "/" }}
-            sourceComponent="HomeSpecialistsSection"
-            sourceButton="Captura rapida home especialistas"
-            leadKind="specialist_lead"
-            compact
-          />
-          <div className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
-            <p className="eyebrow">Etapa fundador abierta</p>
-            <h3 className="text-2xl font-black leading-tight text-ink">No necesitas tener todo resuelto para empezar.</h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {["Perfil sin costo inicial", "Revision en 48 h", "Puedes ofrecer mas de un servicio", "Categorias nuevas en formacion"].map((item) => (
-                <span key={item} className="rounded-2xl bg-brand-soft px-4 py-3 text-sm font-black text-brand-dark">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+        <HomeFounderStage />
         <div className="grid gap-5 lg:grid-cols-3">
           {featured.map((specialist) => (
             <SpecialistCard key={specialist.id} specialist={specialist} />
