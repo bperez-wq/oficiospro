@@ -153,6 +153,20 @@ const es = {
     lead: "Clientes pueden ganar créditos y especialistas pueden sumar reputación o badge Fundador cuando sus referidos se activan.",
     cta: "Invitar referido",
   },
+  heroSearch: {
+    need: "¿Qué necesitas resolver?",
+    needPlaceholder: "Ej: reparar calefont, filtración, riego, aire acondicionado",
+    serviceType: "Tipo de servicio",
+    serviceTypePlaceholder: "Hogar, empresas, riego...",
+    regionPlaceholder: "RM, Valparaíso, Biobío...",
+    communePlaceholder: "Vitacura, Talca, Concepción...",
+    searchCta: "Buscar especialista",
+    map: "Mapa",
+    describe: "Describe qué necesitas",
+    describePlaceholder: "Cuéntanos el servicio que no encontraste para revisar cobertura y disponibilidad.",
+    suggestions: "Sugerencias:",
+    chooseCommune: "Elige una comuna para buscar disponibilidad real en esa región.",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -311,6 +325,20 @@ const en: Dictionary = {
     lead: "Customers can earn credits and specialists can gain reputation or a Founder badge when their referrals activate.",
     cta: "Invite a referral",
   },
+  heroSearch: {
+    need: "What do you need solved?",
+    needPlaceholder: "e.g. fix water heater, leak, irrigation, air conditioning",
+    serviceType: "Service type",
+    serviceTypePlaceholder: "Home, business, irrigation...",
+    regionPlaceholder: "Region / state...",
+    communePlaceholder: "Your city or district...",
+    searchCta: "Find a specialist",
+    map: "Map",
+    describe: "Describe what you need",
+    describePlaceholder: "Tell us the service you couldn't find so we can check coverage and availability.",
+    suggestions: "Suggestions:",
+    chooseCommune: "Choose a city to check real availability in that region.",
+  },
 };
 
 const pt: Dictionary = {
@@ -458,6 +486,20 @@ const pt: Dictionary = {
     title: "Indique clientes ou especialistas e ganhe benefícios.",
     lead: "Clientes podem ganhar créditos e especialistas podem somar reputação ou selo Fundador quando suas indicações se ativam.",
     cta: "Indicar",
+  },
+  heroSearch: {
+    need: "O que você precisa resolver?",
+    needPlaceholder: "ex: consertar aquecedor, vazamento, irrigação, ar-condicionado",
+    serviceType: "Tipo de serviço",
+    serviceTypePlaceholder: "Casa, empresas, irrigação...",
+    regionPlaceholder: "Região / estado...",
+    communePlaceholder: "Sua cidade ou bairro...",
+    searchCta: "Buscar especialista",
+    map: "Mapa",
+    describe: "Descreva o que você precisa",
+    describePlaceholder: "Conte o serviço que não encontrou para verificarmos cobertura e disponibilidade.",
+    suggestions: "Sugestões:",
+    chooseCommune: "Escolha uma cidade para verificar disponibilidade real nessa região.",
   },
 };
 
@@ -607,6 +649,20 @@ const fr: Dictionary = {
     lead: "Les clients peuvent gagner des crédits et les spécialistes de la réputation ou un badge Fondateur quand leurs parrainages s'activent.",
     cta: "Parrainer",
   },
+  heroSearch: {
+    need: "Que devez-vous résoudre ?",
+    needPlaceholder: "ex : réparer chauffe-eau, fuite, arrosage, climatisation",
+    serviceType: "Type de service",
+    serviceTypePlaceholder: "Maison, entreprises, arrosage...",
+    regionPlaceholder: "Région / département...",
+    communePlaceholder: "Votre ville ou quartier...",
+    searchCta: "Trouver un spécialiste",
+    map: "Carte",
+    describe: "Décrivez ce dont vous avez besoin",
+    describePlaceholder: "Dites-nous le service que vous n'avez pas trouvé pour vérifier couverture et disponibilité.",
+    suggestions: "Suggestions :",
+    chooseCommune: "Choisissez une ville pour vérifier la disponibilité réelle dans cette région.",
+  },
 };
 
 const de: Dictionary = {
@@ -755,6 +811,20 @@ const de: Dictionary = {
     lead: "Kunden können Guthaben verdienen und Fachleute Reputation oder ein Gründer-Abzeichen, wenn ihre Empfehlungen aktiv werden.",
     cta: "Empfehlung einladen",
   },
+  heroSearch: {
+    need: "Was möchten Sie lösen?",
+    needPlaceholder: "z. B. Durchlauferhitzer reparieren, Leck, Bewässerung, Klimaanlage",
+    serviceType: "Art der Leistung",
+    serviceTypePlaceholder: "Zuhause, Unternehmen, Bewässerung...",
+    regionPlaceholder: "Region / Bundesland...",
+    communePlaceholder: "Ihre Stadt oder Ihr Bezirk...",
+    searchCta: "Fachkraft finden",
+    map: "Karte",
+    describe: "Beschreiben Sie, was Sie brauchen",
+    describePlaceholder: "Sagen Sie uns die Leistung, die Sie nicht gefunden haben, damit wir Abdeckung und Verfügbarkeit prüfen.",
+    suggestions: "Vorschläge:",
+    chooseCommune: "Wählen Sie eine Stadt, um die echte Verfügbarkeit in dieser Region zu prüfen.",
+  },
 };
 
 const it: Dictionary = {
@@ -902,6 +972,20 @@ const it: Dictionary = {
     title: "Invita clienti o specialisti e ottieni vantaggi.",
     lead: "I clienti possono guadagnare crediti e gli specialisti reputazione o un badge Fondatore quando i loro referral si attivano.",
     cta: "Invita un referral",
+  },
+  heroSearch: {
+    need: "Cosa devi risolvere?",
+    needPlaceholder: "es: riparare scaldabagno, perdita, irrigazione, climatizzatore",
+    serviceType: "Tipo di servizio",
+    serviceTypePlaceholder: "Casa, aziende, irrigazione...",
+    regionPlaceholder: "Regione / provincia...",
+    communePlaceholder: "La tua città o quartiere...",
+    searchCta: "Trova uno specialista",
+    map: "Mappa",
+    describe: "Descrivi cosa ti serve",
+    describePlaceholder: "Indicaci il servizio che non hai trovato per verificare copertura e disponibilità.",
+    suggestions: "Suggerimenti:",
+    chooseCommune: "Scegli una città per verificare la disponibilità reale in quella regione.",
   },
 };
 
