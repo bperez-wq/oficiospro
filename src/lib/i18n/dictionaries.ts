@@ -66,6 +66,13 @@ const es = {
     ],
     back: "Volver al inicio",
   },
+  specialistsPage: {
+    eyebrow: "Especialistas verificados",
+    title: "Encuentra especialistas verificados",
+    subtitle: "Puedes buscar sin registrarte. Filtra por oficio, comuna, disponibilidad, reputación y precio en créditos; crea tu cuenta cuando quieras reservar o contactar.",
+    viewCredits: "Ver mis créditos",
+    createAccount: "Crear cuenta",
+  },
   home: {
     heroEyebrow: "Piloto fundador OficiosPro",
     heroTitlePrefix: "Especialistas verificados para tu ",
@@ -182,6 +189,13 @@ const en: Dictionary = {
     ],
     back: "Back to home",
   },
+  specialistsPage: {
+    eyebrow: "Verified specialists",
+    title: "Find verified specialists",
+    subtitle: "You can search without signing up. Filter by trade, area, availability, reputation and price in credits; create your account when you want to book or get in touch.",
+    viewCredits: "View my credits",
+    createAccount: "Create account",
+  },
   home: {
     heroEyebrow: "OficiosPro founder pilot",
     heroTitlePrefix: "Verified specialists for your ",
@@ -287,6 +301,13 @@ const pt: Dictionary = {
       "Reputação e avaliações reais",
     ],
     back: "Voltar ao início",
+  },
+  specialistsPage: {
+    eyebrow: "Especialistas verificados",
+    title: "Encontre especialistas verificados",
+    subtitle: "Você pode buscar sem se cadastrar. Filtre por ofício, região, disponibilidade, reputação e preço em créditos; crie sua conta quando quiser reservar ou entrar em contato.",
+    viewCredits: "Ver meus créditos",
+    createAccount: "Criar conta",
   },
   home: {
     heroEyebrow: "Piloto fundador OficiosPro",
@@ -394,6 +415,13 @@ const fr: Dictionary = {
     ],
     back: "Retour à l'accueil",
   },
+  specialistsPage: {
+    eyebrow: "Spécialistes vérifiés",
+    title: "Trouvez des spécialistes vérifiés",
+    subtitle: "Vous pouvez chercher sans inscription. Filtrez par métier, zone, disponibilité, réputation et prix en crédits ; créez votre compte quand vous voulez réserver ou contacter.",
+    viewCredits: "Voir mes crédits",
+    createAccount: "Créer un compte",
+  },
   home: {
     heroEyebrow: "Pilote fondateur OficiosPro",
     heroTitlePrefix: "Des spécialistes vérifiés pour votre ",
@@ -500,6 +528,13 @@ const de: Dictionary = {
     ],
     back: "Zur Startseite",
   },
+  specialistsPage: {
+    eyebrow: "Geprüfte Fachleute",
+    title: "Finden Sie geprüfte Fachleute",
+    subtitle: "Sie können ohne Anmeldung suchen. Filtern Sie nach Gewerk, Gebiet, Verfügbarkeit, Reputation und Preis in Guthaben; erstellen Sie Ihr Konto, wenn Sie buchen oder Kontakt aufnehmen möchten.",
+    viewCredits: "Meine Guthaben ansehen",
+    createAccount: "Konto erstellen",
+  },
   home: {
     heroEyebrow: "OficiosPro Gründer-Pilot",
     heroTitlePrefix: "Geprüfte Fachleute für Ihr ",
@@ -605,6 +640,13 @@ const it: Dictionary = {
       "Reputazione e recensioni reali",
     ],
     back: "Torna alla home",
+  },
+  specialistsPage: {
+    eyebrow: "Specialisti verificati",
+    title: "Trova specialisti verificati",
+    subtitle: "Puoi cercare senza registrarti. Filtra per mestiere, zona, disponibilità, reputazione e prezzo in crediti; crea il tuo account quando vuoi prenotare o contattare.",
+    viewCredits: "Vedi i miei crediti",
+    createAccount: "Crea account",
   },
   home: {
     heroEyebrow: "Pilota fondatori OficiosPro",
