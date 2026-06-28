@@ -8,6 +8,7 @@ import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip"
 import { HomeClubHogarBlock } from "@/components/HomeClubHogarBlock";
 import { HomeEnterpriseIntro } from "@/components/HomeEnterpriseIntro";
 import { HomeHero } from "@/components/HomeHero";
+import { HomeReferralBlock } from "@/components/HomeReferralBlock";
 import { HomeRoleCtas } from "@/components/HomeRoleCtas";
 import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
@@ -234,18 +235,7 @@ export default function HomePage() {
 
       <Reveal delay={0}>
       <section className="section-compact">
-        <div className="grid gap-6 rounded-[32px] border border-line bg-white p-6 shadow-soft md:grid-cols-[1fr_auto] md:items-center md:p-10">
-          <div>
-            <p className="eyebrow">Referidos OficiosPro</p>
-            <h2 className="section-title">Invita clientes o especialistas y gana beneficios.</h2>
-            <p className="section-lead">
-              Clientes pueden ganar créditos y especialistas pueden sumar reputación o badge Fundador cuando sus referidos se activan.
-            </p>
-          </div>
-          <ConversionButton type="referido" sourceButton="Referidos home" className="btn-primary">
-            Invitar referido
-          </ConversionButton>
-        </div>
+        <HomeReferralBlock />
       </section>
       </Reveal>
 

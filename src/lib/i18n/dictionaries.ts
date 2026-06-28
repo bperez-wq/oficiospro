@@ -147,6 +147,12 @@ const es = {
     cta: "Solicitar cuenta empresa",
     secondary: "Soluciones para empresas",
   },
+  homeReferral: {
+    eyebrow: "Referidos OficiosPro",
+    title: "Invita clientes o especialistas y gana beneficios.",
+    lead: "Clientes pueden ganar créditos y especialistas pueden sumar reputación o badge Fundador cuando sus referidos se activan.",
+    cta: "Invitar referido",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -299,6 +305,12 @@ const en: Dictionary = {
     cta: "Request a business account",
     secondary: "Business solutions",
   },
+  homeReferral: {
+    eyebrow: "OficiosPro Referrals",
+    title: "Invite customers or specialists and earn rewards.",
+    lead: "Customers can earn credits and specialists can gain reputation or a Founder badge when their referrals activate.",
+    cta: "Invite a referral",
+  },
 };
 
 const pt: Dictionary = {
@@ -440,6 +452,12 @@ const pt: Dictionary = {
     lead: "Uma rede sob demanda para escritórios, restaurantes, depósitos, condomínios e plantas produtivas que precisam de continuidade operacional.",
     cta: "Solicitar conta empresa",
     secondary: "Soluções para empresas",
+  },
+  homeReferral: {
+    eyebrow: "Indicações OficiosPro",
+    title: "Indique clientes ou especialistas e ganhe benefícios.",
+    lead: "Clientes podem ganhar créditos e especialistas podem somar reputação ou selo Fundador quando suas indicações se ativam.",
+    cta: "Indicar",
   },
 };
 
@@ -583,6 +601,12 @@ const fr: Dictionary = {
     cta: "Demander un compte entreprise",
     secondary: "Solutions pour entreprises",
   },
+  homeReferral: {
+    eyebrow: "Parrainage OficiosPro",
+    title: "Parrainez des clients ou des spécialistes et gagnez des avantages.",
+    lead: "Les clients peuvent gagner des crédits et les spécialistes de la réputation ou un badge Fondateur quand leurs parrainages s'activent.",
+    cta: "Parrainer",
+  },
 };
 
 const de: Dictionary = {
@@ -725,6 +749,12 @@ const de: Dictionary = {
     cta: "Firmenkonto anfragen",
     secondary: "Lösungen für Unternehmen",
   },
+  homeReferral: {
+    eyebrow: "OficiosPro Empfehlungen",
+    title: "Empfehlen Sie Kunden oder Fachleute und verdienen Sie Vorteile.",
+    lead: "Kunden können Guthaben verdienen und Fachleute Reputation oder ein Gründer-Abzeichen, wenn ihre Empfehlungen aktiv werden.",
+    cta: "Empfehlung einladen",
+  },
 };
 
 const it: Dictionary = {
@@ -866,6 +896,12 @@ const it: Dictionary = {
     lead: "Una rete on-demand per uffici, ristoranti, magazzini, condomini e impianti produttivi che necessitano di continuità operativa.",
     cta: "Richiedi un account aziendale",
     secondary: "Soluzioni per aziende",
+  },
+  homeReferral: {
+    eyebrow: "Referral OficiosPro",
+    title: "Invita clienti o specialisti e ottieni vantaggi.",
+    lead: "I clienti possono guadagnare crediti e gli specialisti reputazione o un badge Fondatore quando i loro referral si attivano.",
+    cta: "Invita un referral",
   },
 };
 
