@@ -104,6 +104,13 @@ const es = {
     indexTitle: "Mercados en exploración",
     indexSubtitle: "Países y ciudades donde estamos midiendo interés. Activamos solo donde haya tracción.",
   },
+  homeSections: {
+    flow: { eyebrow: "Cómo funciona", title: "De buscar a cerrar el trabajo, sin perseguir presupuestos.", text: "Disponibilidad, reputación y créditos ordenados para decidir rápido." },
+    proof: { eyebrow: "Trabajos realizados", title: "Evidencia visual antes de reservar.", text: "La confianza mejora cuando puedes ver trabajos, comunas, créditos usados y calificaciones." },
+    trust: { eyebrow: "Confianza antes que precio", title: "Los mejores especialistas brillan por evidencia, no por promesas.", text: "OficiosPro muestra reputación, comentarios reales, trabajos completados y certificaciones para que el precio en créditos no sea la única variable." },
+    specialists: { eyebrow: "Especialistas disponibles", title: "Perfiles que se ganan la confianza con reputación.", text: "Certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." },
+    categories: { eyebrow: "Categorías", title: "Una red para problemas cotidianos y operación crítica.", text: "Explora por rubro: cada grupo despliega sus especialidades." },
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -213,6 +220,13 @@ const en: Dictionary = {
     indexTitle: "Markets under exploration",
     indexSubtitle: "Countries and cities where we're measuring interest. We activate only where there's traction.",
   },
+  homeSections: {
+    flow: { eyebrow: "How it works", title: "From search to job done, without chasing quotes.", text: "Availability, reputation and credits organized to decide fast." },
+    proof: { eyebrow: "Completed jobs", title: "Visual evidence before you book.", text: "Trust improves when you can see jobs, areas, credits used and ratings." },
+    trust: { eyebrow: "Trust before price", title: "The best specialists shine through evidence, not promises.", text: "OficiosPro shows reputation, real reviews, completed jobs and certifications so price in credits isn't the only variable." },
+    specialists: { eyebrow: "Available specialists", title: "Profiles that earn trust through reputation.", text: "Certifications, completed jobs, response time and price from credits." },
+    categories: { eyebrow: "Categories", title: "A network for everyday problems and critical operations.", text: "Explore by sector: each group expands its specialties." },
+  },
 };
 
 const pt: Dictionary = {
@@ -311,6 +325,13 @@ const pt: Dictionary = {
     supplyCta: "Ofereço serviços",
     indexTitle: "Mercados em exploração",
     indexSubtitle: "Países e cidades onde estamos medindo interesse. Ativamos só onde houver tração.",
+  },
+  homeSections: {
+    flow: { eyebrow: "Como funciona", title: "Da busca ao trabalho concluído, sem perseguir orçamentos.", text: "Disponibilidade, reputação e créditos organizados para decidir rápido." },
+    proof: { eyebrow: "Trabalhos realizados", title: "Evidência visual antes de reservar.", text: "A confiança melhora quando você vê trabalhos, regiões, créditos usados e avaliações." },
+    trust: { eyebrow: "Confiança antes do preço", title: "Os melhores especialistas se destacam por evidências, não por promessas.", text: "A OficiosPro mostra reputação, avaliações reais, trabalhos concluídos e certificações para que o preço em créditos não seja a única variável." },
+    specialists: { eyebrow: "Especialistas disponíveis", title: "Perfis que conquistam a confiança pela reputação.", text: "Certificações, trabalhos concluídos, tempo de resposta e preço a partir de créditos." },
+    categories: { eyebrow: "Categorias", title: "Uma rede para problemas do dia a dia e operação crítica.", text: "Explore por setor: cada grupo abre suas especialidades." },
   },
 };
 
@@ -411,6 +432,13 @@ const fr: Dictionary = {
     indexTitle: "Marchés en exploration",
     indexSubtitle: "Pays et villes où nous mesurons l'intérêt. Nous activons uniquement là où il y a de la traction.",
   },
+  homeSections: {
+    flow: { eyebrow: "Comment ça marche", title: "De la recherche au travail terminé, sans courir après les devis.", text: "Disponibilité, réputation et crédits organisés pour décider vite." },
+    proof: { eyebrow: "Travaux réalisés", title: "Des preuves visuelles avant de réserver.", text: "La confiance s'améliore quand vous voyez les travaux, zones, crédits utilisés et notes." },
+    trust: { eyebrow: "La confiance avant le prix", title: "Les meilleurs spécialistes brillent par les preuves, pas par les promesses.", text: "OficiosPro montre réputation, avis réels, travaux réalisés et certifications pour que le prix en crédits ne soit pas la seule variable." },
+    specialists: { eyebrow: "Spécialistes disponibles", title: "Des profils qui gagnent la confiance par la réputation.", text: "Certifications, travaux réalisés, temps de réponse et prix à partir de crédits." },
+    categories: { eyebrow: "Catégories", title: "Un réseau pour les problèmes quotidiens et les opérations critiques.", text: "Explorez par secteur : chaque groupe déploie ses spécialités." },
+  },
 };
 
 const de: Dictionary = {
@@ -510,6 +538,13 @@ const de: Dictionary = {
     indexTitle: "Märkte in Erkundung",
     indexSubtitle: "Länder und Städte, in denen wir Interesse messen. Wir aktivieren nur bei Traktion.",
   },
+  homeSections: {
+    flow: { eyebrow: "So funktioniert es", title: "Von der Suche bis zum erledigten Auftrag, ohne Angeboten hinterherzulaufen.", text: "Verfügbarkeit, Reputation und Guthaben übersichtlich, um schnell zu entscheiden." },
+    proof: { eyebrow: "Erledigte Aufträge", title: "Visuelle Nachweise vor der Buchung.", text: "Vertrauen wächst, wenn Sie Arbeiten, Gebiete, genutzte Guthaben und Bewertungen sehen." },
+    trust: { eyebrow: "Vertrauen vor Preis", title: "Die besten Fachleute überzeugen durch Nachweise, nicht durch Versprechen.", text: "OficiosPro zeigt Reputation, echte Bewertungen, erledigte Aufträge und Zertifizierungen, damit der Preis in Guthaben nicht die einzige Variable ist." },
+    specialists: { eyebrow: "Verfügbare Fachleute", title: "Profile, die durch Reputation Vertrauen gewinnen.", text: "Zertifizierungen, erledigte Aufträge, Reaktionszeit und Preis ab Guthaben." },
+    categories: { eyebrow: "Kategorien", title: "Ein Netzwerk für Alltagsprobleme und kritischen Betrieb.", text: "Nach Bereich erkunden: jede Gruppe zeigt ihre Spezialgebiete." },
+  },
 };
 
 const it: Dictionary = {
@@ -608,6 +643,13 @@ const it: Dictionary = {
     supplyCta: "Offro servizi",
     indexTitle: "Mercati in esplorazione",
     indexSubtitle: "Paesi e città dove misuriamo l'interesse. Attiviamo solo dove c'è trazione.",
+  },
+  homeSections: {
+    flow: { eyebrow: "Come funziona", title: "Dalla ricerca al lavoro concluso, senza rincorrere preventivi.", text: "Disponibilità, reputazione e crediti organizzati per decidere in fretta." },
+    proof: { eyebrow: "Lavori realizzati", title: "Prove visive prima di prenotare.", text: "La fiducia migliora quando puoi vedere lavori, zone, crediti usati e valutazioni." },
+    trust: { eyebrow: "Fiducia prima del prezzo", title: "I migliori specialisti si distinguono per le prove, non per le promesse.", text: "OficiosPro mostra reputazione, recensioni reali, lavori conclusi e certificazioni così il prezzo in crediti non è l'unica variabile." },
+    specialists: { eyebrow: "Specialisti disponibili", title: "Profili che guadagnano fiducia con la reputazione.", text: "Certificazioni, lavori conclusi, tempo di risposta e prezzo a partire dai crediti." },
+    categories: { eyebrow: "Categorie", title: "Una rete per problemi quotidiani e operazioni critiche.", text: "Esplora per settore: ogni gruppo mostra le sue specialità." },
   },
 };
 

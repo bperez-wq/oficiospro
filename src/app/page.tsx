@@ -6,6 +6,7 @@ import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HomeHero } from "@/components/HomeHero";
+import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
@@ -111,11 +112,7 @@ export default function HomePage() {
 
       <Reveal delay={80}>
       <section className="section-compact">
-        <SectionHeader
-          eyebrow="Cómo funciona"
-          title="De buscar a cerrar el trabajo, sin perseguir presupuestos."
-          text="Disponibilidad, reputación y créditos ordenados para decidir rápido."
-        />
+        <TranslatedSectionHeader sectionKey="flow" />
         <HowItWorksFlow />
       </section>
       </Reveal>
@@ -123,7 +120,7 @@ export default function HomePage() {
       <Reveal delay={0}>
       <section className="section-compact">
         <div className="rounded-[32px] bg-slate-50 p-5 md:p-8">
-          <SectionHeader eyebrow="Trabajos realizados" title="Evidencia visual antes de reservar." text="La confianza mejora cuando puedes ver trabajos, comunas, créditos usados y calificaciones." />
+          <TranslatedSectionHeader sectionKey="proof" />
           <WorkProofGallery stories={workStories} />
         </div>
       </section>
@@ -222,7 +219,7 @@ export default function HomePage() {
             </AcquisitionTrackingLink>
           </div>
         </div>
-        <SectionHeader eyebrow="Confianza antes que precio" title="Los mejores especialistas brillan por evidencia, no por promesas." text="OficiosPro muestra reputación, comentarios reales, trabajos completados y certificaciones para que el precio en créditos no sea la única variable." />
+        <TranslatedSectionHeader sectionKey="trust" />
         <div className="grid gap-5 md:grid-cols-3">
           {testimonials.map((testimonial) => (
             <article key={testimonial.author} className="panel card-hover">
@@ -245,7 +242,7 @@ export default function HomePage() {
       <Reveal delay={80}>
       <section className="section-compact" id="especialistas">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <SectionHeader eyebrow="Especialistas disponibles" title="Perfiles que se ganan la confianza con reputación." text="Certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." />
+          <TranslatedSectionHeader sectionKey="specialists" />
           <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
             Ver todos
           </Link>
@@ -316,7 +313,7 @@ export default function HomePage() {
 
       <Reveal delay={0}>
       <section className="section-compact">
-        <SectionHeader eyebrow="Categorías" title="Una red para problemas cotidianos y operación crítica." text="Explora por rubro: cada grupo despliega sus especialidades." />
+        <TranslatedSectionHeader sectionKey="categories" />
         <HomeCategoryAccordion />
       </section>
       </Reveal>
@@ -424,16 +421,6 @@ function CollapsiblePanel({ title, detail, children }: { title: string; detail: 
       </summary>
       <div className="border-t border-line p-5">{children}</div>
     </details>
-  );
-}
-
-function SectionHeader({ eyebrow, title, text }: { eyebrow: string; title: string; text: string }) {
-  return (
-    <div className="mb-10 max-w-4xl">
-      <p className="eyebrow">{eyebrow}</p>
-      <h2 className="section-title">{title}</h2>
-      <p className="section-lead">{text}</p>
-    </div>
   );
 }
 
