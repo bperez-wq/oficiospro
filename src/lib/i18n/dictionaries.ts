@@ -118,6 +118,18 @@ const es = {
     specialists: { eyebrow: "Especialistas disponibles", title: "Perfiles que se ganan la confianza con reputación.", text: "Certificaciones, trabajos completados, tiempo de respuesta y precio desde créditos." },
     categories: { eyebrow: "Categorías", title: "Una red para problemas cotidianos y operación crítica.", text: "Explora por rubro: cada grupo despliega sus especialidades." },
   },
+  homeCta: {
+    clientTitle: "Soy cliente",
+    clientText: "Busca técnicos, compara reputación y reserva con créditos.",
+    clientLabel: "Crear cuenta",
+    companyTitle: "Soy empresa",
+    companyText: "Centraliza mantenciones, sucursales, reportes y facturación.",
+    companyLabel: "Solicitar cuenta",
+    specialistTitle: "Soy especialista",
+    specialistText: "Ofrece tus servicios y crea tu perfil fundador sin costo inicial: muestra tus trabajos y construye reputación real desde el piloto.",
+    specialistLabel: "Ofrecer mis servicios",
+    specialistSecondary: "Ver cómo funcionará mi agenda",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -241,6 +253,18 @@ const en: Dictionary = {
     specialists: { eyebrow: "Available specialists", title: "Profiles that earn trust through reputation.", text: "Certifications, completed jobs, response time and price from credits." },
     categories: { eyebrow: "Categories", title: "A network for everyday problems and critical operations.", text: "Explore by sector: each group expands its specialties." },
   },
+  homeCta: {
+    clientTitle: "I'm a customer",
+    clientText: "Find tradespeople, compare reputation and book with credits.",
+    clientLabel: "Create account",
+    companyTitle: "I'm a business",
+    companyText: "Centralize maintenance, branches, reports and invoicing.",
+    companyLabel: "Request account",
+    specialistTitle: "I'm a specialist",
+    specialistText: "Offer your services and create your founder profile at no upfront cost: show your work and build real reputation from the pilot.",
+    specialistLabel: "Offer my services",
+    specialistSecondary: "See how my calendar will work",
+  },
 };
 
 const pt: Dictionary = {
@@ -353,6 +377,18 @@ const pt: Dictionary = {
     trust: { eyebrow: "Confiança antes do preço", title: "Os melhores especialistas se destacam por evidências, não por promessas.", text: "A OficiosPro mostra reputação, avaliações reais, trabalhos concluídos e certificações para que o preço em créditos não seja a única variável." },
     specialists: { eyebrow: "Especialistas disponíveis", title: "Perfis que conquistam a confiança pela reputação.", text: "Certificações, trabalhos concluídos, tempo de resposta e preço a partir de créditos." },
     categories: { eyebrow: "Categorias", title: "Uma rede para problemas do dia a dia e operação crítica.", text: "Explore por setor: cada grupo abre suas especialidades." },
+  },
+  homeCta: {
+    clientTitle: "Sou cliente",
+    clientText: "Busque profissionais, compare reputação e reserve com créditos.",
+    clientLabel: "Criar conta",
+    companyTitle: "Sou empresa",
+    companyText: "Centralize manutenções, filiais, relatórios e faturamento.",
+    companyLabel: "Solicitar conta",
+    specialistTitle: "Sou especialista",
+    specialistText: "Ofereça seus serviços e crie seu perfil fundador sem custo inicial: mostre seus trabalhos e construa reputação real desde o piloto.",
+    specialistLabel: "Oferecer meus serviços",
+    specialistSecondary: "Ver como funcionará minha agenda",
   },
 };
 
@@ -467,6 +503,18 @@ const fr: Dictionary = {
     specialists: { eyebrow: "Spécialistes disponibles", title: "Des profils qui gagnent la confiance par la réputation.", text: "Certifications, travaux réalisés, temps de réponse et prix à partir de crédits." },
     categories: { eyebrow: "Catégories", title: "Un réseau pour les problèmes quotidiens et les opérations critiques.", text: "Explorez par secteur : chaque groupe déploie ses spécialités." },
   },
+  homeCta: {
+    clientTitle: "Je suis client",
+    clientText: "Trouvez des artisans, comparez la réputation et réservez avec des crédits.",
+    clientLabel: "Créer un compte",
+    companyTitle: "Je suis une entreprise",
+    companyText: "Centralisez l'entretien, les sites, les rapports et la facturation.",
+    companyLabel: "Demander un compte",
+    specialistTitle: "Je suis spécialiste",
+    specialistText: "Proposez vos services et créez votre profil fondateur sans frais initiaux : montrez vos travaux et bâtissez une vraie réputation dès le pilote.",
+    specialistLabel: "Proposer mes services",
+    specialistSecondary: "Voir comment mon agenda fonctionnera",
+  },
 };
 
 const de: Dictionary = {
@@ -580,6 +628,18 @@ const de: Dictionary = {
     specialists: { eyebrow: "Verfügbare Fachleute", title: "Profile, die durch Reputation Vertrauen gewinnen.", text: "Zertifizierungen, erledigte Aufträge, Reaktionszeit und Preis ab Guthaben." },
     categories: { eyebrow: "Kategorien", title: "Ein Netzwerk für Alltagsprobleme und kritischen Betrieb.", text: "Nach Bereich erkunden: jede Gruppe zeigt ihre Spezialgebiete." },
   },
+  homeCta: {
+    clientTitle: "Ich bin Kunde",
+    clientText: "Finden Sie Fachleute, vergleichen Sie die Reputation und buchen Sie mit Guthaben.",
+    clientLabel: "Konto erstellen",
+    companyTitle: "Ich bin ein Unternehmen",
+    companyText: "Zentralisieren Sie Wartung, Standorte, Berichte und Rechnungen.",
+    companyLabel: "Konto anfragen",
+    specialistTitle: "Ich bin Fachkraft",
+    specialistText: "Bieten Sie Ihre Leistungen an und erstellen Sie Ihr Gründerprofil ohne Anfangskosten: zeigen Sie Ihre Arbeit und bauen Sie ab dem Piloten echte Reputation auf.",
+    specialistLabel: "Meine Leistungen anbieten",
+    specialistSecondary: "Sehen, wie mein Kalender funktioniert",
+  },
 };
 
 const it: Dictionary = {
@@ -692,6 +752,18 @@ const it: Dictionary = {
     trust: { eyebrow: "Fiducia prima del prezzo", title: "I migliori specialisti si distinguono per le prove, non per le promesse.", text: "OficiosPro mostra reputazione, recensioni reali, lavori conclusi e certificazioni così il prezzo in crediti non è l'unica variabile." },
     specialists: { eyebrow: "Specialisti disponibili", title: "Profili che guadagnano fiducia con la reputazione.", text: "Certificazioni, lavori conclusi, tempo di risposta e prezzo a partire dai crediti." },
     categories: { eyebrow: "Categorie", title: "Una rete per problemi quotidiani e operazioni critiche.", text: "Esplora per settore: ogni gruppo mostra le sue specialità." },
+  },
+  homeCta: {
+    clientTitle: "Sono un cliente",
+    clientText: "Trova professionisti, confronta la reputazione e prenota con i crediti.",
+    clientLabel: "Crea account",
+    companyTitle: "Sono un'azienda",
+    companyText: "Centralizza manutenzioni, sedi, report e fatturazione.",
+    companyLabel: "Richiedi account",
+    specialistTitle: "Sono uno specialista",
+    specialistText: "Offri i tuoi servizi e crea il tuo profilo fondatore senza costi iniziali: mostra i tuoi lavori e costruisci una reputazione reale dal pilota.",
+    specialistLabel: "Offrire i miei servizi",
+    specialistSecondary: "Vedi come funzionerà la mia agenda",
   },
 };
 
