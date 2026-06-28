@@ -77,6 +77,17 @@ const es = {
     creditsHelp: "¿Cómo funcionan los créditos? →",
     chips: ["Piloto fundador", "Pago protegido", "Especialistas en revisión", "Solicitudes con seguimiento"],
   },
+  howItWorks: {
+    stepTitles: ["Busca por problema", "Compara especialistas", "Reserva o pide visita", "Cierra y evalúa"],
+    stepTexts: [
+      "Filtración, calefont, tablero, riego o mantención.",
+      "Revisa reputación, trabajos, precio en créditos y disponibilidad.",
+      "Los créditos quedan retenidos hasta avanzar el servicio.",
+      "Libera el pago, deja reseña y aumenta la reputación del especialista.",
+    ],
+    cta: "Buscar especialista ahora",
+    note: "Pago protegido: tus créditos solo se liberan cuando confirmas el avance.",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -159,6 +170,17 @@ const en: Dictionary = {
     creditsHelp: "How do credits work? →",
     chips: ["Founder pilot", "Protected payment", "Specialists under review", "Tracked requests"],
   },
+  howItWorks: {
+    stepTitles: ["Search by problem", "Compare specialists", "Book or request a visit", "Close and rate"],
+    stepTexts: [
+      "Leak, water heater, electrical panel, irrigation or maintenance.",
+      "Check reputation, jobs, price in credits and availability.",
+      "Credits are held until the service moves forward.",
+      "Release payment, leave a review and boost the specialist's reputation.",
+    ],
+    cta: "Find a specialist now",
+    note: "Protected payment: your credits are only released when you confirm progress.",
+  },
 };
 
 const pt: Dictionary = {
@@ -230,6 +252,17 @@ const pt: Dictionary = {
     specialistHint: "Crie seu perfil, mostre seus serviços e receba solicitações.",
     creditsHelp: "Como funcionam os créditos? →",
     chips: ["Piloto fundador", "Pagamento protegido", "Especialistas em revisão", "Solicitações acompanhadas"],
+  },
+  howItWorks: {
+    stepTitles: ["Busque por problema", "Compare especialistas", "Reserve ou peça visita", "Finalize e avalie"],
+    stepTexts: [
+      "Vazamento, aquecedor, quadro elétrico, irrigação ou manutenção.",
+      "Veja reputação, trabalhos, preço em créditos e disponibilidade.",
+      "Os créditos ficam retidos até o serviço avançar.",
+      "Libere o pagamento, deixe avaliação e aumente a reputação do especialista.",
+    ],
+    cta: "Buscar especialista agora",
+    note: "Pagamento protegido: seus créditos só são liberados quando você confirma o avanço.",
   },
 };
 
@@ -303,6 +336,17 @@ const fr: Dictionary = {
     creditsHelp: "Comment fonctionnent les crédits ? →",
     chips: ["Pilote fondateur", "Paiement protégé", "Spécialistes en vérification", "Demandes suivies"],
   },
+  howItWorks: {
+    stepTitles: ["Cherchez par problème", "Comparez les spécialistes", "Réservez ou demandez une visite", "Clôturez et évaluez"],
+    stepTexts: [
+      "Fuite, chauffe-eau, tableau électrique, arrosage ou entretien.",
+      "Vérifiez réputation, travaux, prix en crédits et disponibilité.",
+      "Les crédits sont retenus jusqu'à l'avancement du service.",
+      "Libérez le paiement, laissez un avis et augmentez la réputation du spécialiste.",
+    ],
+    cta: "Trouver un spécialiste maintenant",
+    note: "Paiement protégé : vos crédits ne sont libérés que lorsque vous confirmez l'avancement.",
+  },
 };
 
 const de: Dictionary = {
@@ -375,6 +419,17 @@ const de: Dictionary = {
     creditsHelp: "Wie funktionieren Guthaben? →",
     chips: ["Gründer-Pilot", "Geschützte Zahlung", "Fachleute in Prüfung", "Anfragen mit Nachverfolgung"],
   },
+  howItWorks: {
+    stepTitles: ["Nach Problem suchen", "Fachleute vergleichen", "Buchen oder Besuch anfragen", "Abschließen und bewerten"],
+    stepTexts: [
+      "Leck, Durchlauferhitzer, Sicherungskasten, Bewässerung oder Wartung.",
+      "Reputation, Aufträge, Preis in Guthaben und Verfügbarkeit prüfen.",
+      "Guthaben wird zurückgehalten, bis der Service voranschreitet.",
+      "Zahlung freigeben, Bewertung abgeben und die Reputation der Fachkraft steigern.",
+    ],
+    cta: "Jetzt Fachkraft finden",
+    note: "Geschützte Zahlung: Ihr Guthaben wird erst freigegeben, wenn Sie den Fortschritt bestätigen.",
+  },
 };
 
 const it: Dictionary = {
@@ -446,6 +501,17 @@ const it: Dictionary = {
     specialistHint: "Crea il tuo profilo, mostra i tuoi servizi e ricevi richieste.",
     creditsHelp: "Come funzionano i crediti? →",
     chips: ["Pilota fondatori", "Pagamento protetto", "Specialisti in verifica", "Richieste tracciate"],
+  },
+  howItWorks: {
+    stepTitles: ["Cerca per problema", "Confronta gli specialisti", "Prenota o richiedi una visita", "Chiudi e valuta"],
+    stepTexts: [
+      "Perdita, scaldabagno, quadro elettrico, irrigazione o manutenzione.",
+      "Controlla reputazione, lavori, prezzo in crediti e disponibilità.",
+      "I crediti restano trattenuti finché il servizio non avanza.",
+      "Libera il pagamento, lascia una recensione e aumenta la reputazione dello specialista.",
+    ],
+    cta: "Trova uno specialista ora",
+    note: "Pagamento protetto: i tuoi crediti vengono liberati solo quando confermi l'avanzamento.",
   },
 };
 

@@ -1,10 +1,11 @@
+"use client";
+
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 type Step = {
   number: string;
-  title: string;
-  text: string;
   gradient: string;
   icon: ReactNode;
   visual: ReactNode;
@@ -15,8 +16,6 @@ const iconClass = "h-5 w-5";
 const steps: Step[] = [
   {
     number: "1",
-    title: "Busca por problema",
-    text: "Filtración, calefont, tablero, riego o mantención.",
     gradient: "from-brand to-brand-dark",
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -39,8 +38,6 @@ const steps: Step[] = [
   },
   {
     number: "2",
-    title: "Compara especialistas",
-    text: "Revisa reputación, trabajos, precio en créditos y disponibilidad.",
     gradient: "from-accent to-accent-dark",
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -62,8 +59,6 @@ const steps: Step[] = [
   },
   {
     number: "3",
-    title: "Reserva o pide visita",
-    text: "Los créditos quedan retenidos hasta avanzar el servicio.",
     gradient: "from-sun to-sun-dark",
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -88,8 +83,6 @@ const steps: Step[] = [
   },
   {
     number: "4",
-    title: "Cierra y evalúa",
-    text: "Libera el pago, deja reseña y aumenta la reputación del especialista.",
     gradient: "from-brand to-brand-dark",
     icon: (
       <svg className={iconClass} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -110,12 +103,15 @@ const steps: Step[] = [
 ];
 
 export function HowItWorksFlow() {
+  const { t, tList } = useI18n();
+  const stepTitles = tList("howItWorks.stepTitles");
+  const stepTexts = tList("howItWorks.stepTexts");
   return (
     <div>
       <ol className="relative grid gap-7 lg:grid-cols-4 lg:gap-4">
         <span aria-hidden className="absolute bottom-10 left-[21px] top-12 w-px bg-gradient-to-b from-brand via-accent to-sun opacity-40 lg:hidden" />
         <span aria-hidden className="absolute inset-x-20 top-[22px] hidden h-px bg-gradient-to-r from-brand via-accent to-sun opacity-50 lg:block" />
-        {steps.map((step) => (
+        {steps.map((step, index) => (
           <li key={step.number} className="relative pl-14 lg:pl-0">
             <span
               className={`absolute left-0 top-0 z-10 grid h-11 w-11 place-items-center rounded-full bg-gradient-to-br ${step.gradient} text-sm font-black text-white shadow-card lg:static lg:mb-4`}
@@ -125,9 +121,9 @@ export function HowItWorksFlow() {
             <article className="group h-full rounded-[24px] border border-line bg-white/95 p-4 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-brand/30 hover:shadow-card">
               <div className="flex items-center gap-2 text-brand-dark">
                 {step.icon}
-                <h3 className="text-base font-black text-ink">{step.title}</h3>
+                <h3 className="text-base font-black text-ink">{stepTitles[index]}</h3>
               </div>
-              <p className="mt-2 min-h-10 text-[13px] font-semibold leading-5 text-muted">{step.text}</p>
+              <p className="mt-2 min-h-10 text-[13px] font-semibold leading-5 text-muted">{stepTexts[index]}</p>
               <div className="mt-3 rounded-2xl bg-slate-50 p-2.5 transition duration-300 group-hover:bg-brand-soft/40">{step.visual}</div>
             </article>
           </li>
@@ -136,9 +132,9 @@ export function HowItWorksFlow() {
 
       <div className="mt-10 flex flex-col items-center gap-3 text-center">
         <Link href="/especialistas?sourceSection=home_how_it_works" className="btn-primary" data-event="how_it_works_cta">
-          Buscar especialista ahora
+          {t("howItWorks.cta")}
         </Link>
-        <p className="text-sm font-bold text-muted">Pago protegido: tus créditos solo se liberan cuando confirmas el avance.</p>
+        <p className="text-sm font-bold text-muted">{t("howItWorks.note")}</p>
       </div>
     </div>
   );
