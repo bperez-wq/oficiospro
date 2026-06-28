@@ -19,6 +19,7 @@ const es = {
     login: "Iniciar sesión",
     search: "Buscar",
     searchPlaceholder: "Busca oficio, problema o comuna",
+    bag: "Bolsa",
     global: "Global",
   },
   lang: {
@@ -191,6 +192,7 @@ const en: Dictionary = {
     login: "Log in",
     search: "Search",
     searchPlaceholder: "Search a trade, problem or city",
+    bag: "Cart",
     global: "Global",
   },
   lang: {
@@ -353,6 +355,7 @@ const pt: Dictionary = {
     login: "Entrar",
     search: "Buscar",
     searchPlaceholder: "Busque um serviço, problema ou cidade",
+    bag: "Sacola",
     global: "Global",
   },
   lang: {
@@ -515,6 +518,7 @@ const fr: Dictionary = {
     login: "Se connecter",
     search: "Rechercher",
     searchPlaceholder: "Cherchez un métier, un problème ou une ville",
+    bag: "Panier",
     global: "Global",
   },
   lang: {
@@ -677,6 +681,7 @@ const de: Dictionary = {
     login: "Anmelden",
     search: "Suchen",
     searchPlaceholder: "Gewerk, Problem oder Stadt suchen",
+    bag: "Warenkorb",
     global: "Global",
   },
   lang: {
@@ -839,6 +844,7 @@ const it: Dictionary = {
     login: "Accedi",
     search: "Cerca",
     searchPlaceholder: "Cerca un mestiere, un problema o una città",
+    bag: "Carrello",
     global: "Global",
   },
   lang: {
