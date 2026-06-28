@@ -130,6 +130,16 @@ const es = {
     specialistLabel: "Ofrecer mis servicios",
     specialistSecondary: "Ver cómo funcionará mi agenda",
   },
+  homeClub: {
+    eyebrow: "Club Hogar",
+    title: "La suscripción para tener tranquilidad acumulada.",
+    lead: "Acumula créditos mensuales para resolver problemas de gasfitería, electricidad, jardín, climatización o mantenciones cuando los necesites.",
+    chips: ["Créditos acumulables", "Garantía OficiosPro", "Atención prioritaria", "Historial de servicios"],
+    cta: "Conocer planes",
+    monthLabels: ["Mes 1", "Mes 2", "Mes 3"],
+    monthHint: "Úsalos en visitas, diagnósticos o mantenciones.",
+    creditsWord: "créditos",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -265,6 +275,16 @@ const en: Dictionary = {
     specialistLabel: "Offer my services",
     specialistSecondary: "See how my calendar will work",
   },
+  homeClub: {
+    eyebrow: "Home Club",
+    title: "The subscription for accumulated peace of mind.",
+    lead: "Accumulate monthly credits to solve plumbing, electrical, garden, HVAC or maintenance problems whenever you need them.",
+    chips: ["Rollover credits", "OficiosPro guarantee", "Priority attention", "Service history"],
+    cta: "See plans",
+    monthLabels: ["Month 1", "Month 2", "Month 3"],
+    monthHint: "Use them on visits, diagnostics or maintenance.",
+    creditsWord: "credits",
+  },
 };
 
 const pt: Dictionary = {
@@ -389,6 +409,16 @@ const pt: Dictionary = {
     specialistText: "Ofereça seus serviços e crie seu perfil fundador sem custo inicial: mostre seus trabalhos e construa reputação real desde o piloto.",
     specialistLabel: "Oferecer meus serviços",
     specialistSecondary: "Ver como funcionará minha agenda",
+  },
+  homeClub: {
+    eyebrow: "Clube Casa",
+    title: "A assinatura para ter tranquilidade acumulada.",
+    lead: "Acumule créditos mensais para resolver problemas de encanamento, elétrica, jardim, climatização ou manutenção quando precisar.",
+    chips: ["Créditos acumuláveis", "Garantia OficiosPro", "Atendimento prioritário", "Histórico de serviços"],
+    cta: "Conhecer planos",
+    monthLabels: ["Mês 1", "Mês 2", "Mês 3"],
+    monthHint: "Use em visitas, diagnósticos ou manutenções.",
+    creditsWord: "créditos",
   },
 };
 
@@ -515,6 +545,16 @@ const fr: Dictionary = {
     specialistLabel: "Proposer mes services",
     specialistSecondary: "Voir comment mon agenda fonctionnera",
   },
+  homeClub: {
+    eyebrow: "Club Maison",
+    title: "L'abonnement pour une tranquillité accumulée.",
+    lead: "Accumulez des crédits mensuels pour résoudre des problèmes de plomberie, électricité, jardin, climatisation ou entretien quand vous en avez besoin.",
+    chips: ["Crédits cumulables", "Garantie OficiosPro", "Attention prioritaire", "Historique des services"],
+    cta: "Voir les forfaits",
+    monthLabels: ["Mois 1", "Mois 2", "Mois 3"],
+    monthHint: "Utilisez-les pour des visites, diagnostics ou entretiens.",
+    creditsWord: "crédits",
+  },
 };
 
 const de: Dictionary = {
@@ -640,6 +680,16 @@ const de: Dictionary = {
     specialistLabel: "Meine Leistungen anbieten",
     specialistSecondary: "Sehen, wie mein Kalender funktioniert",
   },
+  homeClub: {
+    eyebrow: "Haus-Club",
+    title: "Das Abo für angesparte Sorglosigkeit.",
+    lead: "Sammeln Sie monatliche Guthaben, um Probleme mit Sanitär, Elektrik, Garten, Klima oder Wartung zu lösen, wann immer Sie sie brauchen.",
+    chips: ["Ansparbare Guthaben", "OficiosPro-Garantie", "Bevorzugte Betreuung", "Service-Historie"],
+    cta: "Pläne ansehen",
+    monthLabels: ["Monat 1", "Monat 2", "Monat 3"],
+    monthHint: "Nutzen Sie sie für Besuche, Diagnosen oder Wartung.",
+    creditsWord: "Guthaben",
+  },
 };
 
 const it: Dictionary = {
@@ -764,6 +814,16 @@ const it: Dictionary = {
     specialistText: "Offri i tuoi servizi e crea il tuo profilo fondatore senza costi iniziali: mostra i tuoi lavori e costruisci una reputazione reale dal pilota.",
     specialistLabel: "Offrire i miei servizi",
     specialistSecondary: "Vedi come funzionerà la mia agenda",
+  },
+  homeClub: {
+    eyebrow: "Club Casa",
+    title: "L'abbonamento per una tranquillità accumulata.",
+    lead: "Accumula crediti mensili per risolvere problemi di idraulica, elettricità, giardino, climatizzazione o manutenzione quando ti servono.",
+    chips: ["Crediti accumulabili", "Garanzia OficiosPro", "Attenzione prioritaria", "Storico servizi"],
+    cta: "Scopri i piani",
+    monthLabels: ["Mese 1", "Mese 2", "Mese 3"],
+    monthHint: "Usali per visite, diagnosi o manutenzioni.",
+    creditsWord: "crediti",
   },
 };
 

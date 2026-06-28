@@ -5,6 +5,7 @@ import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
+import { HomeClubHogarBlock } from "@/components/HomeClubHogarBlock";
 import { HomeHero } from "@/components/HomeHero";
 import { HomeRoleCtas } from "@/components/HomeRoleCtas";
 import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
@@ -129,34 +130,7 @@ export default function HomePage() {
 
       <Reveal delay={80}>
       <section className="section-compact" id="club-hogar">
-        <div className="grid gap-6 rounded-[32px] border border-line bg-white p-6 shadow-soft lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
-          <div>
-            <p className="eyebrow">Club Hogar</p>
-            <h2 className="section-title">La suscripción para tener tranquilidad acumulada.</h2>
-            <p className="section-lead">
-              Acumula créditos mensuales para resolver problemas de gasfitería, electricidad, jardín, climatización o mantenciones cuando los necesites.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {["Créditos acumulables", "Garantía OficiosPro", "Atención prioritaria", "Historial de servicios"].map((item) => (
-                <span key={item} className="chip bg-brand-soft text-brand-dark">
-                  {item}
-                </span>
-              ))}
-            </div>
-            <ConversionButton type="lead_cliente" sourceButton="Conocer planes" className="btn-primary mt-7">
-              Conocer planes
-            </ConversionButton>
-          </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {[["Mes 1", "45 créditos"], ["Mes 2", "90 créditos"], ["Mes 3", "135 créditos"]].map(([label, value]) => (
-              <article key={label} className="rounded-[24px] border border-line bg-slate-50 p-5">
-                <span className="font-black text-muted">{label}</span>
-                <strong className="mt-2 block text-3xl font-black">{value}</strong>
-                <p className="mt-3 text-sm font-semibold text-muted">Úsalos en visitas, diagnósticos o mantenciones.</p>
-              </article>
-            ))}
-          </div>
-        </div>
+        <HomeClubHogarBlock />
       </section>
       </Reveal>
 
