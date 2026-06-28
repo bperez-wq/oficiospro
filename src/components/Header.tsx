@@ -219,8 +219,10 @@ export function Header() {
         </Link>
 
         <div className="hidden min-w-0 items-center gap-3 lg:flex">
-          <HeaderSearch />
-          <nav className="flex shrink-0 items-center gap-1 text-sm font-black text-muted">
+          <div className="hidden min-w-0 flex-1 xl:flex">
+            <HeaderSearch />
+          </div>
+          <nav className="flex shrink-0 items-center gap-0.5 text-sm font-black text-muted xl:gap-1">
             <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
