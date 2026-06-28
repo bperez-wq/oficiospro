@@ -15,7 +15,7 @@ const creditQuestions = [
   ["Créditos", "¿Cómo se usan?", "Al reservar un servicio, los créditos correspondientes se retienen. Se liberan al especialista cuando el trabajo avanza o queda cerrado. Cualquier adicional requiere tu aprobación antes de cobrarse."],
   ["Créditos", "¿Qué pasa si el trabajo no se completa?", "Los créditos quedan protegidos: no se liberan al especialista si el servicio no se realiza. OficiosPro revisa cada caso de forma manual mientras se resuelve."],
   ["Créditos", "¿Hay reembolsos o disputas?", "Sí. Si hay un problema con el servicio, puedes abrir una disputa y el equipo OficiosPro la revisa. Mientras se resuelve, los créditos retenidos permanecen protegidos."],
-  ["Créditos", "¿Los créditos vencen?", "Los créditos acumulados tienen una vigencia de 24 meses, por lo que puedes usarlos en distintos servicios a lo largo del tiempo."],
+  ["Créditos", "¿Los créditos se acumulan o vencen?", "Se acumulan mes a mes hasta un tope equivalente a 10 meses de tu plan (por ejemplo, 400 créditos en un plan de 40 mensuales). Dentro de ese tope se mantienen disponibles; al llegar al tope dejan de sumar, así que conviene usarlos al menos un par de veces al año."],
   ["Club Hogar", "¿Qué ventaja dan los créditos en Club Hogar?", "Club Hogar te permite acumular créditos mensuales y acceder a un valor preferente en créditos por servicio frente al precio normal, manteniendo la misma protección de pago."],
   ["Empresas", "¿Cómo funcionan los créditos para empresas?", "Las empresas pueden operar con planes y créditos según su volumen de mantenciones y sedes. Un ejecutivo revisa el caso para proponer la cobertura adecuada."],
 ];

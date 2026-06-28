@@ -129,7 +129,7 @@ export function ClientDashboard() {
         <article className="enterprise-shell p-6">
           <p className="eyebrow text-teal-200">Club Hogar</p>
           <h2 className="text-4xl font-black">{balance} créditos disponibles</h2>
-          <p className="mt-3 font-semibold leading-7 text-white/75">Tus créditos se acumulan hasta 24 meses y se descuentan al reservar especialistas.</p>
+          <p className="mt-3 font-semibold leading-7 text-white/75">Tus créditos se acumulan hasta un tope equivalente a 10 meses de tu plan y se descuentan al reservar especialistas.</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
             <MetricDark label="Próximas" value={upcoming.length.toString()} />
             <MetricDark label="Realizados" value={completed.length.toString()} />
