@@ -92,6 +92,18 @@ const es = {
     cta: "Buscar especialista ahora",
     note: "Pago protegido: tus créditos solo se liberan cuando confirmas el avance.",
   },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "Estamos explorando este mercado.",
+    subtitle: "Puedes dejar tu interés como cliente, empresa o especialista. No hay disponibilidad garantizada todavía.",
+    referential: "Los perfiles mostrados son referenciales si aplica; no representan especialistas reales disponibles.",
+    localLangLabel: "Idioma local",
+    localTermLabel: "Oficio local",
+    demandCta: "Busco contratar",
+    supplyCta: "Ofrezco servicios",
+    indexTitle: "Mercados en exploración",
+    indexSubtitle: "Países y ciudades donde estamos midiendo interés. Activamos solo donde haya tracción.",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -189,6 +201,18 @@ const en: Dictionary = {
     cta: "Find a specialist now",
     note: "Protected payment: your credits are only released when you confirm progress.",
   },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "We're exploring this market.",
+    subtitle: "You can register your interest as a customer, business or specialist. No guaranteed availability yet.",
+    referential: "Any profiles shown are illustrative if applicable; they don't represent real available specialists.",
+    localLangLabel: "Local language",
+    localTermLabel: "Local trade",
+    demandCta: "I want to hire",
+    supplyCta: "I offer services",
+    indexTitle: "Markets under exploration",
+    indexSubtitle: "Countries and cities where we're measuring interest. We activate only where there's traction.",
+  },
 };
 
 const pt: Dictionary = {
@@ -275,6 +299,18 @@ const pt: Dictionary = {
     ],
     cta: "Buscar especialista agora",
     note: "Pagamento protegido: seus créditos só são liberados quando você confirma o avanço.",
+  },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "Estamos explorando este mercado.",
+    subtitle: "Você pode registrar seu interesse como cliente, empresa ou especialista. Ainda não há disponibilidade garantida.",
+    referential: "Os perfis mostrados são ilustrativos, se aplicável; não representam especialistas reais disponíveis.",
+    localLangLabel: "Idioma local",
+    localTermLabel: "Ofício local",
+    demandCta: "Quero contratar",
+    supplyCta: "Ofereço serviços",
+    indexTitle: "Mercados em exploração",
+    indexSubtitle: "Países e cidades onde estamos medindo interesse. Ativamos só onde houver tração.",
   },
 };
 
@@ -363,6 +399,18 @@ const fr: Dictionary = {
     cta: "Trouver un spécialiste maintenant",
     note: "Paiement protégé : vos crédits ne sont libérés que lorsque vous confirmez l'avancement.",
   },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "Nous explorons ce marché.",
+    subtitle: "Vous pouvez indiquer votre intérêt en tant que client, entreprise ou spécialiste. Pas encore de disponibilité garantie.",
+    referential: "Les profils affichés sont illustratifs le cas échéant ; ils ne représentent pas de spécialistes réels disponibles.",
+    localLangLabel: "Langue locale",
+    localTermLabel: "Métier local",
+    demandCta: "Je veux engager",
+    supplyCta: "Je propose des services",
+    indexTitle: "Marchés en exploration",
+    indexSubtitle: "Pays et villes où nous mesurons l'intérêt. Nous activons uniquement là où il y a de la traction.",
+  },
 };
 
 const de: Dictionary = {
@@ -450,6 +498,18 @@ const de: Dictionary = {
     cta: "Jetzt Fachkraft finden",
     note: "Geschützte Zahlung: Ihr Guthaben wird erst freigegeben, wenn Sie den Fortschritt bestätigen.",
   },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "Wir erkunden diesen Markt.",
+    subtitle: "Sie können Ihr Interesse als Kunde, Unternehmen oder Fachkraft hinterlassen. Noch keine garantierte Verfügbarkeit.",
+    referential: "Gezeigte Profile sind ggf. illustrativ; sie stehen nicht für real verfügbare Fachleute.",
+    localLangLabel: "Lokale Sprache",
+    localTermLabel: "Lokales Gewerk",
+    demandCta: "Ich möchte beauftragen",
+    supplyCta: "Ich biete Leistungen an",
+    indexTitle: "Märkte in Erkundung",
+    indexSubtitle: "Länder und Städte, in denen wir Interesse messen. Wir aktivieren nur bei Traktion.",
+  },
 };
 
 const it: Dictionary = {
@@ -536,6 +596,18 @@ const it: Dictionary = {
     ],
     cta: "Trova uno specialista ora",
     note: "Pagamento protetto: i tuoi crediti vengono liberati solo quando confermi l'avanzamento.",
+  },
+  marketLab: {
+    eyebrow: "OficiosPro Market Lab",
+    exploring: "Stiamo esplorando questo mercato.",
+    subtitle: "Puoi lasciare il tuo interesse come cliente, azienda o specialista. Nessuna disponibilità garantita ancora.",
+    referential: "Gli eventuali profili mostrati sono illustrativi; non rappresentano specialisti reali disponibili.",
+    localLangLabel: "Lingua locale",
+    localTermLabel: "Mestiere locale",
+    demandCta: "Voglio assumere",
+    supplyCta: "Offro servizi",
+    indexTitle: "Mercati in esplorazione",
+    indexSubtitle: "Paesi e città dove misuriamo l'interesse. Attiviamo solo dove c'è trazione.",
   },
 };
 
