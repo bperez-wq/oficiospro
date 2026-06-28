@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
@@ -70,7 +70,9 @@ export function Header() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const categoryMenuRef = useRef<HTMLDivElement | null>(null);
+  const categoryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const categoryCloseTimerRef = useRef<number | null>(null);
+  const [categoryMenuStyle, setCategoryMenuStyle] = useState<CSSProperties>({});
   const pathname = usePathname();
 
   useEffect(() => {
@@ -110,6 +112,18 @@ export function Header() {
   }, [categoryOpen]);
 
   useEffect(() => {
+    if (!categoryOpen) return;
+
+    updateCategoryMenuPosition();
+    window.addEventListener("resize", updateCategoryMenuPosition);
+    window.addEventListener("scroll", updateCategoryMenuPosition, true);
+    return () => {
+      window.removeEventListener("resize", updateCategoryMenuPosition);
+      window.removeEventListener("scroll", updateCategoryMenuPosition, true);
+    };
+  }, [categoryOpen]);
+
+  useEffect(() => {
     return () => {
       if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
     };
@@ -131,6 +145,7 @@ export function Header() {
   function openCategoryMenu() {
     if (categoryCloseTimerRef.current) window.clearTimeout(categoryCloseTimerRef.current);
     categoryCloseTimerRef.current = null;
+    updateCategoryMenuPosition();
     setCategoryOpen(true);
   }
 
@@ -154,6 +169,25 @@ export function Header() {
       return;
     }
     openCategoryMenu();
+  }
+
+  function updateCategoryMenuPosition() {
+    const trigger = categoryTriggerRef.current;
+    if (!trigger || typeof window === "undefined") return;
+
+    const rect = trigger.getBoundingClientRect();
+    const margin = 16;
+    const width = Math.min(1120, Math.max(320, window.innerWidth - margin * 2));
+    const left = Math.min(Math.max(window.innerWidth / 2, margin + width / 2), window.innerWidth - margin - width / 2);
+    const top = Math.min(rect.bottom + 12, window.innerHeight - margin);
+    const maxHeight = Math.max(280, window.innerHeight - top - margin);
+
+    setCategoryMenuStyle({
+      left,
+      top,
+      width,
+      maxHeight,
+    });
   }
 
   return (
@@ -187,6 +221,7 @@ export function Header() {
             <NavLink href="/especialistas" label="Especialistas" pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
+                ref={categoryTriggerRef}
                 className={categoryOpen ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
                 type="button"
                 aria-haspopup="menu"
@@ -206,7 +241,7 @@ export function Header() {
               >
                 Categorias
               </button>
-              <MegaCategoryMenu open={categoryOpen} onClose={closeCategoryMenu} />
+              <MegaCategoryMenu open={categoryOpen} onClose={closeCategoryMenu} style={categoryMenuStyle} />
             </div>
             <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
             <NavLink href="/empresas" label="Empresas" pathname={pathname} />
@@ -338,11 +373,16 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
   );
 }
 
-function MegaCategoryMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+function MegaCategoryMenu({ open, onClose, style }: { open: boolean; onClose: () => void; style?: CSSProperties }) {
   if (!open) return null;
 
   return (
-    <div id="header-category-menu" className="absolute left-1/2 top-full z-[90] w-[min(1120px,calc(100vw-40px))] -translate-x-1/2 pt-3" role="menu">
+    <div
+      id="header-category-menu"
+      className="fixed z-[90] -translate-x-1/2 overflow-y-auto overscroll-contain pt-3"
+      style={{ left: "50%", top: "5rem", width: "min(1120px, calc(100vw - 32px))", maxHeight: "calc(100vh - 6rem)", ...style }}
+      role="menu"
+    >
       <div className="rounded-[28px] border border-line bg-white p-5 shadow-card">
         <div className="grid gap-4 xl:grid-cols-5">
           {categoryGroups.map((group) => (
