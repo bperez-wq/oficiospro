@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -16,7 +15,9 @@ import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
+import { CollapsiblePanel } from "@/components/CollapsiblePanel";
 import { CommunityReferralBanner } from "@/components/CommunityReferralBanner";
+import { TranslatedText } from "@/components/TranslatedText";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { QuickProblemLinks } from "@/components/QuickProblemLinks";
 import { WorkProofGallery } from "@/components/WorkProofGallery";
@@ -200,17 +201,19 @@ export default function HomePage() {
 
       <Reveal delay={80}>
       <section className="section-compact grid gap-3">
-        <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">Más sobre la red OficiosPro</h2>
-        <CollapsiblePanel title="Cobertura nacional" detail="Regiones y comunas donde opera la red.">
+        <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">
+          <TranslatedText k="homeNetwork.title" />
+        </h2>
+        <CollapsiblePanel titleKey="homeNetwork.coverage.title" detailKey="homeNetwork.coverage.detail">
           <NationalCoveragePanel />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Catálogo de especialidades" detail="Todos los oficios y servicios disponibles.">
+        <CollapsiblePanel titleKey="homeNetwork.catalog.title" detailKey="homeNetwork.catalog.detail">
           <SpecialtyCatalogPreview />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Validación y ranking" detail="Cómo verificamos y ordenamos a los especialistas.">
+        <CollapsiblePanel titleKey="homeNetwork.ranking.title" detailKey="homeNetwork.ranking.detail">
           <ValidationAndRankPanel />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Búsquedas locales" detail="Servicios más buscados por comuna.">
+        <CollapsiblePanel titleKey="homeNetwork.localSearch.title" detailKey="homeNetwork.localSearch.detail">
           <LocalSeoPanel />
         </CollapsiblePanel>
       </section>
@@ -260,28 +263,6 @@ function PilotLaunchStrip() {
 }
 
 // FloatingCard migrado a HomeHeroVisual (i18n).
-
-function CollapsiblePanel({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
-  return (
-    <details className="group overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition duration-200 open:border-brand/30 open:shadow-card">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
-        <span className="min-w-0">
-          <strong className="block text-lg font-black text-ink">{title}</strong>
-          <span className="block truncate text-sm font-bold text-muted">{detail}</span>
-        </span>
-        <span
-          aria-hidden
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-300 group-open:rotate-180 group-open:border-brand group-open:text-brand-dark"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </span>
-      </summary>
-      <div className="border-t border-line p-5">{children}</div>
-    </details>
-  );
-}
 
 function DashboardPreview() {
   return (

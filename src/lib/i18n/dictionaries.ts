@@ -182,6 +182,13 @@ const es = {
     founderTitle: "No necesitas tener todo resuelto para empezar.",
     founderChips: ["Perfil sin costo inicial", "Revisión en 48 h", "Puedes ofrecer más de un servicio", "Categorías nuevas en formación"],
   },
+  homeNetwork: {
+    title: "Más sobre la red OficiosPro",
+    coverage: { title: "Cobertura nacional", detail: "Regiones y comunas donde opera la red." },
+    catalog: { title: "Catálogo de especialidades", detail: "Todos los oficios y servicios disponibles." },
+    ranking: { title: "Validación y ranking", detail: "Cómo verificamos y ordenamos a los especialistas." },
+    localSearch: { title: "Búsquedas locales", detail: "Servicios más buscados por comuna." },
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -369,6 +376,13 @@ const en: Dictionary = {
     founderTitle: "You don't need everything figured out to start.",
     founderChips: ["Profile at no upfront cost", "Review within 48 h", "You can offer more than one service", "New categories forming"],
   },
+  homeNetwork: {
+    title: "More about the OficiosPro network",
+    coverage: { title: "National coverage", detail: "Regions and cities where the network operates." },
+    catalog: { title: "Specialties catalog", detail: "All available trades and services." },
+    ranking: { title: "Validation & ranking", detail: "How we verify and rank specialists." },
+    localSearch: { title: "Local searches", detail: "Most searched services by city." },
+  },
 };
 
 const pt: Dictionary = {
@@ -545,6 +559,13 @@ const pt: Dictionary = {
     founderEyebrow: "Etapa fundador aberta",
     founderTitle: "Você não precisa ter tudo resolvido para começar.",
     founderChips: ["Perfil sem custo inicial", "Revisão em 48 h", "Pode oferecer mais de um serviço", "Novas categorias em formação"],
+  },
+  homeNetwork: {
+    title: "Mais sobre a rede OficiosPro",
+    coverage: { title: "Cobertura nacional", detail: "Regiões e cidades onde a rede opera." },
+    catalog: { title: "Catálogo de especialidades", detail: "Todos os ofícios e serviços disponíveis." },
+    ranking: { title: "Validação e ranking", detail: "Como verificamos e classificamos os especialistas." },
+    localSearch: { title: "Buscas locais", detail: "Serviços mais buscados por cidade." },
   },
 };
 
@@ -723,6 +744,13 @@ const fr: Dictionary = {
     founderTitle: "Pas besoin de tout maîtriser pour commencer.",
     founderChips: ["Profil sans frais initiaux", "Vérification sous 48 h", "Vous pouvez proposer plusieurs services", "Nouvelles catégories en formation"],
   },
+  homeNetwork: {
+    title: "En savoir plus sur le réseau OficiosPro",
+    coverage: { title: "Couverture nationale", detail: "Régions et villes où le réseau opère." },
+    catalog: { title: "Catalogue de spécialités", detail: "Tous les métiers et services disponibles." },
+    ranking: { title: "Validation et classement", detail: "Comment nous vérifions et classons les spécialistes." },
+    localSearch: { title: "Recherches locales", detail: "Services les plus recherchés par ville." },
+  },
 };
 
 const de: Dictionary = {
@@ -900,6 +928,13 @@ const de: Dictionary = {
     founderTitle: "Sie müssen nicht alles geklärt haben, um zu starten.",
     founderChips: ["Profil ohne Anfangskosten", "Prüfung in 48 h", "Sie können mehrere Leistungen anbieten", "Neue Kategorien im Aufbau"],
   },
+  homeNetwork: {
+    title: "Mehr über das OficiosPro-Netzwerk",
+    coverage: { title: "Landesweite Abdeckung", detail: "Regionen und Städte, in denen das Netzwerk arbeitet." },
+    catalog: { title: "Leistungskatalog", detail: "Alle verfügbaren Gewerke und Leistungen." },
+    ranking: { title: "Validierung & Ranking", detail: "Wie wir Fachleute prüfen und einordnen." },
+    localSearch: { title: "Lokale Suchen", detail: "Meistgesuchte Leistungen nach Stadt." },
+  },
 };
 
 const it: Dictionary = {
@@ -1076,6 +1111,13 @@ const it: Dictionary = {
     founderEyebrow: "Fase fondatori aperta",
     founderTitle: "Non devi avere tutto pronto per iniziare.",
     founderChips: ["Profilo senza costi iniziali", "Verifica in 48 h", "Puoi offrire più di un servizio", "Nuove categorie in formazione"],
+  },
+  homeNetwork: {
+    title: "Scopri di più sulla rete OficiosPro",
+    coverage: { title: "Copertura nazionale", detail: "Regioni e città dove opera la rete." },
+    catalog: { title: "Catalogo specialità", detail: "Tutti i mestieri e servizi disponibili." },
+    ranking: { title: "Validazione e ranking", detail: "Come verifichiamo e classifichiamo gli specialisti." },
+    localSearch: { title: "Ricerche locali", detail: "Servizi più cercati per città." },
   },
 };
 
