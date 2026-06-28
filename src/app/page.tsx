@@ -5,7 +5,7 @@ import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
-import { HeroSearchPanel } from "@/components/HeroSearchPanel";
+import { HomeHero } from "@/components/HomeHero";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
@@ -38,7 +38,6 @@ export const metadata: Metadata = buildPublicRouteMetadata({
 export default function HomePage() {
   const featured = specialists.filter((specialist) => specialist.top).slice(0, 3);
   const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
-  const founderHeroContext = { source: "campana_local" as const, campaign: "founder_specialists_home_hero", landingPage: "/" };
 
   return (
     <main>
@@ -48,50 +47,7 @@ export default function HomePage() {
       <section className="relative isolate overflow-hidden border-b border-line bg-gradient-to-b from-mint/70 via-white to-white">
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-10 md:py-16 lg:grid-cols-[0.95fr_1.05fr]">
-          <div className="animate-fade-up">
-            <span className="eyebrow-pill">
-              <span className="h-2 w-2 rounded-full bg-brand" />
-              Piloto fundador OficiosPro
-            </span>
-            <h1 className="max-w-4xl text-4xl font-black leading-[1.02] tracking-tight text-ink md:text-6xl">
-              Especialistas verificados para tu <span className="gradient-text">hogar, empresa o campo</span>.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-muted md:text-lg">
-              Estamos abriendo OficiosPro de forma controlada: explora especialistas fundadores, compara reputacion y solicita contacto sin registrarte hasta que decidas avanzar.
-            </p>
-            <HeroSearchPanel />
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-2 rounded-3xl border border-line bg-white/80 p-4 shadow-sm backdrop-blur transition hover:-translate-y-0.5 hover:shadow-soft">
-                <span className="text-xs font-black uppercase tracking-wide text-brand">Soy cliente</span>
-                <Link href="/especialistas" className="btn-primary w-full" data-event="browse_specialists_home_hero">
-                  Buscar especialista
-                </Link>
-                <span className="text-[13px] font-semibold leading-5 text-muted">Encuentra técnicos y especialistas por comuna.</span>
-              </div>
-              <div className="flex flex-col gap-2 rounded-3xl border border-sun/30 bg-sun-soft/50 p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
-                <span className="text-xs font-black uppercase tracking-wide text-sun-dark">Soy especialista</span>
-                <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_hero&intent=offer_services" className="btn-sun w-full" eventType="click_offer_services" sourceButton="Ofrecer mis servicios home hero" context={founderHeroContext}>
-                  Ofrecer mis servicios
-                </AcquisitionTrackingLink>
-                <span className="text-[13px] font-semibold leading-5 text-muted">Crea tu perfil, muestra tus servicios y recibe solicitudes.</span>
-              </div>
-            </div>
-            <CreditsHelpTrigger className="mt-4 inline-block text-sm font-black text-brand-dark transition hover:text-brand">
-              ¿Cómo funcionan los créditos? →
-            </CreditsHelpTrigger>
-            <div className="mt-7 flex flex-wrap gap-2.5">
-              {[
-                ["*", "Piloto fundador", "chip-sun"],
-                ["✓", "Pago protegido", "chip-brand"],
-                ["✓", "Especialistas en revision", "chip-emerald"],
-                ["●", "Solicitudes con seguimiento", "chip-brand"],
-              ].map(([icon, label, cls]) => (
-                <span key={label} className={`${cls} px-3.5 py-2 text-[13px]`}>
-                  <span aria-hidden>{icon}</span> {label}
-                </span>
-              ))}
-            </div>
-          </div>
+          <HomeHero />
 
           <div className="relative hidden min-h-[520px] lg:block">
             <div className="absolute inset-0 rounded-[34px] bg-gradient-to-br from-brand-soft via-mint to-accent-soft" />

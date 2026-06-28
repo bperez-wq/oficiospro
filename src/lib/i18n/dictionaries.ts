@@ -62,6 +62,21 @@ const es = {
     ],
     back: "Volver al inicio",
   },
+  home: {
+    heroEyebrow: "Piloto fundador OficiosPro",
+    heroTitlePrefix: "Especialistas verificados para tu ",
+    heroTitleHighlight: "hogar, empresa o campo",
+    heroSubtitle:
+      "Estamos abriendo OficiosPro de forma controlada: explora especialistas fundadores, compara reputación y solicita contacto sin registrarte hasta que decidas avanzar.",
+    clientTag: "Soy cliente",
+    clientCta: "Buscar especialista",
+    clientHint: "Encuentra técnicos y especialistas por comuna.",
+    specialistTag: "Soy especialista",
+    specialistCta: "Ofrecer mis servicios",
+    specialistHint: "Crea tu perfil, muestra tus servicios y recibe solicitudes.",
+    creditsHelp: "¿Cómo funcionan los créditos? →",
+    chips: ["Piloto fundador", "Pago protegido", "Especialistas en revisión", "Solicitudes con seguimiento"],
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -129,6 +144,21 @@ const en: Dictionary = {
     ],
     back: "Back to home",
   },
+  home: {
+    heroEyebrow: "OficiosPro founder pilot",
+    heroTitlePrefix: "Verified specialists for your ",
+    heroTitleHighlight: "home, business or field",
+    heroSubtitle:
+      "We're opening OficiosPro gradually: explore founding specialists, compare reputation and request contact without signing up until you decide to move forward.",
+    clientTag: "I'm a customer",
+    clientCta: "Find a specialist",
+    clientHint: "Find tradespeople and specialists by area.",
+    specialistTag: "I'm a specialist",
+    specialistCta: "Offer my services",
+    specialistHint: "Create your profile, show your services and receive requests.",
+    creditsHelp: "How do credits work? →",
+    chips: ["Founder pilot", "Protected payment", "Specialists under review", "Tracked requests"],
+  },
 };
 
 const pt: Dictionary = {
@@ -185,6 +215,21 @@ const pt: Dictionary = {
       "Reputação e avaliações reais",
     ],
     back: "Voltar ao início",
+  },
+  home: {
+    heroEyebrow: "Piloto fundador OficiosPro",
+    heroTitlePrefix: "Especialistas verificados para sua ",
+    heroTitleHighlight: "casa, empresa ou campo",
+    heroSubtitle:
+      "Estamos abrindo a OficiosPro de forma controlada: explore especialistas fundadores, compare reputação e solicite contato sem se cadastrar até decidir avançar.",
+    clientTag: "Sou cliente",
+    clientCta: "Buscar especialista",
+    clientHint: "Encontre profissionais e especialistas por região.",
+    specialistTag: "Sou especialista",
+    specialistCta: "Oferecer meus serviços",
+    specialistHint: "Crie seu perfil, mostre seus serviços e receba solicitações.",
+    creditsHelp: "Como funcionam os créditos? →",
+    chips: ["Piloto fundador", "Pagamento protegido", "Especialistas em revisão", "Solicitações acompanhadas"],
   },
 };
 
@@ -243,6 +288,21 @@ const fr: Dictionary = {
     ],
     back: "Retour à l'accueil",
   },
+  home: {
+    heroEyebrow: "Pilote fondateur OficiosPro",
+    heroTitlePrefix: "Des spécialistes vérifiés pour votre ",
+    heroTitleHighlight: "maison, entreprise ou terrain",
+    heroSubtitle:
+      "Nous ouvrons OficiosPro progressivement : explorez les spécialistes fondateurs, comparez la réputation et demandez un contact sans inscription jusqu'à ce que vous décidiez d'avancer.",
+    clientTag: "Je suis client",
+    clientCta: "Trouver un spécialiste",
+    clientHint: "Trouvez des artisans et spécialistes par zone.",
+    specialistTag: "Je suis spécialiste",
+    specialistCta: "Proposer mes services",
+    specialistHint: "Créez votre profil, montrez vos services et recevez des demandes.",
+    creditsHelp: "Comment fonctionnent les crédits ? →",
+    chips: ["Pilote fondateur", "Paiement protégé", "Spécialistes en vérification", "Demandes suivies"],
+  },
 };
 
 const de: Dictionary = {
@@ -300,6 +360,21 @@ const de: Dictionary = {
     ],
     back: "Zur Startseite",
   },
+  home: {
+    heroEyebrow: "OficiosPro Gründer-Pilot",
+    heroTitlePrefix: "Geprüfte Fachleute für Ihr ",
+    heroTitleHighlight: "Zuhause, Unternehmen oder Grundstück",
+    heroSubtitle:
+      "Wir öffnen OficiosPro schrittweise: Entdecken Sie Gründer-Fachleute, vergleichen Sie die Reputation und fordern Sie Kontakt an, ohne sich anzumelden, bis Sie weitermachen möchten.",
+    clientTag: "Ich bin Kunde",
+    clientCta: "Fachkraft finden",
+    clientHint: "Finden Sie Handwerker und Fachleute nach Region.",
+    specialistTag: "Ich bin Fachkraft",
+    specialistCta: "Meine Leistungen anbieten",
+    specialistHint: "Erstellen Sie Ihr Profil, zeigen Sie Ihre Leistungen und erhalten Sie Anfragen.",
+    creditsHelp: "Wie funktionieren Guthaben? →",
+    chips: ["Gründer-Pilot", "Geschützte Zahlung", "Fachleute in Prüfung", "Anfragen mit Nachverfolgung"],
+  },
 };
 
 const it: Dictionary = {
@@ -356,6 +431,21 @@ const it: Dictionary = {
       "Reputazione e recensioni reali",
     ],
     back: "Torna alla home",
+  },
+  home: {
+    heroEyebrow: "Pilota fondatori OficiosPro",
+    heroTitlePrefix: "Specialisti verificati per la tua ",
+    heroTitleHighlight: "casa, azienda o terreno",
+    heroSubtitle:
+      "Stiamo aprendo OficiosPro in modo graduale: esplora gli specialisti fondatori, confronta la reputazione e richiedi un contatto senza registrarti finché non decidi di procedere.",
+    clientTag: "Sono un cliente",
+    clientCta: "Trova uno specialista",
+    clientHint: "Trova artigiani e specialisti per zona.",
+    specialistTag: "Sono uno specialista",
+    specialistCta: "Offrire i miei servizi",
+    specialistHint: "Crea il tuo profilo, mostra i tuoi servizi e ricevi richieste.",
+    creditsHelp: "Come funzionano i crediti? →",
+    chips: ["Pilota fondatori", "Pagamento protetto", "Specialisti in verifica", "Richieste tracciate"],
   },
 };
 
