@@ -6,6 +6,7 @@ import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HomeClubHogarBlock } from "@/components/HomeClubHogarBlock";
+import { HomeEnterpriseIntro } from "@/components/HomeEnterpriseIntro";
 import { HomeHero } from "@/components/HomeHero";
 import { HomeRoleCtas } from "@/components/HomeRoleCtas";
 import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
@@ -17,7 +18,7 @@ import { CommunityReferralBanner } from "@/components/CommunityReferralBanner";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { QuickProblemLinks } from "@/components/QuickProblemLinks";
 import { WorkProofGallery } from "@/components/WorkProofGallery";
-import { companyDashboard, companyUseCases, specialists, testimonials, workStories } from "@/data/mock";
+import { companyDashboard, specialists, testimonials, workStories } from "@/data/mock";
 import { heroCollageImages } from "@/data/visualAssets";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -143,28 +144,7 @@ export default function HomePage() {
       <Reveal delay={80}>
       <section className="bg-enterprise py-20 text-white" id="empresas">
         <div className="mx-auto grid max-w-7xl gap-10 px-5 lg:grid-cols-[0.9fr_1.1fr]">
-          <div>
-            <p className="eyebrow text-teal-200">OficiosPro Empresas</p>
-            <h2 className="text-4xl font-black leading-tight md:text-5xl">Centraliza tus mantenciones y paga con créditos corporativos.</h2>
-            <p className="mt-5 text-lg font-semibold leading-8 text-white/75">
-              Una red bajo demanda para oficinas, restaurantes, bodegas, comunidades y plantas productivas que necesitan continuidad operacional.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {companyUseCases.map((item) => (
-                <span key={item} className="chip bg-white/10 text-white">
-                  {item}
-                </span>
-              ))}
-            </div>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa home" className="btn-primary">
-                Solicitar cuenta empresa
-              </ConversionButton>
-              <Link href="/empresas" className="btn-secondary border-white/20 bg-white/10 text-white hover:border-white/40" data-event="home_business_solutions">
-                Soluciones para empresas
-              </Link>
-            </div>
-          </div>
+          <HomeEnterpriseIntro />
           <DashboardPreview />
         </div>
         <div className="mx-auto mt-10 max-w-7xl px-5">

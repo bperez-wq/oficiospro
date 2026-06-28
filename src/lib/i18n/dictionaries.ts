@@ -140,6 +140,13 @@ const es = {
     monthHint: "Úsalos en visitas, diagnósticos o mantenciones.",
     creditsWord: "créditos",
   },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Empresas",
+    title: "Centraliza tus mantenciones y paga con créditos corporativos.",
+    lead: "Una red bajo demanda para oficinas, restaurantes, bodegas, comunidades y plantas productivas que necesitan continuidad operacional.",
+    cta: "Solicitar cuenta empresa",
+    secondary: "Soluciones para empresas",
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -285,6 +292,13 @@ const en: Dictionary = {
     monthHint: "Use them on visits, diagnostics or maintenance.",
     creditsWord: "credits",
   },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Business",
+    title: "Centralize your maintenance and pay with corporate credits.",
+    lead: "An on-demand network for offices, restaurants, warehouses, communities and production plants that need operational continuity.",
+    cta: "Request a business account",
+    secondary: "Business solutions",
+  },
 };
 
 const pt: Dictionary = {
@@ -419,6 +433,13 @@ const pt: Dictionary = {
     monthLabels: ["Mês 1", "Mês 2", "Mês 3"],
     monthHint: "Use em visitas, diagnósticos ou manutenções.",
     creditsWord: "créditos",
+  },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Empresas",
+    title: "Centralize suas manutenções e pague com créditos corporativos.",
+    lead: "Uma rede sob demanda para escritórios, restaurantes, depósitos, condomínios e plantas produtivas que precisam de continuidade operacional.",
+    cta: "Solicitar conta empresa",
+    secondary: "Soluções para empresas",
   },
 };
 
@@ -555,6 +576,13 @@ const fr: Dictionary = {
     monthHint: "Utilisez-les pour des visites, diagnostics ou entretiens.",
     creditsWord: "crédits",
   },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Entreprises",
+    title: "Centralisez votre entretien et payez avec des crédits d'entreprise.",
+    lead: "Un réseau à la demande pour bureaux, restaurants, entrepôts, communautés et sites de production qui ont besoin de continuité opérationnelle.",
+    cta: "Demander un compte entreprise",
+    secondary: "Solutions pour entreprises",
+  },
 };
 
 const de: Dictionary = {
@@ -690,6 +718,13 @@ const de: Dictionary = {
     monthHint: "Nutzen Sie sie für Besuche, Diagnosen oder Wartung.",
     creditsWord: "Guthaben",
   },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Unternehmen",
+    title: "Zentralisieren Sie Ihre Wartung und zahlen Sie mit Firmenguthaben.",
+    lead: "Ein On-Demand-Netzwerk für Büros, Restaurants, Lager, Wohnanlagen und Produktionsstätten, die betriebliche Kontinuität brauchen.",
+    cta: "Firmenkonto anfragen",
+    secondary: "Lösungen für Unternehmen",
+  },
 };
 
 const it: Dictionary = {
@@ -824,6 +859,13 @@ const it: Dictionary = {
     monthLabels: ["Mese 1", "Mese 2", "Mese 3"],
     monthHint: "Usali per visite, diagnosi o manutenzioni.",
     creditsWord: "crediti",
+  },
+  homeEnterprise: {
+    eyebrow: "OficiosPro Aziende",
+    title: "Centralizza le tue manutenzioni e paga con crediti aziendali.",
+    lead: "Una rete on-demand per uffici, ristoranti, magazzini, condomini e impianti produttivi che necessitano di continuità operativa.",
+    cta: "Richiedi un account aziendale",
+    secondary: "Soluzioni per aziende",
   },
 };
 
