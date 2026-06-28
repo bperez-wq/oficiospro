@@ -61,16 +61,16 @@ export function Footer() {
             {t("footer.tagline")}
           </p>
           <p className="mt-4 max-w-xl text-lg font-black leading-7 text-white">
-            Empoderamos el oficio. Empoderamos al trabajador.
+            {t("footer.empower")}
           </p>
           <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-white/70">
-            El lugar donde los buenos trabajadores brillan, construyen reputación y acceden a mejores oportunidades.
+            {t("footer.empowerSub")}
           </p>
           <p className="mt-4 max-w-xl text-sm font-black leading-6 text-white">
             Contacto: bperez@oficiospro.cl
           </p>
           <CreditsHelpTrigger className="mt-3 text-sm font-black text-white underline underline-offset-2 hover:text-white/80">
-            ¿Cómo funcionan los créditos?
+            {t("footer.creditsHelp")}
           </CreditsHelpTrigger>
           <div className="mt-6 flex flex-wrap gap-2">
             {tList("footer.chips").map((item) => (
@@ -87,9 +87,9 @@ export function Footer() {
           </div>
         </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {groups.map((group) => (
+          {groups.map((group, index) => (
             <div key={group.title}>
-              <h3 className="font-black">{group.title}</h3>
+              <h3 className="font-black">{tList("footer.groupTitles")[index] ?? group.title}</h3>
               <div className="mt-4 grid gap-3 text-sm font-semibold text-white/70">
                 {group.links.map((link) => (
                   <Link key={link.href} href={link.href} className="transition hover:text-white">
