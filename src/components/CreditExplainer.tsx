@@ -83,6 +83,15 @@ export function CreditExplainer({
           <CreditMetric label="Ahorro potencial" value={sampleRequests * savingsPerRequest} />
         </div>
       </div>
+
+      <div className="mt-4 flex flex-col gap-2 rounded-2xl border border-line bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm font-semibold leading-6 text-muted">
+          Los créditos se retienen al reservar y quedan protegidos: si el trabajo no se completa, no se liberan al especialista y revisamos el caso.
+        </p>
+        <a className="shrink-0 text-sm font-black text-brand-dark underline-offset-4 hover:underline" href="/faq">
+          Ver preguntas de créditos
+        </a>
+      </div>
     </section>
   );
 }

@@ -1149,10 +1149,42 @@ function SuccessState({
 }) {
   const session = getMockSession();
 
+  const nextSteps = isEnterprise
+    ? [
+        "Guardamos tu solicitud y la asignamos a un ejecutivo OficiosPro.",
+        "Revisamos tu caso y la necesidad operacional de tu empresa de forma manual.",
+        "Te contactamos para proponer un plan y coordinar cobertura real.",
+      ]
+    : isReservation
+      ? [
+          "Tu solicitud queda registrada y la sumamos a tu seguimiento en OficiosPro.",
+          "El equipo revisa el detalle y valida disponibilidad real con el especialista.",
+          "Te contactamos para confirmar horario; tus créditos quedan protegidos y no se cobra nada antes de confirmar.",
+        ]
+      : [
+          "Recibimos tu solicitud y la guardamos para darle seguimiento.",
+          "El equipo OficiosPro revisa el detalle de forma manual.",
+          "Te contactamos para coordinar el siguiente paso. No prometemos un horario hasta confirmar disponibilidad real.",
+        ];
+
   return (
     <div className="mt-5 rounded-[24px] border border-brand/20 bg-brand-soft p-5">
-      <strong className="block text-2xl font-black text-ink">Listo</strong>
+      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-900">
+        <span aria-hidden>✓</span> Solicitud recibida
+      </span>
+      <strong className="mt-3 block text-2xl font-black text-ink">Listo, lo tenemos.</strong>
       <p className="mt-2 font-semibold leading-7 text-brand-dark">{text}</p>
+      <div className="mt-4 rounded-2xl bg-white/80 p-4">
+        <p className="text-xs font-black uppercase text-brand-dark">Qué pasa ahora</p>
+        <ol className="mt-3 grid gap-3">
+          {nextSteps.map((stepText, index) => (
+            <li key={stepText} className="flex items-start gap-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white">{index + 1}</span>
+              <span className="text-sm font-semibold leading-6 text-muted">{stepText}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         {isReservation ? (
           session ? (
@@ -1161,7 +1193,7 @@ function SuccessState({
             </a>
           ) : (
             <a className="btn-primary flex-1" href={`/registro-cliente${specialistId ? `?reserve=${specialistId}` : ""}`}>
-              Crear cuenta rápida
+              Crear cuenta para seguir mi solicitud
             </a>
           )
         ) : null}
