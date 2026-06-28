@@ -189,6 +189,12 @@ const es = {
     ranking: { title: "Validación y ranking", detail: "Cómo verificamos y ordenamos a los especialistas." },
     localSearch: { title: "Búsquedas locales", detail: "Servicios más buscados por comuna." },
   },
+  pages: {
+    clubHogar: { eyebrow: "Club Hogar", title: "Tus créditos son saldo disponible para mantenciones reales.", subtitle: "Acumula créditos para servicios del hogar, reténlos al reservar y libera el pago cuando el trabajo queda cerrado con respaldo." },
+    empresas: { eyebrow: "OficiosPro Empresas", title: "Centraliza mantenciones, sucursales y créditos corporativos.", subtitle: "Externaliza mantenciones de forma controlada con técnicos verificados, centros de costo, reportes, documentación del servicio, facturación y trazabilidad." },
+    faq: { eyebrow: "FAQ", title: "Preguntas frecuentes", subtitle: "Respuestas iniciales para clientes, empresas y especialistas OficiosPro." },
+    registroEspecialista: { eyebrow: "Especialista fundador", title: "Crea tu perfil de especialista.", subtitle: "Sin costo inicial, declara tus servicios y queda en revisión para sumarte a la primera red por comuna. Puedes postular aunque tu categoría esté en formación." },
+  },
 } as const;
 
 type WidenDictionary<T> = T extends string
@@ -383,6 +389,12 @@ const en: Dictionary = {
     ranking: { title: "Validation & ranking", detail: "How we verify and rank specialists." },
     localSearch: { title: "Local searches", detail: "Most searched services by city." },
   },
+  pages: {
+    clubHogar: { eyebrow: "Home Club", title: "Your credits are available balance for real maintenance.", subtitle: "Accumulate credits for home services, hold them when you book, and release payment when the job is closed with backing." },
+    empresas: { eyebrow: "OficiosPro Business", title: "Centralize maintenance, branches and corporate credits.", subtitle: "Outsource maintenance in a controlled way with verified pros, cost centers, reports, service documentation, invoicing and traceability." },
+    faq: { eyebrow: "FAQ", title: "Frequently asked questions", subtitle: "Initial answers for customers, businesses and OficiosPro specialists." },
+    registroEspecialista: { eyebrow: "Founder specialist", title: "Create your specialist profile.", subtitle: "No upfront cost: declare your services and get reviewed to join the first network by area. You can apply even if your category is still forming." },
+  },
 };
 
 const pt: Dictionary = {
@@ -566,6 +578,12 @@ const pt: Dictionary = {
     catalog: { title: "Catálogo de especialidades", detail: "Todos os ofícios e serviços disponíveis." },
     ranking: { title: "Validação e ranking", detail: "Como verificamos e classificamos os especialistas." },
     localSearch: { title: "Buscas locais", detail: "Serviços mais buscados por cidade." },
+  },
+  pages: {
+    clubHogar: { eyebrow: "Clube Casa", title: "Seus créditos são saldo disponível para manutenções reais.", subtitle: "Acumule créditos para serviços da casa, retenha ao reservar e libere o pagamento quando o trabalho for concluído com respaldo." },
+    empresas: { eyebrow: "OficiosPro Empresas", title: "Centralize manutenções, filiais e créditos corporativos.", subtitle: "Terceirize manutenções de forma controlada com profissionais verificados, centros de custo, relatórios, documentação do serviço, faturamento e rastreabilidade." },
+    faq: { eyebrow: "FAQ", title: "Perguntas frequentes", subtitle: "Respostas iniciais para clientes, empresas e especialistas OficiosPro." },
+    registroEspecialista: { eyebrow: "Especialista fundador", title: "Crie seu perfil de especialista.", subtitle: "Sem custo inicial: declare seus serviços e fique em revisão para entrar na primeira rede por região. Você pode se candidatar mesmo que sua categoria esteja em formação." },
   },
 };
 
@@ -751,6 +769,12 @@ const fr: Dictionary = {
     ranking: { title: "Validation et classement", detail: "Comment nous vérifions et classons les spécialistes." },
     localSearch: { title: "Recherches locales", detail: "Services les plus recherchés par ville." },
   },
+  pages: {
+    clubHogar: { eyebrow: "Club Maison", title: "Vos crédits sont un solde disponible pour de vrais entretiens.", subtitle: "Accumulez des crédits pour les services de la maison, retenez-les à la réservation et libérez le paiement une fois le travail clôturé avec garantie." },
+    empresas: { eyebrow: "OficiosPro Entreprises", title: "Centralisez entretien, sites et crédits d'entreprise.", subtitle: "Externalisez l'entretien de façon contrôlée avec des pros vérifiés, centres de coûts, rapports, documentation du service, facturation et traçabilité." },
+    faq: { eyebrow: "FAQ", title: "Questions fréquentes", subtitle: "Premières réponses pour clients, entreprises et spécialistes OficiosPro." },
+    registroEspecialista: { eyebrow: "Spécialiste fondateur", title: "Créez votre profil de spécialiste.", subtitle: "Sans frais initiaux : déclarez vos services et passez en vérification pour rejoindre le premier réseau par zone. Vous pouvez postuler même si votre catégorie est en formation." },
+  },
 };
 
 const de: Dictionary = {
@@ -935,6 +959,12 @@ const de: Dictionary = {
     ranking: { title: "Validierung & Ranking", detail: "Wie wir Fachleute prüfen und einordnen." },
     localSearch: { title: "Lokale Suchen", detail: "Meistgesuchte Leistungen nach Stadt." },
   },
+  pages: {
+    clubHogar: { eyebrow: "Haus-Club", title: "Ihre Guthaben sind verfügbares Guthaben für echte Wartung.", subtitle: "Sammeln Sie Guthaben für Hausleistungen, halten Sie es bei der Buchung zurück und geben Sie die Zahlung frei, wenn der Auftrag mit Absicherung abgeschlossen ist." },
+    empresas: { eyebrow: "OficiosPro Unternehmen", title: "Zentralisieren Sie Wartung, Standorte und Firmenguthaben.", subtitle: "Lagern Sie Wartung kontrolliert aus – mit geprüften Fachleuten, Kostenstellen, Berichten, Servicedokumentation, Rechnung und Nachverfolgbarkeit." },
+    faq: { eyebrow: "FAQ", title: "Häufige Fragen", subtitle: "Erste Antworten für Kunden, Unternehmen und OficiosPro-Fachleute." },
+    registroEspecialista: { eyebrow: "Gründer-Fachkraft", title: "Erstellen Sie Ihr Fachkraft-Profil.", subtitle: "Ohne Anfangskosten: Geben Sie Ihre Leistungen an und kommen Sie in Prüfung, um dem ersten Netzwerk nach Region beizutreten. Sie können sich bewerben, auch wenn Ihre Kategorie noch im Aufbau ist." },
+  },
 };
 
 const it: Dictionary = {
@@ -1118,6 +1148,12 @@ const it: Dictionary = {
     catalog: { title: "Catalogo specialità", detail: "Tutti i mestieri e servizi disponibili." },
     ranking: { title: "Validazione e ranking", detail: "Come verifichiamo e classifichiamo gli specialisti." },
     localSearch: { title: "Ricerche locali", detail: "Servizi più cercati per città." },
+  },
+  pages: {
+    clubHogar: { eyebrow: "Club Casa", title: "I tuoi crediti sono saldo disponibile per manutenzioni reali.", subtitle: "Accumula crediti per i servizi di casa, trattienili alla prenotazione e libera il pagamento quando il lavoro è concluso con garanzia." },
+    empresas: { eyebrow: "OficiosPro Aziende", title: "Centralizza manutenzioni, sedi e crediti aziendali.", subtitle: "Esternalizza le manutenzioni in modo controllato con professionisti verificati, centri di costo, report, documentazione del servizio, fatturazione e tracciabilità." },
+    faq: { eyebrow: "FAQ", title: "Domande frequenti", subtitle: "Prime risposte per clienti, aziende e specialisti OficiosPro." },
+    registroEspecialista: { eyebrow: "Specialista fondatore", title: "Crea il tuo profilo di specialista.", subtitle: "Senza costi iniziali: dichiara i tuoi servizi e passa in revisione per entrare nella prima rete per zona. Puoi candidarti anche se la tua categoria è in formazione." },
   },
 };
 
