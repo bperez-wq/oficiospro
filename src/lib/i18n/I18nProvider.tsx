@@ -46,6 +46,11 @@ export function I18nProvider({ children, initialLocale = defaultLocale }: { chil
     setLocaleState(stored && isLocale(stored) ? stored : resolveLocale(window.navigator.language));
   }, []);
 
+  // Mantiene <html lang> sincronizado con el idioma activo (a11y + SEO).
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
   const setLocale = useCallback((nextLocale: Locale) => {
     setLocaleState(nextLocale);
     window.localStorage.setItem(localeStorageKey, nextLocale);

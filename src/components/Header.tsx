@@ -5,9 +5,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
 import { getClientMenuGroups } from "@/data/tradeTaxonomy";
 import { trackEvent } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
 const quickSuggestions = ["Calefont", "Filtracion", "Electricista SEC", "Camaras", "Riego", "Piscina", "Porton"];
@@ -74,6 +76,7 @@ export function Header() {
   const categoryCloseTimerRef = useRef<number | null>(null);
   const [categoryMenuStyle, setCategoryMenuStyle] = useState<CSSProperties>({});
   const pathname = usePathname();
+  const { t } = useI18n();
 
   useEffect(() => {
     setSession(getMockSession());
@@ -218,7 +221,7 @@ export function Header() {
         <div className="hidden min-w-0 items-center gap-3 lg:flex">
           <HeaderSearch />
           <nav className="flex shrink-0 items-center gap-1 text-sm font-black text-muted">
-            <NavLink href="/especialistas" label="Especialistas" pathname={pathname} />
+            <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
                 ref={categoryTriggerRef}
@@ -239,13 +242,13 @@ export function Header() {
                   }
                 }}
               >
-                Categorias
+                {t("nav.categories")}
               </button>
               <MegaCategoryMenu open={categoryOpen} onClose={closeCategoryMenu} style={categoryMenuStyle} />
             </div>
-            <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
-            <NavLink href="/empresas" label="Empresas" pathname={pathname} />
-            <NavLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} />
+            <NavLink href="/club-hogar" label={t("nav.club")} pathname={pathname} />
+            <NavLink href="/empresas" label={t("nav.companies")} pathname={pathname} />
+            <NavLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} />
             <Link
               href="/especialistas-fundadores?source=header&intent=offer_services"
               className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
@@ -260,16 +263,17 @@ export function Header() {
                 });
               }}
             >
-              Trabaja con nosotros
+              {t("nav.work")}
             </Link>
-            <NavLink href="/soporte" label="Soporte" pathname={pathname} />
+            <NavLink href="/soporte" label={t("nav.support")} pathname={pathname} />
           </nav>
         </div>
 
         <div className="flex items-center justify-end gap-2">
           <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand lg:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
-            Buscar
+            {t("nav.search")}
           </button>
+          <LanguageSwitcher className="hidden lg:inline-flex" compact />
           <CartButton onOpen={() => setCartOpen(true)} />
           <div className="hidden md:block">
             {session ? (
@@ -283,7 +287,7 @@ export function Header() {
               />
             ) : (
               <button className="rounded-2xl px-4 py-3 text-sm font-black text-muted transition hover:bg-slate-100 hover:text-brand" type="button" onClick={() => setLoginOpen(true)}>
-                Iniciar sesion
+                {t("nav.login")}
               </button>
             )}
           </div>
@@ -326,6 +330,7 @@ export function Header() {
 function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubmit?: () => void }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const { t } = useI18n();
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -351,10 +356,10 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onChange={(event) => setQuery(event.target.value)}
           className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm font-bold text-ink outline-none"
-          placeholder="Busca oficio, problema o comuna"
+          placeholder={t("nav.searchPlaceholder")}
         />
-        <button className="bg-brand px-4 text-sm font-black text-white transition hover:bg-brand-dark" type="submit" aria-label="Buscar">
-          Buscar
+        <button className="bg-brand px-4 text-sm font-black text-white transition hover:bg-brand-dark" type="submit" aria-label={t("nav.search")}>
+          {t("nav.search")}
         </button>
       </div>
       {focused ? (
@@ -474,12 +479,17 @@ function MobileMenu({
   onOpenCart: () => void;
   onLogout: () => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="border-t border-line bg-white px-4 py-4 shadow-soft lg:hidden">
       <div className="grid gap-3">
-        <MobileLink href="/especialistas" label="Especialistas" pathname={pathname} onClick={onClose} />
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-3">
+          <span className="text-sm font-black text-muted">{t("lang.choose")}</span>
+          <LanguageSwitcher compact />
+        </div>
+        <MobileLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} onClick={onClose} />
         <div className="rounded-2xl border border-line bg-slate-50 p-3">
-          <strong className="text-sm font-black text-ink">Categorias</strong>
+          <strong className="text-sm font-black text-ink">{t("nav.categories")}</strong>
           <div className="mt-2 grid gap-2">
             {categoryGroups.map((group) => (
               <details key={group.title} className="rounded-xl bg-white p-3">
@@ -498,12 +508,13 @@ function MobileMenu({
             ))}
           </div>
         </div>
-        <MobileLink href="/club-hogar" label="Club Hogar" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/empresas" label="Empresas" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/club-hogar" label={t("nav.club")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/empresas" label={t("nav.companies")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/global" label={t("nav.global")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} onClick={onClose} />
         <MobileLink
           href="/especialistas-fundadores?source=header&intent=offer_services"
-          label="Trabaja con nosotros"
+          label={t("nav.work")}
           pathname={pathname}
           onClick={() => {
             void trackEvent({
@@ -517,7 +528,7 @@ function MobileMenu({
             onClose();
           }}
         />
-        <MobileLink href="/soporte" label="Soporte" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/soporte" label={t("nav.support")} pathname={pathname} onClick={onClose} />
         <button className="btn-secondary" type="button" onClick={onOpenCart}>
           Mi bolsa
         </button>
@@ -541,7 +552,7 @@ function MobileMenu({
           </div>
         ) : (
           <button className="btn-primary" type="button" onClick={onLogin}>
-            Iniciar sesion
+            {t("nav.login")}
           </button>
         )}
       </div>

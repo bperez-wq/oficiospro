@@ -3,8 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { useI18n } from "@/lib/i18n/I18nProvider";
-import { submitConversionEvent } from "@/lib/leadClient";
-import { submitLead } from "@/lib/leadClient";
+import { submitMarketLabInterest } from "@/lib/marketLab/marketLabLeads";
 
 /**
  * Landing de demanda global (lista de espera honesta).
@@ -35,7 +34,7 @@ const countries = [
 type Role = "client" | "specialist";
 
 export function GlobalWaitlist() {
-  const { t, tList } = useI18n();
+  const { t, tList, locale } = useI18n();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [country, setCountry] = useState("");
@@ -51,24 +50,16 @@ export function GlobalWaitlist() {
     if (submitting || website) return;
     setSubmitting(true);
     try {
-      await submitLead({
-        leadType: "payment_interest",
-        fullName: name,
-        email,
+      await submitMarketLabInterest({
+        role,
+        country,
+        city,
         trade,
-        communeName: city,
-        problemDescription: `[global_waitlist] role=${role} country=${country} city=${city} trade=${trade}`,
+        name,
+        email,
+        locale,
         source: "global_waitlist",
-        campaign: "global_prototype",
-        website,
-        payload: { kind: "global_waitlist", country, city, trade, role },
-      });
-      void submitConversionEvent({
-        type: "global_waitlist",
-        source: "global_landing",
-        sourceComponent: "GlobalWaitlist",
-        sourceButton: "Join waitlist",
-        payload: { country, city, trade, role },
+        honeypot: website,
       });
       setDone(true);
     } finally {
@@ -97,9 +88,14 @@ export function GlobalWaitlist() {
               ))}
             </div>
           </div>
-          <Link href="/" className="mt-6 inline-flex text-sm font-black text-brand-dark underline-offset-4 hover:underline">
-            ← {t("global.back")}
-          </Link>
+          <div className="mt-6 flex flex-wrap items-center gap-4">
+            <Link href="/market-lab" className="rounded-2xl bg-brand-soft px-4 py-2.5 text-sm font-black text-brand-dark transition hover:bg-brand hover:text-white">
+              🌎 {t("marketLab.indexTitle")}
+            </Link>
+            <Link href="/" className="inline-flex text-sm font-black text-brand-dark underline-offset-4 hover:underline">
+              ← {t("global.back")}
+            </Link>
+          </div>
         </div>
       </section>
 

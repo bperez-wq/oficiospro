@@ -1,6 +1,10 @@
+"use client";
+
 import Link from "next/link";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const groups = [
   {
@@ -45,6 +49,7 @@ const groups = [
 ];
 
 export function Footer() {
+  const { t, tList } = useI18n();
   return (
     <footer className="border-t border-white/10 bg-enterprise px-5 py-12 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_1.4fr]">
@@ -53,32 +58,38 @@ export function Footer() {
             <BrandLogo variant="white" size="lg" />
           </Link>
           <p className="mt-4 max-w-xl text-sm font-semibold leading-6 text-white/70">
-            Técnicos verificados, créditos acumulables y dashboards para convertir mantenciones del hogar y operación empresarial en una experiencia confiable.
+            {t("footer.tagline")}
           </p>
           <p className="mt-4 max-w-xl text-lg font-black leading-7 text-white">
-            Empoderamos el oficio. Empoderamos al trabajador.
+            {t("footer.empower")}
           </p>
           <p className="mt-2 max-w-xl text-sm font-semibold leading-6 text-white/70">
-            El lugar donde los buenos trabajadores brillan, construyen reputación y acceden a mejores oportunidades.
+            {t("footer.empowerSub")}
           </p>
           <p className="mt-4 max-w-xl text-sm font-black leading-6 text-white">
             Contacto: bperez@oficiospro.cl
           </p>
           <CreditsHelpTrigger className="mt-3 text-sm font-black text-white underline underline-offset-2 hover:text-white/80">
-            ¿Cómo funcionan los créditos?
+            {t("footer.creditsHelp")}
           </CreditsHelpTrigger>
           <div className="mt-6 flex flex-wrap gap-2">
-            {["Pago seguro", "Garantía OficiosPro", "Técnicos verificados", "Cobertura nacional"].map((item) => (
+            {tList("footer.chips").map((item) => (
               <span key={item} className="chip bg-white/10 text-white">
                 {item}
               </span>
             ))}
           </div>
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            <Link href="/global" className="rounded-2xl bg-white/10 px-4 py-2.5 text-sm font-black text-white transition hover:bg-white hover:text-ink">
+              🌐 {t("footer.globalCta")}
+            </Link>
+            <LanguageSwitcher compact />
+          </div>
         </div>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-          {groups.map((group) => (
+          {groups.map((group, index) => (
             <div key={group.title}>
-              <h3 className="font-black">{group.title}</h3>
+              <h3 className="font-black">{tList("footer.groupTitles")[index] ?? group.title}</h3>
               <div className="mt-4 grid gap-3 text-sm font-semibold text-white/70">
                 {group.links.map((link) => (
                   <Link key={link.href} href={link.href} className="transition hover:text-white">
