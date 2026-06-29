@@ -1,4 +1,5 @@
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { PlatformNav } from "@/components/PlatformNav";
+import { TranslatedAppHero } from "@/components/TranslatedAppHero";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
@@ -17,11 +18,7 @@ export default function SpecialistRegisterPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero
-        eyebrow="Especialista fundador"
-        title="Crea tu perfil de especialista."
-        subtitle="Sin costo inicial, declara tus servicios y queda en revisión para sumarte a la primera red por comuna. Puedes postular aunque tu categoría esté en formación."
-      />
+      <TranslatedAppHero pageKey="registroEspecialista" />
       <SpecialistOpportunityTeaser />
       <Reveal>
         <section className="grid gap-3 md:grid-cols-4">

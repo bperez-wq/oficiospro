@@ -22,6 +22,30 @@ export const localeMeta: Record<Locale, { label: string; flag: string; intl: str
   it: { label: "Italiano", flag: "🇮🇹", intl: "it-IT", currency: "EUR" },
 };
 
+/**
+ * Valor de referencia de 1 crédito por región/idioma (informativo, no habilita pagos
+ * internacionales). Chile mantiene CLP; resto usa los valores indicados por Benjamín
+ * (US$1,1 por defecto, EUR1,0 en Europa). Editable; el cobro real sigue siendo CLP.
+ */
+export const creditPricing: Record<Locale, { currency: string; value: number }> = {
+  es: { currency: "CLP", value: 1000 },
+  en: { currency: "USD", value: 1.1 },
+  pt: { currency: "USD", value: 1.1 },
+  fr: { currency: "EUR", value: 1.0 },
+  de: { currency: "EUR", value: 1.0 },
+  it: { currency: "EUR", value: 1.0 },
+};
+
+/** Devuelve "1 crédito" formateado en la moneda del idioma activo, ej. "US$1,10" / "€1,00" / "$1.000". */
+export function creditUnitLabel(locale: Locale): string {
+  const pricing = creditPricing[locale] ?? creditPricing[defaultLocale];
+  return new Intl.NumberFormat(localeMeta[locale]?.intl ?? localeMeta[defaultLocale].intl, {
+    style: "currency",
+    currency: pricing.currency,
+    maximumFractionDigits: pricing.value < 10 ? 2 : 0,
+  }).format(pricing.value);
+}
+
 export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value);
 }

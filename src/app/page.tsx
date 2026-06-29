@@ -1,31 +1,31 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
 import { AcquisitionTrackingLink } from "@/components/AcquisitionTrackingLink";
 import { AnalyticsPageView } from "@/components/AnalyticsTracker";
 import { ConversionButton } from "@/components/ConversionModal";
 import { FeaturedSpecialistsStrip } from "@/components/FeaturedSpecialistsStrip";
 import { HomeClubHogarBlock } from "@/components/HomeClubHogarBlock";
 import { HomeEnterpriseIntro } from "@/components/HomeEnterpriseIntro";
+import { HomeFounderStage, ViewAllSpecialistsLink } from "@/components/HomeFounderStage";
 import { HomeHero } from "@/components/HomeHero";
+import { HomeHeroVisual } from "@/components/HomeHeroVisual";
 import { HomeReferralBlock } from "@/components/HomeReferralBlock";
 import { HomeRoleCtas } from "@/components/HomeRoleCtas";
 import { TranslatedSectionHeader } from "@/components/TranslatedSectionHeader";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { HomeCategoryAccordion } from "@/components/HomeCategoryAccordion";
 import { HomeCreditPreview } from "@/components/HomeCreditPreview";
-import { CreditsHeroBadge, CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
+import { CollapsiblePanel } from "@/components/CollapsiblePanel";
 import { CommunityReferralBanner } from "@/components/CommunityReferralBanner";
+import { TranslatedText } from "@/components/TranslatedText";
 import { HowItWorksFlow } from "@/components/HowItWorksFlow";
 import { QuickProblemLinks } from "@/components/QuickProblemLinks";
 import { WorkProofGallery } from "@/components/WorkProofGallery";
 import { companyDashboard, specialists, testimonials, workStories } from "@/data/mock";
-import { heroCollageImages } from "@/data/visualAssets";
 import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, ValidationAndRankPanel } from "@/components/MarketplaceOverview";
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
-import { SpecialistQuickLeadForm } from "@/components/SpecialistQuickLeadForm";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
@@ -53,37 +53,7 @@ export default function HomePage() {
         <div className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-80" />
         <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-10 md:py-16 lg:grid-cols-[0.95fr_1.05fr]">
           <HomeHero />
-
-          <div className="relative hidden min-h-[520px] lg:block">
-            <div className="absolute inset-0 rounded-[34px] bg-gradient-to-br from-brand-soft via-mint to-accent-soft" />
-            <div className="surface-grid absolute inset-0 rounded-[34px] opacity-40" />
-            <div className="absolute inset-x-6 bottom-6 top-6 grid grid-cols-2 grid-rows-2 gap-3">
-              {heroCollageImages.map((image, index) => (
-                <img
-                  key={image.src}
-                  src={image.src}
-                  alt={image.alt}
-                  loading="eager"
-                  fetchPriority={index === 0 ? "high" : "auto"}
-                  className="h-full w-full rounded-[24px] object-cover object-center shadow-card"
-                />
-              ))}
-            </div>
-            <FloatingCard className="left-0 top-6 animate-float" label="Ejemplo piloto" value="4,9★" accent="sun" />
-            <FloatingCard className="right-0 top-20 animate-float [animation-delay:1.5s]" label="Respuesta referencial" value="35 min" accent="accent" />
-            <CreditsHeroBadge className="bottom-16 left-4 animate-float [animation-delay:0.8s]" />
-            <div className="absolute bottom-4 right-4 w-48 rounded-[20px] border border-line bg-white/95 p-3 shadow-card backdrop-blur">
-              <p className="text-[11px] font-black uppercase text-muted">Tecnicos cercanos</p>
-              <div className="mt-2 flex -space-x-2.5">
-                {specialists.slice(0, 4).map((specialist) => (
-                  <span key={specialist.id} className="grid h-8 w-8 place-items-center rounded-full border-2 border-white bg-gradient-to-br from-brand to-brand-dark text-[11px] font-black text-white shadow-sm">
-                    {specialist.initials}
-                  </span>
-                ))}
-              </div>
-              <p className="mt-2 text-xs font-bold leading-4 text-muted">Fundadores en revision antes de publicar.</p>
-            </div>
-          </div>
+          <HomeHeroVisual />
         </div>
       </section>
 
@@ -199,32 +169,9 @@ export default function HomePage() {
       <section className="section-compact" id="especialistas">
         <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <TranslatedSectionHeader sectionKey="specialists" />
-          <Link href="/especialistas" className="btn-secondary" data-event="browse_specialists_featured">
-            Ver todos
-          </Link>
+          <ViewAllSpecialistsLink />
         </div>
-        <div className="mb-6 grid gap-5 lg:grid-cols-[0.95fr_1.05fr]">
-          <SpecialistQuickLeadForm
-            title="Quieres ofrecer tus servicios en OficiosPro?"
-            text="Deja tus datos basicos y te ayudamos a preparar tu perfil fundador sin costo inicial."
-            context={{ source: "campana_local", campaign: "founder_specialists_home_section", landingPage: "/" }}
-            sourceComponent="HomeSpecialistsSection"
-            sourceButton="Captura rapida home especialistas"
-            leadKind="specialist_lead"
-            compact
-          />
-          <div className="rounded-[28px] border border-line bg-white p-5 shadow-soft">
-            <p className="eyebrow">Etapa fundador abierta</p>
-            <h3 className="text-2xl font-black leading-tight text-ink">No necesitas tener todo resuelto para empezar.</h3>
-            <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {["Perfil sin costo inicial", "Revision en 48 h", "Puedes ofrecer mas de un servicio", "Categorias nuevas en formacion"].map((item) => (
-                <span key={item} className="rounded-2xl bg-brand-soft px-4 py-3 text-sm font-black text-brand-dark">
-                  {item}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
+        <HomeFounderStage />
         <div className="grid gap-5 lg:grid-cols-3">
           {featured.map((specialist) => (
             <SpecialistCard key={specialist.id} specialist={specialist} />
@@ -254,17 +201,19 @@ export default function HomePage() {
 
       <Reveal delay={80}>
       <section className="section-compact grid gap-3">
-        <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">Más sobre la red OficiosPro</h2>
-        <CollapsiblePanel title="Cobertura nacional" detail="Regiones y comunas donde opera la red.">
+        <h2 className="mb-2 text-xl font-black text-ink md:text-2xl">
+          <TranslatedText k="homeNetwork.title" />
+        </h2>
+        <CollapsiblePanel titleKey="homeNetwork.coverage.title" detailKey="homeNetwork.coverage.detail">
           <NationalCoveragePanel />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Catálogo de especialidades" detail="Todos los oficios y servicios disponibles.">
+        <CollapsiblePanel titleKey="homeNetwork.catalog.title" detailKey="homeNetwork.catalog.detail">
           <SpecialtyCatalogPreview />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Validación y ranking" detail="Cómo verificamos y ordenamos a los especialistas.">
+        <CollapsiblePanel titleKey="homeNetwork.ranking.title" detailKey="homeNetwork.ranking.detail">
           <ValidationAndRankPanel />
         </CollapsiblePanel>
-        <CollapsiblePanel title="Búsquedas locales" detail="Servicios más buscados por comuna.">
+        <CollapsiblePanel titleKey="homeNetwork.localSearch.title" detailKey="homeNetwork.localSearch.detail">
           <LocalSeoPanel />
         </CollapsiblePanel>
       </section>
@@ -313,50 +262,7 @@ function PilotLaunchStrip() {
   );
 }
 
-function FloatingCard({
-  label,
-  value,
-  className,
-  accent = "brand",
-}: {
-  label: string;
-  value: string;
-  className: string;
-  accent?: "brand" | "accent" | "sun";
-}) {
-  const dot = accent === "sun" ? "bg-sun" : accent === "accent" ? "bg-accent" : "bg-brand";
-  return (
-    <div className={`absolute rounded-[22px] border border-line bg-white/95 p-4 shadow-card backdrop-blur ${className}`}>
-      <span className="flex items-center gap-2 text-xs font-black uppercase text-muted">
-        <span className={`h-2 w-2 rounded-full ${dot}`} />
-        {label}
-      </span>
-      <strong className="mt-1 block text-2xl font-black text-ink">{value}</strong>
-    </div>
-  );
-}
-
-function CollapsiblePanel({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
-  return (
-    <details className="group overflow-hidden rounded-[24px] border border-line bg-white shadow-sm transition duration-200 open:border-brand/30 open:shadow-card">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 p-5 [&::-webkit-details-marker]:hidden">
-        <span className="min-w-0">
-          <strong className="block text-lg font-black text-ink">{title}</strong>
-          <span className="block truncate text-sm font-bold text-muted">{detail}</span>
-        </span>
-        <span
-          aria-hidden
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-300 group-open:rotate-180 group-open:border-brand group-open:text-brand-dark"
-        >
-          <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round">
-            <path d="m6 9 6 6 6-6" />
-          </svg>
-        </span>
-      </summary>
-      <div className="border-t border-line p-5">{children}</div>
-    </details>
-  );
-}
+// FloatingCard migrado a HomeHeroVisual (i18n).
 
 function DashboardPreview() {
   return (
