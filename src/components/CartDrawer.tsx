@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCLP } from "@/data/marketplace";
 import { clearCart, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
 import { cartTotals, checkoutModeForCart, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
  * Naming oficial: la experiencia de usuario se llama "Bolsa" en todo OficiosPro
@@ -13,6 +14,7 @@ import { cartTotals, checkoutModeForCart, isCartItemCheckoutReady, itemAmountCLP
  */
 
 export function CartButton({ onOpen }: { onOpen: () => void }) {
+  const { t } = useI18n();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export function CartButton({ onOpen }: { onOpen: () => void }) {
       className="relative inline-flex h-11 items-center gap-1.5 rounded-2xl border border-line bg-white px-3 text-sm font-black text-ink shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-[0.97]"
       type="button"
       onClick={onOpen}
-      aria-label={count ? `Abrir bolsa, ${count} ${count === 1 ? "ítem" : "ítems"}` : "Abrir bolsa, vacía"}
+      aria-label={count ? `${t("nav.bag")} (${count})` : t("nav.bag")}
     >
       <BagIcon className="h-5 w-5" />
-      <span className="hidden sm:inline" aria-hidden="true">Bolsa</span>
+      <span className="hidden sm:inline" aria-hidden="true">{t("nav.bag")}</span>
       {count ? (
         <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-black text-white shadow-sm ring-2 ring-white">
           {count > 9 ? "9+" : count}

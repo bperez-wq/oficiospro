@@ -1,4 +1,5 @@
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { PlatformNav } from "@/components/PlatformNav";
+import { TranslatedAppHero } from "@/components/TranslatedAppHero";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
@@ -25,18 +26,14 @@ export default function EmpresasPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero
-        eyebrow="OficiosPro Empresas"
-        title="Centraliza mantenciones, sucursales y créditos corporativos."
-        subtitle="Externaliza mantenciones de forma controlada con técnicos verificados, centros de costo, reportes, documentación del servicio, facturación y trazabilidad."
-      >
+      <TranslatedAppHero pageKey="empresas">
         <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary shine">
           Solicitar cuenta empresa
         </ConversionButton>
         <ConversionButton type="contacto_empresa" sourceButton="Hablar con ventas empresa" className="btn-secondary">
           Hablar con ventas
         </ConversionButton>
-      </AppHero>
+      </TranslatedAppHero>
 
       <Reveal delay={0}>
       <section>

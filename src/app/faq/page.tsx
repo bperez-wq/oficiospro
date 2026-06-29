@@ -1,4 +1,5 @@
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { PlatformNav } from "@/components/PlatformNav";
+import { TranslatedAppHero } from "@/components/TranslatedAppHero";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
@@ -32,7 +33,7 @@ export default function FaqPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero eyebrow="FAQ" title="Preguntas frecuentes" subtitle="Respuestas iniciales para clientes, empresas y especialistas OficiosPro." />
+      <TranslatedAppHero pageKey="faq" />
       <Reveal delay={0}>
         <section className="grid gap-4">
           <div>

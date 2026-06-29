@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { PlatformNav } from "@/components/PlatformNav";
+import { TranslatedAppHero } from "@/components/TranslatedAppHero";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -61,11 +62,7 @@ export default function ClubHogarPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero
-        eyebrow="Club Hogar"
-        title="Tus créditos son saldo disponible para mantenciones reales."
-        subtitle="Acumula créditos para servicios del hogar, reténlos al reservar y libera el pago cuando el trabajo queda cerrado con respaldo."
-      >
+      <TranslatedAppHero pageKey="clubHogar">
         <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-primary">
           Usar créditos
         </ConversionButton>
@@ -75,7 +72,7 @@ export default function ClubHogarPage() {
         <CreditsHelpTrigger className="text-sm font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
           ¿Cómo funcionan los créditos?
         </CreditsHelpTrigger>
-      </AppHero>
+      </TranslatedAppHero>
 
       <VisualRail
         eyebrow="Uso cotidiano"

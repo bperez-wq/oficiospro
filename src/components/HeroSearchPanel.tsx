@@ -7,6 +7,7 @@ import { SearchableSelect } from "@/components/SearchableSelect";
 import { heroServiceTypeOptions, OTHER_SERVICE_VALUE } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
 import { trackEvent } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 const suggestedTags = ["gasfíter", "calefont", "aire acondicionado", "Vitacura", "filtración", "riego"];
 const heroTypeOptions = [
@@ -19,6 +20,7 @@ const heroTypeOptions = [
 ];
 
 export function HeroSearchPanel() {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [serviceTypeId, setServiceTypeId] = useState("");
   const [region, setRegion] = useState("");
@@ -43,7 +45,7 @@ export function HeroSearchPanel() {
 
   async function submit() {
     if (region && !commune) {
-      setLocationStatus("Elige una comuna para buscar disponibilidad real en esa región.");
+      setLocationStatus(t("heroSearch.chooseCommune"));
       return;
     }
     const destination = buildSpecialistsHref();
@@ -95,7 +97,7 @@ export function HeroSearchPanel() {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-1 rounded-t-[28px] bg-gradient-to-r from-brand via-accent to-sun" />
       <div className="grid gap-4 lg:grid-cols-[1.5fr_1fr_0.9fr_0.9fr_auto] lg:items-end lg:gap-5">
         <label className="field">
-          ¿Qué necesitas resolver?
+          {t("heroSearch.need")}
           <span className="relative block">
             <svg
               className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-brand"
@@ -114,19 +116,19 @@ export function HeroSearchPanel() {
               className="!pl-11"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Ej: reparar calefont, filtración, riego, aire acondicionado"
+              placeholder={t("heroSearch.needPlaceholder")}
             />
           </span>
         </label>
         <SearchableSelect
-          label="Tipo de servicio"
+          label={t("heroSearch.serviceType")}
           value={serviceTypeId}
           options={heroTypeOptions}
           onChange={(value) => {
             setServiceTypeId(value);
             if (value !== OTHER_SERVICE_VALUE) setOtherServiceDescription("");
           }}
-          placeholder="Hogar, empresas, riego..."
+          placeholder={t("heroSearch.serviceTypePlaceholder")}
           dropdownClassName="sm:min-w-[380px]"
         />
         <RegionCommuneSelect
@@ -141,11 +143,11 @@ export function HeroSearchPanel() {
             setCommune(nextCommune);
             setLocationStatus("");
           }}
-          regionPlaceholder="RM, Valparaíso, Biobío..."
-          communePlaceholder="Vitacura, Talca, Concepción..."
+          regionPlaceholder={t("heroSearch.regionPlaceholder")}
+          communePlaceholder={t("heroSearch.communePlaceholder")}
         />
         <button className="btn-primary h-12 w-full px-6 lg:w-auto" type="button" onClick={submit}>
-          Buscar especialista
+          {t("heroSearch.searchCta")}
         </button>
         <Link
           className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-full border border-brand/20 bg-white px-4 text-sm font-black text-brand-dark shadow-sm transition hover:-translate-y-0.5 hover:border-brand hover:bg-brand-soft lg:w-auto"
@@ -161,23 +163,23 @@ export function HeroSearchPanel() {
           }}
         >
           <span aria-hidden>🗺️</span>
-          Mapa
+          {t("heroSearch.map")}
         </Link>
       </div>
       {serviceTypeId === OTHER_SERVICE_VALUE ? (
         <label className="field mt-4">
-          Describe qué necesitas
+          {t("heroSearch.describe")}
           <textarea
             value={otherServiceDescription}
             onChange={(event) => setOtherServiceDescription(event.target.value)}
-            placeholder="Cuéntanos el servicio que no encontraste para revisar cobertura y disponibilidad."
+            placeholder={t("heroSearch.describePlaceholder")}
             required
           />
         </label>
       ) : null}
       {locationStatus ? <p className="mt-4 rounded-2xl bg-brand-soft p-3 text-sm font-black text-brand-dark">{locationStatus}</p> : null}
       <div className="mt-5 flex flex-wrap items-center gap-2">
-        <span className="text-xs font-black uppercase tracking-wide text-muted">Sugerencias:</span>
+        <span className="text-xs font-black uppercase tracking-wide text-muted">{t("heroSearch.suggestions")}</span>
         {suggestedTags.map((tag, index) => (
           <button
             key={tag}
