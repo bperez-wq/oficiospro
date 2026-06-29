@@ -287,7 +287,7 @@ if (assetDirectory === "./out") {
     "Soluciones para empresas",
     "Ofrecer mis servicios",
   ]) {
-    assertAnyContains(["src/app/page.tsx", "src/components/HeroSearchPanel.tsx", "src/components/Footer.tsx"], text);
+    assertAnyContains(["src/app/page.tsx", "src/components/HeroSearchPanel.tsx", "src/components/Footer.tsx", "src/lib/i18n/dictionaries.ts"], text);
   }
 
   assertRegex("src/data/chileCommunes.ts", /export\s+const\s+chileCommunes\s*:/, "chileCommunes dataset");
@@ -321,7 +321,7 @@ if (assetDirectory === "./out") {
   }
   assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
   assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
-  assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
+  assertAnyContains(["src/app/page.tsx", "src/lib/i18n/dictionaries.ts"], "Ver cómo funcionará mi agenda");
   assertContains("migrations/0001_leads.sql", "CREATE TABLE IF NOT EXISTS lead_submissions");
   for (const endpoint of ["/api/leads", "/api/jobs/request", "/api/specialists/apply", "/api/companies/request", "/api/bookings/request", "/api/contact", "/api/admin/leads"]) {
     assertContains("worker/index.ts", endpoint);
