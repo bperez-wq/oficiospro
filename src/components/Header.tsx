@@ -197,7 +197,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-line/80 bg-white/95 backdrop-blur-xl">
       {isAdmin ? (
         <div className="border-b border-teal-900/20 bg-ink text-white">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3">
+          <div className="mx-auto flex max-w-[112rem] flex-wrap items-center justify-between gap-3 px-5 py-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-teal-300 px-3 py-1 text-xs font-black uppercase text-teal-950">Administrador</span>
               <span className="text-sm font-bold text-white/85">{session.email ?? "Administrador OficiosPro"}</span>
@@ -213,16 +213,16 @@ export function Header() {
         </div>
       ) : null}
 
-      <div className="mx-auto grid min-h-20 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:px-5">
+      <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:px-5">
         <Link href="/" className="flex shrink-0 items-center font-black" aria-label="Ir al inicio de OficiosPro" onClick={closeMenus}>
           <BrandLogo variant="primary" size="md" />
         </Link>
 
-        <div className="hidden min-w-0 items-center gap-3 lg:flex">
+        <div className="hidden min-w-0 items-center gap-3 xl:flex">
           <div className="hidden min-w-0 flex-1 xl:flex">
             <HeaderSearch />
           </div>
-          <nav className="flex shrink-0 items-center gap-0.5 text-sm font-black text-muted xl:gap-1">
+          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-hidden text-sm font-black text-muted xl:gap-1">
             <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
@@ -272,10 +272,9 @@ export function Header() {
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand lg:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
+          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
             {t("nav.search")}
           </button>
-          <LanguageSwitcher className="hidden lg:inline-flex" compact />
           <CartButton onOpen={() => setCartOpen(true)} />
           <div className="hidden md:block">
             {session ? (
@@ -293,14 +292,15 @@ export function Header() {
               </button>
             )}
           </div>
-          <button className="grid h-11 w-11 place-items-center rounded-2xl border border-line bg-white text-lg font-black text-ink shadow-sm transition hover:border-brand hover:bg-brand-soft lg:hidden" type="button" onClick={() => setMobileOpen((current) => !current)} aria-label="Abrir menu">
+          <LanguageSwitcher className="hidden xl:inline-flex" compact />
+          <button className="grid h-11 w-11 place-items-center rounded-2xl border border-line bg-white text-lg font-black text-ink shadow-sm transition hover:border-brand hover:bg-brand-soft xl:hidden" type="button" onClick={() => setMobileOpen((current) => !current)} aria-label="Abrir menu">
             =
           </button>
         </div>
       </div>
 
       {mobileSearchOpen ? (
-        <div className="border-t border-line bg-white px-4 py-3 lg:hidden">
+        <div className="border-t border-line bg-white px-4 py-3 xl:hidden">
           <HeaderSearch compact onSubmit={() => setMobileSearchOpen(false)} />
         </div>
       ) : null}
@@ -483,7 +483,7 @@ function MobileMenu({
 }) {
   const { t } = useI18n();
   return (
-    <div className="border-t border-line bg-white px-4 py-4 shadow-soft lg:hidden">
+    <div className="border-t border-line bg-white px-4 py-4 shadow-soft xl:hidden">
       <div className="grid gap-3">
         <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-3">
           <span className="text-sm font-black text-muted">{t("lang.choose")}</span>
