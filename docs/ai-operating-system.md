@@ -81,6 +81,11 @@ Las IAs deben alertar si se observa cualquiera de estas senales:
 - Poca recurrencia.
 - Baja retencion de especialistas.
 - Bajo uso de Club Hogar o planes empresa.
+- Densidad de red baja por comuna/oficio: usuarios buscan y no encuentran match suficiente.
+- Perfiles publicos con carga lenta, contenido vacio o dependencia excesiva de renderizado cliente.
+- Funnel post-busqueda poco claro despues de cotizar, reservar o solicitar visita.
+- Onboarding especialista manual que no escala con volumen de postulaciones.
+- Sistema de creditos poco entendido por clientes, especialistas o empresas.
 
 ## Como proponer cambios de modelo
 

@@ -1178,7 +1178,7 @@ export const services = [
 export const homeBenefits = [
   "Técnicos verificados",
   "Pago liberado al finalizar el trabajo",
-  "Créditos acumulables hasta 24 meses",
+  "Créditos acumulables hasta 10 meses",
   "Calificaciones reales",
   "Garantía OficiosPro",
 ];

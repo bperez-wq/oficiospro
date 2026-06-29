@@ -61,19 +61,25 @@ export function SpecialistPublicProfile({ id, initialSpecialist = null }: { id: 
     };
   }, [id, initialSpecialist]);
 
-  if (!loaded) return <section>Cargando perfil...</section>;
+  if (!loaded) return <ProfileLoadingSkeleton />;
 
   if (!specialist) {
     return (
       <section className="grid gap-6">
-        <section className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
-          <p className="eyebrow">Perfil no encontrado</p>
-          <h1 className="mt-3 text-4xl font-black text-ink">No encontramos este especialista.</h1>
+        <section className="rounded-[32px] border border-line bg-white p-8 shadow-soft md:p-10">
+          <p className="eyebrow">Perfil no disponible</p>
+          <h1 className="mt-3 text-3xl font-black text-ink md:text-4xl">Este perfil ya no está disponible.</h1>
+          <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-muted">
+            Puede que el especialista haya pausado su disponibilidad o que el enlace haya cambiado. No te quedes sin ayuda: explora otros especialistas verificados o déjanos tu solicitud y el equipo OficiosPro te orienta.
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link className="btn-secondary" href="/especialistas">Volver a especialistas</Link>
-            <Link className="btn-secondary" href="/especialistas">Ver todos los especialistas</Link>
-            <Link className="btn-primary" href="/contacto">Solicitar ayuda</Link>
+            <Link className="btn-primary" href="/especialistas">Ver especialistas verificados</Link>
+            <Link className="btn-secondary" href="/especialistas?sourceSection=perfil_no_disponible">Dejar una solicitud</Link>
+            <Link className="btn-secondary" href="/contacto">Hablar con el equipo</Link>
           </div>
+          <p className="mt-5 text-xs font-bold text-muted">
+            Revisamos cada solicitud de forma manual y te contactamos para coordinar el siguiente paso.
+          </p>
         </section>
       </section>
     );
@@ -323,6 +329,33 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
       </button>
     </StickyMobileCTA>
     </>
+  );
+}
+
+export function ProfileLoadingSkeleton() {
+  return (
+    <section className="grid gap-6 lg:grid-cols-[1fr_390px]" aria-busy="true" aria-label="Cargando perfil del especialista">
+      <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
+        <div className="h-[320px] w-full animate-pulse bg-slate-100 md:h-[460px]" />
+        <div className="grid gap-6 p-6">
+          <div className="grid gap-3 sm:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+          <div className="h-32 animate-pulse rounded-[24px] bg-slate-100" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+          </div>
+        </div>
+      </article>
+      <aside className="grid gap-5 self-start">
+        <div className="h-56 animate-pulse rounded-[28px] bg-slate-100" />
+        <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
+        <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
+      </aside>
+    </section>
   );
 }
 
