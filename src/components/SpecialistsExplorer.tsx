@@ -626,6 +626,27 @@ export function SpecialistsExplorer() {
               </div>
             </div>
           ) : null}
+          {visible.length > 0 && visible.length <= 3 ? (
+            <div className="flex flex-col gap-4 rounded-[24px] border border-amber-200 bg-amber-50 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase text-amber-800">Red en crecimiento por comuna</p>
+                <h3 className="mt-1 text-xl font-black text-ink">
+                  {searchIntentLabel ? `Aún sumamos especialistas de ${searchIntentLabel} en esta zona.` : "Aún sumamos especialistas para esta búsqueda."}
+                </h3>
+                <p className="mt-1 text-sm font-semibold leading-6 text-amber-900">
+                  Ves pocas opciones por ahora. Déjanos tu solicitud y priorizaremos cobertura; el equipo OficiosPro la revisa de forma manual y te contacta.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn-primary" type="button" onClick={() => captureDemand("Solicitar especialista (baja densidad)")}>
+                  Solicitar especialista
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => captureDemand("Quiero que me contacten (baja densidad)")}>
+                  Quiero que me contacten
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visible.length ? (
               visible.map((specialist) => {

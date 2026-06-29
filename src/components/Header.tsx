@@ -388,10 +388,10 @@ function MegaCategoryMenu({ open, onClose, style }: { open: boolean; onClose: ()
       style={{ left: "50%", top: "5rem", width: "min(1120px, calc(100vw - 32px))", maxHeight: "calc(100vh - 6rem)", ...style }}
       role="menu"
     >
-      <div className="rounded-[28px] border border-line bg-white p-5 shadow-card">
-        <div className="grid gap-4 xl:grid-cols-5">
+      <div className="rounded-[28px] border border-line bg-white p-4 shadow-card md:p-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {categoryGroups.map((group) => (
-            <section key={group.title} className="rounded-2xl bg-slate-50 p-4">
+            <section key={group.title} className="min-w-0 rounded-2xl bg-slate-50 p-4">
               <Link href={group.href} role="menuitem" className="block rounded-xl px-2 py-2 text-sm font-black text-ink transition hover:bg-white hover:text-brand" onClick={onClose}>
                 {group.title}
               </Link>
