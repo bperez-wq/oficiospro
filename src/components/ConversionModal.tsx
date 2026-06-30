@@ -5,6 +5,7 @@ import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import type { Specialist } from "@/data/mock";
 import { formatCLP, getPlanById, getServiceTypeById, serviceTypes, subscriptionPlans } from "@/data/marketplace";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
   communeRegionCode,
   DEFAULT_REGION_CODE,
@@ -182,6 +183,7 @@ export function ConversionButton({
 }
 
 function ConversionModal({ options, onClose }: { options: OpenConversionModalOptions | null; onClose: () => void }) {
+  const { t } = useI18n();
   const [step, setStep] = useState(1);
   const [lead, setLead] = useState(defaultLead);
   const [enterprise, setEnterprise] = useState(defaultEnterprise);
@@ -582,8 +584,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
         <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
           <aside className="hidden bg-enterprise p-7 text-white lg:block">
             <p className="eyebrow text-teal-200">OficiosPro</p>
-            <h2 className="mt-4 text-3xl font-black leading-tight">{modalTitle(options.type)}</h2>
-            <p className="mt-4 text-sm font-semibold leading-6 text-white/75">{modalSubtitle(options.type)}</p>
+            <h2 className="mt-4 text-3xl font-black leading-tight">{t(`modal.titles.${options.type}`)}</h2>
+            <p className="mt-4 text-sm font-semibold leading-6 text-white/75">{t(`modal.subtitles.${options.type}`)}</p>
             <div className="mt-8 grid gap-3">
               {["Técnicos verificados", "Pago protegido", "Créditos acumulables", "Respuesta rápida"].map((item) => (
                 <span key={item} className="rounded-2xl bg-white/10 p-4 text-sm font-black">
@@ -596,8 +598,8 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <p className="eyebrow">Paso {step} de {isEnterpriseModal || isSpecialistModal || isSearchModal ? 1 : 2}</p>
-                <h2 className="text-3xl font-black text-ink">{modalTitle(options.type)}</h2>
-                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{modalSubtitle(options.type)}</p>
+                <h2 className="text-3xl font-black text-ink">{t(`modal.titles.${options.type}`)}</h2>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{t(`modal.subtitles.${options.type}`)}</p>
               </div>
               <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={closeModal} aria-label="Cerrar">
                 ×
@@ -772,35 +774,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   );
 }
 
-function modalTitle(type: ConversionModalType) {
-  const titles: Record<ConversionModalType, string> = {
-    lead_cliente: "Activa tu Club Hogar",
-    plan_hogar: "Activa tu Club Hogar",
-    plan_empresa: "Centraliza tus mantenciones con OficiosPro Empresas",
-    reserva_especialista: "Cuéntanos qué necesitas",
-    registro_especialista: "Postula como especialista verificado",
-    contacto_empresa: "Centraliza tus mantenciones con OficiosPro Empresas",
-    referido: "Invita y gana créditos",
-    busqueda_rapida: "Busca especialistas disponibles",
-    consulta_general: "Busca especialistas disponibles",
-  };
-  return titles[type];
-}
-
-function modalSubtitle(type: ConversionModalType) {
-  const subtitles: Record<ConversionModalType, string> = {
-    lead_cliente: "Déjanos tus datos y te mostramos el mejor camino para activar créditos acumulables.",
-    plan_hogar: "Primero capturamos tus datos y luego avanzas a la activación del plan seleccionado.",
-    plan_empresa: "Cuéntanos tu operación para recomendar un plan, créditos corporativos y tiempos de respuesta.",
-    reserva_especialista: "Creamos una solicitud con servicio, comuna, urgencia y especialista seleccionado.",
-    registro_especialista: "Captura rápida antes del formulario completo de validación, referencias y precios.",
-    contacto_empresa: "Un ejecutivo revisará tu caso y la necesidad operacional de tu empresa.",
-    referido: "Registra un referido y acumula beneficios en la plataforma.",
-    busqueda_rapida: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
-    consulta_general: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
-  };
-  return subtitles[type];
-}
+// modalTitle/modalSubtitle migrados a i18n (modal.titles / modal.subtitles).
 
 function LeadFields({
   lead,
