@@ -597,7 +597,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
           <section className="p-5 md:p-7">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="eyebrow">Paso {step} de {isEnterpriseModal || isSpecialistModal || isSearchModal ? 1 : 2}</p>
+                <p className="eyebrow">{t("modal.ui.step")} {step} {t("modal.ui.of")} {isEnterpriseModal || isSpecialistModal || isSearchModal ? 1 : 2}</p>
                 <h2 className="text-3xl font-black text-ink">{t(`modal.titles.${options.type}`)}</h2>
                 <p className="mt-2 text-sm font-semibold leading-6 text-muted">{t(`modal.subtitles.${options.type}`)}</p>
               </div>
@@ -1121,35 +1121,22 @@ function SuccessState({
   specialistId?: string;
   onClose: () => void;
 }) {
+  const { t, tList } = useI18n();
   const session = getMockSession();
 
-  const nextSteps = isEnterprise
-    ? [
-        "Guardamos tu solicitud y la asignamos a un ejecutivo OficiosPro.",
-        "Revisamos tu caso y la necesidad operacional de tu empresa de forma manual.",
-        "Te contactamos para proponer un plan y coordinar cobertura real.",
-      ]
-    : isReservation
-      ? [
-          "Tu solicitud queda registrada y la sumamos a tu seguimiento en OficiosPro.",
-          "El equipo revisa el detalle y valida disponibilidad real con el especialista.",
-          "Te contactamos para confirmar horario; tus créditos quedan protegidos y no se cobra nada antes de confirmar.",
-        ]
-      : [
-          "Recibimos tu solicitud y la guardamos para darle seguimiento.",
-          "El equipo OficiosPro revisa el detalle de forma manual.",
-          "Te contactamos para coordinar el siguiente paso. No prometemos un horario hasta confirmar disponibilidad real.",
-        ];
+  const nextSteps = tList(
+    isEnterprise ? "modal.success.stepsEnterprise" : isReservation ? "modal.success.stepsReservation" : "modal.success.stepsGeneral",
+  );
 
   return (
     <div className="mt-5 rounded-[24px] border border-brand/20 bg-brand-soft p-5">
       <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-900">
-        <span aria-hidden>✓</span> Solicitud recibida
+        <span aria-hidden>✓</span> {t("modal.success.received")}
       </span>
-      <strong className="mt-3 block text-2xl font-black text-ink">Listo, lo tenemos.</strong>
+      <strong className="mt-3 block text-2xl font-black text-ink">{t("modal.success.title")}</strong>
       <p className="mt-2 font-semibold leading-7 text-brand-dark">{text}</p>
       <div className="mt-4 rounded-2xl bg-white/80 p-4">
-        <p className="text-xs font-black uppercase text-brand-dark">Qué pasa ahora</p>
+        <p className="text-xs font-black uppercase text-brand-dark">{t("modal.success.whatNext")}</p>
         <ol className="mt-3 grid gap-3">
           {nextSteps.map((stepText, index) => (
             <li key={stepText} className="flex items-start gap-3">
@@ -1163,21 +1150,21 @@ function SuccessState({
         {isReservation ? (
           session ? (
             <a className="btn-primary flex-1" href="/dashboard-cliente">
-              Ir a mi dashboard
+              {t("modal.success.goDashboard")}
             </a>
           ) : (
             <a className="btn-primary flex-1" href={`/registro-cliente${specialistId ? `?reserve=${specialistId}` : ""}`}>
-              Crear cuenta para seguir mi solicitud
+              {t("modal.success.createAccount")}
             </a>
           )
         ) : null}
         {isEnterprise ? (
           <a className="btn-primary flex-1" href="/empresas">
-            Ver planes empresa
+            {t("modal.success.viewPlans")}
           </a>
         ) : null}
         <button className="btn-secondary flex-1" type="button" onClick={onClose}>
-          Cerrar
+          {t("modal.success.close")}
         </button>
       </div>
     </div>
@@ -1185,17 +1172,19 @@ function SuccessState({
 }
 
 function Progress({ step, total }: { step: number; total: number }) {
+  const { t } = useI18n();
   return (
     <div className="grid gap-2">
       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(step / total) * 100}%` }} />
       </div>
-      <span className="text-xs font-black uppercase text-muted">{total === 1 ? "Formulario corto" : `Paso ${step} de ${total}`}</span>
+      <span className="text-xs font-black uppercase text-muted">{total === 1 ? t("modal.ui.shortForm") : `${t("modal.ui.step")} ${step} ${t("modal.ui.of")} ${total}`}</span>
     </div>
   );
 }
 
 function PrivacyText() {
+  const { t } = useI18n();
   return (
     <>
       <label className="hidden" aria-hidden="true">
@@ -1203,7 +1192,7 @@ function PrivacyText() {
         <input name="companyWebsite" tabIndex={-1} autoComplete="off" />
       </label>
       <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-        Tus datos se usan solo para coordinar servicios OficiosPro.
+        {t("modal.ui.privacy")}
       </p>
     </>
   );
