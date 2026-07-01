@@ -108,7 +108,7 @@ function ProofCard({ story, featured = false }: { story: WorkHistory; featured?:
         </div>
         <Link
           href={href}
-          className="mt-4 inline-flex min-h-10 w-fit items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-xs font-black text-brand-dark transition duration-200 hover:bg-brand-soft active:scale-[0.98]"
+          className="mt-4 inline-flex min-h-11 w-fit items-center justify-center gap-1.5 rounded-xl bg-white px-4 text-xs font-black text-brand-dark transition duration-200 hover:bg-brand-soft active:scale-[0.98]"
           data-event="work_proof_card_cta"
         >
           {meta.cta}

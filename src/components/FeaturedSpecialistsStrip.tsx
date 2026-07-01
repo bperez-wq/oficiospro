@@ -77,7 +77,7 @@ export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specia
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <button
-              className="hidden h-10 w-10 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
+              className="hidden h-11 w-11 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
               type="button"
               onClick={() => scrollByCards(-1)}
               aria-label="Ver especialistas anteriores"
@@ -87,7 +87,7 @@ export function FeaturedSpecialistsStrip({ specialists }: { specialists?: Specia
               </svg>
             </button>
             <button
-              className="hidden h-10 w-10 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
+              className="hidden h-11 w-11 place-items-center rounded-full border border-line bg-white text-muted shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-95 lg:grid"
               type="button"
               onClick={() => scrollByCards(1)}
               aria-label="Ver más especialistas"

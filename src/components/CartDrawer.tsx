@@ -111,7 +111,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <div className="flex shrink-0 items-center gap-2">
             {hasItems ? (
               <Link
-                className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-brand px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:bg-brand-dark active:scale-[0.97]"
+                className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-brand px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:bg-brand-dark active:scale-[0.97]"
                 href="/bolsa"
                 onClick={onClose}
                 data-event="cart_drawer_header_view_bag"
@@ -179,7 +179,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                         </p>
                       </Link>
                       <button
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
                         type="button"
                         onClick={() => removeCartItem(item.id)}
                         aria-label={`Quitar ${item.title} de la bolsa`}
@@ -270,7 +270,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                 </p>
               ) : null}
               <button
-                className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
                 type="button"
                 onClick={clearCart}
               >

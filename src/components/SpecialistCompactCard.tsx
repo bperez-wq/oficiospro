@@ -85,7 +85,7 @@ export function SpecialistCompactCard({
       <div className="mt-3 grid grid-cols-2 gap-2">
         <Link
           href={profileHref}
-          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
           onClick={() =>
             preserveSpecialistIntent({
               specialist,
@@ -99,7 +99,7 @@ export function SpecialistCompactCard({
           Ver perfil
         </Link>
         <button
-          className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
           type="button"
           data-event="specialist_compact_add_to_bag"
           onClick={() => addSpecialistToBagAndProceed({ specialist, service, sourceSection })}
