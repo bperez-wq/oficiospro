@@ -243,7 +243,7 @@ export default function BolsaPage() {
                     Las cotizaciones pendientes no pasan a checkout hasta que apruebes una propuesta.
                   </p>
                 ) : null}
-                <Link className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-brand-dark transition hover:bg-brand-soft" href="/especialistas?sourceSection=bolsa">
+                <Link className="inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-black text-brand-dark transition hover:bg-brand-soft" href="/especialistas?sourceSection=bolsa">
                   Seguir explorando especialistas
                 </Link>
               </div>
@@ -336,7 +336,7 @@ function SpecialistBagCard({
               <span className="block truncate text-sm font-bold text-muted">{specialist?.specialty ?? item.serviceName}</span>
             </div>
             <button
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
               type="button"
               onClick={() => removeCartItem(item.id)}
               aria-label={`Eliminar ${item.specialistName ?? item.title} de la bolsa`}
@@ -406,10 +406,10 @@ function SpecialistBagCard({
               </div>
               {virtualQuote.offer.comment ? <p className="mt-2 text-xs font-bold leading-5 text-muted">{virtualQuote.offer.comment}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
-                <button className="btn-primary min-h-10 px-4 text-xs" type="button" onClick={onApproveOffer}>
+                <button className="btn-primary min-h-11 px-4 text-xs" type="button" onClick={onApproveOffer}>
                   Aprobar cotización
                 </button>
-                <button className="btn-secondary min-h-10 px-4 text-xs" type="button" onClick={onRejectOffer}>
+                <button className="btn-secondary min-h-11 px-4 text-xs" type="button" onClick={onRejectOffer}>
                   Rechazar
                 </button>
               </div>
@@ -421,12 +421,12 @@ function SpecialistBagCard({
       <div className="mt-3 grid grid-cols-3 gap-2">
         <Link
           href={href}
-          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
         >
           Ver perfil
         </Link>
         <button
-          className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
           type="button"
           onClick={quote ? onVirtualQuote : onQuote}
           data-event="bolsa_quote_item"
@@ -434,7 +434,7 @@ function SpecialistBagCard({
           {quote ? virtualQuote ? "Ver cotización" : "Iniciar cotización" : "Cotizar"}
         </button>
         <button
-          className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
+          className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
           type="button"
           onClick={quote ? onVirtualQuote : onReserve}
           data-event="bolsa_reserve_item"
@@ -699,7 +699,7 @@ function PurchaseBagCard({ item }: { item: OficiosProCartItem }) {
           </p>
         </div>
         <button
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+          className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
           type="button"
           onClick={() => removeCartItem(item.id)}
           aria-label={`Eliminar ${item.title} de la bolsa`}
@@ -709,7 +709,7 @@ function PurchaseBagCard({ item }: { item: OficiosProCartItem }) {
       </div>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
         <span className="text-base font-black text-ink">{amount ? `${formatCLP(amount)}${isPlan ? " /mes" : ""}` : "Monto por confirmar"}</span>
-        <Link className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-4 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]" href={checkoutUrlForItems([item])}>
+        <Link className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-4 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]" href={checkoutUrlForItems([item])}>
           Continuar al checkout
         </Link>
       </div>

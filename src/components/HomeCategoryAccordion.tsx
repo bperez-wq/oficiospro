@@ -71,7 +71,7 @@ export function HomeCategoryAccordion() {
               <Link
                 key={item.href}
                 href={item.href}
-                className="inline-flex min-h-10 items-center rounded-full border border-line bg-white px-4 text-sm font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
+                className="inline-flex min-h-11 items-center rounded-full border border-line bg-white px-4 text-sm font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
                 data-event="home_category_accordion_link"
               >
                 {item.label}

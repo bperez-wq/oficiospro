@@ -456,22 +456,22 @@ export function AdminFinancePanel() {
               {payout.blockedReason ? <p className="mt-3 rounded-2xl bg-rose-50 p-3 text-sm font-black text-rose-700">{payout.blockedReason}</p> : null}
               <div className="mt-4 flex flex-wrap gap-2">
                 {payout.specialistDocumentStatus === "pending" && payout.requiredDocumentType !== "none" ? (
-                  <button className="btn-secondary min-h-10 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, (item) => markSpecialistDocumentReceived(item, `doc-manual-${payout.id}`), "Documento marcado como recibido.")}>
+                  <button className="btn-secondary min-h-11 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, (item) => markSpecialistDocumentReceived(item, `doc-manual-${payout.id}`), "Documento marcado como recibido.")}>
                     Marcar documento recibido
                   </button>
                 ) : null}
                 {payout.payoutStatus === "pending" && payout.specialistDocumentStatus === "received" ? (
-                  <button className="btn-secondary min-h-10 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, markSpecialistPayoutReady, "Payout validado y listo para pagar.")}>
+                  <button className="btn-secondary min-h-11 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, markSpecialistPayoutReady, "Payout validado y listo para pagar.")}>
                     Aprobar payout
                   </button>
                 ) : null}
                 {payout.payoutStatus === "ready_to_pay" ? (
-                  <button className="btn-primary min-h-10 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, markSpecialistPayoutPaid, "Payout marcado como pagado.")}>
+                  <button className="btn-primary min-h-11 px-4 text-sm" type="button" onClick={() => updatePayout(payout.id, markSpecialistPayoutPaid, "Payout marcado como pagado.")}>
                     Marcar pagado
                   </button>
                 ) : null}
                 {payout.payoutStatus !== "paid" && payout.payoutStatus !== "blocked" ? (
-                  <button className="min-h-10 rounded-2xl border border-rose-200 bg-white px-4 text-sm font-black text-rose-600 transition hover:bg-rose-50" type="button" onClick={() => updatePayout(payout.id, (item) => blockSpecialistPayout(item, "Bloqueado manualmente por admin"), "Payout bloqueado.")}>
+                  <button className="min-h-11 rounded-2xl border border-rose-200 bg-white px-4 text-sm font-black text-rose-600 transition hover:bg-rose-50" type="button" onClick={() => updatePayout(payout.id, (item) => blockSpecialistPayout(item, "Bloqueado manualmente por admin"), "Payout bloqueado.")}>
                     Bloquear payout
                   </button>
                 ) : null}
@@ -511,7 +511,7 @@ export function AdminFinancePanel() {
           <p className="mt-3 rounded-2xl bg-slate-50 p-3 text-xs font-bold text-muted">{taxSummary.note}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {(["sales", "credit_movements", "payouts", "commissions", "tax_documents"] as AccountingExportType[]).map((type) => (
-              <button key={type} className="btn-secondary min-h-10 px-4 text-sm" type="button" onClick={() => exportReport(type)}>
+              <button key={type} className="btn-secondary min-h-11 px-4 text-sm" type="button" onClick={() => exportReport(type)}>
                 Exportar {type.replace(/_/g, " ")} (CSV)
               </button>
             ))}

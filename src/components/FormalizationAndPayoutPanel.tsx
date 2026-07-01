@@ -201,7 +201,7 @@ function ReceiverField({
       <span className="text-xs font-black uppercase text-muted">{label}</span>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <strong className="break-words text-sm text-ink">{value}</strong>
-        <button className="btn-secondary min-h-10 px-4 text-sm" type="button" onClick={() => onCopy(label, value)}>
+        <button className="btn-secondary min-h-11 px-4 text-sm" type="button" onClick={() => onCopy(label, value)}>
           Copiar
         </button>
       </div>
