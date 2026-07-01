@@ -457,7 +457,7 @@ export function SpecialistDashboard() {
       maxCredits: 36,
       estimatedDuration: "Media jornada",
       materialsExcluded: "Materiales y repuestos se confirman antes de ejecutar.",
-      conditions: "Cotizacion basada en los antecedentes enviados. Puede ajustarse si aparece una condicion no visible en fotos.",
+      conditions: "Cotización basada en los antecedentes enviados. Puede ajustarse si aparece una condicion no visible en fotos.",
       comment: "Puedo resolverlo con diagnostico virtual. Si apruebas, coordinamos horario para ejecutar.",
     });
     setVirtualQuotes(getVirtualQuoteRequests());
@@ -471,7 +471,7 @@ export function SpecialistDashboard() {
       estimatedDuration: "45 minutos",
       requiresVisit: true,
       conditions: "El caso requiere revisar en terreno antes de comprometer precio cerrado.",
-      comment: "Recomiendo una visita tecnica para evitar cotizar con informacion incompleta.",
+      comment: "Recomiendo una visita técnica para evitar cotizar con informacion incompleta.",
     });
     setVirtualQuotes(getVirtualQuoteRequests());
   }

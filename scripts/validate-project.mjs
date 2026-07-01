@@ -308,7 +308,7 @@ if (assetDirectory === "./out") {
   assertRegex("src/lib/bookingStorage.ts", /oficiospro\.bookingRequests/, "local booking request storage");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+addBlockedSlot\s*\(/, "addBlockedSlot helper");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+createBookingRequest\s*\(/, "createBookingRequest helper");
-  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio.");
+  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los créditos iniciales quedan retenidos hasta confirmar el servicio.");
   assertContains("src/components/BookingDrawer.tsx", "createPortal");
   assertContains("src/components/BookingDrawer.tsx", "document.body");
   assertContains("src/components/BookingDrawer.tsx", "document.body.style.overflow");
@@ -406,7 +406,7 @@ if (assetDirectory === "./out") {
   assertContains("src/lib/flexiblePricing.ts", "pricingSummary");
   assertContains("src/lib/flexiblePricing.ts", "creditsForInitialHold");
   assertContains("src/components/BookingDrawer.tsx", "quote_request_submit");
-  assertContains("src/components/BookingDrawer.tsx", "Cotizacion solicitada");
+  assertContains("src/components/BookingDrawer.tsx", "Cotización solicitada");
   assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Cotizaciones y acuerdos");
   assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Propuestas y adicionales");
   assertContains("src/components/AdminPanel.tsx", "Tarifas, cotizaciones y negociación");
@@ -436,7 +436,7 @@ if (assetDirectory === "./out") {
   assertContains("src/app/checkout/page.tsx", "additional_work_hold");
   assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por categoria");
   assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por comuna");
-  assertContains("src/components/AdminPricingPanel.tsx", "Certificacion requerida por categoria");
+  assertContains("src/components/AdminPricingPanel.tsx", "Certificación requerida por categoria");
   assertNoPublicInternalPricingLeak();
   for (const fn of [
     "formatCLP",

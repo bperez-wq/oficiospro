@@ -1173,7 +1173,7 @@ export function seedPaymentState() {
         type: "quote_acceptance_hold",
         amount: -20,
         relatedServiceRequestId: "quote-irrigation-visit",
-        detail: "Creditos retenidos por visita tecnica",
+        detail: "Creditos retenidos por visita técnica",
         createdAt: now,
       },
       {
@@ -1432,7 +1432,7 @@ export function createQuoteAgreement(input: Omit<QuoteAgreement, "id" | "created
   const quote: QuoteAgreement = {
     ...input,
     id: `quote-op-${Date.now()}`,
-    history: input.history?.length ? input.history : ["El cliente solicito una cotizacion."],
+    history: input.history?.length ? input.history : ["El cliente solicito una cotización."],
     createdAt: now,
     updatedAt: now,
   };

@@ -14,7 +14,7 @@ import { getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 const shortBadgeLabels: Record<string, string> = {
   "Identidad verificada": "Verificado",
   "Referencias revisadas": "Referencias",
-  "Certificacion cargada": "Certificado",
+  "Certificación cargada": "Certificado",
   "Respuesta rapida": "Resp. rápida",
   "Top especialista": "Top",
 };

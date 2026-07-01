@@ -36,7 +36,7 @@ export default function SpecialistRegisterPage() {
           <div className="mt-5 grid gap-3">
             {[
               "Aparece por oficio, comuna y especialidades cuando tu perfil sea aprobado.",
-              "Declara tu tarifa esperada en CLP; OficiosPro calcula los creditos visibles para clientes.",
+              "Declara tu tarifa esperada en CLP; OficiosPro calcula los créditos visibles para clientes.",
               "Suma trabajos, referencias y evidencia visual sin mezclar tus documentos privados.",
               "Recibe solicitudes del piloto con seguimiento operacional del equipo OficiosPro.",
             ].map((item) => (

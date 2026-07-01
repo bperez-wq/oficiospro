@@ -1105,10 +1105,10 @@ export function SpecialistRegisterForm() {
         return setStepError(currentStep, "incomplete_service_details", "Completa nombre, descripcion breve y duracion estimada de cada servicio.");
       }
       if (services.some((service) => service.pricingMode !== "quote_required" && service.pricingMode !== "virtual_diagnosis" && Number(service.specialistExpectedPayoutCLP) <= 0)) {
-        return setStepError(currentStep, "missing_expected_clp", "Completa el monto esperado en CLP cuando el servicio tenga precio fijo, por hora, rango o visita tecnica.");
+        return setStepError(currentStep, "missing_expected_clp", "Completa el monto esperado en CLP cuando el servicio tenga precio fijo, por hora, rango o visita técnica.");
       }
       if (services.some((service) => !serviceHasPricingBasis(service))) {
-        return setStepError(currentStep, "missing_pricing_basis", "Completa horas, duracion y tarifa esperada segun la modalidad seleccionada. OficiosPro calculara los creditos cliente.");
+        return setStepError(currentStep, "missing_pricing_basis", "Completa horas, duracion y tarifa esperada segun la modalidad seleccionada. OficiosPro calculara los créditos cliente.");
       }
       if (services.some((service) => service.specialty === OTHER_SERVICE_VALUE && !service.otherServiceDescription.trim())) {
         return setStepError(currentStep, "missing_other_service_description", "Describe el servicio cuando selecciones Otro servicio.");
@@ -1313,8 +1313,8 @@ export function SpecialistRegisterForm() {
         clientCredits: service.pricingMode === "fixed" ? calculatedClientCredits : 0,
         pricingStatus: marginWarningForService(service) ? "pending_review" as const : "approved" as const,
         pricingNotesInternal: marginWarningForService(service)
-          ? "Comision OficiosPro baja para el monto declarado. Revisar antes de publicar."
-          : "Tarifa declarada por especialista. OficiosPro calcula creditos cliente y comision antes de publicar.",
+          ? "Comisión OficiosPro baja para el monto declarado. Revisar antes de publicar."
+          : "Tarifa declarada por especialista. OficiosPro calcula créditos cliente y comisión antes de publicar.",
         emergencyAvailable: service.emergency,
         active: true,
         creditPrice: calculatedClientCredits,
@@ -1774,7 +1774,7 @@ export function SpecialistRegisterForm() {
             <div>
               <p className="eyebrow">Servicios ofrecidos</p>
               <h3 className="text-2xl font-black">Servicios y tarifa esperada</h3>
-              <p className="mt-2 text-sm font-bold text-muted">Indica lo que esperas recibir en CLP. OficiosPro revisara la tarifa y definira los creditos finales para el cliente.</p>
+              <p className="mt-2 text-sm font-bold text-muted">Indica lo que esperas recibir en CLP. OficiosPro revisara la tarifa y definira los créditos finales para el cliente.</p>
             </div>
             <button className="btn-secondary" type="button" onClick={() => setServices((current) => [...current, createEmptyService()])}>
               Agregar servicio
@@ -1792,7 +1792,7 @@ export function SpecialistRegisterForm() {
             />
             <div className="grid gap-2 text-sm font-bold leading-6 text-brand-dark">
               <span>Puedes aparecer en varias busquedas, pero tendras un solo perfil con toda tu reputacion.</span>
-              <span>Tu ingresas tarifa esperada en CLP; OficiosPro calcula los creditos visibles para clientes.</span>
+              <span>Tu ingresas tarifa esperada en CLP; OficiosPro calcula los créditos visibles para clientes.</span>
               {selectedPrimaryTradeCoverage ? (
                 <span className={`rounded-2xl px-3 py-2 text-xs font-black ${selectedPrimaryTradeIsForming ? "bg-amber-50 text-amber-800" : "bg-white text-brand-dark"}`}>
                   {selectedPrimaryTradeCoverage}
@@ -1862,7 +1862,7 @@ export function SpecialistRegisterForm() {
           </label>
           <label className="field">
             Giro o actividad SII
-            <input value={formalization.siiActivity} onChange={(event) => setFormalization({ ...formalization, siiActivity: event.target.value })} placeholder="Ej: servicios tecnicos, mantenimiento, instalaciones" />
+            <input value={formalization.siiActivity} onChange={(event) => setFormalization({ ...formalization, siiActivity: event.target.value })} placeholder="Ej: servicios técnicos, mantenimiento, instalaciones" />
           </label>
           <div className="grid gap-3 rounded-2xl border border-line bg-slate-50 p-4 md:col-span-2">
             <label className="flex items-start gap-3 text-sm font-bold text-muted">
@@ -1960,7 +1960,7 @@ export function SpecialistRegisterForm() {
           <fieldset className="grid gap-3 rounded-2xl border border-line bg-white p-4 md:col-span-2">
             <legend className="px-2 text-sm font-black text-ink">Certificaciones</legend>
             <p className="text-sm font-bold text-muted">
-              Si tu oficio requiere certificacion, OficiosPro podra solicitar respaldo antes de activar el perfil.
+              Si tu oficio requiere certificación, OficiosPro podra solicitar respaldo antes de activar el perfil.
             </p>
             <label className="flex items-center gap-3 text-sm font-bold text-muted">
               <input type="checkbox" checked={hasNoFormalCertifications} onChange={() => toggleCertification(noFormalCertificationLabel)} /> {noFormalCertificationLabel}
@@ -2306,7 +2306,7 @@ function ServiceEditor({
       <div className={`rounded-2xl p-4 text-sm font-bold ${hasLowMargin ? "border border-amber-200 bg-amber-50 text-amber-900" : "bg-slate-50 text-muted"}`}>
         {hasLowMargin
           ? "OficiosPro dejara este servicio en revision antes de publicarlo."
-          : "OficiosPro revisara la modalidad, creditos y condiciones antes de publicar el servicio."}
+          : "OficiosPro revisara la modalidad, créditos y condiciones antes de publicar el servicio."}
       </div>
     </article>
   );

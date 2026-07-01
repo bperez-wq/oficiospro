@@ -78,7 +78,7 @@ export const categoryRoutes: Record<string, CategoryRouteConfig> = {
     categoryId: "empresas",
     label: "Empresas y comercios",
     title: "Especialistas para empresas y comercios",
-    subtitle: "Mantencion para oficinas, retail, restaurantes, bodegas, sucursales y operacion comercial.",
+    subtitle: "Mantencion para oficinas, retail, restaurantes, bodegas, sucursales y operación comercial.",
     terms: [
       "empresa",
       "comercial",
@@ -192,8 +192,8 @@ categoryRoutes["empresas-industria"] = {
   categoryId: "empresas",
   label: "Empresas e industria",
   title: "Especialistas para empresas e industria",
-  subtitle: "Mantencion comercial, refrigeracion, seguridad, limpieza, motores, soldadura, tableros y operacion industrial.",
-  terms: [...categoryRoutes.empresas.terms, ...categoryRoutes.industria.terms, "empresas industria", "operacion industrial"],
+  subtitle: "Mantencion comercial, refrigeracion, seguridad, limpieza, motores, soldadura, tableros y operación industrial.",
+  terms: [...categoryRoutes.empresas.terms, ...categoryRoutes.industria.terms, "empresas industria", "operación industrial"],
   suggestions: ["Mantencion comercial", "Refrigeracion comercial", "Seguridad", "Limpieza", "Soldadura", "Tableros"],
 };
 
@@ -236,7 +236,7 @@ Object.assign(specialtyRoutes, {
   camaras: { label: "Camaras", terms: ["camara", "camaras", "cctv", "seguridad electronica"], categoryId: "automatizacion" },
   calderas: { label: "Calderas", terms: ["caldera", "calderas", "calefaccion central"], categoryId: "empresas" },
   "electricidad-comun": { label: "Electricidad comun", terms: ["electricidad comun", "tablero", "luminaria", "edificio", "condominio"], categoryId: "empresas" },
-  "mantencion-preventiva": { label: "Mantencion preventiva", terms: ["mantencion preventiva", "mantencion", "preventiva", "operacion"], categoryId: "empresas" },
+  "mantencion-preventiva": { label: "Mantencion preventiva", terms: ["mantencion preventiva", "mantencion", "preventiva", "operación"], categoryId: "empresas" },
   "refrigeracion-comercial": { label: "Refrigeracion comercial", terms: ["refrigeracion comercial", "frio", "camara", "vitrina", "congelador", "frigor"], categoryId: "empresas" },
   "seguridad-electronica": { label: "Seguridad electronica", terms: ["seguridad electronica", "camara", "cctv", "alarma", "control de acceso"], categoryId: "automatizacion" },
   limpieza: { label: "Limpieza", terms: ["limpieza", "aseo", "sanitizacion", "mantencion"], categoryId: "all" },
@@ -382,11 +382,11 @@ export function serviceCreditValue(service: FlexibleService | undefined, fallbac
 export function matchedServiceSummary(service: FlexibleService | undefined, generic = false) {
   if (!service) return "Precio por confirmar";
   if (generic) return pricingSummary(service);
-  if (service.emergency && service.emergencyCredits) return `${service.name} - Emergencia desde ${service.emergencyCredits} creditos`;
-  if (service.pricingMode === "quote_required") return `${service.name} - Requiere cotizacion`;
+  if (service.emergency && service.emergencyCredits) return `${service.name} - Emergencia desde ${service.emergencyCredits} créditos`;
+  if (service.pricingMode === "quote_required") return `${service.name} - Requiere cotización`;
   if (service.pricingMode === "virtual_diagnosis") return `${service.name} - Cotiza con fotos`;
-  if (service.pricingMode === "visit_then_quote") return `${service.name} - Visita desde ${service.visitCredits ?? 0} creditos`;
-  if (service.pricingMode === "hourly") return `${service.name} - ${service.hourlyCredits ?? 0} creditos/hora`;
-  if (service.pricingMode === "range") return `${service.name} - Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;
-  return `${service.name} - ${service.fixedCredits ?? serviceCreditValue(service)} creditos`;
+  if (service.pricingMode === "visit_then_quote") return `${service.name} - Visita desde ${service.visitCredits ?? 0} créditos`;
+  if (service.pricingMode === "hourly") return `${service.name} - ${service.hourlyCredits ?? 0} créditos/hora`;
+  if (service.pricingMode === "range") return `${service.name} - Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} créditos`;
+  return `${service.name} - ${service.fixedCredits ?? serviceCreditValue(service)} créditos`;
 }

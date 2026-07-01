@@ -47,7 +47,7 @@ export function getTrustBadges(specialist: Specialist) {
   return [
     specialist.verified ? "Identidad verificada" : null,
     (specialist.validation?.references ?? 0) > 0 ? "Referencias revisadas" : null,
-    specialist.certifications.length || specialist.validation?.certifications === "approved" ? "Certificacion cargada" : null,
+    specialist.certifications.length || specialist.validation?.certifications === "approved" ? "Certificación cargada" : null,
     responseMinutes(specialist.responseTime) <= 60 ? "Respuesta rapida" : null,
     specialist.top || specialist.recommendation >= 95 ? "Top especialista" : null,
   ].filter(Boolean) as string[];

@@ -44,9 +44,9 @@ const nextBilling = new Date();
 nextBilling.setMonth(nextBilling.getMonth() + 1);
 
 const paymentContexts = [
-  { id: "service_fixed_hold", label: "Servicio fijo", detail: "Reserva con creditos exactos.", credits: 12 },
-  { id: "visit_hold", label: "Visita tecnica", detail: "Diagnostico antes de propuesta.", credits: 6 },
-  { id: "quote_acceptance_hold", label: "Cotizacion aceptada", detail: "Retencion del total acordado.", credits: 48 },
+  { id: "service_fixed_hold", label: "Servicio fijo", detail: "Reserva con créditos exactos.", credits: 12 },
+  { id: "visit_hold", label: "Visita técnica", detail: "Diagnostico antes de propuesta.", credits: 6 },
+  { id: "quote_acceptance_hold", label: "Cotización aceptada", detail: "Retencion del total acordado.", credits: 48 },
   { id: "additional_work_hold", label: "Adicional aprobado", detail: "Trabajo adicional autorizado.", credits: 10 },
   { id: "materials_hold", label: "Materiales", detail: "Materiales aprobados por cliente.", credits: 8 },
   { id: "service_hourly_hold", label: "Horas adicionales", detail: "Bloque inicial o extra por hora.", credits: 16 },
@@ -132,7 +132,7 @@ export default function CheckoutPage() {
       return;
     }
     if (mode === "credits_purchase" && !selectedCreditPack) {
-      setStatus("Selecciona una bolsa de creditos para continuar.");
+      setStatus("Selecciona una bolsa de créditos para continuar.");
       return;
     }
     setIsSubmitting(true);
@@ -142,7 +142,7 @@ export default function CheckoutPage() {
     const amountToPay = catalogPack?.amountCLP ?? plan.priceCLP;
     addCartItem({
       type: mode === "subscription" ? "subscription_plan" : "credit_pack",
-      title: mode === "subscription" ? plan.name : `${creditsToBuy} creditos`,
+      title: mode === "subscription" ? plan.name : `${creditsToBuy} créditos`,
       planId: mode === "subscription" ? plan.id : undefined,
       credits: mode === "subscription" ? plan.monthlyCredits : creditsToBuy,
       amountCLP: mode === "subscription" ? plan.priceCLP : amountToPay,
@@ -250,7 +250,7 @@ export default function CheckoutPage() {
         });
       }
 
-      setStatus("Pago en preparacion. Los creditos se activaran cuando el pago sea confirmado.");
+      setStatus("Pago en preparacion. Los créditos se activaran cuando el pago sea confirmado.");
     } catch {
       setStatus("Pago en preparacion. Dejamos tu solicitud registrada para revision operacional segura.");
     } finally {
@@ -266,20 +266,20 @@ export default function CheckoutPage() {
           <p className="eyebrow">Checkout seguro</p>
           <h1 className="text-4xl font-black md:text-5xl">Checkout global OficiosPro.</h1>
           <p className="mt-4 max-w-2xl font-semibold leading-7 text-muted">
-            Confirma creditos, plan o solicitud de servicio. Tu pago sera procesado por el proveedor seleccionado y conciliado contra el ledger de creditos.
+            Confirma créditos, plan o solicitud de servicio. Tu pago sera procesado por el proveedor seleccionado y conciliado contra el ledger de créditos.
           </p>
 
           <div className="mt-8 grid gap-4 sm:grid-cols-2">
             <DashboardMetricCard label="Plan seleccionado" value={plan.name} />
             <DashboardMetricCard label="Precio mensual" value={formatCLP(plan.priceCLP)} />
-            <DashboardMetricCard label="Creditos checkout" value={`${checkoutCredits} creditos`} tone="brand" />
+            <DashboardMetricCard label="Creditos checkout" value={`${checkoutCredits} créditos`} tone="brand" />
             <DashboardMetricCard label="Total CLP visible" value={formatCLP(checkoutAmountCLP)} />
           </div>
 
           <div className="mt-6 grid gap-3 rounded-[24px] border border-brand/15 bg-brand-soft p-5 text-sm font-bold leading-6 text-brand-dark">
-            <strong className="text-base text-ink">Confirmacion de creditos</strong>
-            <span>Los creditos se activaran cuando el pago sea confirmado.</span>
-            {hasServiceCheckoutItems ? <span>Precio total en creditos. Incluye gestion de plataforma y pago protegido.</span> : null}
+            <strong className="text-base text-ink">Confirmacion de créditos</strong>
+            <span>Los créditos se activaran cuando el pago sea confirmado.</span>
+            {hasServiceCheckoutItems ? <span>Precio total en créditos. Incluye gestion de plataforma y pago protegido.</span> : null}
             <span>En etapa piloto algunos pagos pueden requerir confirmacion operacional antes de reflejarse en tu cuenta.</span>
           </div>
 
@@ -297,7 +297,7 @@ export default function CheckoutPage() {
                   <article key={item.id} className="rounded-2xl border border-line bg-slate-50 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <strong>{item.title}</strong>
-                      <span className="chip bg-white text-brand-dark">{item.credits ?? 0} creditos</span>
+                      <span className="chip bg-white text-brand-dark">{item.credits ?? 0} créditos</span>
                     </div>
                     <p className="mt-2 text-sm font-bold text-muted">
                       {[item.serviceName, item.specialistName, item.pricingMode].filter(Boolean).join(" - ") || "Item listo para pago"}
@@ -309,7 +309,7 @@ export default function CheckoutPage() {
                 <EmptyState
                   eyebrow="Checkout"
                   title="Compra directa disponible"
-                  text="Puedes activar un plan o comprar creditos puntuales. Si venias desde una reserva, vuelve a la bolsa para revisar tu seleccion antes de pagar."
+                  text="Puedes activar un plan o comprar créditos puntuales. Si venias desde una reserva, vuelve a la bolsa para revisar tu seleccion antes de pagar."
                   action={<Link className="btn-secondary" href="/bolsa">Ver bolsa</Link>}
                 />
               )}
@@ -329,13 +329,13 @@ export default function CheckoutPage() {
           <section className="mt-8 grid gap-4 rounded-[24px] border border-line bg-white p-5 sm:grid-cols-2">
             <article className="rounded-2xl border border-line bg-slate-50 p-4">
               <p className="eyebrow">Sin suscripcion</p>
-              <h2 className="text-xl font-black">Compra creditos sin renovacion mensual.</h2>
-              <p className="mt-2 text-sm font-bold text-muted">Puedes comprar creditos puntuales y pagar precio normal en cada solicitud.</p>
+              <h2 className="text-xl font-black">Compra créditos sin renovacion mensual.</h2>
+              <p className="mt-2 text-sm font-bold text-muted">Puedes comprar créditos puntuales y pagar precio normal en cada solicitud.</p>
             </article>
             <article className="rounded-2xl border border-brand/20 bg-brand-soft p-4">
               <p className="eyebrow">Con Club Hogar</p>
               <h2 className="text-xl font-black">Conviene si haces 2 solicitudes al mes.</h2>
-              <p className="mt-2 text-sm font-bold text-brand-dark">Ahorro: 4 creditos al mes, mas creditos acumulables y beneficios.</p>
+              <p className="mt-2 text-sm font-bold text-brand-dark">Ahorro: 4 créditos al mes, mas créditos acumulables y beneficios.</p>
             </article>
           </section>
 
@@ -411,10 +411,10 @@ export default function CheckoutPage() {
             </div>
 
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">
-              Renovacion automatica mensual. Los creditos se activan cuando el pago mensual sea confirmado y se acumulan hasta {plan.accumulatesMonths} meses.
+              Renovacion automatica mensual. Los créditos se activan cuando el pago mensual sea confirmado y se acumulan hasta {plan.accumulatesMonths} meses.
             </div>
             <div className="rounded-2xl bg-white p-4 text-sm font-bold text-muted">
-              Comercio: {oficiosProMerchant.tradeName} · RUT {oficiosProMerchant.rut}. Al continuar aceptas los terminos de compra, uso de creditos y conciliacion contra proveedor de pago.
+              Comercio: {oficiosProMerchant.tradeName} · RUT {oficiosProMerchant.rut}. Al continuar aceptas los terminos de compra, uso de créditos y conciliacion contra proveedor de pago.
             </div>
 
             <button className="btn-primary" type="button" onClick={() => startPayment("subscription")} disabled={isSubmitting}>
@@ -476,7 +476,7 @@ export default function CheckoutPage() {
                 >
                   <strong className="block text-lg font-black text-ink">{context.label}</strong>
                   <span className="text-sm font-bold text-muted">{context.detail}</span>
-                  <span className="mt-2 block text-sm font-black text-brand">{context.credits} creditos - {formatCLP(context.credits * defaultCommercialConfig.customerCreditValueCLP)}</span>
+                  <span className="mt-2 block text-sm font-black text-brand">{context.credits} créditos - {formatCLP(context.credits * defaultCommercialConfig.customerCreditValueCLP)}</span>
                 </button>
               ))}
             </div>

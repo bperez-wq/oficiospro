@@ -212,10 +212,10 @@ export function SpecialistsExplorer() {
   const formingCoverage = taxonomyCoverage ? isTradeForming(taxonomyCoverage) : false;
   const coverageLabel = taxonomyCoverage ? getTradeCoverageLabel(taxonomyCoverage) : "";
   const selectedTypeLabel = typeFilterOptions.find((item) => item.value === category)?.label;
-  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Tecnicos recomendados");
+  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Técnicos recomendados");
   const contextualSubtitle = formingCoverage
     ? `Estamos formando red para este oficio. Puedes dejar una solicitud y priorizaremos cobertura por comuna.`
-    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos." : resultContext);
+    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en créditos." : resultContext);
   const suggestedChips = routeCategory?.suggestions ?? [];
   const activeSearchIntent = useMemo<SpecialistSearchIntent>(
     () => ({
@@ -246,7 +246,7 @@ export function SpecialistsExplorer() {
     zone && zone !== ALL_COMMUNES_VALUE ? { label: `Comuna: ${zone}`, clear: () => setZone(ALL_COMMUNES_VALUE) } : null,
     availability !== "all" ? { label: `Disponibilidad: ${availabilityOptions.find((item) => item.value === availability)?.label ?? availability}`, clear: () => setAvailability("all") } : null,
     rating > 0 ? { label: `Calificacion desde ${rating.toFixed(1)}`, clear: () => setRating(0) } : null,
-    maxCredits < 999 ? { label: `Hasta ${maxCredits} creditos`, clear: () => setMaxCredits(999) } : null,
+    maxCredits < 999 ? { label: `Hasta ${maxCredits} créditos`, clear: () => setMaxCredits(999) } : null,
     level !== "all" ? { label: `Nivel ${level}`, clear: () => setLevel("all") } : null,
     quickResponse ? { label: "Respuesta rapida", clear: () => setQuickResponse(false) } : null,
     withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
@@ -439,7 +439,7 @@ export function SpecialistsExplorer() {
             <div>
               <p className="eyebrow">Busca por confianza</p>
               <h2 className="text-2xl font-black">Filtra especialistas</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y creditos.</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y créditos.</p>
             </div>
             <button
               type="button"

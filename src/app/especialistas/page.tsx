@@ -6,7 +6,7 @@ import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Especialistas verificados por oficio y comuna",
-  description: "Busca especialistas verificados por categoria, comuna, disponibilidad, reputacion y precio en creditos dentro de OficiosPro.",
+  description: "Busca especialistas verificados por categoria, comuna, disponibilidad, reputacion y precio en créditos dentro de OficiosPro.",
   path: "/especialistas",
   keywords: ["especialistas verificados", "oficios por comuna", "gasfiter", "electricista"],
 });

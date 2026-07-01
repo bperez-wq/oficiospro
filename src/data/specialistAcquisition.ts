@@ -40,7 +40,7 @@ export const acquisitionSourceLabels: Record<AcquisitionSource | "direct", strin
   sence: "SENCE",
   chilevalora: "ChileValora",
   cft_ip: "CFT / IP",
-  liceo_tecnico: "Liceo tecnico",
+  liceo_tecnico: "Liceo técnico",
   ferreteria: "Ferreteria",
   proveedor_materiales: "Proveedor de materiales",
   administrador_comunidad: "Administrador de comunidad",
@@ -82,7 +82,7 @@ export const founderProgramBenefits = [
   "Visibilidad por oficio, comuna y especialidades cuando el perfil sea aprobado.",
   "Orden de servicios, tarifas esperadas y cobertura en un solo perfil.",
   "Formalizacion asistida y apoyo para entender documentos de cobro.",
-  "Cotizacion virtual y solicitudes con contexto cuando exista demanda real.",
+  "Cotización virtual y solicitudes con contexto cuando exista demanda real.",
   "Reputacion acumulable por trabajos, evidencia y calificaciones.",
 ];
 

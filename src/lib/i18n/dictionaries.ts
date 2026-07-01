@@ -2954,7 +2954,7 @@ const it: Dictionary = {
       creditHistoryTitle: "Cronologia crediti",
       favTitle: "Tecnici preferiti",
       emptyFavEyebrow: "Nessun preferito reale",
-      emptyFavTitle: "Ancora nessun tecnico preferito.",
+      emptyFavTitle: "Ancora nessun técnico preferito.",
       emptyFavText: "I tuoi preferiti appariranno qui quando salverai specialisti reali.",
     },
     specialist: {

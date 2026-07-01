@@ -248,8 +248,8 @@ function Info({ label, value }: { label: string; value: unknown }) {
 
 function friendlyColumnLabel(column: string) {
   const labels: Record<string, string> = {
-    platformMarginCLP: "Comision OficiosPro CLP",
-    platformMarginCredits: "Comision OficiosPro creditos",
+    platformMarginCLP: "Comisión OficiosPro CLP",
+    platformMarginCredits: "Comisión OficiosPro creditos",
   };
   return labels[column] ?? column;
 }

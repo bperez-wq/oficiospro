@@ -19,7 +19,7 @@ export default function FormalizacionPage() {
       <AppHero
         eyebrow="Especialistas OficiosPro"
         title="Formalizacion clara antes de cobrar servicios."
-        subtitle="OficiosPro ordena el flujo para que el cliente pague con creditos y el especialista emita su documento a OP SpA antes de liberar liquidaciones."
+        subtitle="OficiosPro ordena el flujo para que el cliente pague con créditos y el especialista emita su documento a OP SpA antes de liberar liquidaciones."
       />
       <section className="rounded-[28px] border border-brand/15 bg-white p-6 shadow-soft">
         <p className="eyebrow">Tranquilo</p>
@@ -34,10 +34,10 @@ export default function FormalizacionPage() {
         </div>
       </section>
       <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-6 shadow-soft">
-        <p className="eyebrow">Comision OficiosPro</p>
+        <p className="eyebrow">Comisión OficiosPro</p>
         <h2 className="text-3xl font-black text-ink">9,5% + IVA sobre la base configurada del servicio.</h2>
         <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-brand-dark">
-          OficiosPro aplica una comision estandar de plataforma de 9,5% + IVA. Esta comision financia tecnologia, soporte, operacion, pago protegido y gestion administrativa.
+          OficiosPro aplica una comisión estandar de plataforma de 9,5% + IVA. Esta comisión financia tecnologia, soporte, operación, pago protegido y gestion administrativa.
         </p>
         <p className="mt-2 max-w-3xl text-sm font-bold leading-6 text-brand-dark">
           El calculo final puede variar segun tipo de documento, retencion, IVA, materiales, urgencia y validacion contable.
@@ -46,7 +46,7 @@ export default function FormalizacionPage() {
       <section className="grid gap-5 lg:grid-cols-3">
         {[
           ["1", "El cliente compra creditos", "OficiosPro documenta la compra o suscripcion segun corresponda."],
-          ["2", "El servicio se ejecuta", "Los creditos quedan retenidos hasta que el trabajo avance o cierre."],
+          ["2", "El servicio se ejecuta", "Los créditos quedan retenidos hasta que el trabajo avance o cierre."],
           ["3", "Especialista documenta a OP SpA", "Boleta de honorarios o factura segun situacion tributaria validada."],
         ].map(([step, title, text]) => (
           <MarketplaceCard key={step} hover={false}>

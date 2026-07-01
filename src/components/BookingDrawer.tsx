@@ -143,7 +143,7 @@ export function BookingDrawer({
     preserveSpecialistIntent({ specialist, service: selectedService, intendedAction: "reservar", source: "BookingDrawer", sourceSection });
     const needsQuoteOnly = selectedService.pricingMode === "quote_required" || selectedService.pricingMode === "virtual_diagnosis" || selectedService.pricingMode === "range" || selectedService.pricingMode === "custom";
     if (needsQuoteOnly && !requestDescription.trim()) {
-      setSuccess("Describe el problema o alcance para solicitar una cotizacion clara.");
+      setSuccess("Describe el problema o alcance para solicitar una cotización clara.");
       submitLockRef.current = false;
       return;
     }
@@ -212,7 +212,7 @@ export function BookingDrawer({
           commune: specialist.commune ?? specialist.zone,
           status: "quote_requested",
           originalRequest: requestDescription,
-          history: ["El cliente solicito cotizacion desde la agenda del especialista."],
+          history: ["El cliente solicito cotización desde la agenda del especialista."],
         });
         const leadResult = await submitLead({
           leadType: "booking_request",
@@ -227,11 +227,11 @@ export function BookingDrawer({
           specialistName: specialist.name,
           creditsEstimate: selectedService.minCredits,
           sourceComponent: sourceSection ?? "BookingDrawer",
-          sourceButton: "Solicitar cotizacion",
+          sourceButton: "Solicitar cotización",
           consentContact: false,
           payload: { quoteId: quote.id, pricingMode: selectedService.pricingMode, servicePricingId: selectedService.id, rut: customer.rut, sourceSection },
         });
-        setSuccess(leadResult.ok ? "Cotizacion solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
+        setSuccess(leadResult.ok ? "Cotización solicitada. El especialista enviara una propuesta estructurada para revisar." : leadResult.message);
         setRequestDescription("");
         return;
       }
@@ -277,7 +277,7 @@ export function BookingDrawer({
         consentContact: false,
       });
       setBookings(getBookingRequests());
-      setSuccess(leadResult.ok ? "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio." : leadResult.message);
+      setSuccess(leadResult.ok ? "Horario solicitado. Los créditos iniciales quedan retenidos hasta confirmar el servicio." : leadResult.message);
       setSelectedSlot(null);
     } finally {
       setSubmitting(false);
@@ -327,7 +327,7 @@ export function BookingDrawer({
           <div className="grid gap-3 md:grid-cols-3">
             <StepTile number="1" title="Que necesitas" detail="Servicio, comuna, comentario y urgencia." active />
             <StepTile number="2" title="Creditos" detail="Precio normal, Club Hogar y saldo disponible." active />
-            <StepTile number="3" title="Confirmacion" detail="Fecha tentativa y creditos a retener." active={Boolean(selectedSlot) || needsQuoteOnly} />
+            <StepTile number="3" title="Confirmacion" detail="Fecha tentativa y créditos a retener." active={Boolean(selectedSlot) || needsQuoteOnly} />
           </div>
 
           {!hasSession ? (
@@ -396,24 +396,24 @@ export function BookingDrawer({
             <div className="mt-4 rounded-2xl border border-brand/15 bg-brand-soft p-4">
               <strong className="block text-ink">{pricingSummary(selectedService, isSubscriber)}</strong>
               <p className="mt-1 text-sm font-bold text-brand-dark">{pricingDetail(selectedService)}</p>
-              <p className="mt-1 text-sm font-bold text-brand-dark">Retencion inicial estimada: {currentHoldCredits || "por confirmar"} creditos.</p>
+              <p className="mt-1 text-sm font-bold text-brand-dark">Retencion inicial estimada: {currentHoldCredits || "por confirmar"} créditos.</p>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-2">
               <article className="rounded-2xl border border-line bg-white p-4">
                 <p className="text-xs font-black uppercase text-muted">Sin suscripcion</p>
-                <h4 className="mt-1 text-lg font-black">Compra creditos cuando los necesitas</h4>
-                <p className="mt-2 text-sm font-bold text-muted">Pagas precio normal en creditos y no tienes renovacion mensual.</p>
+                <h4 className="mt-1 text-lg font-black">Compra créditos cuando los necesitas</h4>
+                <p className="mt-2 text-sm font-bold text-muted">Pagas precio normal en créditos y no tienes renovacion mensual.</p>
               </article>
               <article className="rounded-2xl border border-brand/20 bg-brand-soft p-4">
                 <p className="text-xs font-black uppercase text-brand-dark">Con Club Hogar</p>
-                <h4 className="mt-1 text-lg font-black">Ahorras 2 creditos por solicitud</h4>
-                <p className="mt-2 text-sm font-bold text-brand-dark">Recibes creditos mensuales, los acumulas y accedes a beneficios.</p>
+                <h4 className="mt-1 text-lg font-black">Ahorras 2 créditos por solicitud</h4>
+                <p className="mt-2 text-sm font-bold text-brand-dark">Recibes créditos mensuales, los acumulas y accedes a beneficios.</p>
               </article>
             </div>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
-              <InfoTile label="Disponibles" value={`${wallet.currentBalance} creditos`} detail="Saldo actual para reservar o comprar servicios." />
-              <InfoTile label="A retener" value={`${currentHoldCredits || 0} creditos`} detail="Quedan protegidos hasta confirmar avance." />
-              <InfoTile label="Faltantes" value={`${missingCredits} creditos`} detail={missingCredits ? "Puedes comprar creditos o activar Club Hogar." : "Tienes saldo suficiente para continuar."} />
+              <InfoTile label="Disponibles" value={`${wallet.currentBalance} créditos`} detail="Saldo actual para reservar o comprar servicios." />
+              <InfoTile label="A retener" value={`${currentHoldCredits || 0} créditos`} detail="Quedan protegidos hasta confirmar avance." />
+              <InfoTile label="Faltantes" value={`${missingCredits} créditos`} detail={missingCredits ? "Puedes comprar créditos o activar Club Hogar." : "Tienes saldo suficiente para continuar."} />
             </div>
             {selectedService.pricingMode === "hourly" ? (
               <label className="field mt-4">
@@ -432,7 +432,7 @@ export function BookingDrawer({
 
           {needsQuoteOnly ? (
             <section className="rounded-[24px] border border-line bg-slate-50 p-4">
-              <p className="eyebrow">Cotizacion</p>
+              <p className="eyebrow">Cotización</p>
               <h3 className="text-2xl font-black">Crearemos una solicitud para propuesta.</h3>
               <p className="mt-2 text-sm font-bold leading-6 text-muted">
                 No se descuenta un pago final ahora. El especialista enviara una propuesta y podras aceptar, rechazar o pedir ajuste.

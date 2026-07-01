@@ -5,7 +5,7 @@ import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Preguntas frecuentes OficiosPro",
-  description: "Resuelve dudas sobre creditos, reservas, especialistas verificados, Club Hogar, empresas y postulaciones en OficiosPro.",
+  description: "Resuelve dudas sobre créditos, reservas, especialistas verificados, Club Hogar, empresas y postulaciones en OficiosPro.",
   path: "/faq",
   keywords: ["FAQ OficiosPro", "preguntas frecuentes", "creditos OficiosPro"],
 });

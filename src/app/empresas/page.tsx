@@ -13,11 +13,11 @@ import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
-  title: "OficiosPro Empresas | Servicios tecnicos con creditos",
-  description: "Centraliza solicitudes tecnicas, creditos empresa, historial y especialistas verificados para oficinas, locales y operaciones.",
+  title: "OficiosPro Empresas | Servicios técnicos con creditos",
+  description: "Centraliza solicitudes técnicas, créditos empresa, historial y especialistas verificados para oficinas, locales y operaciones.",
   path: "/empresas",
   image: "/assets/club-empresas.webp",
-  keywords: ["servicios tecnicos empresas", "mantencion oficinas", "creditos empresa"],
+  keywords: ["servicios técnicos empresas", "mantencion oficinas", "creditos empresa"],
 });
 
 export default function EmpresasPage() {

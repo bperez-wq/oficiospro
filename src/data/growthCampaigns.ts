@@ -51,7 +51,7 @@ export const specialistGrowthCampaigns: GrowthCampaign[] = [
     utmMedium: "direct",
     utmCampaign: "especialistas_fundadores",
     utmContent: "direct_message",
-    suggestedCopy: "Hola, vi que trabajas en oficios tecnicos. Estoy creando OficiosPro.cl para dar visibilidad a especialistas verificados por comuna. Estamos invitando a los primeros especialistas fundadores sin costo inicial. Te interesa crear tu perfil?",
+    suggestedCopy: "Hola, vi que trabajas en oficios técnicos. Estoy creando OficiosPro.cl para dar visibilidad a especialistas verificados por comuna. Estamos invitando a los primeros especialistas fundadores sin costo inicial. Te interesa crear tu perfil?",
     cta: "Crear perfil",
   },
   {
@@ -96,7 +96,7 @@ export const specialistGrowthCampaigns: GrowthCampaign[] = [
   {
     id: "cft_ip_partner",
     name: "CFT / IP partner",
-    target: "Egresados y estudiantes tecnicos",
+    target: "Egresados y estudiantes técnicos",
     landingUrl: "/instituciones",
     source: "cft_ip",
     utmSource: "cft_ip",
