@@ -429,7 +429,7 @@ export function SpecialistsExplorer() {
         />
       ) : null}
 
-      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[240px_1fr]">
+      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[280px_1fr]">
         <aside
           ref={filterDrawerRef}
           className={`${filtersOpen ? "fixed inset-x-3 bottom-20 top-20 z-50 grid overflow-y-auto" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 shadow-card lg:sticky lg:inset-x-auto lg:bottom-auto lg:top-28 lg:z-auto lg:grid lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:shadow-none`}
@@ -447,7 +447,7 @@ export function SpecialistsExplorer() {
             </div>
             <button
               type="button"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-white text-sm font-black text-muted lg:hidden"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-sm font-black text-muted lg:hidden"
               aria-label="Cerrar filtros"
               onClick={() => setFiltersOpen(false)}
             >
