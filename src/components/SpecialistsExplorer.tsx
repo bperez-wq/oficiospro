@@ -97,6 +97,9 @@ export function SpecialistsExplorer() {
   const [sourceSection, setSourceSection] = useState("");
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
+  // true solo cuando tenemos coordenadas reales del usuario (perfil con ubicación).
+  // Sin esto la distancia se calcula desde un centro por defecto y es engañosa (P1-04).
+  const [hasUserLocation, setHasUserLocation] = useState(false);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
   const [notice, setNotice] = useState("");
   const filterDrawerRef = useRef<HTMLElement | null>(null);
@@ -108,6 +111,7 @@ export function SpecialistsExplorer() {
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
       setClientLng(clientProfile.lng);
+      setHasUserLocation(true);
       setNotice(`Ubicación privada disponible para ordenar por cercanía desde ${clientProfile.commune}.`);
     }
     fetch("/api/specialists")
@@ -564,7 +568,7 @@ export function SpecialistsExplorer() {
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <strong className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
+              <strong role="status" aria-live="polite" className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
               <button className="rounded-full border border-line px-4 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={clearFilters}>
                 Limpiar filtros
               </button>
@@ -658,6 +662,7 @@ export function SpecialistsExplorer() {
                     matchedService={matchedService}
                     searchIntent={searchIntentLabel}
                     highlightedCreditPrice={matchedServiceSummary(matchedService, !searchIntentLabel)}
+                    showDistance={hasUserLocation}
                     onReserve={reserve}
                   />
                 );

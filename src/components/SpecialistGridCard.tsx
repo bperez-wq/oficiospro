@@ -24,12 +24,15 @@ export function SpecialistGridCard({
   matchedService,
   searchIntent,
   highlightedCreditPrice,
+  showDistance = false,
   sourceSection = "specialists_explorer_grid",
 }: {
   specialist: Specialist;
   matchedService?: FlexibleService | null;
   searchIntent?: string;
   highlightedCreditPrice?: string;
+  /** Solo mostrar km cuando hay ubicación real del usuario (evita distancias engañosas). */
+  showDistance?: boolean;
   /** Compatibilidad: ya no abre modal; el CTA agrega a la Bolsa (bag-first). */
   onReserve?: (id: string, service?: FlexibleService | null) => void;
   sourceSection?: string;
@@ -41,7 +44,7 @@ export function SpecialistGridCard({
   const badges = useMemo(() => getTrustBadges(specialist).slice(0, 2), [specialist]);
   const profileHref = `/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}&sourceSection=${sourceSection}`;
   const action = bagActionLabel(displayService.pricingMode);
-  const hasDistance = typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
+  const hasDistance = showDistance && typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
 
   function addToBag() {
     addSpecialistToBagAndProceed({ specialist, service: displayService, sourceSection });

@@ -23,12 +23,15 @@ export function SpecialistCard({
   matchedService,
   searchIntent,
   highlightedCreditPrice,
+  showDistance = false,
   onReserve,
 }: {
   specialist: Specialist;
   matchedService?: FlexibleService | null;
   searchIntent?: string;
   highlightedCreditPrice?: string;
+  /** Solo mostrar km cuando hay ubicación real del usuario (evita distancias engañosas). */
+  showDistance?: boolean;
   onReserve?: (id: string, service?: FlexibleService | null) => void;
 }) {
   const [bookingModal, setBookingModal] = useState<{
@@ -159,7 +162,7 @@ export function SpecialistCard({
             ¿Cómo funcionan los créditos?
           </CreditsHelpTrigger>
           {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} créditos por solicitud con Club Hogar.</p> : null}
-          {specialist.coverageRadiusKm ? (
+          {showDistance && specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
               A {specialist.distance} km · {coverageStatus} · radio {specialist.coverageRadiusKm} km
             </p>
