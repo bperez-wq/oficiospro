@@ -227,16 +227,16 @@ export function Header() {
           <BrandLogo variant="primary" size="md" />
         </Link>
 
-        <div className="hidden min-w-0 items-center gap-3 xl:flex">
-          <div className="hidden min-w-0 flex-1 xl:flex">
+        <div className="hidden min-w-0 flex-1 items-center gap-3 xl:flex">
+          <div className="hidden min-w-0 flex-1 2xl:flex">
             <HeaderSearch />
           </div>
-          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-hidden text-sm font-black text-muted xl:gap-1">
+          <nav className="flex min-w-0 items-center justify-center gap-0.5 text-sm font-black text-muted xl:gap-1 2xl:justify-end">
             <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
                 ref={categoryTriggerRef}
-                className={categoryOpen ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
+                className={categoryOpen ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={categoryOpen}
@@ -262,7 +262,7 @@ export function Header() {
             <NavLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} />
             <Link
               href="/especialistas-fundadores?source=header&intent=offer_services"
-              className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
+              className="whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
               onClick={() => {
                 void trackEvent({
                   eventName: "click_offer_services",
@@ -281,7 +281,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
+          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand 2xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
             {t("nav.search")}
           </button>
           <CartButton onOpen={() => setCartOpen(true)} />
@@ -309,7 +309,7 @@ export function Header() {
       </div>
 
       {mobileSearchOpen ? (
-        <div className="border-t border-line bg-white px-4 py-3 xl:hidden">
+        <div className="border-t border-line bg-white px-4 py-3 2xl:hidden">
           <HeaderSearch compact onSubmit={() => setMobileSearchOpen(false)} />
         </div>
       ) : null}
@@ -599,7 +599,7 @@ function MobileMenu({
 function NavLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
   const active = isActivePath(pathname, href);
   return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
+    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
       {label}
     </Link>
   );
