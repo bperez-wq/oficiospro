@@ -57,7 +57,7 @@ export function SpecialistCompactCard({
         <div className="min-w-0 flex-1">
           <div className="flex items-start justify-between gap-1.5">
             <strong className="truncate text-sm text-ink">{specialist.name}</strong>
-            <span className="shrink-0 text-xs font-black text-gold">★ {specialist.rating.toFixed(1)}</span>
+            <span role="img" aria-label={`Calificación ${specialist.rating.toFixed(1).replace(".", ",")} de 5`} className="shrink-0 text-xs font-black text-gold"><span aria-hidden>★</span> {specialist.rating.toFixed(1)}</span>
           </div>
           <span className="mt-0.5 block line-clamp-2 text-xs font-bold leading-4 text-muted">{specialist.specialty}</span>
           <span className={`mt-1 inline-flex rounded-full px-2 py-1 text-[11px] font-black ${levelChipStyles[level]}`}>Nivel {level}</span>

@@ -69,8 +69,12 @@ export function SpecialistGridCard({
           <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />
           {availabilityLabels[specialist.availability]}
         </span>
-        <span className="absolute right-2.5 top-2.5 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur">
-          ★ {specialist.rating.toFixed(1)}
+        <span
+          role="img"
+          aria-label={`Calificación ${specialist.rating.toFixed(1).replace(".", ",")} de 5`}
+          className="absolute right-2.5 top-2.5 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur"
+        >
+          <span aria-hidden>★</span> {specialist.rating.toFixed(1)}
         </span>
       </div>
 

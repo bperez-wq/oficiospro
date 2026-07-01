@@ -670,9 +670,19 @@ export function SpecialistsExplorer() {
             ) : (
               <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                 <EmptyState
-                  eyebrow={formingCoverage ? "Cobertura en formacion" : "Piloto por comuna"}
-                  title={searchIntentLabel ? `Estamos sumando especialistas de ${searchIntentLabel} en tu zona.` : "Estamos sumando especialistas para este servicio en tu zona."}
-                  text="Dejanos tu solicitud y priorizaremos esta cobertura. Si eres especialista de esta zona, tambien puedes crear tu perfil fundador."
+                  eyebrow={hasActiveFilters ? "Sin resultados" : formingCoverage ? "Cobertura en formación" : "Piloto por comuna"}
+                  title={
+                    hasActiveFilters
+                      ? "No encontramos especialistas con estos filtros."
+                      : searchIntentLabel
+                        ? `Estamos sumando especialistas de ${searchIntentLabel} en tu zona.`
+                        : "Estamos sumando especialistas para este servicio en tu zona."
+                  }
+                  text={
+                    hasActiveFilters
+                      ? "Prueba ampliar la comuna o quitar algún filtro. También puedes dejar tu solicitud y la revisamos manualmente."
+                      : "Déjanos tu solicitud y priorizaremos esta cobertura. Si eres especialista de esta zona, también puedes crear tu perfil fundador."
+                  }
                   visual={<span aria-hidden className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-2xl font-black text-brand-dark">OP</span>}
                   action={
                     <>

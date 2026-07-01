@@ -108,8 +108,12 @@ export function SpecialistCard({
         <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
           {availabilityLabels[specialist.availability]}
         </span>
-        <span className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-ink/80 px-3 py-2 text-xs font-black text-white shadow-soft backdrop-blur">
-          <span className="text-gold">★</span> {specialist.rating.toFixed(1)}
+        <span
+          role="img"
+          aria-label={`Calificación ${specialist.rating.toFixed(1).replace(".", ",")} de 5`}
+          className="absolute right-4 top-4 inline-flex items-center gap-1 rounded-full bg-ink/80 px-3 py-2 text-xs font-black text-white shadow-soft backdrop-blur"
+        >
+          <span aria-hidden className="text-gold">★</span> {specialist.rating.toFixed(1)}
         </span>
         <div className="absolute bottom-4 left-4 flex items-center gap-3">
           <span className="grid h-14 w-14 place-items-center rounded-2xl bg-brand text-lg font-black text-white shadow-lg shadow-brand/30">
