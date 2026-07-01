@@ -1,45 +1,59 @@
-# Global Market Lab
+# OficiosPro Global Market Lab
 
-Laboratorio para prototipar mercados (países/ciudades/oficios) de forma global **sin operar realmente**
-fuera de Chile y **sin depender de `oficiospro.com`**. Inspirado en expansión local-first (estilo Ebury):
-motor global común, adaptación local, activación solo donde haya tracción.
+## Propósito
 
-## Principios de honestidad
+Market Lab permite medir interés fuera de Chile sin prometer operación global. Es una capa de aprendizaje dentro de `oficiospro.cl`, no una expansión pública internacional.
 
-- "Estamos explorando este mercado." / "Sin disponibilidad garantizada todavía." / "Perfiles referenciales si aplica."
-- No prometer cobertura ni presencia global. No mostrar perfiles demo como reales.
-- **noindex por defecto** (no SEO internacional indexable todavía).
-- Dominio: todo vive bajo **`oficiospro.cl/market-lab`** (ver `docs/domain-global-strategy.md`). No usar `.com`.
+## Principios
 
-## Implementación actual (en código)
+- Chile opera en `oficiospro.cl`.
+- Los mercados externos se prueban en `/market-lab`.
+- Todas las rutas de Market Lab deben mantenerse `noindex` hasta aprobación explícita.
+- No se muestran especialistas como disponibles si no existe operación real.
+- No se activan pagos, checkout local ni promesas de cobertura fuera de Chile.
+- No se usa `oficiospro.com` como dominio propio ni como supuesto destino futuro.
 
-- Datos: `src/data/marketLab.ts` — 11 mercados (Chile/Santiago, Perú/Lima, Colombia/Bogotá, México/CDMX,
-  España/Madrid, Brasil/São Paulo, Portugal/Lisboa, Argentina/Buenos Aires, Uruguay/Montevideo,
-  EE.UU. hispano/Miami, UAE/Dubai). Cada mercado: `countryCode`, `countrySlug`, `cityName`, `locale`,
-  `currency`, `neighborhoodLabel`, `trades[]`, `status`, `seoStatus: noindex`, `paymentStatus: disabled/research_only`,
-  `contactChannel`, `trustNote`, `demoProfilePolicy: referential_only`.
-- Rutas (todas noindex):
-  - `/market-lab` — índice de mercados en exploración.
-  - `/market-lab/[country]/[city]/[trade]` — landing por mercado (`generateStaticParams`, `robots:{index:false}`).
-- Captura de leads unificada (`src/lib/marketLab/marketLabLeads.ts`, sin tocar Worker/D1):
-  - clientes/empresas → `market_lab_demand_lead`
-  - especialistas → `market_lab_supply_lead`
-  - `global_waitlist` queda como `source`/`campaign`.
+## Estrategia si oficiospro.com no está disponible
 
-## Estados de mercado
+La falta de `oficiospro.com` no bloquea el aprendizaje global. El laboratorio debe seguir estas reglas:
 
-`research → landing_live → collecting_supply → collecting_demand → pilot_ready → paused`.
-`seoStatus`: `noindex` (default) → `draft` → `approved` (solo con aprobación de Benjamín).
-`paymentStatus`: `disabled` → `research_only` → `future` (no se activan pagos internacionales).
+- No depender del `.com`.
+- Usar `oficiospro.cl` para Chile y para hospedar el laboratorio noindex.
+- Mantener `/market-lab` como espacio de investigación: país, ciudad, oficio, idioma y señales de demanda/oferta.
+- Evaluar dominio global alternativo cuando exista tracción real.
+- No crear SEO internacional indexable todavía.
+- Documentar cualquier candidato global como "por verificar", no como propiedad.
 
-## Estrategia si `oficiospro.com` no está disponible
+## Qué se puede medir
 
-- El Market Lab **no necesita** el `.com`: corre dentro de `oficiospro.cl/market-lab` (noindex).
-- Sirve para medir demanda por país antes de decidir cualquier dominio global.
-- Solo con tracción medible se evalúa un dominio global alternativo (`oficiospro.app`, `.global`,
-  `getoficiospro.com`, ccTLD por país). Ver criterios en `docs/domain-global-strategy.md`.
+- Leads de demanda: clientes o empresas que quieren contratar.
+- Leads de oferta: especialistas que quieren ofrecer servicios.
+- País, ciudad, oficio, idioma y canal de origen.
+- Tasa de conversión de visita a lead.
+- Calidad de lead y posibilidad de seguimiento manual.
+- Densidad mínima de oferta antes de considerar piloto.
 
-## Pendiente para operar realmente un mercado
+## Qué no se debe hacer todavía
 
-Pagos locales, marco legal/tributario, oferta verificada, soporte e idioma — nada de eso está activo.
-El Market Lab solo mide interés.
+- No indexar `/market-lab`.
+- No agregar rutas `/{lang}/...` indexables.
+- No publicar sitemap internacional.
+- No prometer técnicos disponibles fuera de Chile.
+- No habilitar cobros internacionales.
+- No usar un dominio global no comprado o no validado.
+
+## Relación con i18n
+
+La capa i18n puede ayudar a validar comprensión y conversión en distintos idiomas, pero no implica SEO internacional. Mientras no haya operación real, el contenido multilingüe es de aprendizaje y debe mantenerse noindex.
+
+## Señales para pasar de laboratorio a piloto
+
+Un mercado puede pasar de investigación a piloto manual solo si tiene:
+
+- Demanda repetida y trazable.
+- Oferta potencial suficiente.
+- Canal de contacto operativo.
+- Responsable de seguimiento.
+- Política clara de no prometer trabajos garantizados.
+- Revisión legal/comercial mínima para el país.
+

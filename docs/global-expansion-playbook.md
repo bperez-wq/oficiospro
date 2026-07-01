@@ -1,34 +1,112 @@
-# Playbook de expansión global
+# Playbook de expansión global OficiosPro
 
-Cómo OficiosPro evalúa y activa mercados nuevos, **local-first**, sin depender de `oficiospro.com` y sin
-prometer presencia global.
+## Norte estratégico
 
-## Secuencia por mercado
+OficiosPro debe crecer con una lógica local-first: validar primero densidad, confianza, oferta y soporte en cada mercado antes de activar SEO, pagos o promesas comerciales.
 
-1. **Research** — agregar el mercado a `src/data/marketLab.ts` (noindex). Hipótesis de demanda/oferta.
-2. **Landing noindex** — `/market-lab/[country]/[city]/[trade]` en `oficiospro.cl`. Copy honesto
-   ("estamos explorando"). Cero promesa de cobertura.
-3. **Medir** — leads `market_lab_demand_lead` (cliente/empresa) y `market_lab_supply_lead` (especialista).
-4. **Umbral de tracción** — definir mínimos de demanda + oferta sostenidas antes de invertir.
-5. **Decisión de operar** — solo si hay capacidad real: oferta verificada, pagos locales, legal/tributario, soporte.
-6. **Activación local** — recién aquí se evalúa dominio/idioma/SEO indexable para ese mercado.
+## Estado actual
 
-## Dominios en la expansión
+- Dominio operativo de Chile: `oficiospro.cl`.
+- Laboratorio internacional: `/market-lab` dentro de `oficiospro.cl`.
+- Estado SEO de Market Lab: noindex.
+- Dominio global: no definido.
+- `oficiospro.com`: no disponible para OficiosPro en este momento y no debe ser usado como activo.
 
-- Chile: `oficiospro.cl` (principal, no se mueve).
-- Exploración: `oficiospro.cl/market-lab` (noindex).
-- Global futuro: dominio alternativo **solo con tracción** (`oficiospro.app`, `.global`, `getoficiospro.com`,
-  o ccTLD por país). Ver `docs/domain-global-strategy.md`.
+## Estrategia si oficiospro.com no está disponible
 
-## Estrategia si `oficiospro.com` no está disponible
+El plan global debe funcionar sin `oficiospro.com`.
 
-No bloquea la expansión: se mide demanda en `/market-lab` (noindex, sobre `.cl`) y se compra un dominio
-global alternativo únicamente cuando un mercado justifique operación real. Riesgos de rebranding y criterios
-de compra están en `docs/domain-global-strategy.md`.
+Acciones:
 
-## Reglas
+- Mantener `oficiospro.cl` como base de Chile.
+- Mantener `/market-lab` como laboratorio noindex para países.
+- Usar campañas controladas para medir demanda y oferta sin indexación internacional.
+- Evaluar dominios alternativos (`oficiospro.app`, `oficiospro.global`, `getoficiospro.com` u otros) cuando haya tracción.
+- No prometer presencia global.
+- No crear SEO internacional indexable todavía.
 
-- No SEO internacional indexable hasta aprobación.
-- No activar pagos internacionales (todo `paymentStatus: disabled/research_only`).
-- No mostrar oferta/demos como reales.
-- No tocar Worker/D1/wrangler para experimentos de mercado.
+## Fases
+
+### Fase 0: Chile
+
+Objetivo: fortalecer operación, leads, CRM, especialistas, créditos y confianza en `oficiospro.cl`.
+
+Criterios:
+
+- Captura real de leads.
+- Seguimiento operativo.
+- Densidad de especialistas por comuna/oficio.
+- Claridad del sistema de créditos.
+- Evidencia visual y reputación.
+
+### Fase 1: Market Lab noindex
+
+Objetivo: aprender en mercados externos sin promesas.
+
+Acciones:
+
+- Crear o mantener rutas `/market-lab/[country]/[city]/[trade]`.
+- Capturar interés como `market_lab_demand_lead` o `market_lab_supply_lead`.
+- Mantener robots noindex.
+- Evitar perfiles falsos como disponibilidad real.
+- No usar checkout ni pagos internacionales.
+
+### Fase 2: piloto manual por país
+
+Objetivo: probar operación limitada con seguimiento humano.
+
+Requisitos:
+
+- Leads suficientes.
+- Oferta inicial mínima.
+- Canal de soporte.
+- Responsable operativo.
+- Mensajería honesta sobre cobertura limitada.
+
+### Fase 3: dominio global alternativo
+
+Objetivo: elegir dominio global solo con datos.
+
+Candidatos a verificar:
+
+- `oficiospro.app`
+- `oficiospro.global`
+- `getoficiospro.com`
+- `useoficiospro.com`
+- `oficiospro.io`
+
+Criterios:
+
+- Disponibilidad y costo razonable.
+- Bajo riesgo de confusión.
+- Buena recordación.
+- Compatible con Chile y mercados futuros.
+- Posibilidad de email transaccional confiable.
+- Aprobación de marca/legal.
+
+### Fase 4: SEO internacional
+
+Objetivo: indexar solo mercados con operación o contenido editorial sólido.
+
+Requiere aprobación explícita:
+
+- Rutas `/{lang}/...`.
+- `hreflang`.
+- Sitemap por idioma o país.
+- Canonical por mercado.
+- Contenido local útil y no duplicado.
+
+## Riesgos y mitigación
+
+- Riesgo: cambio de dominio confunde a usuarios.
+  Mitigación: explicar relación con `oficiospro.cl` y redireccionar solo cuando haya decisión formal.
+
+- Riesgo: SEO internacional débil o duplicado.
+  Mitigación: mantener Market Lab noindex hasta tener operación real.
+
+- Riesgo: prometer cobertura inexistente.
+  Mitigación: copy honesto y CTAs de lista de espera.
+
+- Riesgo: comprar dominio equivocado.
+  Mitigación: usar criterios de tracción antes de invertir.
+

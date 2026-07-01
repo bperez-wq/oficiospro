@@ -1,64 +1,60 @@
-# Estrategia global de dominios
+# Estrategia global de dominios OficiosPro
 
-Define cómo OficiosPro maneja dominios para crecer globalmente **sin depender de `oficiospro.com`**,
-que **actualmente NO es propiedad de OficiosPro**. Ningún código, doc ni estrategia debe asumir el `.com`
-como propio.
+## Decisión actual
 
-## Principios
+- `oficiospro.cl` es el dominio principal de Chile y la fuente de verdad para el piloto operativo.
+- La expansión fuera de Chile se explora dentro de `oficiospro.cl/market-lab`.
+- `/market-lab` y sus rutas por país/ciudad/oficio deben mantenerse `noindex` mientras no exista operación real en esos mercados.
+- OficiosPro no debe depender de `oficiospro.com`, porque ese dominio no pertenece actualmente a OficiosPro.
+- No se debe usar `oficiospro.com` en código, documentación, campañas, metadata, sitemaps, emails ni estrategia como si fuera propiedad de la empresa.
 
-- **`oficiospro.cl` es el dominio principal** (operación real en Chile). Toda la metadata, canonical,
-  sitemap y SEO indexable apuntan a `oficiospro.cl`.
-- **No usar `oficiospro.com`** en código, metadata, docs ni materiales como si fuera nuestro.
-- **No prometer presencia global** ni cobertura fuera de Chile.
-- **No crear SEO internacional indexable todavía** (los experimentos van noindex).
-- Expansión **local-first**: motor global común, activación por mercado solo con tracción.
+## Estrategia si oficiospro.com no está disponible
 
-## Estado actual
+OficiosPro debe tratar `oficiospro.com` como un dominio externo no controlado. La estrategia global no puede depender de comprarlo, redireccionarlo o usarlo para campañas.
 
-- Producción Chile: `oficiospro.cl`.
-- Laboratorio de mercados: **`/market-lab`** dentro de `oficiospro.cl`, **noindex** por defecto
-  (ver `docs/global-market-lab.md`). Sirve para medir interés por país/ciudad/oficio sin prometer cobertura.
-- i18n: client-side (es/en/pt/fr/de/it). Rutas por idioma pregeneradas = fase futura con aprobación
-  (ver `docs/i18n-localized-routes-plan.md`).
+Reglas:
 
-## Estrategia si `oficiospro.com` no está disponible
+- No depender del `.com` para validar mercados.
+- Usar `oficiospro.cl` para Chile, SEO local chileno, operación, leads y confianza inicial.
+- Usar `/market-lab` en `oficiospro.cl` para pruebas internacionales noindex.
+- Evaluar un dominio global alternativo solo cuando haya tracción medible fuera de Chile.
+- No prometer presencia global ni disponibilidad de especialistas fuera de mercados activados.
+- No crear SEO internacional indexable hasta que exista operación, soporte, oferta y base legal mínima por país.
 
-Es el escenario vigente. Plan:
+## Alternativas futuras de dominio global
 
-1. **No depender del `.com`.** No se compra ni se referencia como propio. Si algún día está disponible a
-   precio razonable, se evalúa solo como redirección hacia el dominio oficial, nunca como marca base.
-2. **Chile sigue en `oficiospro.cl`.** Es el activo de marca y SEO; no se migra.
-3. **Pruebas internacionales en `/market-lab` (noindex)** dentro de `oficiospro.cl`. Cero costo de dominio,
-   cero riesgo de marca, datos de demanda reales por mercado.
-4. **Evaluar un dominio global alternativo solo cuando haya tracción medible** en un mercado (ver criterios).
-5. **Criterios para comprar un dominio global:**
-   - Señal de demanda sostenida en ≥1 mercado fuera de Chile (leads supply+demand en `/market-lab`).
-   - Decisión de operar realmente ahí (pagos, legal, oferta) — no solo marketing.
-   - Disponibilidad del dominio + costo razonable + sin conflicto de marca/trademark.
-   - Capacidad operativa para sostener el mercado (no abrir lo que no se puede atender).
-6. **Riesgos de cambiar de marca/dominio:**
-   - Pérdida de SEO/autoridad si se mueve Chile fuera de `.cl` (NO recomendado).
-   - Confusión de marca si conviven varios dominios sin jerarquía clara.
-   - Costo de redirecciones, emails, certificados y rebranding.
-   - Mitigación: `oficiospro.cl` permanece como ancla; el dominio global sería **paraguas**, no reemplazo,
-     y cada país fuerte puede usar su ccTLD (`.pe`, `.co`, `.mx`…) cuando se active.
-7. **Dominios candidatos a verificar** (disponibilidad + trademark antes de comprar):
-   - `oficiospro.app`
-   - `oficiospro.global`
-   - `getoficiospro.com`
-   - `oficiospro.io` / `oficiospro.lat` (LatAm) / `oficiospro.world`
-   - ccTLD por país cuando se active operación: `oficiospro.pe`, `.co`, `.mx`, etc.
-   - Marca alternativa global solo si "OficiosPro" no escala lingüísticamente (decisión de Benjamín).
+Candidatos a verificar antes de cualquier compra, uso público o campaña:
 
-## Reglas para código y SEO
+- `oficiospro.app`
+- `oficiospro.global`
+- `getoficiospro.com`
+- `useoficiospro.com`
+- `oficiospro.io`
+- `oficiospro.net`
 
-- `metadataBase`, `canonical`, OpenGraph y sitemap → `oficiospro.cl` únicamente.
-- `/market-lab/**` → `robots: noindex` (ya implementado).
-- No agregar `hreflang` ni sitemaps internacionales hasta aprobar la fase de rutas por idioma.
-- Emails de contacto en `@oficiospro.cl`.
+Estos dominios son candidatos de exploración, no activos de la empresa. Antes de usarlos se debe verificar disponibilidad, costo, riesgo de marca, conflictos legales, redes sociales asociadas y percepción del usuario.
 
-## Decisiones que requieren a Benjamín
+## Criterios para comprar un dominio global
 
-- Comprar (o no) un dominio global alternativo y cuál, una vez haya tracción.
-- Momento de activar SEO internacional indexable.
-- Si algún país amerita su propio ccTLD/operación local.
+Comprar o reservar dominio global solo si se cumplen al menos estas señales:
+
+- 100 o más leads internacionales válidos con email/teléfono verificable.
+- Al menos 30 prospectos de especialistas por país objetivo.
+- Un mercado con tasa de conversión suficiente para piloto manual.
+- Señales orgánicas repetidas desde campañas o referidos internacionales.
+- Capacidad mínima de soporte operativo para responder a esos leads.
+- Revisión legal/marca antes de usar el dominio en producción.
+- Decisión explícita de Benjamín sobre país, marca y alcance.
+
+## Riesgos de cambiar marca o dominio
+
+- Pérdida de confianza si Chile opera en `oficiospro.cl` y mercados externos aparecen en otro dominio sin explicación.
+- Duplicación SEO y canónicos incorrectos si se indexan dominios globales antes de tiempo.
+- Confusión comercial si el dominio global promete cobertura que todavía no existe.
+- Riesgo legal o reputacional si se usa un dominio parecido a uno que pertenece a terceros.
+- Costos de migración de URLs, campañas, email, analytics y Search Console.
+
+## Recomendación operativa
+
+Mantener `oficiospro.cl` como casa matriz digital del piloto. Usar `/market-lab` como laboratorio privado/noindex para medir demanda internacional. Comprar o activar un dominio global solo cuando los datos del Market Lab justifiquen inversión, soporte y operación local.
+
