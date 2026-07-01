@@ -11,7 +11,7 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
       <strong className="my-3 block text-3xl font-black">{formatCLP(plan.priceCLP)}/mes</strong>
       <div className={featured ? "rounded-2xl bg-white/10 p-4" : "rounded-2xl bg-brand-soft p-4"}>
         <span className={featured ? "text-sm font-black text-white/70" : "text-sm font-black text-brand-dark"}>Créditos mensuales</span>
-        <strong className="block text-3xl font-black">{plan.monthlyCredits}</strong>
+        <strong className={`block text-3xl font-black ${featured ? "text-white" : "text-sun-dark"}`}>{plan.monthlyCredits}</strong>
         <span className={featured ? "text-xs font-bold text-white/70" : "text-xs font-bold text-muted"}>Acumulables hasta {plan.accumulatesMonths} meses</span>
       </div>
       <p className={featured ? "mt-4 text-sm font-semibold leading-6 text-white/75" : "mt-4 text-sm font-semibold leading-6 text-muted"}>{plan.description}</p>
