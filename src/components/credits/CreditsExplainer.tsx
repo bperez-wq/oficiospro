@@ -228,14 +228,18 @@ export function CreditPriceTag({
       {showClp ? <span className="text-xs font-bold text-muted" title={`1 crédito = ${formatCLP(CREDIT_VALUE_CLP)}`}>({clp})</span> : null}
       {showHelp ? (
         <>
+          {/* Ícono visual de 16px con área táctil ampliada a 44px (padding + margen
+              negativo para no alterar el layout). WCAG 2.5.5 objetivo táctil. */}
           <button
             type="button"
-            className="grid h-4 w-4 place-items-center rounded-full border border-line text-[10px] font-black leading-none text-muted hover:text-ink"
+            className="grid place-items-center p-[14px] -m-[14px] text-brand"
             onClick={() => setOpen(true)}
-            aria-label="Como funcionan los creditos"
-            title="Como funcionan los creditos"
+            aria-label="Cómo funcionan los créditos"
+            title="1 crédito = $1.000. Pagas los servicios con créditos y tu dinero queda protegido hasta que confirmes el trabajo."
           >
-            i
+            <span aria-hidden className="grid h-4 w-4 place-items-center rounded-full border border-brand/40 text-[10px] font-black leading-none">
+              i
+            </span>
           </button>
           <CreditsExplainerModal open={open} onClose={() => setOpen(false)} />
         </>

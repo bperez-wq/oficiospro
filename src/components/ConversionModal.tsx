@@ -667,7 +667,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                     {t("modal.specialist.clear")}
                   </button>
                 ) : null}
-                {specialistNotice ? <p className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-brand-dark">{specialistNotice}</p> : null}
+                {specialistNotice ? <p role="alert" aria-live="assertive" className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-brand-dark">{specialistNotice}</p> : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
                   {submitting ? t("modal.buttons.sending") : t("modal.buttons.startApplication")}
@@ -757,7 +757,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                 <button className="btn-secondary w-full" type="button" onClick={useSearchLocation}>
                   {t("modal.buttons.useLocation")}
                 </button>
-                {locationStatus ? <p className="text-sm font-black text-brand-dark">{locationStatus}</p> : null}
+                {locationStatus ? <p role="status" aria-live="polite" className="text-sm font-black text-brand-dark">{locationStatus}</p> : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
                   {submitting ? t("modal.buttons.sending") : t("modal.buttons.viewAvailable")}

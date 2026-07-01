@@ -204,8 +204,8 @@ export function SpecialistsExplorer() {
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
   const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
   const resultContext = hasLocationContext
-    ? "Ordenados por cercania y reputacion"
-    : "Agrega tu comuna para ver especialistas cerca de ti";
+    ? "Ordenados por cercanía y reputación"
+    : "📍 Indica tu comuna para ver especialistas cerca de ti";
   const routeCategory = categoryParam ? categoryRoutes[categoryParam] : null;
   const routeSpecialty = specialtyParam ? specialtyRoutes[specialtyParam] : null;
   const selectedMapCenter = getCommuneCenter(zone, region !== ALL_REGIONS_VALUE ? regionNameForCode(region) : undefined);

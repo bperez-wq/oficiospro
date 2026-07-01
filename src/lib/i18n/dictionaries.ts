@@ -229,7 +229,7 @@ const es = {
       specialistPrefill: "Precargaremos estos datos en el formulario completo.",
       specialistCleared: "Datos temporales limpiados.",
       specialistMissing: "Completa nombres, apellidos, WhatsApp, email y tipo de servicio para continuar.",
-      specialistEmail: "Ingresa un email válido para que podamos contactarte.",
+      specialistEmail: "Ingresa un correo válido, por ejemplo nombre@correo.cl",
       searchLocation: "Selecciona región y comuna para revisar disponibilidad real.",
       geoRequesting: "Solicitando ubicación...",
       geoUnavailable: "No pudimos acceder a tu ubicación. Puedes buscar por comuna.",
