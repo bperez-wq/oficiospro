@@ -62,6 +62,29 @@ a {
   text-decoration: none;
 }
 
+/* Skip link: oculto hasta recibir foco por teclado (WCAG 2.4.1). */
+.skip-link {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 200;
+  transform: translateY(-120%);
+  margin: 12px;
+  border-radius: 12px;
+  background: #08746f;
+  padding: 12px 18px;
+  font-weight: 800;
+  color: #ffffff;
+  box-shadow: 0 12px 34px rgba(11, 45, 47, 0.24);
+  transition: transform 0.18s ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
 ::selection {
   background: #dff4ef;
   color: #04413e;

@@ -173,7 +173,7 @@ export function SpecialistAssistantWidget() {
               <p className="mt-1 text-xs font-bold leading-5 text-muted">Busca especialistas, ofrece servicios o resuelve dudas.</p>
             </div>
             <button
-              className="grid h-9 w-9 place-items-center rounded-full border border-brand/20 bg-white text-lg font-black text-brand-dark"
+              className="grid h-11 w-11 place-items-center rounded-full border border-brand/20 bg-white text-lg font-black text-brand-dark"
               type="button"
               onClick={() => setOpen(false)}
               aria-label="Cerrar asistente"
