@@ -8,7 +8,7 @@ export function PlanActionCard({ plan, featured = false }: { plan: SubscriptionP
   return (
     <article className={`rounded-[28px] border p-6 shadow-soft transition hover:-translate-y-1 hover:shadow-card ${featured ? "border-brand bg-brand text-white" : "border-line bg-white"}`}>
       <span className={featured ? "font-black text-white/70" : "font-black text-brand"}>{plan.name}</span>
-      <strong className="my-3 block text-3xl font-black">{formatCLP(plan.priceCLP)}/mes</strong>
+      <strong className={`my-3 block text-3xl font-black ${featured ? "text-white" : "text-ink"}`}>{formatCLP(plan.priceCLP)}/mes</strong>
       <div className={featured ? "rounded-2xl bg-white/10 p-4" : "rounded-2xl bg-brand-soft p-4"}>
         <span className={featured ? "text-sm font-black text-white/70" : "text-sm font-black text-brand-dark"}>Créditos mensuales</span>
         <strong className={`block text-3xl font-black ${featured ? "text-white" : "text-sun-dark"}`}>{plan.monthlyCredits}</strong>
