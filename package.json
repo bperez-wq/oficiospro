@@ -21,6 +21,7 @@
     "db:status:remote": "wrangler d1 migrations list DB --remote",
     "kaizen:audit": "node scripts/kaizen-worktree-audit.mjs",
     "ops:specialist-intake": "node scripts/generate-specialist-intake-report.mjs",
+    "ops:backoffice-pipeline": "node scripts/backoffice-data-pipeline-check.mjs",
     "pilot:readiness": "node scripts/pilot-readiness-check.mjs",
     "pilot:readiness:strict": "node scripts/pilot-readiness-check.mjs --require-admin",
     "test:leads": "node scripts/test-lead-endpoints.mjs",

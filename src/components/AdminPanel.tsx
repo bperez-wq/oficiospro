@@ -24,6 +24,7 @@ import { getSpecialistReviews, type SpecialistReview } from "@/lib/trust";
 import { defaultCommercialConfig as defaultPricingConfig } from "@/data/commercialConfig";
 import { communeOptions } from "@/lib/catalog";
 import { canAccess } from "@/lib/security";
+import { adminRequestHeaders, adminSessionToken, hasAdminBrowserSession, initialAdminToken } from "@/lib/adminAuth";
 import { shouldShowDemoData } from "@/lib/demoData";
 import {
   addPaymentCredits,
@@ -121,6 +122,52 @@ type CompanyRequest = {
   createdAt?: string;
 };
 
+type LiveAdminLead = {
+  id: string;
+  created_at?: string;
+  createdAt?: string;
+  lead_type?: string;
+  leadType?: string;
+  status?: string;
+  priority?: string;
+  full_name?: string;
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  company_name?: string;
+  companyName?: string;
+  service?: string;
+  trade?: string;
+  region_name?: string;
+  regionName?: string;
+  commune_name?: string;
+  communeName?: string;
+  source_component?: string;
+  sourceComponent?: string;
+  source_button?: string;
+  sourceButton?: string;
+  payload_json?: string;
+  payloadJson?: string;
+};
+
+type LiveCrmOverview = {
+  newLeads?: number;
+  pendingSpecialists?: number;
+  pendingVirtualQuotes?: number;
+  overdueTasks?: number;
+  newCompanies?: number;
+  paymentIssues?: number;
+  openOpportunities?: number;
+};
+
+type LiveAdminDataState = {
+  status: "idle" | "loading" | "loaded" | "unauthorized" | "error";
+  leads: LiveAdminLead[];
+  overview: LiveCrmOverview | null;
+  message: string;
+  updatedAt?: string;
+};
+
 type AdminPlan = SubscriptionPlan & { active: boolean };
 type EditableSpecialty = {
   id: string;
@@ -165,6 +212,7 @@ const adminKeys = {
   leadNotes: "oficiospro.adminLeadNotes",
 };
 const fallbackDate = "1970-01-01T00:00:00.000Z";
+const adminBackofficeTokenStorageKey = "oficiospro.adminBackofficeToken";
 
 function readLocal<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
@@ -259,6 +307,12 @@ export function AdminPanel() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [authState, setAuthState] = useState<"checking" | "authenticated" | "unauthenticated" | "forbidden">("checking");
   const [adminSession, setAdminSession] = useState<MockSession | null>(null);
+  const [liveAdminData, setLiveAdminData] = useState<LiveAdminDataState>({
+    status: "idle",
+    leads: [],
+    overview: null,
+    message: "Pendiente de conectar datos D1.",
+  });
 
   useEffect(() => {
     const session = getMockSession();
@@ -278,6 +332,7 @@ export function AdminPanel() {
     setIsAdmin(true);
     seedMockState();
     refresh();
+    void refreshLiveAdminData();
     setPlans(readLocal(adminKeys.plans, defaultPlans()));
     setCatalog(readLocal(adminKeys.catalog, defaultCatalog()));
     setCoverage(readLocal(adminKeys.communes, defaultCommunes()));
@@ -318,6 +373,71 @@ export function AdminPanel() {
     setConfig(getCommercialConfig());
   }
 
+  function currentAdminToken() {
+    if (typeof window === "undefined") return "";
+    return (
+      initialAdminToken(adminBackofficeTokenStorageKey) ||
+      window.sessionStorage.getItem("oficiospro.adminLeadToken") ||
+      window.sessionStorage.getItem("oficiospro.adminCrmToken") ||
+      (hasAdminBrowserSession() ? adminSessionToken : "")
+    );
+  }
+
+  async function refreshLiveAdminData() {
+    const activeToken = currentAdminToken();
+    if (!activeToken) {
+      setLiveAdminData({
+        status: "unauthorized",
+        leads: [],
+        overview: null,
+        message: "Inicia sesion admin real o guarda ADMIN_TOKEN en Leads/CRM para ver datos D1.",
+      });
+      return;
+    }
+
+    setLiveAdminData((current) => ({ ...current, status: "loading", message: "Consultando D1..." }));
+    try {
+      const [leadsResponse, overviewResponse] = await Promise.all([
+        fetch("/api/admin/leads?limit=100", {
+          credentials: "include",
+          headers: adminRequestHeaders(activeToken),
+        }),
+        fetch("/api/admin/crm/overview", {
+          credentials: "include",
+          headers: adminRequestHeaders(activeToken),
+        }),
+      ]);
+      const leadsData = (await leadsResponse.json().catch(() => ({}))) as { ok?: boolean; leads?: LiveAdminLead[]; error?: string };
+      const overviewData = (await overviewResponse.json().catch(() => ({}))) as { ok?: boolean; overview?: LiveCrmOverview; error?: string };
+
+      if (!leadsResponse.ok || !leadsData.ok) {
+        const error = leadsData.error ?? `http_${leadsResponse.status}`;
+        setLiveAdminData({
+          status: error === "unauthorized" ? "unauthorized" : "error",
+          leads: [],
+          overview: null,
+          message: liveAdminErrorMessage(error),
+        });
+        return;
+      }
+
+      setLiveAdminData({
+        status: "loaded",
+        leads: leadsData.leads ?? [],
+        overview: overviewResponse.ok && overviewData.ok ? overviewData.overview ?? null : null,
+        message: `${leadsData.leads?.length ?? 0} leads reales cargados desde D1.`,
+        updatedAt: new Date().toISOString(),
+      });
+    } catch {
+      setLiveAdminData({
+        status: "error",
+        leads: [],
+        overview: null,
+        message: "No pudimos conectar el panel con D1. Revisa sesion admin, Worker o conexion.",
+      });
+    }
+  }
+
   const demoDataEnabled = shouldShowDemoData();
   const approvedBase = demoDataEnabled ? specialists.filter((specialist) => specialist.verified !== false) : [];
   const managedPublished = publishedSpecialists.filter((specialist) =>
@@ -328,6 +448,12 @@ export function AdminPanel() {
   const visiblePublished = publishedFilter === "all" ? [...approvedBase, ...managedPublished] : managedPublished;
   const pendingOnly = pendingSpecialists.filter((item) => item.status === "pendiente" || item.status === "info solicitada");
   const rejectedOnly = pendingSpecialists.filter((item) => item.status === "rechazado");
+  const liveDataLoaded = liveAdminData.status === "loaded";
+  const liveSpecialistLeads = liveAdminData.leads.filter((lead) => liveLeadType(lead) === "specialist_application");
+  const livePendingSpecialistLeads = liveSpecialistLeads.filter(isLiveOpenLead);
+  const liveCustomerLeads = liveAdminData.leads.filter((lead) => ["customer_request", "booking_request", "club_hogar_interest", "contact_message", "payment_interest"].includes(liveLeadType(lead)));
+  const liveCompanyLeads = liveAdminData.leads.filter((lead) => liveLeadType(lead) === "company_request");
+  const liveServiceRequests = liveAdminData.leads.filter((lead) => ["customer_request", "booking_request"].includes(liveLeadType(lead)));
   const commissionGrossRate = chileTaxConfig2026.platformCommission.standardRate * (chileTaxConfig2026.platformCommission.ivaApplies ? 1 + chileTaxConfig2026.ivaRate : 1);
   const estimatedCommission = serviceRequests.reduce((sum, request) => sum + (request.estimatedCredits ?? 0) * config.creditValueCLP * commissionGrossRate, 0);
   const reviewRows = useMemo<AdminReviewRow[]>(
@@ -344,11 +470,11 @@ export function AdminPanel() {
   );
   const filteredReviewRows = reviewRows.filter((review) => reviewRatingFilter === "all" || Math.round(review.ratingGeneral).toString() === reviewRatingFilter);
   const kpis = [
-    { label: "Especialistas pendientes", value: pendingOnly.length.toString() },
+    { label: "Especialistas pendientes", value: (liveDataLoaded ? livePendingSpecialistLeads.length : pendingOnly.length).toString() },
     { label: "Especialistas aprobados", value: visiblePublished.length.toString() },
-    { label: "Solicitudes nuevas", value: serviceRequests.filter((item) => item.status === "Nuevo").length.toString() },
-    { label: "Leads hogar", value: homeLeads.length.toString() },
-    { label: "Leads empresa", value: (enterpriseLeads.length + companyRequests.length).toString() },
+    { label: "Solicitudes nuevas", value: (liveDataLoaded ? liveServiceRequests.length : serviceRequests.filter((item) => item.status === "Nuevo").length).toString() },
+    { label: "Leads hogar", value: (liveDataLoaded ? liveCustomerLeads.length : homeLeads.length).toString() },
+    { label: "Leads empresa", value: (liveDataLoaded ? liveCompanyLeads.length : enterpriseLeads.length + companyRequests.length).toString() },
     { label: "Pagos recientes", value: payments.length.toString() },
     { label: "Propuestas pendientes", value: quoteAgreements.filter((item) => ["quote_requested", "proposal_sent", "platform_review", "customer_counteroffer"].includes(item.status)).length.toString() },
     { label: "Adicionales pendientes", value: additionalRequests.filter((item) => item.status === "pending_customer_approval" || item.status === "clarification_requested").length.toString() },
@@ -787,6 +913,15 @@ export function AdminPanel() {
               <h1 className="text-3xl font-black md:text-4xl">{sectionTitle(activeSection)}</h1>
             </div>
             <div className="flex flex-wrap gap-2">
+              <button className="btn-secondary" type="button" onClick={() => void refreshLiveAdminData()}>
+                Actualizar D1
+              </button>
+              <Link className="btn-secondary" href="/admin/leads">
+                Leads D1
+              </Link>
+              <Link className="btn-secondary" href="/admin/crm">
+                CRM D1
+              </Link>
               <Link className="btn-secondary" href="/">
                 Ver sitio público
               </Link>
@@ -802,6 +937,7 @@ export function AdminPanel() {
 
         {activeSection === "resumen" ? (
           <section className="grid gap-5">
+            <LiveAdminStatusCard state={liveAdminData} />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {kpis.map((kpi) => (
                 <KpiCard key={kpi.label} label={kpi.label} value={kpi.value} />
@@ -810,11 +946,23 @@ export function AdminPanel() {
             <div className="grid gap-5 xl:grid-cols-2">
               <Panel title="Actividad crítica" eyebrow="Hoy">
                 <div className="grid gap-3">
-                  <SummaryRow label="Especialistas pendientes" value={pendingOnly.length} action={() => setActiveSection("pendientes")} />
-                  <SummaryRow label="Solicitudes de clientes" value={serviceRequests.length} action={() => setActiveSection("solicitudes")} />
-                  <SummaryRow label="Cotizaciones virtuales" value={0} action={() => setActiveSection("cotizaciones-virtuales")} />
+                  <SummaryRow label="Especialistas pendientes" value={liveDataLoaded ? livePendingSpecialistLeads.length : pendingOnly.length} action={() => setActiveSection("pendientes")} />
+                  <SummaryRow label="Solicitudes de clientes" value={liveDataLoaded ? liveServiceRequests.length : serviceRequests.length} action={() => setActiveSection("solicitudes")} />
+                  <SummaryRow label="Cotizaciones virtuales" value={liveAdminData.overview?.pendingVirtualQuotes ?? 0} action={() => setActiveSection("cotizaciones-virtuales")} />
                   <SummaryRow label="Reviews nuevas" value={reviewRows.filter((review) => !review.reviewedByAdmin).length} action={() => setActiveSection("reviews")} />
-                  <SummaryRow label="Leads comerciales" value={allLeads.length} action={() => setActiveSection("leads-hogar")} />
+                  <SummaryRow label="Leads comerciales" value={liveDataLoaded ? liveAdminData.leads.length : allLeads.length} action={() => setActiveSection("leads-hogar")} />
+                </div>
+              </Panel>
+              <Panel title="Leads D1 recientes" eyebrow="Pipeline real">
+                <div className="grid gap-3">
+                  {liveDataLoaded && liveAdminData.leads.length ? liveAdminData.leads.slice(0, 5).map((lead) => (
+                    <LiveLeadSummaryRow key={lead.id} lead={lead} />
+                  )) : (
+                    <EmptyState text={liveAdminData.status === "loaded" ? "No hay leads reales en D1." : "Conecta sesion admin para cargar leads reales desde D1."} />
+                  )}
+                  <Link className="btn-secondary justify-self-start" href="/admin/leads">
+                    Abrir leads operativos
+                  </Link>
                 </div>
               </Panel>
               <Panel title="Cobertura nacional" eyebrow="Comunas">
@@ -831,6 +979,28 @@ export function AdminPanel() {
         {activeSection === "pendientes" ? (
           <Panel title="Especialistas pendientes" eyebrow="Validación">
             <div className="grid gap-3">
+              {liveDataLoaded ? (
+                <div className="rounded-2xl border border-brand/20 bg-brand-soft p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-brand-dark">Fuente real D1</p>
+                      <p className="mt-1 text-sm font-bold text-muted">
+                        {livePendingSpecialistLeads.length} postulaciones abiertas desde /api/admin/leads.
+                      </p>
+                    </div>
+                    <Link className="btn-primary" href="/admin/leads">
+                      Gestionar en Leads D1
+                    </Link>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-bold text-amber-900">
+                  {liveAdminData.message} Mientras tanto se muestra fallback local si existe.
+                </div>
+              )}
+              {liveDataLoaded && livePendingSpecialistLeads.length ? livePendingSpecialistLeads.map((lead) => (
+                <LiveSpecialistLeadRow key={lead.id} lead={lead} />
+              )) : null}
               {pendingOnly.length ? pendingOnly.map((request) => (
                 <SpecialistAdminRow
                   key={request.id ?? request.name}
@@ -1191,6 +1361,128 @@ function sectionTitle(section: AdminSection) {
 function normalizeStatus(status?: string): ConversionLeadStatus {
   const allowed: ConversionLeadStatus[] = ["Nuevo", "Contactado", "En proceso", "Cerrado", "Convertido", "Perdido"];
   return allowed.includes(status as ConversionLeadStatus) ? (status as ConversionLeadStatus) : "Nuevo";
+}
+
+function liveLeadValue(lead: LiveAdminLead, snakeKey: keyof LiveAdminLead, camelKey: keyof LiveAdminLead) {
+  return String(lead[snakeKey] ?? lead[camelKey] ?? "").trim();
+}
+
+function liveLeadType(lead: LiveAdminLead) {
+  return liveLeadValue(lead, "lead_type", "leadType");
+}
+
+function liveLeadName(lead: LiveAdminLead) {
+  return liveLeadValue(lead, "full_name", "fullName") || liveLeadValue(lead, "company_name", "companyName") || "Contacto OficiosPro";
+}
+
+function liveLeadCommune(lead: LiveAdminLead) {
+  return liveLeadValue(lead, "commune_name", "communeName") || "Comuna por confirmar";
+}
+
+function liveLeadCreatedAt(lead: LiveAdminLead) {
+  return liveLeadValue(lead, "created_at", "createdAt");
+}
+
+function liveLeadInterest(lead: LiveAdminLead) {
+  return lead.service || lead.trade || liveLeadTypeLabel(liveLeadType(lead));
+}
+
+function liveLeadTypeLabel(type: string) {
+  const labels: Record<string, string> = {
+    specialist_application: "Postulacion especialista",
+    customer_request: "Solicitud cliente",
+    booking_request: "Reserva",
+    company_request: "Empresa",
+    contact_message: "Contacto",
+    club_hogar_interest: "Club Hogar",
+    payment_interest: "Pago/creditos",
+  };
+  return labels[type] ?? (type || "Lead");
+}
+
+function isLiveOpenLead(lead: LiveAdminLead) {
+  const status = String(lead.status ?? "").toLowerCase();
+  return !["approved", "aprobado", "published", "rejected", "rechazado", "closed", "cerrado", "convertido", "perdido"].includes(status);
+}
+
+function liveAdminErrorMessage(error: string) {
+  if (error === "unauthorized") return "Sesion admin no autorizada para D1. Inicia sesion real o usa ADMIN_TOKEN.";
+  if (error === "admin_token_not_configured") return "ADMIN_TOKEN no esta configurado en Cloudflare.";
+  if (error === "database_not_configured") return "Binding D1 DB no esta disponible en el Worker.";
+  return `No pudimos leer D1: ${error}`;
+}
+
+function formatLiveLeadDate(value: string) {
+  if (!value) return "Sin fecha";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString("es-CL", { dateStyle: "short", timeStyle: "short" });
+}
+
+function LiveAdminStatusCard({ state }: { state: LiveAdminDataState }) {
+  const tone =
+    state.status === "loaded"
+      ? "border-brand/20 bg-brand-soft text-brand-dark"
+      : state.status === "loading"
+        ? "border-sky-200 bg-sky-50 text-sky-900"
+        : "border-amber-200 bg-amber-50 text-amber-900";
+  return (
+    <article className={`rounded-3xl border p-4 ${tone}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide">Fuente de datos backoffice</p>
+          <p className="mt-1 text-sm font-bold">{state.message}</p>
+          {state.updatedAt ? <p className="mt-1 text-xs font-bold opacity-80">Actualizado: {formatLiveLeadDate(state.updatedAt)}</p> : null}
+        </div>
+        <span className="rounded-full bg-white px-3 py-1 text-xs font-black uppercase shadow-sm">
+          {state.status === "loaded" ? "D1 activo" : state.status === "loading" ? "Cargando" : "Fallback"}
+        </span>
+      </div>
+    </article>
+  );
+}
+
+function LiveLeadSummaryRow({ lead }: { lead: LiveAdminLead }) {
+  return (
+    <article className="rounded-2xl border border-line bg-slate-50 p-4">
+      <div className="flex flex-wrap items-center gap-2">
+        <strong>{liveLeadName(lead)}</strong>
+        <span className="chip bg-white text-brand-dark">{liveLeadTypeLabel(liveLeadType(lead))}</span>
+        <span className="chip bg-brand-soft text-brand-dark">{lead.status ?? "nuevo"}</span>
+      </div>
+      <p className="mt-2 text-sm font-bold text-muted">
+        {liveLeadInterest(lead)} - {liveLeadCommune(lead)} - {formatLiveLeadDate(liveLeadCreatedAt(lead))}
+      </p>
+    </article>
+  );
+}
+
+function LiveSpecialistLeadRow({ lead }: { lead: LiveAdminLead }) {
+  return (
+    <article className="grid gap-4 rounded-2xl border border-brand/20 bg-white p-4 xl:grid-cols-[1fr_auto]">
+      <div>
+        <div className="flex flex-wrap items-center gap-2">
+          <strong>{liveLeadName(lead)}</strong>
+          <span className="chip bg-brand-soft text-brand-dark">{lead.status ?? "postulado"}</span>
+          <span className="chip bg-white text-brand-dark">D1</span>
+        </div>
+        <p className="mt-2 text-sm font-bold text-muted">
+          {lead.email || "Sin email"} - {lead.phone || "Sin telefono"} - {liveLeadCommune(lead)}
+        </p>
+        <p className="mt-2 text-sm font-bold text-muted">
+          {liveLeadInterest(lead)} - {formatLiveLeadDate(liveLeadCreatedAt(lead))}
+        </p>
+      </div>
+      <div className="flex flex-wrap gap-2 xl:justify-end">
+        <Link className="btn-primary" href="/admin/leads">
+          Revisar en Leads D1
+        </Link>
+        <Link className="btn-secondary" href="/admin/crm/acquisition">
+          Ver captacion
+        </Link>
+      </div>
+    </article>
+  );
 }
 
 function Panel({ eyebrow, title, action, children }: { eyebrow: string; title: string; action?: ReactNode; children: ReactNode }) {
