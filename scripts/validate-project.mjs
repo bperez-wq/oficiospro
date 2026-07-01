@@ -407,8 +407,8 @@ if (assetDirectory === "./out") {
   assertContains("src/lib/flexiblePricing.ts", "creditsForInitialHold");
   assertContains("src/components/BookingDrawer.tsx", "quote_request_submit");
   assertContains("src/components/BookingDrawer.tsx", "Cotizacion solicitada");
-  assertContains("src/components/Dashboards.tsx", "Cotizaciones y acuerdos");
-  assertContains("src/components/Dashboards.tsx", "Propuestas y adicionales");
+  assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Cotizaciones y acuerdos");
+  assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Propuestas y adicionales");
   assertContains("src/components/AdminPanel.tsx", "Tarifas, cotizaciones y negociación");
   assertContains("src/components/AdminPanel.tsx", "AdminCreditLedgerPreview");
   assertContains("src/components/AdminCreditLedgerPreview.tsx", "El cliente ve créditos");
