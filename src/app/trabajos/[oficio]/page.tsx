@@ -111,7 +111,7 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
         includedItems={[
           ...page.benefits,
           `Aparicion por oficio ${page.shortTitle} y comuna cuando el perfil sea aprobado.`,
-          "Cotizacion virtual y apoyo para ordenar servicios y precios.",
+          "Cotización virtual y apoyo para ordenar servicios y precios.",
         ]}
         guidanceTitle="Requisitos de postulacion"
         guidanceItems={[
@@ -125,7 +125,7 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
         internalLinks={[
           { href: founderRegistrationHref(acquisitionContext), label: "Registro especialista", description: "Formulario real con source SEO y oficio precargados." },
           { href: "/especialistas-fundadores", label: "Especialistas Fundadores", description: "Conoce el programa fundador completo." },
-          { href: "/referidos/especialistas", label: "Referir especialista", description: "Invita a otro trabajador tecnico sin promesas monetarias." },
+          { href: "/referidos/especialistas", label: "Referir especialista", description: "Invita a otro trabajador técnico sin promesas monetarias." },
           { href: searchHref(page.searchParams), label: "Marketplace de especialistas", description: "Mira como se muestran perfiles publicados." },
           { href: "/instituciones", label: "Instituciones", description: "Propuesta para OMIL, SENCE, CFT/IP y organizaciones locales." },
         ]}

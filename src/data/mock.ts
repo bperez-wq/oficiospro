@@ -899,7 +899,7 @@ function makeFlexibleService({
         : pricingMode === "virtual_diagnosis"
           ? "El cliente envia fotos y antecedentes para cotizar antes de ir, cuando sea posible."
         : pricingMode === "visit_then_quote"
-          ? "La visita tecnica permite cerrar alcance y puede descontarse segun condiciones."
+          ? "La visita técnica permite cerrar alcance y puede descontarse segun condiciones."
           : "Materiales o alcance adicional se aprueban antes de cualquier cobro extra.",
     adminReviewStatus: pricingMode === "custom" ? "pending_review" : "approved",
   };
@@ -984,7 +984,7 @@ const specificFlexibleServices: Record<string, FlexibleService[]> = {
       id: "victor-hvac-hourly",
       serviceTypeId: "climatizacion-refrigeracion",
       specialty: "Mantencion HVAC",
-      name: "Tecnico HVAC por hora",
+      name: "Técnico HVAC por hora",
       description: "Diagnostico, limpieza y mantencion preventiva segun equipo.",
       pricingMode: "hourly",
       credits: 16,

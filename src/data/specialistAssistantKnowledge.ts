@@ -66,8 +66,8 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     id: "cliente-find-service",
     category: "cliente",
     intent: "find_service",
-    keywords: ["necesito ayuda", "busco especialista", "buscar especialista", "servicio tecnico", "tecnico", "especialista cerca"],
-    questionExamples: ["Necesito un especialista", "Busco servicio tecnico", "Me pueden ayudar con un trabajo?"],
+    keywords: ["necesito ayuda", "busco especialista", "buscar especialista", "servicio técnico", "técnico", "especialista cerca"],
+    questionExamples: ["Necesito un especialista", "Busco servicio técnico", "Me pueden ayudar con un trabajo?"],
     answer:
       "Puedo ayudarte a buscar especialistas publicados o a dejar una solicitud. No tengo confirmada cobertura inmediata para cada comuna, pero la solicitud ayuda a priorizar el caso.",
     actionButtons: [
@@ -82,7 +82,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     id: "cliente-find-gasfiter",
     category: "cliente",
     intent: "find_gasfiter",
-    keywords: ["gasfiter", "gasfiteria", "fuga", "filtracion", "filtracion agua", "llave", "cañeria", "caneria", "agua", "lavamanos", "wc"],
+    keywords: ["gasfiter", "gasfiteria", "fuga", "filtracion", "filtracion agua", "llave", "cañería", "caneria", "agua", "lavamanos", "wc"],
     questionExamples: ["Necesito gasfiter", "Tengo una filtracion", "Busco gasfiter urgente"],
     answer:
       "Te puedo ayudar a encontrar gasfiteres. Puedes revisar especialistas publicados o dejar una solicitud si aun estamos formando cobertura en tu comuna; no tengo confirmada disponibilidad inmediata.",
@@ -117,7 +117,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     category: "cliente",
     intent: "find_calefont",
     keywords: ["calefont", "calefon", "agua caliente", "no enciende", "gas", "llama piloto"],
-    questionExamples: ["Mi calefont no enciende", "Necesito tecnico de calefont", "No tengo agua caliente"],
+    questionExamples: ["Mi calefont no enciende", "Necesito técnico de calefont", "No tengo agua caliente"],
     answer:
       "Para problemas de calefont puedes revisar el servicio asociado y buscar especialistas. Si no hay cobertura confirmada para tu comuna, deja una solicitud para priorizarla.",
     actionButtons: [
@@ -151,7 +151,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     category: "cliente",
     intent: "find_climatizacion",
     keywords: ["aire acondicionado", "climatizacion", "hvac", "refrigeracion", "split", "calefaccion"],
-    questionExamples: ["Necesito aire acondicionado", "Busco tecnico en climatizacion", "Reparar split"],
+    questionExamples: ["Necesito aire acondicionado", "Busco técnico en climatizacion", "Reparar split"],
     answer:
       "Para climatizacion puedes revisar especialistas publicados o dejar una solicitud. OficiosPro evita prometer disponibilidad sin revisar comuna, agenda y cobertura.",
     actionButtons: [
@@ -183,7 +183,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     category: "cliente",
     intent: "find_security_service",
     keywords: ["cerrajero", "cerradura", "llave", "camara", "camaras", "porton", "portones", "control remoto", "seguridad"],
-    questionExamples: ["Necesito cerrajero", "Busco tecnico de camaras", "Tengo problema con porton"],
+    questionExamples: ["Necesito cerrajero", "Busco técnico de camaras", "Tengo problema con porton"],
     answer:
       "Puedo guiarte hacia especialistas o solicitudes para seguridad, cerrajeria, camaras o portones. Si no hay cobertura confirmada en tu comuna, deja una solicitud para priorizarla.",
     actionButtons: [
@@ -200,7 +200,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     category: "cliente",
     intent: "find_pool_service",
     keywords: ["piscina", "piscinero", "bomba piscina", "mantencion piscina", "filtro piscina"],
-    questionExamples: ["Necesito mantencion de piscina", "Busco tecnico para piscina"],
+    questionExamples: ["Necesito mantencion de piscina", "Busco técnico para piscina"],
     answer:
       "Puedes dejar una solicitud o revisar especialistas publicados. OficiosPro no confirma disponibilidad inmediata sin comuna y cobertura real.",
     actionButtons: [
@@ -373,10 +373,10 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     id: "pagos-comision",
     category: "pagos",
     intent: "commission",
-    keywords: ["comision", "9,5", "9.5", "iva", "cuanto cobra", "porcentaje", "descuento"],
-    questionExamples: ["Cuanto cobra OficiosPro?", "Cual es la comision?", "Me descuentan algo?"],
+    keywords: ["comisión", "9,5", "9.5", "iva", "cuanto cobra", "porcentaje", "descuento"],
+    questionExamples: ["Cuanto cobra OficiosPro?", "Cual es la comisión?", "Me descuentan algo?"],
     answer:
-      "La comision estandar informada es 9,5% + IVA sobre la base configurada del servicio. Financia tecnologia, soporte, operacion, pago protegido y gestion administrativa. El calculo final puede depender del documento y validacion contable.",
+      "La comisión estandar informada es 9,5% + IVA sobre la base configurada del servicio. Financia tecnologia, soporte, operación, pago protegido y gestion administrativa. El calculo final puede depender del documento y validacion contable.",
     relatedLinks: [formalizationLink],
     confidence: 0.93,
     escalationRecommended: false,
@@ -386,9 +386,9 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     category: "pagos",
     intent: "credits",
     keywords: ["creditos", "cliente", "precio cliente", "tarifa", "clp", "cuanto ve el cliente"],
-    questionExamples: ["El cliente ve pesos o creditos?", "Como se calcula el precio cliente?", "Yo elijo creditos?"],
+    questionExamples: ["El cliente ve pesos o créditos?", "Como se calcula el precio cliente?", "Yo elijo créditos?"],
     answer:
-      "El especialista declara su tarifa esperada en CLP. OficiosPro calcula los creditos visibles para clientes y revisa margen, comision y condiciones antes de publicar el servicio.",
+      "El especialista declara su tarifa esperada en CLP. OficiosPro calcula los créditos visibles para clientes y revisa margen, comisión y condiciones antes de publicar el servicio.",
     relatedLinks: [registerLink, formalizationLink],
     confidence: 0.9,
     escalationRecommended: false,
@@ -400,7 +400,7 @@ export const specialistAssistantKnowledge: SpecialistAssistantKnowledgeEntry[] =
     keywords: ["pago protegido", "cuando pagan", "cuando se paga", "liberar pago", "cobrar", "liquidacion"],
     questionExamples: ["Cuando me pagan?", "Como funciona pago protegido?", "Cuando se libera el pago?"],
     answer:
-      "OficiosPro trabaja con pago protegido: el cliente usa creditos y el pago se libera segun avance o cierre del trabajo, con documentacion revisada. No se libera una liquidacion sin validacion operativa y tributaria.",
+      "OficiosPro trabaja con pago protegido: el cliente usa créditos y el pago se libera segun avance o cierre del trabajo, con documentacion revisada. No se libera una liquidacion sin validacion operativa y tributaria.",
     relatedLinks: [formalizationLink, ...commonContactLink],
     confidence: 0.88,
     escalationRecommended: true,

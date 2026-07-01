@@ -439,7 +439,7 @@ function LeadDetail({
                     <span>Tarifa especialista: {formatPricingCLP(row.specialistExpectedPayoutCLP)}</span>
                     <span>Créditos cliente: {row.clientCredits || "por revisar"}</span>
                     <span>Precio cliente estimado: {row.estimatedClientPriceCLP ? formatPricingCLP(row.estimatedClientPriceCLP) : "por revisar"}</span>
-                    <span>Comision OficiosPro estimada: {row.estimatedCommissionCLP ? formatPricingCLP(row.estimatedCommissionCLP) : "por revisar"}</span>
+                    <span>Comisión OficiosPro estimada: {row.estimatedCommissionCLP ? formatPricingCLP(row.estimatedCommissionCLP) : "por revisar"}</span>
                     <span>Estado pricing: {row.pricingStatus || "pending_review"}</span>
                     <span>Emergencia: {row.emergencyAvailable ? "sí" : "no"}</span>
                   </div>

@@ -266,7 +266,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               )}
               {!hasCheckoutReadyItems ? (
                 <p className="rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-900">
-                  Revisa la cotizacion en la bolsa antes de pasar a checkout.
+                  Revisa la cotización en la bolsa antes de pasar a checkout.
                 </p>
               ) : null}
               <button

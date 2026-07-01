@@ -67,31 +67,31 @@ export function AdminPricingPanel() {
         <p className="eyebrow">Pricing interno</p>
         <h3 className="text-2xl font-black">Configuracion comercial interna</h3>
         <p className="mt-2 text-sm font-bold text-muted">
-          El especialista declara CLP. OficiosPro convierte esa tarifa a creditos cliente usando Comision OficiosPro 9,5% + IVA. Los planes y packs mantienen precios comerciales independientes.
+          El especialista declara CLP. OficiosPro convierte esa tarifa a créditos cliente usando Comisión OficiosPro 9,5% + IVA. Los planes y packs mantienen precios comerciales independientes.
         </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-3">
-        <PricingNumber label="Valor credito cliente CLP" value={config.customerCreditValueCLP} onChange={(value) => updateNumber("customerCreditValueCLP", value)} />
-        <PricingNumber label="Comision referencia %" value={config.platformFeePercent * 100} onChange={(value) => updateNumber("platformFeePercent", value / 100)} />
+        <PricingNumber label="Valor crédito cliente CLP" value={config.customerCreditValueCLP} onChange={(value) => updateNumber("customerCreditValueCLP", value)} />
+        <PricingNumber label="Comisión referencia %" value={config.platformFeePercent * 100} onChange={(value) => updateNumber("platformFeePercent", value / 100)} />
         <PricingNumber label="Costo pago legacy %" value={config.paymentFeePercent * 100} onChange={(value) => updateNumber("paymentFeePercent", value / 100)} />
         <PricingNumber label="Buffer riesgo legacy %" value={config.riskBufferPercent * 100} onChange={(value) => updateNumber("riskBufferPercent", value / 100)} />
         <PricingNumber label="Fee fijo legacy CLP" value={config.fixedServiceFeeCLP} onChange={(value) => updateNumber("fixedServiceFeeCLP", value)} />
         <PricingNumber label="Multiplicador urgencia" value={config.emergencyMultiplier} step="0.05" onChange={(value) => updateNumber("emergencyMultiplier", value)} />
-        <PricingNumber label="Minimo creditos cliente" value={config.minimumClientCredits} onChange={(value) => updateNumber("minimumClientCredits", value)} />
+        <PricingNumber label="Minimo créditos cliente" value={config.minimumClientCredits} onChange={(value) => updateNumber("minimumClientCredits", value)} />
         <PricingNumber label="Redondeo creditos" value={config.creditRoundingStep} onChange={(value) => updateNumber("creditRoundingStep", value)} />
         <PricingNumber label="Payout minimo especialista" value={config.minimumSpecialistPayoutCLP} onChange={(value) => updateNumber("minimumSpecialistPayoutCLP", value)} />
         <PricingNumber label="Payout maximo especialista" value={config.maximumSpecialistPayoutCLP} onChange={(value) => updateNumber("maximumSpecialistPayoutCLP", value)} />
-        <PricingNumber label="Comision minima hogar futura" value={config.minimumHomeMarginCLP} onChange={(value) => updateNumber("minimumHomeMarginCLP", value)} />
-        <PricingNumber label="Comision minima empresa futura" value={config.minimumCompanyMarginCLP} onChange={(value) => updateNumber("minimumCompanyMarginCLP", value)} />
-        <PricingNumber label="Comision minima agricola futura" value={config.minimumAgriculturalMarginCLP} onChange={(value) => updateNumber("minimumAgriculturalMarginCLP", value)} />
-        <PricingNumber label="Comision minima industrial futura" value={config.minimumIndustrialMarginCLP} onChange={(value) => updateNumber("minimumIndustrialMarginCLP", value)} />
+        <PricingNumber label="Comisión minima hogar futura" value={config.minimumHomeMarginCLP} onChange={(value) => updateNumber("minimumHomeMarginCLP", value)} />
+        <PricingNumber label="Comisión minima empresa futura" value={config.minimumCompanyMarginCLP} onChange={(value) => updateNumber("minimumCompanyMarginCLP", value)} />
+        <PricingNumber label="Comisión minima agricola futura" value={config.minimumAgriculturalMarginCLP} onChange={(value) => updateNumber("minimumAgriculturalMarginCLP", value)} />
+        <PricingNumber label="Comisión minima industrial futura" value={config.minimumIndustrialMarginCLP} onChange={(value) => updateNumber("minimumIndustrialMarginCLP", value)} />
         <PricingNumber label="Descuento suscriptor por solicitud" value={config.subscriberDiscountCredits} onChange={(value) => updateNumber("subscriberDiscountCredits", value)} />
         <PricingNumber label="Creditos visita inicial" value={config.initialVisitCredits} onChange={(value) => updateNumber("initialVisitCredits", value)} />
         <PricingNumber label="Fee visita inicial creditos" value={config.initialVisitFeeCredits} onChange={(value) => updateNumber("initialVisitFeeCredits", value)} />
-        <PricingNumber label="Comision materiales %" value={config.materialCommissionPercent * 100} onChange={(value) => updateNumber("materialCommissionPercent", value / 100)} />
-        <PricingNumber label="Comision adicional mano de obra %" value={config.additionalLaborCommissionPercent * 100} onChange={(value) => updateNumber("additionalLaborCommissionPercent", value / 100)} />
-        <PricingNumber label="Vencimiento cotizacion dias" value={config.quoteExpirationDays} onChange={(value) => updateNumber("quoteExpirationDays", value)} />
+        <PricingNumber label="Comisión materiales %" value={config.materialCommissionPercent * 100} onChange={(value) => updateNumber("materialCommissionPercent", value / 100)} />
+        <PricingNumber label="Comisión adicional mano de obra %" value={config.additionalLaborCommissionPercent * 100} onChange={(value) => updateNumber("additionalLaborCommissionPercent", value / 100)} />
+        <PricingNumber label="Vencimiento cotización dias" value={config.quoteExpirationDays} onChange={(value) => updateNumber("quoteExpirationDays", value)} />
         <PricingNumber label="Maximo adicionales por solicitud" value={config.maxAdditionalsPerRequest} onChange={(value) => updateNumber("maxAdditionalsPerRequest", value)} />
         <PricingNumber label="Revision admin si total > creditos" value={config.adminApprovalCreditThreshold} onChange={(value) => updateNumber("adminApprovalCreditThreshold", value)} />
         <label className="flex items-center gap-3 rounded-2xl border border-line bg-slate-50 p-4 text-sm font-black text-muted">
@@ -116,15 +116,15 @@ export function AdminPricingPanel() {
           <input type="number" min="0" step="1000" value={samplePayout} onChange={(event) => setSamplePayout(normalizeCLPInput(event.target.value))} />
         </label>
         <Metric label="Tarifa esperada especialista CLP" value={formatCLP(samplePayout)} />
-        <Metric label="Creditos cliente calculados" value={`${calculatedCredits} creditos`} />
+        <Metric label="Creditos cliente calculados" value={`${calculatedCredits} créditos`} />
         <Metric label="Precio cliente CLP estimado interno" value={formatCLP(estimatedClientPrice)} />
-        <Metric label="Comision OficiosPro estimada" value={formatCLP(estimatedCommission)} />
+        <Metric label="Comisión OficiosPro estimada" value={formatCLP(estimatedCommission)} />
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <InternalRuleEditor
           title="Multiplicadores por categoria"
-          description="Ajusta recargos internos por tipo de servicio antes de publicar creditos cliente."
+          description="Ajusta recargos internos por tipo de servicio antes de publicar créditos cliente."
           entries={config.categoryMultipliers}
           valueLabel="Multiplicador"
           onNumberChange={updateCategoryMultiplier}
@@ -137,7 +137,7 @@ export function AdminPricingPanel() {
           onNumberChange={updateCommuneMultiplier}
         />
         <CertificationRuleEditor
-          title="Certificacion requerida por categoria"
+          title="Certificación requerida por categoria"
           description="Define que categorias requieren respaldo antes de activar servicios."
           entries={config.certificationRequiredByCategory}
           onToggle={updateCertificationRequirement}
@@ -145,7 +145,7 @@ export function AdminPricingPanel() {
       </div>
 
       <p className="text-xs font-bold text-muted">
-        Nota: esta configuracion es una base local para administracion. En produccion, la comision vigente para servicios debe venir de taxConfig/Worker y mantenerse en 9,5% + IVA hasta nueva version validada.
+        Nota: esta configuracion es una base local para administracion. En produccion, la comisión vigente para servicios debe venir de taxConfig/Worker y mantenerse en 9,5% + IVA hasta nueva version validada.
       </p>
     </section>
   );

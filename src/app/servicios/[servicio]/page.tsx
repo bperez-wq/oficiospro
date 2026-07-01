@@ -78,7 +78,7 @@ export default async function ServicePage({ params }: PageProps) {
       description={service.description}
       image={service.image}
       imageAlt={service.title}
-      badges={["Especialistas verificados", "Pago con creditos", "Cotizacion con contexto"]}
+      badges={["Especialistas verificados", "Pago con creditos", "Cotización con contexto"]}
       primaryCta={{ href: primaryCtaHref, label: "Buscar especialistas" }}
       secondaryCta={{ href: founderHref, label: "Postular como especialista" }}
       includedTitle="Servicios incluidos"
@@ -87,7 +87,7 @@ export default async function ServicePage({ params }: PageProps) {
       guidanceItems={[
         "Describe el problema o servicio que necesitas con fotos y comuna.",
         "Compara especialistas por reputacion, disponibilidad y trabajos completados.",
-        "Agrega el perfil a la Bolsa y confirma el alcance antes de pagar con creditos.",
+        "Agrega el perfil a la Bolsa y confirma el alcance antes de pagar con créditos.",
       ]}
       specialists={specialists}
       faqs={service.faqs}

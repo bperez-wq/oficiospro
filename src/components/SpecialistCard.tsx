@@ -23,12 +23,15 @@ export function SpecialistCard({
   matchedService,
   searchIntent,
   highlightedCreditPrice,
+  showDistance = false,
   onReserve,
 }: {
   specialist: Specialist;
   matchedService?: FlexibleService | null;
   searchIntent?: string;
   highlightedCreditPrice?: string;
+  /** Solo mostrar km cuando hay ubicación real del usuario (evita distancias engañosas). */
+  showDistance?: boolean;
   onReserve?: (id: string, service?: FlexibleService | null) => void;
 }) {
   const [bookingModal, setBookingModal] = useState<{
@@ -148,18 +151,18 @@ export function SpecialistCard({
           <strong className="block text-2xl font-black text-ink">{highlightedCreditPrice ?? pricingSummary(displayService)}</strong>
           <div className="mt-3 grid gap-2 sm:grid-cols-2">
             <span className="rounded-2xl bg-white p-3 text-sm font-black text-ink">
-              Normal: {creditPair.baseCredits} creditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.baseCredits)})</span>
+              Normal: {creditPair.baseCredits} créditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.baseCredits)})</span>
             </span>
             <span className="rounded-2xl bg-white p-3 text-sm font-black text-brand-dark">
-              Club Hogar: {creditPair.clubCredits} creditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.clubCredits)})</span>
+              Club Hogar: {creditPair.clubCredits} créditos <span className="text-xs font-bold text-muted">({creditsToCLPLabel(creditPair.clubCredits)})</span>
             </span>
           </div>
           <p className="text-sm font-bold text-muted">{pricingModeLabel(displayService.pricingMode)} · {pricingDetail(displayService)}</p>
           <CreditsHelpTrigger className="mt-2 inline-block text-xs font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
             ¿Cómo funcionan los créditos?
           </CreditsHelpTrigger>
-          {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} creditos por solicitud con Club Hogar.</p> : null}
-          {specialist.coverageRadiusKm ? (
+          {creditPair.savingsCredits ? <p className="mt-2 text-sm font-black text-brand-dark">Ahorra {creditPair.savingsCredits} créditos por solicitud con Club Hogar.</p> : null}
+          {showDistance && specialist.coverageRadiusKm ? (
             <p className="mt-2 text-sm font-bold text-muted">
               A {specialist.distance} km · {coverageStatus} · radio {specialist.coverageRadiusKm} km
             </p>
@@ -173,9 +176,9 @@ export function SpecialistCard({
         </div>
 
         <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-          <span className="text-xs font-black uppercase text-emerald-900">Proteccion OficiosPro</span>
+          <span className="text-xs font-black uppercase text-emerald-900">Protección OficiosPro</span>
           <div className="mt-3 grid gap-2 text-sm font-bold leading-5 text-emerald-950">
-            <span>Tus creditos se retienen hasta confirmar avance.</span>
+            <span>Tus créditos se retienen hasta confirmar avance.</span>
             <span>El especialista es revisado antes de publicarse.</span>
             <span>Puedes calificar despues del servicio.</span>
             <span>Los adicionales requieren aprobacion.</span>
@@ -259,7 +262,7 @@ function snapshotSpecialist(specialist: Specialist): Specialist {
 function badgeClass(badge: string) {
   if (badge === "Identidad verificada") return "chip-emerald";
   if (badge === "Top especialista") return "chip-sun";
-  if (badge === "Certificacion cargada") return "chip-accent";
+  if (badge === "Certificación cargada") return "chip-accent";
   if (badge === "Respuesta rapida") return "chip-brand";
   return "chip-brand";
 }

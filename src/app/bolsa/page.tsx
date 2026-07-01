@@ -90,7 +90,7 @@ export default function BolsaPage() {
     if (!quote?.offer || isCartItemCheckoutReady(item)) return;
     const credits = Math.max(0, Number(quote.offer.creditPrice ?? quote.offer.maxCredits ?? quote.offer.minCredits ?? item.credits ?? 0));
     const amountCLP = credits * defaultCommercialConfig.customerCreditValueCLP;
-    updateVirtualQuoteStatus(quote.id, "aprobada_cliente", "Cliente aprobo la cotizacion virtual. Los creditos se retendran al continuar al checkout.");
+    updateVirtualQuoteStatus(quote.id, "aprobada_cliente", "Cliente aprobo la cotización virtual. Los créditos se retendran al continuar al checkout.");
     void syncVirtualQuoteDecision(quote, "approve");
     addCartItem({
       ...item,
@@ -99,7 +99,7 @@ export default function BolsaPage() {
       credits,
       amountCLP,
       priceCLP: amountCLP,
-      title: `${item.serviceName ?? item.title} - cotizacion aprobada`,
+      title: `${item.serviceName ?? item.title} - cotización aprobada`,
       intendedAction: item.intendedAction ?? "virtual_quote",
       status: "quote_approved",
       virtualQuoteId: quote.remoteId ?? quote.id,
@@ -111,7 +111,7 @@ export default function BolsaPage() {
   function rejectVirtualQuote(item: OficiosProCartItem) {
     const quote = quoteForItem(item);
     if (!quote) return;
-    updateVirtualQuoteStatus(quote.id, "rechazada_cliente", "Cliente rechazo la cotizacion virtual.");
+    updateVirtualQuoteStatus(quote.id, "rechazada_cliente", "Cliente rechazo la cotización virtual.");
     void syncVirtualQuoteDecision(quote, "reject");
     refreshLocalState();
   }
@@ -124,7 +124,7 @@ export default function BolsaPage() {
     if (isQuoteItem(single)) {
       const quote = quoteForItem(single);
       if (isCartItemCheckoutReady(single)) return { label: "Continuar al checkout", href: checkoutHref };
-      return { label: quote?.offer ? "Revisar propuesta" : quote ? "Ver cotizacion virtual" : "Iniciar cotizacion virtual", onClick: () => setVirtualQuoteItem(single), href: undefined };
+      return { label: quote?.offer ? "Revisar propuesta" : quote ? "Ver cotización virtual" : "Iniciar cotización virtual", onClick: () => setVirtualQuoteItem(single), href: undefined };
     }
     return { label: "Confirmar reserva", onClick: () => openBooking(single, "reservar"), href: findSpecialist(single) ? undefined : profileHref(single) };
   })();
@@ -135,7 +135,7 @@ export default function BolsaPage() {
         <p className="eyebrow">Bolsa</p>
         <h1 className="text-3xl font-black text-ink md:text-5xl">Tu bolsa</h1>
         <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-muted">
-          Guarda especialistas, creditos y solicitudes para compararlos con calma antes de confirmar.
+          Guarda especialistas, créditos y solicitudes para compararlos con calma antes de confirmar.
         </p>
 
         {!loaded ? (
@@ -152,7 +152,7 @@ export default function BolsaPage() {
             <span aria-hidden className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-brand-soft text-3xl">🛍</span>
             <h2 className="text-3xl font-black">Tu bolsa está vacía</h2>
             <p className="mx-auto max-w-md text-sm font-bold leading-6 text-muted">
-              Agrega especialistas para comparar perfiles, precios en creditos y disponibilidad. En etapa piloto, tambien puedes dejar una solicitud si no encuentras match exacto.
+              Agrega especialistas para comparar perfiles, precios en créditos y disponibilidad. En etapa piloto, tambien puedes dejar una solicitud si no encuentras match exacto.
             </p>
             <div className="grid gap-2 sm:grid-cols-3">
               <Link className="btn-primary" href="/especialistas?sourceSection=bolsa_empty">Buscar especialistas</Link>
@@ -248,7 +248,7 @@ export default function BolsaPage() {
                 </Link>
               </div>
               <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-                Precio total en creditos. Incluye gestion de plataforma y pago protegido: al reservar, tus creditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.{" "}
+                Precio total en créditos. Incluye gestion de plataforma y pago protegido: al reservar, tus créditos quedan retenidos y se liberan cuando confirmas el avance del trabajo.{" "}
                 <CreditsHelpTrigger className="font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
                   ¿Cómo funcionan los créditos?
                 </CreditsHelpTrigger>
@@ -382,7 +382,7 @@ function SpecialistBagCard({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <strong className="text-sm text-brand-dark">Cotiza con fotos antes de la visita.</strong>
             <span className="rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-brand-dark">
-              {virtualQuote ? virtualQuoteStatusLabels[virtualQuote.status] : "Cotizacion virtual pendiente"}
+              {virtualQuote ? virtualQuoteStatusLabels[virtualQuote.status] : "Cotización virtual pendiente"}
             </span>
           </div>
           <p className="mt-1 text-xs font-bold leading-5 text-brand-dark/80">
@@ -407,7 +407,7 @@ function SpecialistBagCard({
               {virtualQuote.offer.comment ? <p className="mt-2 text-xs font-bold leading-5 text-muted">{virtualQuote.offer.comment}</p> : null}
               <div className="mt-3 flex flex-wrap gap-2">
                 <button className="btn-primary min-h-10 px-4 text-xs" type="button" onClick={onApproveOffer}>
-                  Aprobar cotizacion
+                  Aprobar cotización
                 </button>
                 <button className="btn-secondary min-h-10 px-4 text-xs" type="button" onClick={onRejectOffer}>
                   Rechazar
@@ -431,7 +431,7 @@ function SpecialistBagCard({
           onClick={quote ? onVirtualQuote : onQuote}
           data-event="bolsa_quote_item"
         >
-          {quote ? virtualQuote ? "Ver cotizacion" : "Iniciar cotizacion" : "Cotizar"}
+          {quote ? virtualQuote ? "Ver cotización" : "Iniciar cotización" : "Cotizar"}
         </button>
         <button
           className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
@@ -539,10 +539,10 @@ function VirtualQuoteModal({
             <p className="eyebrow">Diagnostico virtual</p>
             <h2 id="virtual-quote-title" className="text-2xl font-black text-ink">Cotiza con fotos antes de la visita</h2>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">
-              Los creditos solo se retienen cuando apruebas la cotizacion. Si el caso requiere revision presencial, el especialista podra recomendar una visita tecnica.
+              Los créditos solo se retienen cuando apruebas la cotización. Si el caso requiere revision presencial, el especialista podra recomendar una visita técnica.
             </p>
           </div>
-          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted transition hover:border-brand hover:bg-brand-soft hover:text-brand-dark" type="button" onClick={onClose} aria-label="Cerrar cotizacion virtual">
+          <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-muted transition hover:border-brand hover:bg-brand-soft hover:text-brand-dark" type="button" onClick={onClose} aria-label="Cerrar cotización virtual">
             <span aria-hidden className="text-2xl leading-none">×</span>
           </button>
         </div>
@@ -578,7 +578,7 @@ function VirtualQuoteModal({
                       onClose();
                     }}
                   >
-                    Aprobar cotizacion
+                    Aprobar cotización
                   </button>
                   <button
                     className="btn-secondary"
@@ -594,7 +594,7 @@ function VirtualQuoteModal({
               </div>
             ) : (
               <div className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold leading-6 text-muted">
-                Tu solicitud quedo lista para revision. El especialista podra pedir mas informacion, enviar una propuesta en creditos o recomendar visita tecnica.
+                Tu solicitud quedo lista para revision. El especialista podra pedir mas informacion, enviar una propuesta en créditos o recomendar visita técnica.
               </div>
             )}
           </div>
@@ -736,9 +736,9 @@ function MiniInfo({ label, value }: { label: string; value: string }) {
 }
 
 function offerCreditsLabel(offer: NonNullable<VirtualQuoteRequest["offer"]>) {
-  if (offer.pricingMode === "fixed" && offer.creditPrice) return `${offer.creditPrice} creditos`;
-  if (offer.pricingMode === "range") return `${offer.minCredits ?? 0}-${offer.maxCredits ?? 0} creditos`;
-  if (offer.pricingMode === "visit_then_quote") return "Recomienda visita tecnica";
+  if (offer.pricingMode === "fixed" && offer.creditPrice) return `${offer.creditPrice} créditos`;
+  if (offer.pricingMode === "range") return `${offer.minCredits ?? 0}-${offer.maxCredits ?? 0} créditos`;
+  if (offer.pricingMode === "visit_then_quote") return "Recomienda visita técnica";
   return "Requiere mas informacion";
 }
 
@@ -750,7 +750,7 @@ async function syncVirtualQuoteDecision(quote: VirtualQuoteRequest, action: "app
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        message: action === "approve" ? "Cliente aprobo cotizacion virtual." : "Cliente rechazo cotizacion virtual.",
+        message: action === "approve" ? "Cliente aprobo cotización virtual." : "Cliente rechazo cotización virtual.",
       }),
     });
   } catch {

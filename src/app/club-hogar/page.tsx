@@ -17,8 +17,8 @@ import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
-  title: "Club Hogar OficiosPro | Creditos para mantenciones",
-  description: "Club Hogar entrega creditos recurrentes para ordenar mantenciones, reparaciones y solicitudes tecnicas con especialistas verificados.",
+  title: "Club Hogar OficiosPro | Créditos para mantenciones",
+  description: "Club Hogar entrega créditos recurrentes para ordenar mantenciones, reparaciones y solicitudes técnicas con especialistas verificados.",
   path: "/club-hogar",
   image: "/assets/hero-hogar.webp",
   keywords: ["Club Hogar", "creditos mantencion", "servicios hogar"],

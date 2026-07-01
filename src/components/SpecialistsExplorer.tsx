@@ -97,6 +97,9 @@ export function SpecialistsExplorer() {
   const [sourceSection, setSourceSection] = useState("");
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
+  // true solo cuando tenemos coordenadas reales del usuario (perfil con ubicación).
+  // Sin esto la distancia se calcula desde un centro por defecto y es engañosa (P1-04).
+  const [hasUserLocation, setHasUserLocation] = useState(false);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
   const [notice, setNotice] = useState("");
   const filterDrawerRef = useRef<HTMLElement | null>(null);
@@ -108,6 +111,7 @@ export function SpecialistsExplorer() {
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
       setClientLng(clientProfile.lng);
+      setHasUserLocation(true);
       setNotice(`Ubicación privada disponible para ordenar por cercanía desde ${clientProfile.commune}.`);
     }
     fetch("/api/specialists")
@@ -212,10 +216,10 @@ export function SpecialistsExplorer() {
   const formingCoverage = taxonomyCoverage ? isTradeForming(taxonomyCoverage) : false;
   const coverageLabel = taxonomyCoverage ? getTradeCoverageLabel(taxonomyCoverage) : "";
   const selectedTypeLabel = typeFilterOptions.find((item) => item.value === category)?.label;
-  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Tecnicos recomendados");
+  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Técnicos recomendados");
   const contextualSubtitle = formingCoverage
     ? `Estamos formando red para este oficio. Puedes dejar una solicitud y priorizaremos cobertura por comuna.`
-    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos." : resultContext);
+    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en créditos." : resultContext);
   const suggestedChips = routeCategory?.suggestions ?? [];
   const activeSearchIntent = useMemo<SpecialistSearchIntent>(
     () => ({
@@ -246,7 +250,7 @@ export function SpecialistsExplorer() {
     zone && zone !== ALL_COMMUNES_VALUE ? { label: `Comuna: ${zone}`, clear: () => setZone(ALL_COMMUNES_VALUE) } : null,
     availability !== "all" ? { label: `Disponibilidad: ${availabilityOptions.find((item) => item.value === availability)?.label ?? availability}`, clear: () => setAvailability("all") } : null,
     rating > 0 ? { label: `Calificacion desde ${rating.toFixed(1)}`, clear: () => setRating(0) } : null,
-    maxCredits < 999 ? { label: `Hasta ${maxCredits} creditos`, clear: () => setMaxCredits(999) } : null,
+    maxCredits < 999 ? { label: `Hasta ${maxCredits} créditos`, clear: () => setMaxCredits(999) } : null,
     level !== "all" ? { label: `Nivel ${level}`, clear: () => setLevel("all") } : null,
     quickResponse ? { label: "Respuesta rapida", clear: () => setQuickResponse(false) } : null,
     withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
@@ -439,7 +443,7 @@ export function SpecialistsExplorer() {
             <div>
               <p className="eyebrow">Busca por confianza</p>
               <h2 className="text-2xl font-black">Filtra especialistas</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y creditos.</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y créditos.</p>
             </div>
             <button
               type="button"
@@ -564,7 +568,7 @@ export function SpecialistsExplorer() {
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <strong className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
+              <strong role="status" aria-live="polite" className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
               <button className="rounded-full border border-line px-4 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={clearFilters}>
                 Limpiar filtros
               </button>
@@ -658,6 +662,7 @@ export function SpecialistsExplorer() {
                     matchedService={matchedService}
                     searchIntent={searchIntentLabel}
                     highlightedCreditPrice={matchedServiceSummary(matchedService, !searchIntentLabel)}
+                    showDistance={hasUserLocation}
                     onReserve={reserve}
                   />
                 );

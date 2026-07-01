@@ -459,7 +459,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
           commune: reservation.commune,
           status: "quote_requested",
           originalRequest: reservation.additionalComments || serviceLabel || selectedFlexibleService.description,
-          history: ["El cliente solicito cotizacion desde el perfil publico."],
+          history: ["El cliente solicito cotización desde el perfil publico."],
         })
       : null;
     const saved = appendServiceRequestLead({
@@ -476,7 +476,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       quoteId: quote?.id,
       estimatedCredits: selectedFlexibleService?.fixedCredits ?? selectedFlexibleService?.minCredits ?? selectedFlexibleService?.visitCredits ?? specialist?.credits,
       coverageZone: specialist?.commune ?? specialist?.zone,
-      interest: quoteMode && specialist ? `Cotizacion con ${specialist.name}` : specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
+      interest: quoteMode && specialist ? `Cotización con ${specialist.name}` : specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
     });
     appendConversionEvent({
       type: "specialist_reserved",

@@ -5,7 +5,7 @@ export default function AdminCreditsPage() {
     <AdminOperationalTablePage
       eyebrow="Panel interno OficiosPro"
       title="Creditos"
-      description="Wallets de creditos persistidas en D1. Los movimientos deben venir de ledger y acciones autorizadas."
+      description="Wallets de créditos persistidas en D1. Los movimientos deben venir de ledger y acciones autorizadas."
       endpoint="/api/admin/credits"
       responseKey="wallets"
       columns={["id", "userId", "availableCredits", "reservedCredits", "expiringCredits", "lifetimePurchased", "lifetimeUsed", "updatedAt"]}

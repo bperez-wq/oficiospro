@@ -1,8 +1,10 @@
 import { AdminPanel } from "@/components/AdminPanel";
 import Link from "next/link";
+import { RouteAuthGuard } from "@/components/RouteAuthGuard";
 
 export default function AdminPage() {
   return (
+    <RouteAuthGuard resource="admin">
     <main className="section grid gap-6">
       <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-5 shadow-soft">
         <p className="eyebrow">Panel interno OficiosPro</p>
@@ -24,5 +26,6 @@ export default function AdminPage() {
       </section>
       <AdminPanel />
     </main>
+    </RouteAuthGuard>
   );
 }

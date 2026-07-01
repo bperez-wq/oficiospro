@@ -3,7 +3,7 @@ import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Terminos y condiciones OficiosPro",
-  description: "Consulta las condiciones generales de uso de OficiosPro para clientes, especialistas, empresas, creditos y solicitudes.",
+  description: "Consulta las condiciones generales de uso de OficiosPro para clientes, especialistas, empresas, créditos y solicitudes.",
   path: "/terminos",
   keywords: ["terminos OficiosPro", "condiciones de uso"],
 });
