@@ -11,6 +11,28 @@
   --op-shadow-lift: 0 28px 80px rgba(20, 32, 31, 0.14);
   --op-surface: rgba(255, 255, 255, 0.94);
   --op-surface-muted: #f8faf9;
+  /* Naranja accesible (WCAG AA) — reemplaza al #d98a24 que fallaba contraste */
+  --op-orange-text: #a65600; /* 5.31:1 sobre blanco */
+  --op-orange-on-crema: #9b5000; /* 5.40:1 sobre #fff3dc */
+  --op-orange-btn-bg: #a65600; /* con texto blanco 5.31:1 */
+  --op-focus-ring: #08746f; /* 5.62:1 */
+}
+
+/* Foco de teclado visible en todo elemento interactivo (WCAG 2.4.7).
+   El doble :focus-visible eleva la especificidad para ganarle a cualquier
+   `focus:outline-none` (outline transparente) aplicado por utilidades. */
+a:focus-visible:focus-visible,
+button:focus-visible:focus-visible,
+[role="button"]:focus-visible:focus-visible,
+[role="combobox"]:focus-visible:focus-visible,
+[role="link"]:focus-visible:focus-visible,
+[tabindex]:focus-visible:focus-visible,
+input:focus-visible:focus-visible,
+select:focus-visible:focus-visible,
+textarea:focus-visible:focus-visible {
+  outline: 2px solid var(--op-focus-ring, #08746f);
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 * {
@@ -59,7 +81,7 @@ a {
   }
 
   .btn-sun {
-    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-gradient-to-br from-sun to-sun-dark px-5 font-black text-white shadow-glow-sun transition duration-200 hover:-translate-y-0.5 hover:shadow-lift focus:outline-none focus:ring-4 focus:ring-sun-soft;
+    @apply inline-flex min-h-12 items-center justify-center gap-2 rounded-2xl bg-sun-dark px-5 font-black text-white shadow-glow-sun transition duration-200 hover:-translate-y-0.5 hover:bg-[#8f4b00] hover:shadow-lift focus:outline-none focus:ring-4 focus:ring-sun-soft;
   }
 
   .btn-accent {
