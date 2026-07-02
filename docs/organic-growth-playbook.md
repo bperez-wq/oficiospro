@@ -74,3 +74,14 @@ Revisar semanalmente:
 - campanas con mayor envio de postulacion
 
 Registrar decision y resultado en `docs/kaizen-backlog.md`.
+
+## Canal SEO editorial (Soro)
+
+Desde julio 2026 existe un canal adicional de crecimiento organico: contenido editorial investigado con Soro SEO bajo control humano.
+
+- Backlog de temas: `docs/soro-seo-topic-briefs.md` (60 oportunidades priorizadas).
+- Politica y flujo editorial: `docs/soro-seo-editorial-policy.md`.
+- Plan de 90 dias: `docs/soro-seo-90-day-plan.md`.
+- Medicion: `docs/search-console-playbook.md` y seccion Soro de `docs/analytics-and-growth-tracking.md`.
+
+Regla de oro: el contenido complementa este playbook, no lo reemplaza. Cada pieza debe apuntar a una conversion real (registro especialista, solicitud cliente, contacto empresa/institucion) y pasa por revision humana antes de publicarse. Nada se autopublica.
