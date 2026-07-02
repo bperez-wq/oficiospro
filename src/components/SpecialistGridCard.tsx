@@ -14,7 +14,7 @@ import { getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 const shortBadgeLabels: Record<string, string> = {
   "Identidad verificada": "Verificado",
   "Referencias revisadas": "Referencias",
-  "Certificacion cargada": "Certificado",
+  "Certificación cargada": "Certificado",
   "Respuesta rapida": "Resp. rápida",
   "Top especialista": "Top",
 };
@@ -24,12 +24,15 @@ export function SpecialistGridCard({
   matchedService,
   searchIntent,
   highlightedCreditPrice,
+  showDistance = false,
   sourceSection = "specialists_explorer_grid",
 }: {
   specialist: Specialist;
   matchedService?: FlexibleService | null;
   searchIntent?: string;
   highlightedCreditPrice?: string;
+  /** Solo mostrar km cuando hay ubicación real del usuario (evita distancias engañosas). */
+  showDistance?: boolean;
   /** Compatibilidad: ya no abre modal; el CTA agrega a la Bolsa (bag-first). */
   onReserve?: (id: string, service?: FlexibleService | null) => void;
   sourceSection?: string;
@@ -41,7 +44,7 @@ export function SpecialistGridCard({
   const badges = useMemo(() => getTrustBadges(specialist).slice(0, 2), [specialist]);
   const profileHref = `/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}&sourceSection=${sourceSection}`;
   const action = bagActionLabel(displayService.pricingMode);
-  const hasDistance = typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
+  const hasDistance = showDistance && typeof specialist.distance === "number" && Number.isFinite(specialist.distance);
 
   function addToBag() {
     addSpecialistToBagAndProceed({ specialist, service: displayService, sourceSection });
@@ -66,8 +69,12 @@ export function SpecialistGridCard({
           <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />
           {availabilityLabels[specialist.availability]}
         </span>
-        <span className="absolute right-2.5 top-2.5 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur">
-          ★ {specialist.rating.toFixed(1)}
+        <span
+          role="img"
+          aria-label={`Calificación ${specialist.rating.toFixed(1).replace(".", ",")} de 5`}
+          className="absolute right-2.5 top-2.5 rounded-full bg-ink/75 px-2.5 py-1 text-[11px] font-black text-white backdrop-blur"
+        >
+          <span aria-hidden>★</span> {specialist.rating.toFixed(1)}
         </span>
       </div>
 
@@ -108,7 +115,7 @@ export function SpecialistGridCard({
         <div className="mt-auto grid grid-cols-2 gap-2 pt-1">
           <Link
             href={profileHref}
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-line bg-white px-2 text-xs font-black text-brand-dark transition duration-200 hover:border-brand hover:bg-brand-soft active:scale-[0.98]"
             onClick={() =>
               preserveSpecialistIntent({
                 specialist,
@@ -122,7 +129,7 @@ export function SpecialistGridCard({
             Ver perfil
           </Link>
           <button
-            className="inline-flex min-h-10 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-brand px-2 text-xs font-black text-white transition duration-200 hover:bg-brand-dark active:scale-[0.98]"
             type="button"
             data-event="specialist_grid_add_to_bag"
             onClick={addToBag}

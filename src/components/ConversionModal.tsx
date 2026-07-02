@@ -5,6 +5,7 @@ import { RegionCommuneSelect } from "@/components/RegionCommuneSelect";
 import { SearchableSelect } from "@/components/SearchableSelect";
 import type { Specialist } from "@/data/mock";
 import { formatCLP, getPlanById, getServiceTypeById, serviceTypes, subscriptionPlans } from "@/data/marketplace";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import {
   communeRegionCode,
   DEFAULT_REGION_CODE,
@@ -113,9 +114,6 @@ const defaultSearch = {
   urgency: "Hoy",
 };
 
-const otherServicePlaceholder =
-  "Ejemplo: necesito reparar una bomba de agua en una parcela, instalar un equipo especial o coordinar una mantención que no aparece en la lista.";
-
 export function ConversionModalProvider({ children }: { children: ReactNode }) {
   const [options, setOptions] = useState<OpenConversionModalOptions | null>(null);
 
@@ -182,6 +180,7 @@ export function ConversionButton({
 }
 
 function ConversionModal({ options, onClose }: { options: OpenConversionModalOptions | null; onClose: () => void }) {
+  const { t, tList } = useI18n();
   const [step, setStep] = useState(1);
   const [lead, setLead] = useState(defaultLead);
   const [enterprise, setEnterprise] = useState(defaultEnterprise);
@@ -295,7 +294,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
         data: { planId: selectedPlan.id, planName: selectedPlan.name, leadId: saved.id },
       });
     }
-    setSuccess("Datos recibidos. Continuaremos con la activación.");
+    setSuccess(t("modal.notices.homeReceived"));
     const result = await submitLead({
       leadType: options?.planId ? "payment_interest" : "club_hogar_interest",
       fullName: `${lead.firstNames} ${lead.lastNames}`.trim(),
@@ -363,11 +362,11 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
     const fullName = `${specialistLead.firstNames} ${specialistLead.lastNames}`.trim();
     const hasBasicFields = fullName.length > 1 && specialistLead.phone.trim() && specialistLead.email.trim() && specialistLead.serviceTypeId;
     if (!hasBasicFields) {
-      setSpecialistNotice("Completa nombres, apellidos, WhatsApp, email y tipo de servicio para continuar.");
+      setSpecialistNotice(t("modal.notices.specialistMissing"));
       return;
     }
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(specialistLead.email.trim())) {
-      setSpecialistNotice("Ingresa un email valido para que podamos contactarte.");
+      setSpecialistNotice(t("modal.notices.specialistEmail"));
       return;
     }
 
@@ -427,7 +426,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
         },
       },
     });
-    setSpecialistNotice("Precargaremos estos datos en el formulario completo.");
+    setSpecialistNotice(t("modal.notices.specialistPrefill"));
     if (!result.stored) setSpecialistNotice(result.message);
     setSubmitting(false);
     window.setTimeout(() => {
@@ -460,7 +459,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
           commune: reservation.commune,
           status: "quote_requested",
           originalRequest: reservation.additionalComments || serviceLabel || selectedFlexibleService.description,
-          history: ["El cliente solicito cotizacion desde el perfil publico."],
+          history: ["El cliente solicito cotización desde el perfil publico."],
         })
       : null;
     const saved = appendServiceRequestLead({
@@ -477,14 +476,14 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       quoteId: quote?.id,
       estimatedCredits: selectedFlexibleService?.fixedCredits ?? selectedFlexibleService?.minCredits ?? selectedFlexibleService?.visitCredits ?? specialist?.credits,
       coverageZone: specialist?.commune ?? specialist?.zone,
-      interest: quoteMode && specialist ? `Cotizacion con ${specialist.name}` : specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
+      interest: quoteMode && specialist ? `Cotización con ${specialist.name}` : specialist ? `Reserva con ${specialist.name}` : "Solicitud de servicio",
     });
     appendConversionEvent({
       type: "specialist_reserved",
       sourceButton: options?.sourceButton ?? "Reservar",
       data: { requestId: saved.id, specialistId: specialist?.id, service: reservation.service, commune: reservation.commune },
     });
-    setSuccess(quoteMode ? "Cotizacion creada. La guardamos para propuesta y acuerdo." : "Solicitud creada. La guardamos para coordinar el siguiente paso.");
+    setSuccess(quoteMode ? t("modal.notices.quoteCreated") : t("modal.notices.reservationCreated"));
     const bookingLeadResult = await submitLead({
       leadType: "booking_request",
       fullName: `${reservation.firstNames} ${reservation.lastNames}`.trim(),
@@ -503,14 +502,14 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
       sourceButton: options?.sourceButton ?? "Reservar",
       payload: { localLeadId: saved.id, quoteId: quote?.id, rut: reservation.rut, address: reservation.address, pricingMode: selectedFlexibleService?.pricingMode, servicePricingId: selectedFlexibleService?.id },
     });
-    setSuccess(quoteMode && bookingLeadResult.ok ? "Cotizacion solicitada. Podras revisar propuesta, contraofertar o pedir apoyo de OficiosPro." : bookingLeadResult.message);
+    setSuccess(quoteMode && bookingLeadResult.ok ? t("modal.notices.quoteRequested") : bookingLeadResult.message);
     setSubmitting(false);
   }
 
   async function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!search.region || !search.commune) {
-      setLocationStatus("Selecciona región y comuna para revisar disponibilidad real.");
+      setLocationStatus(t("modal.notices.searchLocation"));
       return;
     }
     setSubmitting(true);
@@ -554,18 +553,18 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   }
 
   function useSearchLocation() {
-    setLocationStatus("Solicitando ubicación...");
+    setLocationStatus(t("modal.notices.geoRequesting"));
     if (!("geolocation" in navigator)) {
-      setLocationStatus("No pudimos acceder a tu ubicación. Puedes buscar por comuna.");
+      setLocationStatus(t("modal.notices.geoUnavailable"));
       return;
     }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         setSearchGeo({ lat: position.coords.latitude, lng: position.coords.longitude });
-        setLocationStatus("Ubicación capturada para ordenar resultados cercanos.");
+        setLocationStatus(t("modal.notices.geoCaptured"));
       },
-      () => setLocationStatus("No se pudo obtener permiso. Seguiremos con la comuna seleccionada."),
+      () => setLocationStatus(t("modal.notices.geoDenied")),
       { enableHighAccuracy: true, timeout: 8000 },
     );
   }
@@ -582,10 +581,10 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
         <div className="grid gap-0 lg:grid-cols-[0.95fr_1.05fr]">
           <aside className="hidden bg-enterprise p-7 text-white lg:block">
             <p className="eyebrow text-teal-200">OficiosPro</p>
-            <h2 className="mt-4 text-3xl font-black leading-tight">{modalTitle(options.type)}</h2>
-            <p className="mt-4 text-sm font-semibold leading-6 text-white/75">{modalSubtitle(options.type)}</p>
+            <h2 className="mt-4 text-3xl font-black leading-tight">{t(`modal.titles.${options.type}`)}</h2>
+            <p className="mt-4 text-sm font-semibold leading-6 text-white/75">{t(`modal.subtitles.${options.type}`)}</p>
             <div className="mt-8 grid gap-3">
-              {["Técnicos verificados", "Pago protegido", "Créditos acumulables", "Respuesta rápida"].map((item) => (
+              {tList("modal.aside.chips").map((item) => (
                 <span key={item} className="rounded-2xl bg-white/10 p-4 text-sm font-black">
                   {item}
                 </span>
@@ -595,11 +594,11 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
           <section className="p-5 md:p-7">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
-                <p className="eyebrow">Paso {step} de {isEnterpriseModal || isSpecialistModal || isSearchModal ? 1 : 2}</p>
-                <h2 className="text-3xl font-black text-ink">{modalTitle(options.type)}</h2>
-                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{modalSubtitle(options.type)}</p>
+                <p className="eyebrow">{t("modal.ui.step")} {step} {t("modal.ui.of")} {isEnterpriseModal || isSpecialistModal || isSearchModal ? 1 : 2}</p>
+                <h2 className="text-3xl font-black text-ink">{t(`modal.titles.${options.type}`)}</h2>
+                <p className="mt-2 text-sm font-semibold leading-6 text-muted">{t(`modal.subtitles.${options.type}`)}</p>
               </div>
-              <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={closeModal} aria-label="Cerrar">
+              <button className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-xl font-black text-muted transition hover:bg-slate-50 hover:text-ink" type="button" onClick={closeModal} aria-label={t("modal.close")}>
                 ×
               </button>
             </div>
@@ -630,7 +629,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                 )}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
-                  {submitting ? "Enviando..." : step === 1 ? "Continuar" : "Continuar a activación"}
+                  {submitting ? t("modal.buttons.sending") : step === 1 ? t("modal.buttons.continue") : t("modal.buttons.continueActivation")}
                 </button>
               </form>
             ) : null}
@@ -643,7 +642,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                 ) : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
-                  {submitting ? "Enviando..." : "Solicitar contacto"}
+                  {submitting ? t("modal.buttons.sending") : t("modal.buttons.requestContact")}
                 </button>
               </form>
             ) : null}
@@ -652,7 +651,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
               <form className="mt-5 grid gap-4" onSubmit={submitSpecialistLead}>
                 <SpecialistLeadFields specialistLead={specialistLead} onChange={setSpecialistLead} />
                 <p className="rounded-2xl bg-brand-soft p-4 text-sm font-black text-brand-dark">
-                  Usaremos estos datos solo para revisar tu postulación y contactarte. Puedes editarlos antes de enviar.
+                  {t("modal.specialist.note")}
                 </p>
                 {specialistDraft ? (
                   <button
@@ -662,16 +661,16 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                       clearSpecialistQuickDraft();
                       setSpecialistDraft(null);
                       setSpecialistLead(defaultSpecialist);
-                      setSpecialistNotice("Datos temporales limpiados.");
+                      setSpecialistNotice(t("modal.notices.specialistCleared"));
                     }}
                   >
-                    Limpiar datos
+                    {t("modal.specialist.clear")}
                   </button>
                 ) : null}
-                {specialistNotice ? <p className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-brand-dark">{specialistNotice}</p> : null}
+                {specialistNotice ? <p role="alert" aria-live="assertive" className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-brand-dark">{specialistNotice}</p> : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
-                  {submitting ? "Enviando..." : "Comenzar postulación"}
+                  {submitting ? t("modal.buttons.sending") : t("modal.buttons.startApplication")}
                 </button>
               </form>
             ) : null}
@@ -685,7 +684,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                 )}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
-                  {submitting ? "Enviando..." : step === 1 ? "Continuar" : "Crear solicitud"}
+                  {submitting ? t("modal.buttons.sending") : step === 1 ? t("modal.buttons.continue") : t("modal.buttons.createRequest")}
                 </button>
               </form>
             ) : null}
@@ -693,11 +692,11 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
             {!success && isSearchModal ? (
               <form className="mt-5 grid gap-4" onSubmit={submitSearch}>
                 <label className="field">
-                  ¿Qué necesitas?
-                  <input value={search.need} onChange={(event) => setSearch({ ...search, need: event.target.value })} placeholder="Ej: reparar filtración, instalar aire acondicionado" required />
+                  {t("modal.search.need")}
+                  <input value={search.need} onChange={(event) => setSearch({ ...search, need: event.target.value })} placeholder={t("modal.search.needPh")} required />
                 </label>
                 <SearchableSelect
-                  label="Tipo de servicio"
+                  label={t("modal.search.serviceType")}
                   value={search.serviceTypeId}
                   options={serviceTypeOptions}
                   onChange={(serviceTypeId) => {
@@ -707,30 +706,30 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                   required
                 />
                 <SearchableSelect
-                  label="Especialidad"
+                  label={t("modal.search.specialty")}
                   value={search.specialty}
                   options={specialtyOptionsForType(search.serviceTypeId)}
                   onChange={(specialty) => setSearch({ ...search, specialty, otherServiceDescription: "" })}
-                  placeholder="Busca gasfitería, aire, SEC..."
+                  placeholder={t("modal.search.specialtyPh")}
                   required
                 />
                 {search.specialty === OTHER_SERVICE_VALUE ? (
                   <label className="field">
-                    Describe qué necesitas
+                    {t("modal.fields.describeNeed")}
                     <textarea
                       value={search.otherServiceDescription}
                       onChange={(event) => setSearch({ ...search, otherServiceDescription: event.target.value })}
-                      placeholder={otherServicePlaceholder}
+                      placeholder={t("modal.fields.otherPlaceholder")}
                       required
                     />
                   </label>
                 ) : null}
                 <label className="field">
-                  Comentarios adicionales
+                  {t("modal.fields.additionalComments")}
                   <textarea
                     value={search.additionalComments}
                     onChange={(event) => setSearch({ ...search, additionalComments: event.target.value })}
-                    placeholder="Cuéntanos horarios, condiciones del lugar o datos importantes para coordinar."
+                    placeholder={t("modal.search.commentsPh")}
                   />
                 </label>
                 <RegionCommuneSelect
@@ -744,24 +743,24 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
                     setSearch({ ...search, commune });
                     setLocationStatus("");
                   }}
-                  communePlaceholder="Busca comuna para disponibilidad"
+                  communePlaceholder={t("modal.search.communePh")}
                   required
                 />
                 <label className="field">
-                  Urgencia
+                  {t("modal.fields.urgency")}
                   <select value={search.urgency} onChange={(event) => setSearch({ ...search, urgency: event.target.value })}>
-                    <option>Hoy</option>
-                    <option>Esta semana</option>
-                    <option>Sin urgencia</option>
+                    <option value="Hoy">{t("modal.fields.urgencyToday")}</option>
+                    <option value="Esta semana">{t("modal.fields.urgencyWeek")}</option>
+                    <option value="Sin urgencia">{t("modal.fields.urgencyNone")}</option>
                   </select>
                 </label>
                 <button className="btn-secondary w-full" type="button" onClick={useSearchLocation}>
-                  Usar mi ubicación
+                  {t("modal.buttons.useLocation")}
                 </button>
-                {locationStatus ? <p className="text-sm font-black text-brand-dark">{locationStatus}</p> : null}
+                {locationStatus ? <p role="status" aria-live="polite" className="text-sm font-black text-brand-dark">{locationStatus}</p> : null}
                 <PrivacyText />
                 <button className="btn-primary w-full" type="submit" disabled={submitting}>
-                  {submitting ? "Enviando..." : "Ver especialistas disponibles"}
+                  {submitting ? t("modal.buttons.sending") : t("modal.buttons.viewAvailable")}
                 </button>
               </form>
             ) : null}
@@ -772,35 +771,7 @@ function ConversionModal({ options, onClose }: { options: OpenConversionModalOpt
   );
 }
 
-function modalTitle(type: ConversionModalType) {
-  const titles: Record<ConversionModalType, string> = {
-    lead_cliente: "Activa tu Club Hogar",
-    plan_hogar: "Activa tu Club Hogar",
-    plan_empresa: "Centraliza tus mantenciones con OficiosPro Empresas",
-    reserva_especialista: "Cuéntanos qué necesitas",
-    registro_especialista: "Postula como especialista verificado",
-    contacto_empresa: "Centraliza tus mantenciones con OficiosPro Empresas",
-    referido: "Invita y gana créditos",
-    busqueda_rapida: "Busca especialistas disponibles",
-    consulta_general: "Busca especialistas disponibles",
-  };
-  return titles[type];
-}
-
-function modalSubtitle(type: ConversionModalType) {
-  const subtitles: Record<ConversionModalType, string> = {
-    lead_cliente: "Déjanos tus datos y te mostramos el mejor camino para activar créditos acumulables.",
-    plan_hogar: "Primero capturamos tus datos y luego avanzas a la activación del plan seleccionado.",
-    plan_empresa: "Cuéntanos tu operación para recomendar un plan, créditos corporativos y tiempos de respuesta.",
-    reserva_especialista: "Creamos una solicitud con servicio, comuna, urgencia y especialista seleccionado.",
-    registro_especialista: "Captura rápida antes del formulario completo de validación, referencias y precios.",
-    contacto_empresa: "Un ejecutivo revisará tu caso y la necesidad operacional de tu empresa.",
-    referido: "Registra un referido y acumula beneficios en la plataforma.",
-    busqueda_rapida: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
-    consulta_general: "Filtra por tipo, especialidad, comuna y urgencia antes de ver resultados.",
-  };
-  return subtitles[type];
-}
+// modalTitle/modalSubtitle migrados a i18n (modal.titles / modal.subtitles).
 
 function LeadFields({
   lead,
@@ -809,35 +780,36 @@ function LeadFields({
   lead: typeof defaultLead;
   onChange: (lead: typeof defaultLead) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <label className="field">
-        Nombres
-        <input value={lead.firstNames} onChange={(event) => onChange({ ...lead, firstNames: event.target.value })} placeholder="Ej: Juan" required />
+        {t("modal.fields.firstNames")}
+        <input value={lead.firstNames} onChange={(event) => onChange({ ...lead, firstNames: event.target.value })} placeholder={t("modal.fields.firstNamesPh")} required />
       </label>
       <label className="field">
-        Apellidos
-        <input value={lead.lastNames} onChange={(event) => onChange({ ...lead, lastNames: event.target.value })} placeholder="Ej: Pérez" required />
+        {t("modal.fields.lastNames")}
+        <input value={lead.lastNames} onChange={(event) => onChange({ ...lead, lastNames: event.target.value })} placeholder={t("modal.fields.lastNamesPh")} required />
       </label>
       <label className="field">
-        RUT
-        <input value={lead.rut} onChange={(event) => onChange({ ...lead, rut: event.target.value })} placeholder="12.345.678-9" required />
-        <span className="text-xs font-bold text-muted">RUT para boleta, facturación y validación de cuenta.</span>
+        {t("modal.fields.rut")}
+        <input value={lead.rut} onChange={(event) => onChange({ ...lead, rut: event.target.value })} placeholder={t("modal.fields.rutPh")} required />
+        <span className="text-xs font-bold text-muted">{t("modal.fields.rutHint")}</span>
       </label>
       <label className="field">
-        Email
-        <input value={lead.email} onChange={(event) => onChange({ ...lead, email: event.target.value })} type="email" placeholder="nombre@email.cl" required />
+        {t("modal.fields.email")}
+        <input value={lead.email} onChange={(event) => onChange({ ...lead, email: event.target.value })} type="email" placeholder={t("modal.fields.emailPh")} required />
       </label>
       <label className="field">
-        WhatsApp
-        <input value={lead.whatsapp} onChange={(event) => onChange({ ...lead, whatsapp: event.target.value })} type="tel" placeholder="+56 9 1234 5678" required />
+        {t("modal.fields.whatsapp")}
+        <input value={lead.whatsapp} onChange={(event) => onChange({ ...lead, whatsapp: event.target.value })} type="tel" placeholder={t("modal.fields.whatsappPh")} required />
       </label>
       <RegionCommuneSelect
         region={lead.region}
         commune={lead.commune}
         onRegionChange={(region) => onChange({ ...lead, region, commune: "" })}
         onCommuneChange={(commune) => onChange({ ...lead, commune })}
-        communePlaceholder="Busca Las Condes, Ñuñoa, Valparaíso..."
+        communePlaceholder={t("modal.fields.communePh")}
         required
       />
     </>
@@ -855,11 +827,12 @@ function PlanSummary({
   lockPlan: boolean;
   onPlanChange: (planId: string) => void;
 }) {
+  const { t } = useI18n();
   return (
     <div className="grid gap-4">
       {!lockPlan ? (
         <label className="field">
-          Plan de interés
+          {t("modal.plan.interest")}
           <select value={plan.id} onChange={(event) => onPlanChange(event.target.value)}>
             {plans.map((item) => (
               <option key={item.id} value={item.id}>{item.name}</option>
@@ -868,13 +841,13 @@ function PlanSummary({
         </label>
       ) : null}
       <div className="rounded-[24px] border border-brand/20 bg-brand-soft p-5">
-        <span className="text-sm font-black uppercase text-brand-dark">Plan seleccionado</span>
+        <span className="text-sm font-black uppercase text-brand-dark">{t("modal.plan.selected")}</span>
         <strong className="mt-2 block text-3xl font-black text-ink">{plan.name}</strong>
         <div className="mt-4 grid gap-3 text-sm font-black text-muted sm:grid-cols-2">
-          <span>{formatCLP(plan.priceCLP)}/mes</span>
-          <span>{plan.monthlyCredits} créditos mensuales</span>
-          <span>Acumulables {plan.accumulatesMonths} meses</span>
-          <span>Renovación automática mensual</span>
+          <span>{formatCLP(plan.priceCLP)}{t("modal.plan.perMonth")}</span>
+          <span>{plan.monthlyCredits} {t("modal.plan.monthlyCredits")}</span>
+          <span>{t("modal.plan.accumulates").replace("{months}", String(plan.accumulatesMonths))}</span>
+          <span>{t("modal.plan.autoRenew")}</span>
         </div>
       </div>
     </div>
@@ -888,40 +861,41 @@ function EnterpriseFields({
   enterprise: typeof defaultEnterprise;
   onChange: (enterprise: typeof defaultEnterprise) => void;
 }) {
-  const enterpriseServiceOptions = [...serviceTypeOptions, { value: OTHER_SERVICE_VALUE, label: "Otro / No encontré mi servicio" }];
+  const { t } = useI18n();
+  const enterpriseServiceOptions = [...serviceTypeOptions, { value: OTHER_SERVICE_VALUE, label: t("modal.enterprise.otherOption") }];
 
   return (
     <>
       <label className="field">
-        Razón social
-        <input value={enterprise.businessName} onChange={(event) => onChange({ ...enterprise, businessName: event.target.value })} placeholder="Ej: Operadora Oficinas SpA" required />
+        {t("modal.enterprise.businessName")}
+        <input value={enterprise.businessName} onChange={(event) => onChange({ ...enterprise, businessName: event.target.value })} placeholder={t("modal.enterprise.businessNamePh")} required />
       </label>
       <label className="field">
-        RUT empresa
-        <input value={enterprise.companyRut} onChange={(event) => onChange({ ...enterprise, companyRut: event.target.value })} placeholder="76.123.456-7" required />
+        {t("modal.enterprise.companyRut")}
+        <input value={enterprise.companyRut} onChange={(event) => onChange({ ...enterprise, companyRut: event.target.value })} placeholder={t("modal.enterprise.companyRutPh")} required />
       </label>
       <label className="field">
-        Giro
-        <input value={enterprise.companyLine} onChange={(event) => onChange({ ...enterprise, companyLine: event.target.value })} placeholder="Retail, restaurante, comunidad, planta" required />
+        {t("modal.enterprise.companyLine")}
+        <input value={enterprise.companyLine} onChange={(event) => onChange({ ...enterprise, companyLine: event.target.value })} placeholder={t("modal.enterprise.companyLinePh")} required />
       </label>
       <label className="field">
-        Nombres contacto
+        {t("modal.enterprise.contactFirstNames")}
         <input value={enterprise.firstNames} onChange={(event) => onChange({ ...enterprise, firstNames: event.target.value })} required />
       </label>
       <label className="field">
-        Apellidos contacto
+        {t("modal.enterprise.contactLastNames")}
         <input value={enterprise.lastNames} onChange={(event) => onChange({ ...enterprise, lastNames: event.target.value })} required />
       </label>
       <label className="field">
-        Email corporativo
+        {t("modal.enterprise.corporateEmail")}
         <input value={enterprise.email} onChange={(event) => onChange({ ...enterprise, email: event.target.value })} type="email" required />
       </label>
       <label className="field">
-        WhatsApp
+        {t("modal.fields.whatsapp")}
         <input value={enterprise.whatsapp} onChange={(event) => onChange({ ...enterprise, whatsapp: event.target.value })} type="tel" required />
       </label>
       <label className="field">
-        Número de sucursales
+        {t("modal.enterprise.branches")}
         <input value={enterprise.branches} onChange={(event) => onChange({ ...enterprise, branches: event.target.value })} type="number" min="1" required />
       </label>
       <RegionCommuneSelect
@@ -929,12 +903,12 @@ function EnterpriseFields({
         commune={enterprise.commune}
         onRegionChange={(region) => onChange({ ...enterprise, region, commune: "" })}
         onCommuneChange={(commune) => onChange({ ...enterprise, commune })}
-        communeLabel="Comuna principal"
-        communePlaceholder="Busca comuna de operación"
+        communeLabel={t("modal.enterprise.mainCommune")}
+        communePlaceholder={t("modal.enterprise.mainCommunePh")}
         required
       />
       <SearchableSelect
-        label="Tipo de servicios requeridos"
+        label={t("modal.enterprise.serviceType")}
         value={enterprise.serviceType}
         options={enterpriseServiceOptions}
         onChange={(serviceType) => onChange({ ...enterprise, serviceType, need: serviceType, otherServiceDescription: "" })}
@@ -942,21 +916,21 @@ function EnterpriseFields({
       />
       {enterprise.serviceType === OTHER_SERVICE_VALUE ? (
         <label className="field">
-          Describe qué necesitas
+          {t("modal.fields.describeNeed")}
           <textarea
             value={enterprise.otherServiceDescription}
             onChange={(event) => onChange({ ...enterprise, otherServiceDescription: event.target.value })}
-            placeholder={otherServicePlaceholder}
+            placeholder={t("modal.fields.otherPlaceholder")}
             required
           />
         </label>
       ) : null}
       <label className="field">
-        Comentarios adicionales
+        {t("modal.fields.additionalComments")}
         <textarea
           value={enterprise.additionalComments}
           onChange={(event) => onChange({ ...enterprise, additionalComments: event.target.value })}
-          placeholder="Ej: horarios de atención, cantidad de locales, urgencias frecuentes o proveedor actual."
+          placeholder={t("modal.enterprise.commentsPh")}
         />
       </label>
     </>
@@ -970,30 +944,31 @@ function SpecialistLeadFields({
   specialistLead: typeof defaultSpecialist;
   onChange: (specialistLead: typeof defaultSpecialist) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <label className="field">
-        Nombres
+        {t("modal.fields.firstNames")}
         <input value={specialistLead.firstNames} onChange={(event) => onChange({ ...specialistLead, firstNames: event.target.value })} required />
       </label>
       <label className="field">
-        Apellidos
+        {t("modal.fields.lastNames")}
         <input value={specialistLead.lastNames} onChange={(event) => onChange({ ...specialistLead, lastNames: event.target.value })} required />
       </label>
       <label className="field">
-        RUT
-        <input value={specialistLead.rut} onChange={(event) => onChange({ ...specialistLead, rut: event.target.value })} placeholder="12.345.678-9" required />
+        {t("modal.fields.rut")}
+        <input value={specialistLead.rut} onChange={(event) => onChange({ ...specialistLead, rut: event.target.value })} placeholder={t("modal.fields.rutPh")} required />
       </label>
       <label className="field">
-        WhatsApp
+        {t("modal.fields.whatsapp")}
         <input value={specialistLead.phone} onChange={(event) => onChange({ ...specialistLead, phone: event.target.value })} type="tel" required />
       </label>
       <label className="field">
-        Email
+        {t("modal.fields.email")}
         <input value={specialistLead.email} onChange={(event) => onChange({ ...specialistLead, email: event.target.value })} type="email" required />
       </label>
       <SearchableSelect
-        label="Tipo de servicio principal"
+        label={t("modal.specialist.mainServiceType")}
         value={specialistLead.serviceTypeId}
         options={serviceTypeOptions}
         onChange={(serviceTypeId) => onChange({ ...specialistLead, serviceTypeId })}
@@ -1004,12 +979,12 @@ function SpecialistLeadFields({
         commune={specialistLead.commune}
         onRegionChange={(region) => onChange({ ...specialistLead, region, commune: "" })}
         onCommuneChange={(commune) => onChange({ ...specialistLead, commune })}
-        communeLabel="Comuna base"
-        communePlaceholder="Busca tu comuna base"
+        communeLabel={t("modal.specialist.baseCommune")}
+        communePlaceholder={t("modal.specialist.baseCommunePh")}
         required
       />
       <label className="field">
-        Años de experiencia
+        {t("modal.specialist.years")}
         <input value={specialistLead.years} onChange={(event) => onChange({ ...specialistLead, years: event.target.value })} type="number" min="0" required />
       </label>
     </>
@@ -1023,26 +998,27 @@ function ReservationFields({
   reservation: typeof defaultReservation;
   onChange: (reservation: typeof defaultReservation) => void;
 }) {
+  const { t } = useI18n();
   return (
     <>
       <label className="field">
-        Nombres
+        {t("modal.fields.firstNames")}
         <input value={reservation.firstNames} onChange={(event) => onChange({ ...reservation, firstNames: event.target.value })} required />
       </label>
       <label className="field">
-        Apellidos
+        {t("modal.fields.lastNames")}
         <input value={reservation.lastNames} onChange={(event) => onChange({ ...reservation, lastNames: event.target.value })} required />
       </label>
       <label className="field">
-        RUT
-        <input value={reservation.rut} onChange={(event) => onChange({ ...reservation, rut: event.target.value })} placeholder="12.345.678-9" required />
+        {t("modal.fields.rut")}
+        <input value={reservation.rut} onChange={(event) => onChange({ ...reservation, rut: event.target.value })} placeholder={t("modal.fields.rutPh")} required />
       </label>
       <label className="field">
-        Email
+        {t("modal.fields.email")}
         <input value={reservation.email} onChange={(event) => onChange({ ...reservation, email: event.target.value })} type="email" required />
       </label>
       <label className="field">
-        WhatsApp
+        {t("modal.fields.whatsapp")}
         <input value={reservation.whatsapp} onChange={(event) => onChange({ ...reservation, whatsapp: event.target.value })} type="tel" required />
       </label>
       <RegionCommuneSelect
@@ -1050,57 +1026,57 @@ function ReservationFields({
         commune={reservation.commune}
         onRegionChange={(region) => onChange({ ...reservation, region, commune: "" })}
         onCommuneChange={(commune) => onChange({ ...reservation, commune })}
-        communePlaceholder="Busca comuna del servicio"
+        communePlaceholder={t("modal.reservation.communePh")}
         required
       />
       <label className="field">
-        Dirección aproximada
-        <input value={reservation.address} onChange={(event) => onChange({ ...reservation, address: event.target.value })} placeholder="Sector o referencia" required />
+        {t("modal.reservation.address")}
+        <input value={reservation.address} onChange={(event) => onChange({ ...reservation, address: event.target.value })} placeholder={t("modal.reservation.addressPh")} required />
       </label>
       <SearchableSelect
-        label="Tipo de servicio"
+        label={t("modal.reservation.serviceType")}
         value={reservation.serviceTypeId}
         options={serviceTypeOptions}
         onChange={(serviceTypeId) => {
           const nextService = specialtyOptionsForType(serviceTypeId)[0]?.value ?? "";
           onChange({ ...reservation, serviceTypeId, service: nextService, otherServiceDescription: "" });
         }}
-        placeholder="Selecciona una categoría"
+        placeholder={t("modal.reservation.serviceTypePh")}
         required
       />
       <SearchableSelect
-        label="Servicio requerido"
+        label={t("modal.reservation.serviceRequired")}
         value={reservation.service}
         options={specialtyOptionsForType(reservation.serviceTypeId)}
         onChange={(service) => onChange({ ...reservation, service, otherServiceDescription: "" })}
-        placeholder="Busca dentro de la categoría seleccionada"
+        placeholder={t("modal.reservation.serviceRequiredPh")}
         required
       />
       {reservation.service === OTHER_SERVICE_VALUE ? (
         <label className="field">
-          Describe qué necesitas
+          {t("modal.fields.describeNeed")}
           <textarea
             value={reservation.otherServiceDescription}
             onChange={(event) => onChange({ ...reservation, otherServiceDescription: event.target.value })}
-            placeholder={otherServicePlaceholder}
+            placeholder={t("modal.fields.otherPlaceholder")}
             required
           />
         </label>
       ) : null}
       <label className="field">
-        Comentarios adicionales
+        {t("modal.fields.additionalComments")}
         <textarea
           value={reservation.additionalComments}
           onChange={(event) => onChange({ ...reservation, additionalComments: event.target.value })}
-          placeholder="Ej: disponibilidad horaria, referencias de acceso, fotos disponibles o urgencia real."
+          placeholder={t("modal.reservation.commentsPh")}
         />
       </label>
       <label className="field">
-        Urgencia
+        {t("modal.fields.urgency")}
         <select value={reservation.urgency} onChange={(event) => onChange({ ...reservation, urgency: event.target.value })}>
-          <option>Hoy</option>
-          <option>Esta semana</option>
-          <option>Sin urgencia</option>
+          <option value="Hoy">{t("modal.fields.urgencyToday")}</option>
+          <option value="Esta semana">{t("modal.fields.urgencyWeek")}</option>
+          <option value="Sin urgencia">{t("modal.fields.urgencyNone")}</option>
         </select>
       </label>
     </>
@@ -1108,25 +1084,26 @@ function ReservationFields({
 }
 
 function ReservationSummary({ specialist, reservation }: { specialist?: Specialist; reservation: typeof defaultReservation }) {
+  const { t } = useI18n();
   const serviceLabel = reservation.service === OTHER_SERVICE_VALUE ? reservation.otherServiceDescription : reservation.service;
   const flexibleService = specialist ? getPrimaryFlexibleService(specialist) : null;
 
   return (
     <div className="grid gap-4">
       <div className="rounded-[24px] border border-brand/20 bg-brand-soft p-5">
-        <span className="text-sm font-black uppercase text-brand-dark">Especialista seleccionado</span>
-        <strong className="mt-2 block text-3xl font-black text-ink">{specialist?.name ?? "Red OficiosPro"}</strong>
+        <span className="text-sm font-black uppercase text-brand-dark">{t("modal.reservationSummary.selected")}</span>
+        <strong className="mt-2 block text-3xl font-black text-ink">{specialist?.name ?? t("modal.reservationSummary.network")}</strong>
         <div className="mt-4 grid gap-3 text-sm font-black text-muted sm:grid-cols-2">
-          <span>Servicio: {serviceLabel || "Por confirmar"}</span>
-          <span>Precio: {flexibleService ? pricingSummary(flexibleService) : specialist?.credits ? `${specialist.credits} creditos` : "por confirmar"}</span>
-          <span>Modalidad: {flexibleService ? pricingModeLabel(flexibleService.pricingMode) : "Por confirmar"}</span>
-          <span>Zona de cobertura: {specialist?.commune ?? specialist?.zone ?? reservation.commune}</span>
-          <span>Próximo paso: coordinación y validación de disponibilidad</span>
+          <span>{t("modal.reservationSummary.service")}: {serviceLabel || t("modal.reservationSummary.toConfirm")}</span>
+          <span>{t("modal.reservationSummary.price")}: {flexibleService ? pricingSummary(flexibleService) : specialist?.credits ? `${specialist.credits} ${t("modal.reservationSummary.credits")}` : t("modal.reservationSummary.priceToConfirm")}</span>
+          <span>{t("modal.reservationSummary.mode")}: {flexibleService ? pricingModeLabel(flexibleService.pricingMode) : t("modal.reservationSummary.toConfirm")}</span>
+          <span>{t("modal.reservationSummary.coverage")}: {specialist?.commune ?? specialist?.zone ?? reservation.commune}</span>
+          <span>{t("modal.reservationSummary.nextStep")}: {t("modal.reservationSummary.nextStepValue")}</span>
         </div>
         {flexibleService ? <p className="mt-4 rounded-2xl bg-white/80 p-3 text-sm font-bold text-muted">{pricingDetail(flexibleService)}</p> : null}
         {reservation.additionalComments ? (
           <p className="mt-4 rounded-2xl bg-white/80 p-3 text-sm font-bold text-muted">
-            Comentarios: {reservation.additionalComments}
+            {t("modal.reservationSummary.comments")}: {reservation.additionalComments}
           </p>
         ) : null}
       </div>
@@ -1147,31 +1124,50 @@ function SuccessState({
   specialistId?: string;
   onClose: () => void;
 }) {
+  const { t, tList } = useI18n();
   const session = getMockSession();
+
+  const nextSteps = tList(
+    isEnterprise ? "modal.success.stepsEnterprise" : isReservation ? "modal.success.stepsReservation" : "modal.success.stepsGeneral",
+  );
 
   return (
     <div className="mt-5 rounded-[24px] border border-brand/20 bg-brand-soft p-5">
-      <strong className="block text-2xl font-black text-ink">Listo</strong>
+      <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-900">
+        <span aria-hidden>✓</span> {t("modal.success.received")}
+      </span>
+      <strong className="mt-3 block text-2xl font-black text-ink">{t("modal.success.title")}</strong>
       <p className="mt-2 font-semibold leading-7 text-brand-dark">{text}</p>
+      <div className="mt-4 rounded-2xl bg-white/80 p-4">
+        <p className="text-xs font-black uppercase text-brand-dark">{t("modal.success.whatNext")}</p>
+        <ol className="mt-3 grid gap-3">
+          {nextSteps.map((stepText, index) => (
+            <li key={stepText} className="flex items-start gap-3">
+              <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white">{index + 1}</span>
+              <span className="text-sm font-semibold leading-6 text-muted">{stepText}</span>
+            </li>
+          ))}
+        </ol>
+      </div>
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         {isReservation ? (
           session ? (
             <a className="btn-primary flex-1" href="/dashboard-cliente">
-              Ir a mi dashboard
+              {t("modal.success.goDashboard")}
             </a>
           ) : (
             <a className="btn-primary flex-1" href={`/registro-cliente${specialistId ? `?reserve=${specialistId}` : ""}`}>
-              Crear cuenta rápida
+              {t("modal.success.createAccount")}
             </a>
           )
         ) : null}
         {isEnterprise ? (
           <a className="btn-primary flex-1" href="/empresas">
-            Ver planes empresa
+            {t("modal.success.viewPlans")}
           </a>
         ) : null}
         <button className="btn-secondary flex-1" type="button" onClick={onClose}>
-          Cerrar
+          {t("modal.success.close")}
         </button>
       </div>
     </div>
@@ -1179,17 +1175,19 @@ function SuccessState({
 }
 
 function Progress({ step, total }: { step: number; total: number }) {
+  const { t } = useI18n();
   return (
     <div className="grid gap-2">
       <div className="h-2 overflow-hidden rounded-full bg-slate-100">
         <div className="h-full rounded-full bg-brand transition-all" style={{ width: `${(step / total) * 100}%` }} />
       </div>
-      <span className="text-xs font-black uppercase text-muted">{total === 1 ? "Formulario corto" : `Paso ${step} de ${total}`}</span>
+      <span className="text-xs font-black uppercase text-muted">{total === 1 ? t("modal.ui.shortForm") : `${t("modal.ui.step")} ${step} ${t("modal.ui.of")} ${total}`}</span>
     </div>
   );
 }
 
 function PrivacyText() {
+  const { t } = useI18n();
   return (
     <>
       <label className="hidden" aria-hidden="true">
@@ -1197,7 +1195,7 @@ function PrivacyText() {
         <input name="companyWebsite" tabIndex={-1} autoComplete="off" />
       </label>
       <p className="rounded-2xl bg-slate-50 p-3 text-xs font-bold leading-5 text-muted">
-        Tus datos se usan solo para coordinar servicios OficiosPro.
+        {t("modal.ui.privacy")}
       </p>
     </>
   );

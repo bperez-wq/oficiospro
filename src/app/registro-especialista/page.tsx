@@ -1,4 +1,5 @@
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { PlatformNav } from "@/components/PlatformNav";
+import { TranslatedAppHero } from "@/components/TranslatedAppHero";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
 import { SpecialistRegisterForm } from "@/components/Forms";
@@ -17,11 +18,7 @@ export default function SpecialistRegisterPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero
-        eyebrow="Especialista fundador"
-        title="Crea tu perfil de especialista."
-        subtitle="Sin costo inicial, declara tus servicios y queda en revisión para sumarte a la primera red por comuna. Puedes postular aunque tu categoría esté en formación."
-      />
+      <TranslatedAppHero pageKey="registroEspecialista" />
       <SpecialistOpportunityTeaser />
       <Reveal>
         <section className="grid gap-3 md:grid-cols-4">
@@ -39,7 +36,7 @@ export default function SpecialistRegisterPage() {
           <div className="mt-5 grid gap-3">
             {[
               "Aparece por oficio, comuna y especialidades cuando tu perfil sea aprobado.",
-              "Declara tu tarifa esperada en CLP; OficiosPro calcula los creditos visibles para clientes.",
+              "Declara tu tarifa esperada en CLP; OficiosPro calcula los créditos visibles para clientes.",
               "Suma trabajos, referencias y evidencia visual sin mezclar tus documentos privados.",
               "Recibe solicitudes del piloto con seguimiento operacional del equipo OficiosPro.",
             ].map((item) => (
@@ -53,17 +50,23 @@ export default function SpecialistRegisterPage() {
           <p className="eyebrow">Como funciona la postulacion</p>
           <div className="grid gap-3 sm:grid-cols-2">
             {[
-              ["1", "Completa identidad y contacto"],
-              ["2", "Define comuna, radio y servicios"],
-              ["3", "Declara como documentas tus servicios"],
-              ["4", "Agrega referencias o portafolio si ya los tienes"],
-              ["5", "OficiosPro revisa y te contacta antes de publicar"],
-            ].map(([step, text]) => (
+              ["1", "Completa identidad y contacto", "Apenas registras tu contacto, tu intento queda guardado. No pierdes el avance si cierras la página."],
+              ["2", "Define comuna, radio y servicios", "Indica dónde trabajas y qué ofreces. Puedes ajustar tu cobertura más adelante."],
+              ["3", "Declara cómo documentas tus servicios", "Cuéntanos cómo respaldas tu trabajo. No necesitas tenerlo todo listo hoy."],
+              ["4", "Agrega referencias o portafolio (opcional)", "Documentos y certificaciones pueden completarse después, cuando apliquen a tu oficio."],
+              ["5", "Una persona del equipo revisa y te contacta", "Revisión humana antes de publicar. Te escribimos para confirmar datos y resolver dudas."],
+            ].map(([step, text, detail]) => (
               <article key={step} className="rounded-2xl border border-line bg-slate-50 p-4">
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-brand text-sm font-black text-white">{step}</span>
                 <strong className="mt-3 block text-ink">{text}</strong>
+                <p className="mt-1 text-sm font-semibold leading-6 text-muted">{detail}</p>
               </article>
             ))}
+          </div>
+          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
+            <p className="text-sm font-black text-emerald-950">
+              Tu postulación la revisa una persona real, no un proceso automático. No prometemos empleo ni ingresos: confirmamos tus datos y te sumamos a la red por comuna cuando tu perfil queda aprobado.
+            </p>
           </div>
         </MarketplaceCard>
         </section>

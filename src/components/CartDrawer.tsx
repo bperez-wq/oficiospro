@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatCLP } from "@/data/marketplace";
 import { clearCart, getCartItems, onCartChange, removeCartItem, type OficiosProCartItem } from "@/lib/cart";
 import { cartTotals, checkoutModeForCart, isCartItemCheckoutReady, itemAmountCLP } from "@/lib/payments/cart";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 
 /**
  * Naming oficial: la experiencia de usuario se llama "Bolsa" en todo OficiosPro
@@ -13,6 +14,7 @@ import { cartTotals, checkoutModeForCart, isCartItemCheckoutReady, itemAmountCLP
  */
 
 export function CartButton({ onOpen }: { onOpen: () => void }) {
+  const { t } = useI18n();
   const [count, setCount] = useState(0);
 
   useEffect(() => {
@@ -28,10 +30,10 @@ export function CartButton({ onOpen }: { onOpen: () => void }) {
       className="relative inline-flex h-11 items-center gap-1.5 rounded-2xl border border-line bg-white px-3 text-sm font-black text-ink shadow-sm transition duration-200 hover:border-brand hover:bg-brand-soft hover:text-brand-dark active:scale-[0.97]"
       type="button"
       onClick={onOpen}
-      aria-label={count ? `Abrir bolsa, ${count} ${count === 1 ? "ítem" : "ítems"}` : "Abrir bolsa, vacía"}
+      aria-label={count ? `${t("nav.bag")} (${count})` : t("nav.bag")}
     >
       <BagIcon className="h-5 w-5" />
-      <span className="hidden sm:inline" aria-hidden="true">Bolsa</span>
+      <span className="hidden sm:inline" aria-hidden="true">{t("nav.bag")}</span>
       {count ? (
         <span className="absolute -right-1.5 -top-1.5 grid h-5 min-w-5 place-items-center rounded-full bg-brand px-1 text-[11px] font-black text-white shadow-sm ring-2 ring-white">
           {count > 9 ? "9+" : count}
@@ -109,7 +111,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
           <div className="flex shrink-0 items-center gap-2">
             {hasItems ? (
               <Link
-                className="inline-flex min-h-10 items-center justify-center gap-1 rounded-xl bg-brand px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:bg-brand-dark active:scale-[0.97]"
+                className="inline-flex min-h-11 items-center justify-center gap-1 rounded-xl bg-brand px-3.5 text-xs font-black text-white shadow-sm transition duration-200 hover:bg-brand-dark active:scale-[0.97]"
                 href="/bolsa"
                 onClick={onClose}
                 data-event="cart_drawer_header_view_bag"
@@ -177,7 +179,7 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
                         </p>
                       </Link>
                       <button
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
+                        className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line text-muted transition duration-200 hover:border-rose-200 hover:bg-rose-50 hover:text-rose-600 active:scale-95"
                         type="button"
                         onClick={() => removeCartItem(item.id)}
                         aria-label={`Quitar ${item.title} de la bolsa`}
@@ -264,11 +266,11 @@ export function CartDrawer({ open, onClose }: { open: boolean; onClose: () => vo
               )}
               {!hasCheckoutReadyItems ? (
                 <p className="rounded-2xl bg-amber-50 p-3 text-xs font-black leading-5 text-amber-900">
-                  Revisa la cotizacion en la bolsa antes de pasar a checkout.
+                  Revisa la cotización en la bolsa antes de pasar a checkout.
                 </p>
               ) : null}
               <button
-                className="inline-flex min-h-10 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
+                className="inline-flex min-h-11 items-center justify-center rounded-2xl px-4 text-sm font-black text-muted transition duration-200 hover:bg-slate-100 hover:text-rose-600"
                 type="button"
                 onClick={clearCart}
               >

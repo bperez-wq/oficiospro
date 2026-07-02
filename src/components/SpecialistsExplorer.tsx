@@ -97,6 +97,9 @@ export function SpecialistsExplorer() {
   const [sourceSection, setSourceSection] = useState("");
   const [clientLat, setClientLat] = useState(-33.4088);
   const [clientLng, setClientLng] = useState(-70.5673);
+  // true solo cuando tenemos coordenadas reales del usuario (perfil con ubicación).
+  // Sin esto la distancia se calcula desde un centro por defecto y es engañosa (P1-04).
+  const [hasUserLocation, setHasUserLocation] = useState(false);
   const [approvedSpecialists, setApprovedSpecialists] = useState<Specialist[]>([]);
   const [notice, setNotice] = useState("");
   const filterDrawerRef = useRef<HTMLElement | null>(null);
@@ -108,6 +111,7 @@ export function SpecialistsExplorer() {
     if (clientProfile?.lat && clientProfile?.lng) {
       setClientLat(clientProfile.lat);
       setClientLng(clientProfile.lng);
+      setHasUserLocation(true);
       setNotice(`Ubicación privada disponible para ordenar por cercanía desde ${clientProfile.commune}.`);
     }
     fetch("/api/specialists")
@@ -200,8 +204,8 @@ export function SpecialistsExplorer() {
   const marketplaceSpecialists = useMemo(() => [...specialists, ...approvedSpecialists], [approvedSpecialists]);
   const hasLocationContext = Boolean(notice) || (zone && zone !== ALL_COMMUNES_VALUE);
   const resultContext = hasLocationContext
-    ? "Ordenados por cercania y reputacion"
-    : "Agrega tu comuna para ver especialistas cerca de ti";
+    ? "Ordenados por cercanía y reputación"
+    : "📍 Indica tu comuna para ver especialistas cerca de ti";
   const routeCategory = categoryParam ? categoryRoutes[categoryParam] : null;
   const routeSpecialty = specialtyParam ? specialtyRoutes[specialtyParam] : null;
   const selectedMapCenter = getCommuneCenter(zone, region !== ALL_REGIONS_VALUE ? regionNameForCode(region) : undefined);
@@ -212,10 +216,10 @@ export function SpecialistsExplorer() {
   const formingCoverage = taxonomyCoverage ? isTradeForming(taxonomyCoverage) : false;
   const coverageLabel = taxonomyCoverage ? getTradeCoverageLabel(taxonomyCoverage) : "";
   const selectedTypeLabel = typeFilterOptions.find((item) => item.value === category)?.label;
-  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Tecnicos recomendados");
+  const contextualTitle = routeCategory?.title ?? (routeSpecialty ? `Especialistas para ${routeSpecialty.label.toLowerCase()}` : categoryParam && category !== "all" && selectedTypeLabel ? `Especialistas en ${selectedTypeLabel.toLowerCase()}` : "Técnicos recomendados");
   const contextualSubtitle = formingCoverage
     ? `Estamos formando red para este oficio. Puedes dejar una solicitud y priorizaremos cobertura por comuna.`
-    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en creditos." : resultContext);
+    : routeCategory?.subtitle ?? (routeSpecialty ? "Filtra por region, comuna, disponibilidad, reputacion y precio en créditos." : resultContext);
   const suggestedChips = routeCategory?.suggestions ?? [];
   const activeSearchIntent = useMemo<SpecialistSearchIntent>(
     () => ({
@@ -246,7 +250,7 @@ export function SpecialistsExplorer() {
     zone && zone !== ALL_COMMUNES_VALUE ? { label: `Comuna: ${zone}`, clear: () => setZone(ALL_COMMUNES_VALUE) } : null,
     availability !== "all" ? { label: `Disponibilidad: ${availabilityOptions.find((item) => item.value === availability)?.label ?? availability}`, clear: () => setAvailability("all") } : null,
     rating > 0 ? { label: `Calificacion desde ${rating.toFixed(1)}`, clear: () => setRating(0) } : null,
-    maxCredits < 999 ? { label: `Hasta ${maxCredits} creditos`, clear: () => setMaxCredits(999) } : null,
+    maxCredits < 999 ? { label: `Hasta ${maxCredits} créditos`, clear: () => setMaxCredits(999) } : null,
     level !== "all" ? { label: `Nivel ${level}`, clear: () => setLevel("all") } : null,
     quickResponse ? { label: "Respuesta rapida", clear: () => setQuickResponse(false) } : null,
     withinCoverage ? { label: "Dentro de cobertura", clear: () => setWithinCoverage(false) } : null,
@@ -425,7 +429,7 @@ export function SpecialistsExplorer() {
         />
       ) : null}
 
-      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[240px_1fr]">
+      <section className="grid gap-5 rounded-[28px] border border-line bg-white p-5 shadow-soft lg:grid-cols-[280px_1fr]">
         <aside
           ref={filterDrawerRef}
           className={`${filtersOpen ? "fixed inset-x-3 bottom-20 top-20 z-50 grid overflow-y-auto" : "hidden"} gap-3 self-start rounded-3xl bg-slate-50 p-4 shadow-card lg:sticky lg:inset-x-auto lg:bottom-auto lg:top-28 lg:z-auto lg:grid lg:max-h-[calc(100vh-8rem)] lg:overflow-y-auto lg:shadow-none`}
@@ -439,11 +443,11 @@ export function SpecialistsExplorer() {
             <div>
               <p className="eyebrow">Busca por confianza</p>
               <h2 className="text-2xl font-black">Filtra especialistas</h2>
-              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y creditos.</p>
+              <p className="mt-2 text-sm font-semibold leading-6 text-muted">Combina comuna, disponibilidad, nivel y créditos.</p>
             </div>
             <button
               type="button"
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-line bg-white text-sm font-black text-muted lg:hidden"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-line bg-white text-sm font-black text-muted lg:hidden"
               aria-label="Cerrar filtros"
               onClick={() => setFiltersOpen(false)}
             >
@@ -564,7 +568,7 @@ export function SpecialistsExplorer() {
               ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <strong className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
+              <strong role="status" aria-live="polite" className="chip bg-brand-soft text-brand-dark">Mostrando {visible.length} especialistas</strong>
               <button className="rounded-full border border-line px-4 py-2 text-sm font-black text-muted transition hover:border-brand hover:text-brand" type="button" onClick={clearFilters}>
                 Limpiar filtros
               </button>
@@ -626,6 +630,27 @@ export function SpecialistsExplorer() {
               </div>
             </div>
           ) : null}
+          {visible.length > 0 && visible.length <= 3 ? (
+            <div className="flex flex-col gap-4 rounded-[24px] border border-amber-200 bg-amber-50 p-5 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="text-xs font-black uppercase text-amber-800">Red en crecimiento por comuna</p>
+                <h3 className="mt-1 text-xl font-black text-ink">
+                  {searchIntentLabel ? `Aún sumamos especialistas de ${searchIntentLabel} en esta zona.` : "Aún sumamos especialistas para esta búsqueda."}
+                </h3>
+                <p className="mt-1 text-sm font-semibold leading-6 text-amber-900">
+                  Ves pocas opciones por ahora. Déjanos tu solicitud y priorizaremos cobertura; el equipo OficiosPro la revisa de forma manual y te contacta.
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button className="btn-primary" type="button" onClick={() => captureDemand("Solicitar especialista (baja densidad)")}>
+                  Solicitar especialista
+                </button>
+                <button className="btn-secondary" type="button" onClick={() => captureDemand("Quiero que me contacten (baja densidad)")}>
+                  Quiero que me contacten
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {visible.length ? (
               visible.map((specialist) => {
@@ -637,6 +662,7 @@ export function SpecialistsExplorer() {
                     matchedService={matchedService}
                     searchIntent={searchIntentLabel}
                     highlightedCreditPrice={matchedServiceSummary(matchedService, !searchIntentLabel)}
+                    showDistance={hasUserLocation}
                     onReserve={reserve}
                   />
                 );
@@ -644,9 +670,19 @@ export function SpecialistsExplorer() {
             ) : (
               <div className="sm:col-span-2 lg:col-span-3 xl:col-span-4">
                 <EmptyState
-                  eyebrow={formingCoverage ? "Cobertura en formacion" : "Piloto por comuna"}
-                  title={searchIntentLabel ? `Estamos sumando especialistas de ${searchIntentLabel} en tu zona.` : "Estamos sumando especialistas para este servicio en tu zona."}
-                  text="Dejanos tu solicitud y priorizaremos esta cobertura. Si eres especialista de esta zona, tambien puedes crear tu perfil fundador."
+                  eyebrow={hasActiveFilters ? "Sin resultados" : formingCoverage ? "Cobertura en formación" : "Piloto por comuna"}
+                  title={
+                    hasActiveFilters
+                      ? "No encontramos especialistas con estos filtros."
+                      : searchIntentLabel
+                        ? `Estamos sumando especialistas de ${searchIntentLabel} en tu zona.`
+                        : "Estamos sumando especialistas para este servicio en tu zona."
+                  }
+                  text={
+                    hasActiveFilters
+                      ? "Prueba ampliar la comuna o quitar algún filtro. También puedes dejar tu solicitud y la revisamos manualmente."
+                      : "Déjanos tu solicitud y priorizaremos esta cobertura. Si eres especialista de esta zona, también puedes crear tu perfil fundador."
+                  }
                   visual={<span aria-hidden className="grid h-14 w-14 place-items-center rounded-2xl bg-brand-soft text-2xl font-black text-brand-dark">OP</span>}
                   action={
                     <>

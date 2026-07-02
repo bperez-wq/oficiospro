@@ -101,6 +101,18 @@ Un cambio esta terminado cuando:
 - Si requiere deploy, existe checklist de release completado.
 - Si afecta operacion, queda documentado para Benjamin y futuras IA.
 
+## Puntos criticos permanentes
+
+Estos puntos se revisan en cada ciclo Kaizen de producto, growth, UX, SEO, CRM u operacion. Si un ciclo toca uno de estos temas, la respuesta final debe indicar si lo mejora, lo deja igual o lo deja como riesgo pendiente.
+
+| ID | Punto critico | Severidad | Impacto | Riesgo | Regla Kaizen |
+| --- | --- | --- | --- | --- | --- |
+| KC-001 | Densidad de red baja por comuna/oficio | alto | muy alto | Si el usuario busca y no encuentra match, se va. La frase honesta de revision manual ayuda, pero no escala sin mas oferta o captura operacional. | Priorizar medicion de busquedas sin match, captacion por comuna/oficio y seguimiento CRM. |
+| KC-002 | Perfiles dinamicos o estados "Cargando perfil..." | alto | alto | Si perfiles publicos cargan lento, quedan vacios o dependen demasiado del cliente, se pierde confianza y puede afectar SEO. | Perfiles publicos deben tener contenido inicial util, fallback profesional y carga rapida. |
+| KC-003 | Funnel post-busqueda poco claro | alto | alto | Tras "Cotizar", "Reservar" o "Solicitar visita", el usuario debe entender que pasa, quien responde, en cuanto tiempo y si el pago/agenda ya es real. | Todo CTA principal debe explicar el siguiente paso y dejar evidencia medible en CRM. |
+| KC-004 | Onboarding especialista todavia manual | medio-alto | alto | El formulario mejoro, pero revision humana 48 h y contacto adicional pueden saturar a Benjamin si sube el volumen. | Reducir friccion, capturar intentos tempranos y automatizar cola de revision sin bajar controles. |
+| KC-005 | Explicacion publica de creditos insuficiente | medio | alto | Creditos protegen el modelo, pero si no se entiende valor, compra, recarga, reembolso, disputa, Club Hogar y planes empresa, baja conversion. | Cada ciclo de checkout, bolsa, pricing o planes debe mejorar claridad sin cambiar precios ni comision sin aprobacion. |
+
 ## Reglas de seguridad
 
 - No tocar `worker/index.ts`, D1, migraciones, `wrangler.toml`, pagos o Mercado Pago sin una razon explicita.

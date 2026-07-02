@@ -61,19 +61,25 @@ export function SpecialistPublicProfile({ id, initialSpecialist = null }: { id: 
     };
   }, [id, initialSpecialist]);
 
-  if (!loaded) return <section>Cargando perfil...</section>;
+  if (!loaded) return <ProfileLoadingSkeleton />;
 
   if (!specialist) {
     return (
       <section className="grid gap-6">
-        <section className="rounded-[32px] border border-line bg-white p-8 shadow-soft">
-          <p className="eyebrow">Perfil no encontrado</p>
-          <h1 className="mt-3 text-4xl font-black text-ink">No encontramos este especialista.</h1>
+        <section className="rounded-[32px] border border-line bg-white p-8 shadow-soft md:p-10">
+          <p className="eyebrow">Perfil no disponible</p>
+          <h1 className="mt-3 text-3xl font-black text-ink md:text-4xl">Este perfil ya no está disponible.</h1>
+          <p className="mt-3 max-w-xl text-sm font-semibold leading-6 text-muted">
+            Puede que el especialista haya pausado su disponibilidad o que el enlace haya cambiado. No te quedes sin ayuda: explora otros especialistas verificados o déjanos tu solicitud y el equipo OficiosPro te orienta.
+          </p>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Link className="btn-secondary" href="/especialistas">Volver a especialistas</Link>
-            <Link className="btn-secondary" href="/especialistas">Ver todos los especialistas</Link>
-            <Link className="btn-primary" href="/contacto">Solicitar ayuda</Link>
+            <Link className="btn-primary" href="/especialistas">Ver especialistas verificados</Link>
+            <Link className="btn-secondary" href="/especialistas?sourceSection=perfil_no_disponible">Dejar una solicitud</Link>
+            <Link className="btn-secondary" href="/contacto">Hablar con el equipo</Link>
           </div>
+          <p className="mt-5 text-xs font-bold text-muted">
+            Revisamos cada solicitud de forma manual y te contactamos para coordinar el siguiente paso.
+          </p>
         </section>
       </section>
     );
@@ -166,7 +172,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             </div>
           </section>
           <section>
-            <h2 className="text-2xl font-black">Servicios y creditos</h2>
+            <h2 className="text-2xl font-black">Servicios y créditos</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {services.map((service) => (
                 <article key={service.id} className="rounded-2xl border border-line bg-slate-50 p-4">
@@ -211,7 +217,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
                   <img src={work.image} alt={work.title} className="h-32 w-full object-cover" />
                   <div className="p-4">
                     <strong className="text-ink">{work.title}</strong>
-                    <p className="mt-1 text-sm font-bold text-muted">{work.commune} · {work.credits} creditos · {work.rating}/5</p>
+                    <p className="mt-1 text-sm font-bold text-muted">{work.commune} · {work.credits} créditos · {work.rating}/5</p>
                   </div>
                 </article>
               ))}
@@ -260,10 +266,10 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             </article>
           </section>
           <section className="rounded-[24px] border border-emerald-100 bg-emerald-50 p-5">
-            <p className="eyebrow">Proteccion OficiosPro</p>
+            <p className="eyebrow">Protección OficiosPro</p>
             <h2 className="text-2xl font-black">Todo cobro adicional requiere aprobacion del cliente.</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
-              {["Tus creditos se retienen hasta confirmar avance.", "El especialista es revisado antes de publicarse.", "Puedes calificar despues del servicio.", "Los adicionales requieren aprobacion."].map((item) => (
+              {["Tus créditos se retienen hasta confirmar avance.", "El especialista es revisado antes de publicarse.", "Puedes calificar despues del servicio.", "Los adicionales requieren aprobacion."].map((item) => (
                 <span key={item} className="rounded-2xl bg-white p-4 text-sm font-black text-emerald-950">{item}</span>
               ))}
             </div>
@@ -276,8 +282,8 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
           <span className="font-bold text-muted">Precio desde</span>
           <strong className="block text-4xl font-black">{pricingSummary(primaryService)}</strong>
           <div className="mt-4 grid gap-2">
-            <span className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-ink">Normal: {creditPair.baseCredits} creditos</span>
-            <span className="rounded-2xl bg-brand-soft p-3 text-sm font-black text-brand-dark">Club Hogar: {creditPair.clubCredits} creditos</span>
+            <span className="rounded-2xl bg-slate-50 p-3 text-sm font-black text-ink">Normal: {creditPair.baseCredits} créditos</span>
+            <span className="rounded-2xl bg-brand-soft p-3 text-sm font-black text-brand-dark">Club Hogar: {creditPair.clubCredits} créditos</span>
           </div>
           <p className="mt-2 text-sm font-semibold leading-6 text-muted">{pricingDetail(primaryService)}</p>
           <button className="btn-primary mt-5 w-full" type="button" onClick={() => openBookingForService(primaryService)}>
@@ -326,6 +332,33 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
   );
 }
 
+export function ProfileLoadingSkeleton() {
+  return (
+    <section className="grid gap-6 lg:grid-cols-[1fr_390px]" aria-busy="true" aria-label="Cargando perfil del especialista">
+      <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
+        <div className="h-[320px] w-full animate-pulse bg-slate-100 md:h-[460px]" />
+        <div className="grid gap-6 p-6">
+          <div className="grid gap-3 sm:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-20 animate-pulse rounded-2xl bg-slate-100" />
+            ))}
+          </div>
+          <div className="h-32 animate-pulse rounded-[24px] bg-slate-100" />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+            <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
+          </div>
+        </div>
+      </article>
+      <aside className="grid gap-5 self-start">
+        <div className="h-56 animate-pulse rounded-[28px] bg-slate-100" />
+        <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
+        <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
+      </aside>
+    </section>
+  );
+}
+
 function ReputationMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-2xl bg-slate-50 px-4 py-3">
@@ -350,12 +383,12 @@ function DistributionBar({ rating, count, total }: { rating: number; count: numb
 
 function SpecialistFaq() {
   const faqs = [
-    ["La visita tiene costo?", "Depende del servicio. Si hay visita tecnica, los creditos se informan antes de reservar."],
+    ["La visita tiene costo?", "Depende del servicio. Si hay visita técnica, los créditos se informan antes de reservar."],
     ["Que pasa si se necesitan materiales?", "El especialista debe pedir un adicional y tu lo apruebas antes de cualquier cobro."],
     ["Puedo aprobar un adicional antes de pagarlo?", "Si. Todo adicional requiere aprobacion del cliente."],
-    ["Como se usan los creditos?", "Se retienen al reservar y se liberan cuando el servicio avanza o queda cerrado."],
+    ["Como se usan los créditos?", "Se retienen al reservar y se liberan cuando el servicio avanza o queda cerrado."],
     ["Puedo calificar al especialista?", "Si. Despues del servicio completado puedes dejar una opinion verificada."],
-    ["Que pasa si el especialista no llega?", "OficiosPro revisa el caso y mantiene los creditos protegidos mientras se resuelve."],
+    ["Que pasa si el especialista no llega?", "OficiosPro revisa el caso y mantiene los créditos protegidos mientras se resuelve."],
   ];
 
   return (

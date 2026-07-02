@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
 import { getClientMenuGroups } from "@/data/tradeTaxonomy";
+import { allSpecialtyOptions, communeOptions, normalizeSearch, OTHER_SERVICE_VALUE } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
 const quickSuggestions = ["Calefont", "Filtracion", "Electricista SEC", "Camaras", "Riego", "Piscina", "Porton"];
+
+// Pool de autocompletado: oficios/especialidades + comunas (sin la opción "Otro").
+const searchSuggestionPool: string[] = Array.from(
+  new Set([
+    ...allSpecialtyOptions.filter((option) => option.value !== OTHER_SERVICE_VALUE).map((option) => option.label),
+    ...communeOptions.map((option) => option.label),
+  ]),
+);
 
 const categoryGroups = getClientMenuGroups();
 
@@ -74,6 +85,7 @@ export function Header() {
   const categoryCloseTimerRef = useRef<number | null>(null);
   const [categoryMenuStyle, setCategoryMenuStyle] = useState<CSSProperties>({});
   const pathname = usePathname();
+  const { t } = useI18n();
 
   useEffect(() => {
     setSession(getMockSession());
@@ -194,7 +206,7 @@ export function Header() {
     <header className="sticky top-0 z-50 border-b border-line/80 bg-white/95 backdrop-blur-xl">
       {isAdmin ? (
         <div className="border-b border-teal-900/20 bg-ink text-white">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3 px-5 py-3">
+          <div className="mx-auto flex max-w-[112rem] flex-wrap items-center justify-between gap-3 px-5 py-3">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full bg-teal-300 px-3 py-1 text-xs font-black uppercase text-teal-950">Administrador</span>
               <span className="text-sm font-bold text-white/85">{session.email ?? "Administrador OficiosPro"}</span>
@@ -210,19 +222,21 @@ export function Header() {
         </div>
       ) : null}
 
-      <div className="mx-auto grid min-h-20 max-w-7xl grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:px-5">
+      <div className="mx-auto grid min-h-20 max-w-[112rem] grid-cols-[auto_1fr_auto] items-center gap-3 px-4 md:px-5">
         <Link href="/" className="flex shrink-0 items-center font-black" aria-label="Ir al inicio de OficiosPro" onClick={closeMenus}>
           <BrandLogo variant="primary" size="md" />
         </Link>
 
-        <div className="hidden min-w-0 items-center gap-3 lg:flex">
-          <HeaderSearch />
-          <nav className="flex shrink-0 items-center gap-1 text-sm font-black text-muted">
-            <NavLink href="/especialistas" label="Especialistas" pathname={pathname} />
+        <div className="hidden min-w-0 flex-1 items-center gap-3 xl:flex">
+          <div className="hidden min-w-0 flex-1 2xl:flex">
+            <HeaderSearch />
+          </div>
+          <nav className="flex min-w-0 items-center justify-center gap-0.5 text-sm font-black text-muted xl:gap-1 2xl:justify-end">
+            <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
                 ref={categoryTriggerRef}
-                className={categoryOpen ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
+                className={categoryOpen ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={categoryOpen}
@@ -239,16 +253,16 @@ export function Header() {
                   }
                 }}
               >
-                Categorias
+                {t("nav.categories")}
               </button>
               <MegaCategoryMenu open={categoryOpen} onClose={closeCategoryMenu} style={categoryMenuStyle} />
             </div>
-            <NavLink href="/club-hogar" label="Club Hogar" pathname={pathname} />
-            <NavLink href="/empresas" label="Empresas" pathname={pathname} />
-            <NavLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} />
+            <NavLink href="/club-hogar" label={t("nav.club")} pathname={pathname} />
+            <NavLink href="/empresas" label={t("nav.companies")} pathname={pathname} />
+            <NavLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} />
             <Link
               href="/especialistas-fundadores?source=header&intent=offer_services"
-              className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
+              className="whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
               onClick={() => {
                 void trackEvent({
                   eventName: "click_offer_services",
@@ -260,15 +274,15 @@ export function Header() {
                 });
               }}
             >
-              Trabaja con nosotros
+              {t("nav.work")}
             </Link>
-            <NavLink href="/soporte" label="Soporte" pathname={pathname} />
+            <NavLink href="/soporte" label={t("nav.support")} pathname={pathname} />
           </nav>
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand lg:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
-            Buscar
+          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand 2xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
+            {t("nav.search")}
           </button>
           <CartButton onOpen={() => setCartOpen(true)} />
           <div className="hidden md:block">
@@ -283,18 +297,19 @@ export function Header() {
               />
             ) : (
               <button className="rounded-2xl px-4 py-3 text-sm font-black text-muted transition hover:bg-slate-100 hover:text-brand" type="button" onClick={() => setLoginOpen(true)}>
-                Iniciar sesion
+                {t("nav.login")}
               </button>
             )}
           </div>
-          <button className="grid h-11 w-11 place-items-center rounded-2xl border border-line bg-white text-lg font-black text-ink shadow-sm transition hover:border-brand hover:bg-brand-soft lg:hidden" type="button" onClick={() => setMobileOpen((current) => !current)} aria-label="Abrir menu">
+          <LanguageSwitcher className="hidden xl:inline-flex" compact />
+          <button className="grid h-11 w-11 place-items-center rounded-2xl border border-line bg-white text-lg font-black text-ink shadow-sm transition hover:border-brand hover:bg-brand-soft xl:hidden" type="button" onClick={() => setMobileOpen((current) => !current)} aria-label="Abrir menu">
             =
           </button>
         </div>
       </div>
 
       {mobileSearchOpen ? (
-        <div className="border-t border-line bg-white px-4 py-3 lg:hidden">
+        <div className="border-t border-line bg-white px-4 py-3 2xl:hidden">
           <HeaderSearch compact onSubmit={() => setMobileSearchOpen(false)} />
         </div>
       ) : null}
@@ -325,7 +340,24 @@ export function Header() {
 
 function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubmit?: () => void }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const { t } = useI18n();
+
+  // Debounce ~250ms: solo recalcula sugerencias cuando el usuario pausa de escribir.
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(handle);
+  }, [query]);
+
+  const typing = debouncedQuery.length > 0;
+  const suggestions = useMemo(() => {
+    const normalized = normalizeSearch(debouncedQuery);
+    if (!normalized) return quickSuggestions;
+    return searchSuggestionPool
+      .filter((label) => normalizeSearch(label).includes(normalized))
+      .slice(0, 6);
+  }, [debouncedQuery]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -336,9 +368,13 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
   }
 
   function applySuggestion(suggestion: string) {
+    setQuery(suggestion);
     window.location.href = `/especialistas?q=${encodeURIComponent(suggestion)}`;
     onSubmit?.();
   }
+
+  const listboxId = compact ? "header-mobile-search-list" : "header-search-list";
+  const showPanel = focused && suggestions.length > 0;
 
   return (
     <form className={`relative min-w-0 ${compact ? "w-full" : "w-[min(34vw,420px)]"}`} onSubmit={submit}>
@@ -347,22 +383,27 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
         <input
           id={compact ? "header-mobile-search" : "header-search"}
           value={query}
+          role="combobox"
+          aria-expanded={showPanel}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          autoComplete="off"
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onChange={(event) => setQuery(event.target.value)}
           className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm font-bold text-ink outline-none"
-          placeholder="Busca oficio, problema o comuna"
+          placeholder={t("nav.searchPlaceholder")}
         />
-        <button className="bg-brand px-4 text-sm font-black text-white transition hover:bg-brand-dark" type="submit" aria-label="Buscar">
-          Buscar
+        <button className="bg-brand px-4 text-sm font-black text-white transition hover:bg-brand-dark" type="submit" aria-label={t("nav.search")}>
+          {t("nav.search")}
         </button>
       </div>
-      {focused ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] rounded-2xl border border-line bg-white p-3 shadow-card">
-          <p className="px-2 text-xs font-black uppercase text-muted">Busquedas rapidas</p>
+      {showPanel ? (
+        <div id={listboxId} role="listbox" className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] rounded-2xl border border-line bg-white p-3 shadow-card">
+          <p className="px-2 text-xs font-black uppercase text-muted">{typing ? "Sugerencias" : "Búsquedas rápidas"}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {quickSuggestions.map((suggestion) => (
-              <button key={suggestion} className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applySuggestion(suggestion)}>
+            {suggestions.map((suggestion) => (
+              <button key={suggestion} role="option" aria-selected="false" className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applySuggestion(suggestion)}>
                 {suggestion}
               </button>
             ))}
@@ -383,10 +424,10 @@ function MegaCategoryMenu({ open, onClose, style }: { open: boolean; onClose: ()
       style={{ left: "50%", top: "5rem", width: "min(1120px, calc(100vw - 32px))", maxHeight: "calc(100vh - 6rem)", ...style }}
       role="menu"
     >
-      <div className="rounded-[28px] border border-line bg-white p-5 shadow-card">
-        <div className="grid gap-4 xl:grid-cols-5">
+      <div className="rounded-[28px] border border-line bg-white p-4 shadow-card md:p-5">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {categoryGroups.map((group) => (
-            <section key={group.title} className="rounded-2xl bg-slate-50 p-4">
+            <section key={group.title} className="min-w-0 rounded-2xl bg-slate-50 p-4">
               <Link href={group.href} role="menuitem" className="block rounded-xl px-2 py-2 text-sm font-black text-ink transition hover:bg-white hover:text-brand" onClick={onClose}>
                 {group.title}
               </Link>
@@ -474,12 +515,17 @@ function MobileMenu({
   onOpenCart: () => void;
   onLogout: () => void;
 }) {
+  const { t } = useI18n();
   return (
-    <div className="border-t border-line bg-white px-4 py-4 shadow-soft lg:hidden">
+    <div className="border-t border-line bg-white px-4 py-4 shadow-soft xl:hidden">
       <div className="grid gap-3">
-        <MobileLink href="/especialistas" label="Especialistas" pathname={pathname} onClick={onClose} />
+        <div className="flex items-center justify-between gap-3 rounded-2xl border border-line bg-slate-50 p-3">
+          <span className="text-sm font-black text-muted">{t("lang.choose")}</span>
+          <LanguageSwitcher compact />
+        </div>
+        <MobileLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} onClick={onClose} />
         <div className="rounded-2xl border border-line bg-slate-50 p-3">
-          <strong className="text-sm font-black text-ink">Categorias</strong>
+          <strong className="text-sm font-black text-ink">{t("nav.categories")}</strong>
           <div className="mt-2 grid gap-2">
             {categoryGroups.map((group) => (
               <details key={group.title} className="rounded-xl bg-white p-3">
@@ -498,12 +544,13 @@ function MobileMenu({
             ))}
           </div>
         </div>
-        <MobileLink href="/club-hogar" label="Club Hogar" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/empresas" label="Empresas" pathname={pathname} onClick={onClose} />
-        <MobileLink href="/#recomienda-gana" label="Recomienda y gana" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/club-hogar" label={t("nav.club")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/empresas" label={t("nav.companies")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/global" label={t("nav.global")} pathname={pathname} onClick={onClose} />
+        <MobileLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} onClick={onClose} />
         <MobileLink
           href="/especialistas-fundadores?source=header&intent=offer_services"
-          label="Trabaja con nosotros"
+          label={t("nav.work")}
           pathname={pathname}
           onClick={() => {
             void trackEvent({
@@ -517,7 +564,7 @@ function MobileMenu({
             onClose();
           }}
         />
-        <MobileLink href="/soporte" label="Soporte" pathname={pathname} onClick={onClose} />
+        <MobileLink href="/soporte" label={t("nav.support")} pathname={pathname} onClick={onClose} />
         <button className="btn-secondary" type="button" onClick={onOpenCart}>
           Mi bolsa
         </button>
@@ -541,7 +588,7 @@ function MobileMenu({
           </div>
         ) : (
           <button className="btn-primary" type="button" onClick={onLogin}>
-            Iniciar sesion
+            {t("nav.login")}
           </button>
         )}
       </div>
@@ -552,7 +599,7 @@ function MobileMenu({
 function NavLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
   const active = isActivePath(pathname, href);
   return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
+    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
       {label}
     </Link>
   );

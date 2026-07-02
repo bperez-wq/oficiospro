@@ -5,6 +5,7 @@ import {
   type PricingMode,
   type QuoteAgreement,
 } from "@/data/flexiblePricing";
+import { creditsToCLP, creditsToCLPLabel, formatCLP } from "@/lib/credits/creditInfo";
 
 export const DEFAULT_SUBSCRIBER_DISCOUNT_CREDITS = 2;
 export const DEFAULT_CREDIT_VALUE_CLP = 1000;
@@ -18,7 +19,7 @@ export function isEvenCreditValue(value: number) {
   return Number.isFinite(value) && value > 0 && Math.round(value) % 2 === 0;
 }
 
-export function formatCredits(value: number | undefined, suffix = "creditos") {
+export function formatCredits(value: number | undefined, suffix = "créditos") {
   if (value === undefined || value === null || !Number.isFinite(Number(value))) return "por confirmar";
   return `${Number(value)} ${suffix}`;
 }
@@ -26,57 +27,64 @@ export function formatCredits(value: number | undefined, suffix = "creditos") {
 export function formatDurationRange(service: FlexibleService) {
   const min = service.estimatedDurationMinMinutes;
   const max = service.estimatedDurationMaxMinutes;
-  if (!min && !max) return "Duracion por confirmar";
-  if (min && max && min !== max) return `Duracion estimada: ${formatMinutes(min)} a ${formatMinutes(max)}`;
-  return `Duracion estimada: ${formatMinutes(min ?? max ?? 0)}`;
+  if (!min && !max) return "Duración por confirmar";
+  if (min && max && min !== max) return `Duración estimada: ${formatMinutes(min)} a ${formatMinutes(max)}`;
+  return `Duración estimada: ${formatMinutes(min ?? max ?? 0)}`;
 }
 
+// Incluye siempre la equivalencia en pesos junto al valor en créditos (1 crédito = $1.000).
 export function pricingSummary(service: FlexibleService | undefined, isSubscriber = false) {
   if (!service) return "Precio por confirmar";
   const discount = isSubscriber ? service.clubDiscountCredits ?? DEFAULT_SUBSCRIBER_DISCOUNT_CREDITS : 0;
 
   if (service.pricingMode === "fixed") {
-    const credits = Math.max(0, Number(service.fixedCredits ?? 0) - discount);
-    return isSubscriber ? `Club Hogar: ${credits} creditos` : `Desde ${service.fixedCredits ?? 0} creditos`;
+    const base = Number(service.fixedCredits ?? 0);
+    const credits = isSubscriber ? Math.max(0, base - discount) : base;
+    const label = isSubscriber ? `Club Hogar: ${credits} créditos` : `Desde ${credits} créditos`;
+    return `${label} · ${creditsToCLPLabel(credits)}`;
   }
   if (service.pricingMode === "hourly") {
-    return `Desde ${service.hourlyCredits ?? 0} creditos/hora`;
+    const credits = service.hourlyCredits ?? 0;
+    return `Desde ${credits} créditos/hora · ${creditsToCLPLabel(credits)}/hora`;
   }
   if (service.pricingMode === "range") {
-    return `Desde ${service.minCredits ?? 0} a ${service.maxCredits ?? 0} creditos`;
+    const min = service.minCredits ?? 0;
+    const max = service.maxCredits ?? 0;
+    return `${min} – ${max} créditos · ~${formatCLP(creditsToCLP(min))} – ${formatCLP(creditsToCLP(max))}`;
   }
   if (service.pricingMode === "virtual_diagnosis") {
     return "Cotiza con fotos antes de la visita";
   }
   if (service.pricingMode === "visit_then_quote") {
-    return `Visita desde ${service.visitCredits ?? 0} creditos y luego cotizacion`;
+    const credits = service.visitCredits ?? 0;
+    return `Visita desde ${credits} créditos · ${creditsToCLPLabel(credits)}`;
   }
   if (service.pricingMode === "quote_required") {
-    return "Requiere cotizacion";
+    return "Requiere cotización";
   }
-  return "Revision OficiosPro";
+  return "Revisión OficiosPro";
 }
 
 export function pricingDetail(service: FlexibleService | undefined) {
-  if (!service) return "OficiosPro revisara disponibilidad y alcance.";
-  if (service.pricingMode === "fixed") return "Credito exacto antes de reservar. Pago protegido hasta finalizar.";
+  if (!service) return "OficiosPro revisará disponibilidad y alcance.";
+  if (service.pricingMode === "fixed") return "Crédito exacto antes de reservar. Pago protegido hasta finalizar.";
   if (service.pricingMode === "hourly") {
     const min = service.minHours ?? 1;
     const max = service.maxHours ?? min;
     const hourly = service.hourlyCredits ?? 0;
-    return `Este trabajo podria costar entre ${min * hourly} y ${max * hourly} creditos.`;
+    return `Este trabajo podría costar entre ${min * hourly} y ${max * hourly} créditos.`;
   }
-  if (service.pricingMode === "range") return "Puedes solicitar cotizacion o reservar visita para cerrar alcance.";
-  if (service.pricingMode === "virtual_diagnosis") return "Envias antecedentes y fotos para que el especialista cotice antes de ir, cuando sea posible.";
-  if (service.pricingMode === "visit_then_quote") return "Primero se paga diagnostico. Luego recibes propuesta formal.";
-  if (service.pricingMode === "quote_required") return "Puedes solicitar evaluacion sin compromiso antes del pago final.";
-  return "Un administrador revisara el caso antes de confirmar condiciones.";
+  if (service.pricingMode === "range") return "Puedes solicitar cotización o reservar visita para cerrar alcance.";
+  if (service.pricingMode === "virtual_diagnosis") return "Envías antecedentes y fotos para que el especialista cotice antes de ir, cuando sea posible.";
+  if (service.pricingMode === "visit_then_quote") return "Primero se paga diagnóstico. Luego recibes propuesta formal.";
+  if (service.pricingMode === "quote_required") return "Puedes solicitar evaluación sin compromiso antes del pago final.";
+  return "Un administrador revisará el caso antes de confirmar condiciones.";
 }
 
 export function bookingPrimaryAction(service: FlexibleService | undefined) {
   if (!service) return "Solicitar servicio";
-  if (service.pricingMode === "quote_required" || service.pricingMode === "virtual_diagnosis" || service.pricingMode === "range") return "Solicitar cotizacion";
-  if (service.pricingMode === "visit_then_quote") return "Reservar visita tecnica";
+  if (service.pricingMode === "quote_required" || service.pricingMode === "virtual_diagnosis" || service.pricingMode === "range") return "Solicitar cotización";
+  if (service.pricingMode === "visit_then_quote") return "Reservar visita técnica";
   return "Reservar horario";
 }
 

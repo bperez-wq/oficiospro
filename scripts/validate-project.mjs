@@ -287,7 +287,7 @@ if (assetDirectory === "./out") {
     "Soluciones para empresas",
     "Ofrecer mis servicios",
   ]) {
-    assertAnyContains(["src/app/page.tsx", "src/components/HeroSearchPanel.tsx", "src/components/Footer.tsx"], text);
+    assertAnyContains(["src/app/page.tsx", "src/components/HeroSearchPanel.tsx", "src/components/Footer.tsx", "src/lib/i18n/dictionaries.ts"], text);
   }
 
   assertRegex("src/data/chileCommunes.ts", /export\s+const\s+chileCommunes\s*:/, "chileCommunes dataset");
@@ -308,7 +308,7 @@ if (assetDirectory === "./out") {
   assertRegex("src/lib/bookingStorage.ts", /oficiospro\.bookingRequests/, "local booking request storage");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+addBlockedSlot\s*\(/, "addBlockedSlot helper");
   assertRegex("src/lib/bookingStorage.ts", /export\s+function\s+createBookingRequest\s*\(/, "createBookingRequest helper");
-  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los creditos iniciales quedan retenidos hasta confirmar el servicio.");
+  assertContains("src/components/BookingDrawer.tsx", "Horario solicitado. Los créditos iniciales quedan retenidos hasta confirmar el servicio.");
   assertContains("src/components/BookingDrawer.tsx", "createPortal");
   assertContains("src/components/BookingDrawer.tsx", "document.body");
   assertContains("src/components/BookingDrawer.tsx", "document.body.style.overflow");
@@ -321,7 +321,7 @@ if (assetDirectory === "./out") {
   }
   assertContains("src/components/TimeSlotPicker.tsx", "Sin horarios visibles esta semana. Solicita contacto y revisaremos disponibilidad.");
   assertContains("src/app/agenda-especialista/page.tsx", "Mi agenda OficiosPro");
-  assertContains("src/app/page.tsx", "Ver cómo funcionará mi agenda");
+  assertAnyContains(["src/app/page.tsx", "src/lib/i18n/dictionaries.ts"], "Ver cómo funcionará mi agenda");
   assertContains("migrations/0001_leads.sql", "CREATE TABLE IF NOT EXISTS lead_submissions");
   for (const endpoint of ["/api/leads", "/api/jobs/request", "/api/specialists/apply", "/api/companies/request", "/api/bookings/request", "/api/contact", "/api/admin/leads"]) {
     assertContains("worker/index.ts", endpoint);
@@ -406,9 +406,9 @@ if (assetDirectory === "./out") {
   assertContains("src/lib/flexiblePricing.ts", "pricingSummary");
   assertContains("src/lib/flexiblePricing.ts", "creditsForInitialHold");
   assertContains("src/components/BookingDrawer.tsx", "quote_request_submit");
-  assertContains("src/components/BookingDrawer.tsx", "Cotizacion solicitada");
-  assertContains("src/components/Dashboards.tsx", "Cotizaciones y acuerdos");
-  assertContains("src/components/Dashboards.tsx", "Propuestas y adicionales");
+  assertContains("src/components/BookingDrawer.tsx", "Cotización solicitada");
+  assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Cotizaciones y acuerdos");
+  assertAnyContains(["src/components/Dashboards.tsx", "src/lib/i18n/dictionaries.ts"], "Propuestas y adicionales");
   assertContains("src/components/AdminPanel.tsx", "Tarifas, cotizaciones y negociación");
   assertContains("src/components/AdminPanel.tsx", "AdminCreditLedgerPreview");
   assertContains("src/components/AdminCreditLedgerPreview.tsx", "El cliente ve créditos");
@@ -436,7 +436,7 @@ if (assetDirectory === "./out") {
   assertContains("src/app/checkout/page.tsx", "additional_work_hold");
   assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por categoria");
   assertContains("src/components/AdminPricingPanel.tsx", "Multiplicadores por comuna");
-  assertContains("src/components/AdminPricingPanel.tsx", "Certificacion requerida por categoria");
+  assertContains("src/components/AdminPricingPanel.tsx", "Certificación requerida por categoria");
   assertNoPublicInternalPricingLeak();
   for (const fn of [
     "formatCLP",

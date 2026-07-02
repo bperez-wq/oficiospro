@@ -1,14 +1,14 @@
 /**
- * Calculo de Comision OficiosPro.
+ * Calculo de Comisión OficiosPro.
  *
  * Regla activa:
  * - 9,5% neto segun src/config/taxConfig.ts
- * - IVA sobre la comision si taxConfig.platformCommission.ivaApplies = true
+ * - IVA sobre la comisión si taxConfig.platformCommission.ivaApplies = true
  *
  * Cuando exista documento especialista, preferir
  * calculateCustomerPriceWithPlatformCommission() porque calcula sobre la base
  * tributaria real del documento. Este helper mantiene compatibilidad con el
- * ledger financiero legacy que parte desde creditos finales.
+ * ledger financiero legacy que parte desde créditos finales.
  */
 
 import { chileTaxConfig2026, roundTaxCLP } from "@/config/taxConfig";

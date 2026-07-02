@@ -51,10 +51,10 @@ export const growthExperiments: GrowthExperiment[] = [
   },
   {
     id: "exp-unit-economics-review",
-    title: "Revision de costo variable por operacion",
+    title: "Revision de costo variable por operación",
     type: "commission_vs_lead_fee",
-    hypothesis: "La comision 9,5% + IVA puede requerir automatizacion o variante de monetizacion segun costo real.",
-    problem: "Escalar con costo variable mayor a comision neta no es sostenible.",
+    hypothesis: "La comisión 9,5% + IVA puede requerir automatizacion o variante de monetizacion segun costo real.",
+    problem: "Escalar con costo variable mayor a comisión neta no es sostenible.",
     segment: "Servicios completados en piloto",
     modelVariant: "Medicion, no cambio de cobro",
     owner: "Benjamin",

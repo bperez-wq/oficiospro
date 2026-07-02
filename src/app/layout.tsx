@@ -54,10 +54,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="es">
       <body>
+        <a href="#contenido" className="skip-link">Saltar al contenido</a>
         <I18nProvider>
           <ConversionModalProvider>
             <Header />
-            {children}
+            <div id="contenido" tabIndex={-1}>
+              {children}
+            </div>
             <Footer />
             <SpecialistAssistantWidget />
           </ConversionModalProvider>

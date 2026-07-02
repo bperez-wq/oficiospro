@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
+import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayoutPanel";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
@@ -47,6 +48,7 @@ import {
 } from "@/lib/virtualQuotes";
 
 export function ClientDashboard() {
+  const { t } = useI18n();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const [balance, setBalance] = useState(0);
   const [bookings, setBookings] = useState<Booking[]>([]);
@@ -127,26 +129,26 @@ export function ClientDashboard() {
     <div className="grid gap-6">
       <section className="grid gap-5 lg:grid-cols-[1.1fr_0.9fr]">
         <article className="enterprise-shell p-6">
-          <p className="eyebrow text-teal-200">Club Hogar</p>
-          <h2 className="text-4xl font-black">{balance} créditos disponibles</h2>
-          <p className="mt-3 font-semibold leading-7 text-white/75">Tus créditos se acumulan hasta 24 meses y se descuentan al reservar especialistas.</p>
+          <p className="eyebrow text-teal-200">{t("dashboard.client.clubEyebrow")}</p>
+          <h2 className="text-4xl font-black">{balance} {t("dashboard.client.creditsAvailable")}</h2>
+          <p className="mt-3 font-semibold leading-7 text-white/75">{t("dashboard.client.creditsIntro")}</p>
           <div className="mt-6 grid gap-3 sm:grid-cols-3">
-            <MetricDark label="Próximas" value={upcoming.length.toString()} />
-            <MetricDark label="Realizados" value={completed.length.toString()} />
-            <MetricDark label="Favoritos" value={favorites.length.toString()} />
+            <MetricDark label={t("dashboard.client.metricUpcoming")} value={upcoming.length.toString()} />
+            <MetricDark label={t("dashboard.client.metricCompleted")} value={completed.length.toString()} />
+            <MetricDark label={t("dashboard.client.metricFavorites")} value={favorites.length.toString()} />
           </div>
         </article>
         <article className="panel">
-          <h2 className="text-2xl font-black">Acciones rápidas</h2>
+          <h2 className="text-2xl font-black">{t("dashboard.client.quickActions")}</h2>
           <div className="mt-5 grid gap-3">
             <ConversionButton type="consulta_general" sourceButton="Reservar especialista dashboard cliente" className="btn-primary">
-              Reservar especialista
+              {t("dashboard.client.reserveSpecialist")}
             </ConversionButton>
             <ConversionButton type="lead_cliente" sourceButton="Ver planes Club Hogar dashboard" className="btn-secondary">
-              Ver planes Club Hogar
+              {t("dashboard.client.viewPlans")}
             </ConversionButton>
             <Link className="btn-ghost" href="/registro-cliente">
-              Actualizar datos
+              {t("dashboard.client.updateData")}
             </Link>
           </div>
         </article>
@@ -163,18 +165,18 @@ export function ClientDashboard() {
       <section className="panel">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">Propuesta y acuerdo</p>
-            <h2 className="text-2xl font-black">Cotizaciones y acuerdos</h2>
+            <p className="eyebrow">{t("dashboard.client.quotesEyebrow")}</p>
+            <h2 className="text-2xl font-black">{t("dashboard.client.quotesTitle")}</h2>
           </div>
           <Link className="btn-secondary" href="/checkout?mode=credits_purchase">
-            Comprar créditos
+            {t("dashboard.client.buyCredits")}
           </Link>
         </div>
         <div className="mb-5 grid gap-3 sm:grid-cols-4">
-          <StatCard label="Disponibles" value={`${paymentWallet?.currentBalance ?? balance}`} />
-          <StatCard label="Retenidos" value={`${paymentWallet?.heldCredits ?? 0}`} />
-          <StatCard label="Por vencer" value={`${paymentWallet?.expiringCreditsTotal ?? 0}`} />
-          <StatCard label="En cotización/adicional" value={`${(paymentWallet?.quoteHeldCredits ?? 0) + (paymentWallet?.additionalHeldCredits ?? 0)}`} />
+          <StatCard label={t("dashboard.client.statAvailable")} value={`${paymentWallet?.currentBalance ?? balance}`} />
+          <StatCard label={t("dashboard.client.statHeld")} value={`${paymentWallet?.heldCredits ?? 0}`} />
+          <StatCard label={t("dashboard.client.statExpiring")} value={`${paymentWallet?.expiringCreditsTotal ?? 0}`} />
+          <StatCard label={t("dashboard.client.statInQuote")} value={`${(paymentWallet?.quoteHeldCredits ?? 0) + (paymentWallet?.additionalHeldCredits ?? 0)}`} />
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="grid gap-3">
@@ -186,33 +188,33 @@ export function ClientDashboard() {
                 </div>
                 <p className="mt-2 text-sm font-bold text-muted">{quote.specialistName} · {quote.commune}</p>
                 <p className="mt-2 text-sm font-semibold leading-6 text-muted">{quote.proposal?.description ?? quote.originalRequest}</p>
-                {quote.proposal ? <strong className="mt-2 block text-ink">Total propuesta: {quoteTotalCredits(quote)} créditos</strong> : null}
+                {quote.proposal ? <strong className="mt-2 block text-ink">{t("dashboard.client.totalProposal")} {quoteTotalCredits(quote)} {t("dashboard.common.credits")}</strong> : null}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "accepted", "Propuesta aceptada. Se retendrán los créditos.")}>
-                    Aceptar propuesta
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "accepted", t("dashboard.client.acceptMsg"))}>
+                    {t("dashboard.client.acceptProposal")}
                   </button>
-                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "rejected", "Propuesta rechazada.")}>
-                    Rechazar
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "rejected", t("dashboard.client.rejectMsg"))}>
+                    {t("dashboard.client.reject")}
                   </button>
-                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "customer_counteroffer", "El cliente pidió ajuste.")}>
-                    Pedir ajuste
+                  <button className="btn-secondary" type="button" onClick={() => changeQuote(quote.id, "customer_counteroffer", t("dashboard.client.adjustMsg"))}>
+                    {t("dashboard.client.requestAdjust")}
                   </button>
                 </div>
               </article>
             ))}
             {!quoteAgreements.length ? (
               <EmptyState
-                eyebrow="Piloto sin actividad"
-                title="Aun no tienes cotizaciones activas."
-                text="Cuando solicites un especialista o aceptes una propuesta, el seguimiento aparecera aqui."
-                action={<Link className="btn-secondary" href="/especialistas">Buscar especialistas</Link>}
+                eyebrow={t("dashboard.client.emptyQuotesEyebrow")}
+                title={t("dashboard.client.emptyQuotesTitle")}
+                text={t("dashboard.client.emptyQuotesText")}
+                action={<Link className="btn-secondary" href="/especialistas">{t("dashboard.client.searchSpecialists")}</Link>}
               />
             ) : null}
           </div>
           <div className="grid gap-3">
             <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-              <p className="eyebrow">Adicionales por aprobar</p>
-              <h3 className="text-xl font-black text-emerald-950">Este adicional no se cobrara sin tu aprobacion.</h3>
+              <p className="eyebrow">{t("dashboard.client.additionalsEyebrow")}</p>
+              <h3 className="text-xl font-black text-emerald-950">{t("dashboard.client.additionalsTitle")}</h3>
             </div>
             {additionalRequests.map((additional) => {
               const needsPayment = additionalNeedsPayment(additional, paymentWallet?.currentBalance ?? balance);
@@ -222,22 +224,22 @@ export function ClientDashboard() {
                     <strong>{additionalTypeLabels[additional.type]}</strong>
                     <span className="chip bg-brand-soft text-brand-dark">{additional.status}</span>
                   </div>
-                  <p className="mt-2 text-sm font-bold text-muted">{additional.specialistName} · {additional.requestedCredits} créditos</p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}. El cobro adicional requiere tu aprobacion.</p>
+                  <p className="mt-2 text-sm font-bold text-muted">{additional.specialistName} · {additional.requestedCredits} {t("dashboard.common.credits")}</p>
+                  <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.description}. {t("dashboard.client.additionalChargeSuffix")}</p>
                   <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                    <MiniMetric label="Motivo" value={additional.reason} />
-                    <MiniMetric label="Comprobante" value={additional.photoName ?? additional.receiptName ?? "Opcional"} />
+                    <MiniMetric label={t("dashboard.client.miniReason")} value={additional.reason} />
+                    <MiniMetric label={t("dashboard.client.miniReceipt")} value={additional.photoName ?? additional.receiptName ?? t("dashboard.client.optional")} />
                   </div>
-                  {needsPayment ? <p className="mt-2 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-900">Saldo insuficiente: compra créditos, activa Club Hogar o paga la diferencia.</p> : null}
+                  {needsPayment ? <p className="mt-2 rounded-2xl bg-amber-50 p-3 text-sm font-black text-amber-900">{t("dashboard.client.insufficientBalance")}</p> : null}
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "approved", "Adicional aprobado por cliente.")}>
-                      Aprobar adicional
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "approved", t("dashboard.client.approveMsg"))}>
+                      {t("dashboard.client.approveAdditional")}
                     </button>
-                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "rejected", "Adicional rechazado por cliente.")}>
-                      Rechazar
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "rejected", t("dashboard.client.rejectAddMsg"))}>
+                      {t("dashboard.client.reject")}
                     </button>
-                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "clarification_requested", "Cliente pidió aclaración.")}>
-                      Pedir aclaración
+                    <button className="btn-secondary" type="button" onClick={() => changeAdditional(additional.id, "clarification_requested", t("dashboard.client.clarifyMsg"))}>
+                      {t("dashboard.client.requestClarification")}
                     </button>
                   </div>
                 </article>
@@ -245,9 +247,9 @@ export function ClientDashboard() {
             })}
             {!additionalRequests.length ? (
               <EmptyState
-                eyebrow="Sin adicionales"
-                title="No hay cobros extra por aprobar."
-                text="En el piloto, cualquier adicional quedara visible aqui antes de que se retengan mas creditos."
+                eyebrow={t("dashboard.client.emptyAddEyebrow")}
+                title={t("dashboard.client.emptyAddTitle")}
+                text={t("dashboard.client.emptyAddText")}
               />
             ) : null}
           </div>
@@ -257,10 +259,10 @@ export function ClientDashboard() {
       <section className="panel">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">Reputacion</p>
-            <h2 className="text-2xl font-black">Servicios por calificar</h2>
+            <p className="eyebrow">{t("dashboard.client.reputationEyebrow")}</p>
+            <h2 className="text-2xl font-black">{t("dashboard.client.toRateTitle")}</h2>
           </div>
-          <span className="chip bg-brand-soft text-brand-dark">{completed.length} completados</span>
+          <span className="chip bg-brand-soft text-brand-dark">{completed.length} {t("dashboard.client.completedChip")}</span>
         </div>
         <div className="grid gap-3 md:grid-cols-2">
           {completed.length ? completed.slice(0, 4).map((booking) => (
@@ -268,15 +270,15 @@ export function ClientDashboard() {
               <strong>{booking.service}</strong>
               <p className="mt-1 text-sm font-bold text-muted">{booking.specialistName} · {booking.commune} · {booking.date}</p>
               <button className="btn-secondary mt-3" type="button">
-                Calificar servicio
+                {t("dashboard.client.rateService")}
               </button>
             </article>
           )) : (
             <div className="md:col-span-2">
               <EmptyState
-                eyebrow="Sin actividad"
-                title="Aun no tienes servicios por calificar."
-                text="Cuando completes un servicio, podras calificarlo y ayudar a construir reputacion verificada."
+                eyebrow={t("dashboard.client.emptyRateEyebrow")}
+                title={t("dashboard.client.emptyRateTitle")}
+                text={t("dashboard.client.emptyRateText")}
               />
             </div>
           )}
@@ -285,19 +287,24 @@ export function ClientDashboard() {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
-          <p className="eyebrow">Suscripción</p>
-          <h2 className="text-2xl font-black">{subscription ? subscription.planName : "Sin plan activo"}</h2>
+          <p className="eyebrow">{t("dashboard.client.subscriptionEyebrow")}</p>
+          <h2 className="text-2xl font-black">{subscription ? subscription.planName : t("dashboard.client.noPlan")}</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-muted">
             {subscription
-              ? `Renovación ${subscription.renewal}, ${subscription.monthlyCredits} créditos mensuales y vigencia de ${subscription.accumulatesMonths} meses.`
-              : "Contrata Club Hogar para activar créditos mensuales y pago protegido."}
+              ? t("dashboard.client.subscriptionActive")
+                  .replace("{renewal}", subscription.renewal)
+                  .replace("{credits}", String(subscription.monthlyCredits))
+                  .replace("{months}", String(subscription.accumulatesMonths))
+              : t("dashboard.client.subscriptionCta")}
           </p>
         </article>
         <article className="panel">
-          <p className="eyebrow">Mis referidos</p>
+          <p className="eyebrow">{t("dashboard.client.referralsEyebrow")}</p>
           <h2 className="text-2xl font-black">{referrals?.clientCode ?? "OP-CLIENTE-10"}</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-muted">
-            Invitaciones aceptadas: {referrals?.clientInvitations ?? 0}. Créditos ganados: {referrals?.clientCreditsEarned ?? 0}.
+            {t("dashboard.client.referralsAccepted")
+              .replace("{invitations}", String(referrals?.clientInvitations ?? 0))
+              .replace("{earned}", String(referrals?.clientCreditsEarned ?? 0))}
           </p>
           {demoDataEnabled ? (
             <button
@@ -309,16 +316,16 @@ export function ClientDashboard() {
                 setTransactions(getTransactions());
               }}
             >
-              Registrar referido aceptado
+              {t("dashboard.client.registerReferral")}
             </button>
           ) : null}
         </article>
       </section>
 
       <section className="panel">
-        <h2 className="mb-4 text-2xl font-black">Especialistas cerca de ti</h2>
+        <h2 className="mb-4 text-2xl font-black">{t("dashboard.client.nearbyTitle")}</h2>
         <p className="mb-5 text-sm font-semibold leading-6 text-muted">
-          Usamos tu comuna y coordenadas privadas para ordenar resultados. Tu dirección exacta no se publica.
+          {t("dashboard.client.nearbyIntro")}
         </p>
         <div className="grid gap-4 md:grid-cols-3">
           {nearbySpecialists.map((specialist) => (
@@ -331,7 +338,7 @@ export function ClientDashboard() {
           ))}
           {!nearbySpecialists.length ? (
             <div className="md:col-span-3">
-              <EmptyState eyebrow="Sin especialistas reales" title="Aun no hay especialistas cercanos guardados." text="Cuando se publiquen perfiles reales, apareceran aqui ordenados por comuna y distancia." />
+              <EmptyState eyebrow={t("dashboard.client.emptyNearbyEyebrow")} title={t("dashboard.client.emptyNearbyTitle")} text={t("dashboard.client.emptyNearbyText")} />
             </div>
           ) : null}
         </div>
@@ -339,17 +346,17 @@ export function ClientDashboard() {
 
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
-          <h2 className="mb-4 text-2xl font-black">Reservas próximas</h2>
+          <h2 className="mb-4 text-2xl font-black">{t("dashboard.client.upcomingTitle")}</h2>
           <BookingList bookings={upcoming} />
         </article>
         <article className="panel">
-          <h2 className="mb-4 text-2xl font-black">Historial de créditos</h2>
+          <h2 className="mb-4 text-2xl font-black">{t("dashboard.client.creditHistoryTitle")}</h2>
           <TransactionList transactions={transactions} />
         </article>
       </section>
 
       <section className="panel">
-        <h2 className="mb-4 text-2xl font-black">Técnicos favoritos</h2>
+        <h2 className="mb-4 text-2xl font-black">{t("dashboard.client.favTitle")}</h2>
         <div className="grid gap-4 md:grid-cols-3">
           {favorites.map((specialist) => (
             <Link key={specialist.id} href={`/especialistas/${specialist.id}`} className="overflow-hidden rounded-2xl border border-line bg-white transition hover:-translate-y-1 hover:shadow-card">
@@ -365,14 +372,14 @@ export function ClientDashboard() {
               <div className="p-4">
                 <strong>{specialist.name}</strong>
                 <span className="block text-sm font-bold text-muted">
-                  {specialist.specialty} · {specialist.rating.toFixed(1)}/5 · {specialist.credits} créditos
+                  {specialist.specialty} · {specialist.rating.toFixed(1)}/5 · {specialist.credits} {t("dashboard.common.credits")}
                 </span>
               </div>
             </Link>
           ))}
           {!favorites.length ? (
             <div className="md:col-span-3">
-              <EmptyState eyebrow="Sin favoritos reales" title="Aun no hay tecnicos favoritos." text="Tus favoritos apareceran aqui cuando guardes especialistas reales." />
+              <EmptyState eyebrow={t("dashboard.client.emptyFavEyebrow")} title={t("dashboard.client.emptyFavTitle")} text={t("dashboard.client.emptyFavText")} />
             </div>
           ) : null}
         </div>
@@ -382,6 +389,7 @@ export function ClientDashboard() {
 }
 
 export function SpecialistDashboard() {
+  const { t, tList } = useI18n();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const demoDataEnabled = shouldShowDemoData();
   const specialist = demoDataEnabled ? specialists[0] : null;
@@ -413,9 +421,9 @@ export function SpecialistDashboard() {
   if (!specialist) {
     return (
       <EmptyState
-        eyebrow="Sin perfil real"
-        title="Aun no hay perfil especialista activo para esta sesion."
-        text="Las reservas y cotizaciones apareceran aqui cuando el especialista tenga un perfil real publicado."
+        eyebrow={t("dashboard.specialist.noProfileEyebrow")}
+        title={t("dashboard.specialist.noProfileTitle")}
+        text={t("dashboard.specialist.noProfileText")}
       />
     );
   }
@@ -449,7 +457,7 @@ export function SpecialistDashboard() {
       maxCredits: 36,
       estimatedDuration: "Media jornada",
       materialsExcluded: "Materiales y repuestos se confirman antes de ejecutar.",
-      conditions: "Cotizacion basada en los antecedentes enviados. Puede ajustarse si aparece una condicion no visible en fotos.",
+      conditions: "Cotización basada en los antecedentes enviados. Puede ajustarse si aparece una condicion no visible en fotos.",
       comment: "Puedo resolverlo con diagnostico virtual. Si apruebas, coordinamos horario para ejecutar.",
     });
     setVirtualQuotes(getVirtualQuoteRequests());
@@ -463,7 +471,7 @@ export function SpecialistDashboard() {
       estimatedDuration: "45 minutos",
       requiresVisit: true,
       conditions: "El caso requiere revisar en terreno antes de comprometer precio cerrado.",
-      comment: "Recomiendo una visita tecnica para evitar cotizar con informacion incompleta.",
+      comment: "Recomiendo una visita técnica para evitar cotizar con informacion incompleta.",
     });
     setVirtualQuotes(getVirtualQuoteRequests());
   }
@@ -472,14 +480,14 @@ export function SpecialistDashboard() {
     <div className="grid gap-6">
       {submittedNotice ? (
         <div className="rounded-3xl border border-brand/20 bg-brand-soft p-4 font-black text-brand-dark">
-          Tu perfil fue enviado para revisión.
+          {t("dashboard.specialist.profileSubmitted")}
         </div>
       ) : null}
       <section className="rounded-[28px] border border-brand/15 bg-brand-soft p-6">
-        <p className="eyebrow">Propósito del especialista</p>
-        <h2 className="text-3xl font-black">Tu oficio merece visibilidad, confianza y mejores oportunidades.</h2>
+        <p className="eyebrow">{t("dashboard.specialist.purposeEyebrow")}</p>
+        <h2 className="text-3xl font-black">{t("dashboard.specialist.purposeTitle")}</h2>
         <p className="mt-3 max-w-3xl font-semibold leading-7 text-brand-dark">
-          Cada trabajo bien hecho construye tu reputación. Mantén tu perfil actualizado, suma referencias y muestra evidencia real para destacar como especialista verificado.
+          {t("dashboard.specialist.purposeText")}
         </p>
       </section>
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
@@ -497,11 +505,11 @@ export function SpecialistDashboard() {
           <div className="p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div>
-                <p className="eyebrow">Perfil público</p>
+                <p className="eyebrow">{t("dashboard.specialist.publicProfile")}</p>
                 <h2 className="text-3xl font-black">{specialist.name}</h2>
-                <p className="font-semibold text-muted">{specialist.specialty} en {specialist.zone}</p>
+                <p className="font-semibold text-muted">{specialist.specialty} {t("dashboard.specialist.in")} {specialist.zone}</p>
               </div>
-              <span className="chip bg-brand-soft text-brand-dark">Verificación activa</span>
+              <span className="chip bg-brand-soft text-brand-dark">{t("dashboard.specialist.verificationActive")}</span>
             </div>
             <p className="mt-4 font-semibold leading-7 text-muted">{specialist.description}</p>
             <div className="mt-5 flex flex-wrap gap-2">
@@ -514,22 +522,22 @@ export function SpecialistDashboard() {
           </div>
         </article>
         <aside className="grid gap-4">
-          <StatCard label="Calificación" value={`${specialist.rating.toFixed(1)}/5`} />
-          <StatCard label="Trabajos completados" value={specialist.jobs.toString()} />
-          <StatCard label="Reservas recibidas" value={bookings.length.toString()} />
-          <StatCard label="Créditos ganados" value={earnedCredits.toString()} />
+          <StatCard label={t("dashboard.specialist.ratingLabel")} value={`${specialist.rating.toFixed(1)}/5`} />
+          <StatCard label={t("dashboard.specialist.jobsCompleted")} value={specialist.jobs.toString()} />
+          <StatCard label={t("dashboard.specialist.bookingsReceived")} value={bookings.length.toString()} />
+          <StatCard label={t("dashboard.specialist.creditsEarned")} value={earnedCredits.toString()} />
         </aside>
       </section>
       <FormalizationAndPayoutPanel variant="specialist" />
       <section className="grid gap-5 lg:grid-cols-[1fr_0.75fr]">
         <article className="panel">
-          <h2 className="mb-4 text-2xl font-black">Reservas recibidas</h2>
+          <h2 className="mb-4 text-2xl font-black">{t("dashboard.specialist.bookingsReceived")}</h2>
           <BookingList bookings={bookings} />
         </article>
         <article className="panel">
-          <h2 className="text-2xl font-black">Estado de reputación</h2>
+          <h2 className="text-2xl font-black">{t("dashboard.specialist.reputationStatusTitle")}</h2>
           <div className="mt-5 grid gap-3">
-            {["Perfil con foto destacada", "Certificaciones visibles", "Galería de trabajos", "Comentarios verificados"].map((item) => (
+            {tList("dashboard.specialist.reputationItems").map((item) => (
               <span key={item} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
                 {item}
               </span>
@@ -540,13 +548,13 @@ export function SpecialistDashboard() {
       <section className="panel">
         <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="eyebrow">Diagnostico virtual</p>
-            <h2 className="text-2xl font-black">Cotizaciones virtuales pendientes</h2>
+            <p className="eyebrow">{t("dashboard.specialist.virtualEyebrow")}</p>
+            <h2 className="text-2xl font-black">{t("dashboard.specialist.virtualTitle")}</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-              Revisa antecedentes enviados por clientes, pide mas informacion o propone creditos antes de una visita presencial.
+              {t("dashboard.specialist.virtualIntro")}
             </p>
           </div>
-          <span className="chip bg-brand-soft text-brand-dark">{virtualQuotes.length} solicitudes</span>
+          <span className="chip bg-brand-soft text-brand-dark">{virtualQuotes.length} {t("dashboard.specialist.requestsChip")}</span>
         </div>
         {virtualQuotes.length ? (
           <div className="grid gap-3 lg:grid-cols-2">
@@ -555,25 +563,25 @@ export function SpecialistDashboard() {
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div>
                     <strong className="text-ink">{quote.serviceName ?? quote.problemTitle}</strong>
-                    <p className="mt-1 text-sm font-bold text-muted">{quote.customerName ?? "Cliente OficiosPro"} · {quote.commune}</p>
+                    <p className="mt-1 text-sm font-bold text-muted">{quote.customerName ?? t("dashboard.specialist.clientFallback")} · {quote.commune}</p>
                   </div>
                   <span className="chip bg-white text-brand-dark">{virtualQuoteStatusLabels[quote.status]}</span>
                 </div>
                 <p className="mt-3 text-sm font-semibold leading-6 text-muted">{quote.description}</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <MiniMetric label="Urgencia" value={virtualQuoteUrgencyLabels[quote.urgency]} />
-                  <MiniMetric label="Referencias" value={`${quote.attachmentCount}`} />
-                  <MiniMetric label="Propuesta" value={quote.offer ? "Enviada" : "Pendiente"} />
+                  <MiniMetric label={t("dashboard.specialist.miniUrgency")} value={virtualQuoteUrgencyLabels[quote.urgency]} />
+                  <MiniMetric label={t("dashboard.specialist.miniReferences")} value={`${quote.attachmentCount}`} />
+                  <MiniMetric label={t("dashboard.specialist.miniProposal")} value={quote.offer ? t("dashboard.specialist.sent") : t("dashboard.specialist.pending")} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button className="btn-secondary" type="button" onClick={() => askVirtualInfo(quote.id)}>
-                    Pedir mas info
+                    {t("dashboard.specialist.askMoreInfo")}
                   </button>
                   <button className="btn-secondary" type="button" onClick={() => recommendVirtualVisit(quote.id)}>
-                    Recomendar visita
+                    {t("dashboard.specialist.recommendVisit")}
                   </button>
                   <button className="btn-primary" type="button" onClick={() => sendVirtualOffer(quote.id)}>
-                    Enviar propuesta
+                    {t("dashboard.specialist.sendProposal")}
                   </button>
                 </div>
               </article>
@@ -581,18 +589,18 @@ export function SpecialistDashboard() {
           </div>
         ) : (
           <EmptyState
-            eyebrow="Sin diagnosticos virtuales"
-            title="Aun no hay cotizaciones virtuales pendientes."
-            text="Cuando un cliente envie fotos o antecedentes desde la bolsa, apareceran aqui para responder antes de agendar visita."
+            eyebrow={t("dashboard.specialist.emptyVirtualEyebrow")}
+            title={t("dashboard.specialist.emptyVirtualTitle")}
+            text={t("dashboard.specialist.emptyVirtualText")}
           />
         )}
       </section>
       <section className="panel">
         <div className="mb-5">
-          <p className="eyebrow">Propuesta y acuerdo</p>
-          <h2 className="text-2xl font-black">Propuestas y adicionales</h2>
+          <p className="eyebrow">{t("dashboard.specialist.proposalsEyebrow")}</p>
+          <h2 className="text-2xl font-black">{t("dashboard.specialist.proposalsTitle")}</h2>
           <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-            Usa un flujo estructurado: propuesta, contraoferta, revisión OficiosPro y aprobación del cliente antes de cobrar adicionales.
+            {t("dashboard.specialist.proposalsIntro")}
           </p>
         </div>
         <div className="grid gap-4 lg:grid-cols-2">
@@ -606,54 +614,54 @@ export function SpecialistDashboard() {
                 <p className="mt-2 text-sm font-bold text-muted">{quote.customerName} · {quote.commune}</p>
                 <p className="mt-2 text-sm font-semibold leading-6 text-muted">{quote.proposal?.description ?? quote.originalRequest}</p>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
-                  <MiniMetric label="Total cliente" value={`${quoteTotalCredits(quote) || "por definir"} cr`} />
-                  <MiniMetric label="Pago estimado" value={`${quote.proposal?.specialistPayoutCredits ?? "pendiente"} cr`} />
-                  <MiniMetric label="Comision OficiosPro" value={`${quote.proposal?.platformMarginCredits ?? "pendiente"} cr`} />
+                  <MiniMetric label={t("dashboard.specialist.miniTotalClient")} value={`${quoteTotalCredits(quote) || t("dashboard.specialist.toDefine")} cr`} />
+                  <MiniMetric label={t("dashboard.specialist.miniEstimatedPay")} value={`${quote.proposal?.specialistPayoutCredits ?? t("dashboard.specialist.pendingShort")} cr`} />
+                  <MiniMetric label={t("dashboard.specialist.miniCommission")} value={`${quote.proposal?.platformMarginCredits ?? t("dashboard.specialist.pendingShort")} cr`} />
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button className="btn-secondary" type="button" onClick={() => sendProposal(quote.id)}>
-                    Enviar propuesta
+                    {t("dashboard.specialist.sendProposal")}
                   </button>
                   <button className="btn-secondary" type="button" onClick={() => requestPlatformReview(quote.id)}>
-                    Pedir revisión OficiosPro
+                    {t("dashboard.specialist.requestReview")}
                   </button>
                 </div>
               </article>
             ))}
             {!quotes.length ? (
               <EmptyState
-                eyebrow="Piloto sin solicitudes"
-                title="Aun no tienes propuestas pendientes."
-                text="Cuando llegue una solicitud real del piloto, podras preparar propuesta, pedir revision OficiosPro o marcar adicionales desde aqui."
+                eyebrow={t("dashboard.specialist.emptyProposalsEyebrow")}
+                title={t("dashboard.specialist.emptyProposalsTitle")}
+                text={t("dashboard.specialist.emptyProposalsText")}
               />
             ) : null}
           </div>
           <div className="grid gap-3">
             <article className="rounded-2xl border border-brand/15 bg-brand-soft p-4">
-              <p className="eyebrow">Solicitar adicional</p>
-              <h3 className="text-xl font-black">Todo adicional queda pendiente de aprobacion del cliente.</h3>
+              <p className="eyebrow">{t("dashboard.specialist.requestAdditionalEyebrow")}</p>
+              <h3 className="text-xl font-black">{t("dashboard.specialist.requestAdditionalTitle")}</h3>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <label className="field">
-                  Tipo
+                  {t("dashboard.specialist.typeLabel")}
                   <select defaultValue="materials">
-                    <option value="materials">Materiales</option>
-                    <option value="additional_labor">Mano de obra adicional</option>
-                    <option value="spare_parts">Repuesto</option>
-                    <option value="additional_hours">Horas extra</option>
-                    <option value="other">Otro</option>
+                    <option value="materials">{t("dashboard.specialist.typeMaterials")}</option>
+                    <option value="additional_labor">{t("dashboard.specialist.typeLabor")}</option>
+                    <option value="spare_parts">{t("dashboard.specialist.typeSpare")}</option>
+                    <option value="additional_hours">{t("dashboard.specialist.typeHours")}</option>
+                    <option value="other">{t("dashboard.specialist.typeOther")}</option>
                   </select>
                 </label>
                 <label className="field">
-                  Creditos solicitados
+                  {t("dashboard.specialist.requestedCredits")}
                   <input type="number" defaultValue={10} min={2} step={2} />
                 </label>
                 <label className="field sm:col-span-2">
-                  Descripcion y motivo
-                  <textarea placeholder="Explica que cambia, por que se necesita y que evidencia adjuntas." />
+                  {t("dashboard.specialist.descAndReason")}
+                  <textarea placeholder={t("dashboard.specialist.descPlaceholder")} />
                 </label>
                 <label className="field sm:col-span-2">
-                  Foto opcional
-                  <input type="text" placeholder="Nombre o link del comprobante" />
+                  {t("dashboard.specialist.optionalPhoto")}
+                  <input type="text" placeholder={t("dashboard.specialist.optionalPhotoPh")} />
                 </label>
               </div>
             </article>
@@ -663,35 +671,37 @@ export function SpecialistDashboard() {
                   <strong>{additionalTypeLabels[additional.type]}</strong>
                   <span className="chip bg-brand-soft text-brand-dark">{additional.status}</span>
                 </div>
-                <p className="mt-2 text-sm font-bold text-muted">{additional.customerName} · {additional.requestedCredits} créditos</p>
+                <p className="mt-2 text-sm font-bold text-muted">{additional.customerName} · {additional.requestedCredits} {t("dashboard.common.credits")}</p>
                 <p className="mt-2 text-sm font-semibold leading-6 text-muted">{additional.reason}</p>
                 <button className="btn-secondary mt-3" type="button" onClick={() => sendAdditional(additional.id)}>
-                  Solicitar adicional
+                  {t("dashboard.specialist.requestAdditional")}
                 </button>
               </article>
             ))}
             {!additionals.length ? (
               <EmptyState
-                eyebrow="Sin adicionales"
-                title="No hay adicionales solicitados."
-                text="Usa esta seccion cuando un trabajo requiera materiales, horas o repuestos aprobados por el cliente."
+                eyebrow={t("dashboard.client.emptyAddEyebrow")}
+                title={t("dashboard.specialist.emptyAddSpecTitle")}
+                text={t("dashboard.specialist.emptyAddSpecText")}
               />
             ) : null}
           </div>
         </div>
       </section>
       <section className="panel">
-        <p className="eyebrow">Mis referidos especialista</p>
+        <p className="eyebrow">{t("dashboard.specialist.referralsSpecEyebrow")}</p>
         <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <h2 className="text-2xl font-black">{referrals?.specialistCode ?? "OP-FUNDADOR"}</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-muted">
-              Invitaciones aprobadas: {referrals?.specialistInvitations ?? 0}. Beneficio: {referrals?.specialistBenefit ?? "Badge Fundador o créditos de reputación"}.
+              {t("dashboard.specialist.approvedInvitations")
+                .replace("{invitations}", String(referrals?.specialistInvitations ?? 0))
+                .replace("{benefit}", referrals?.specialistBenefit ?? t("dashboard.specialist.defaultBenefit"))}
             </p>
           </div>
           {demoDataEnabled ? (
             <button className="btn-secondary" type="button" onClick={() => setReferrals(simulateAcceptedSpecialistReferral())}>
-              Marcar referido aprobado
+              {t("dashboard.specialist.markReferralApproved")}
             </button>
           ) : null}
         </div>
@@ -701,6 +711,7 @@ export function SpecialistDashboard() {
 }
 
 export function CompanyDashboard() {
+  const { t } = useI18n();
   const [authorized, setAuthorized] = useState<boolean | null>(null);
   const demoDataEnabled = shouldShowDemoData();
   const corporateTransactions = demoDataEnabled ? [
@@ -713,7 +724,7 @@ export function CompanyDashboard() {
     : {
         creditsAvailable: 0,
         creditsUsed: 0,
-        responseTime: "Sin datos",
+        responseTime: t("dashboard.company.noData"),
         activeBranches: 0,
         monthlyBilling: "$0",
         suppliers: 0,
@@ -734,20 +745,20 @@ export function CompanyDashboard() {
     <div className="grid gap-6">
       <section className="enterprise-shell p-6">
         <div className="grid gap-4 md:grid-cols-4">
-          <MetricDark label="Créditos corporativos" value={companyMetrics.creditsAvailable.toString()} />
-          <MetricDark label="Usados este mes" value={companyMetrics.creditsUsed.toString()} />
-          <MetricDark label="Respuesta promedio" value={companyMetrics.responseTime} />
-          <MetricDark label="Sucursales activas" value={companyMetrics.activeBranches.toString()} />
+          <MetricDark label={t("dashboard.company.metricCorpCredits")} value={companyMetrics.creditsAvailable.toString()} />
+          <MetricDark label={t("dashboard.company.metricUsedMonth")} value={companyMetrics.creditsUsed.toString()} />
+          <MetricDark label={t("dashboard.company.metricAvgResponse")} value={companyMetrics.responseTime} />
+          <MetricDark label={t("dashboard.company.metricActiveBranches")} value={companyMetrics.activeBranches.toString()} />
         </div>
       </section>
       <section className="grid gap-5 lg:grid-cols-3">
-        <StatCard label="Gasto mensual" value={companyMetrics.monthlyBilling} />
-        <StatCard label="Solicitudes abiertas" value={companyMetrics.openRequests.toString()} />
-        <StatCard label="Proveedores frecuentes" value={companyMetrics.suppliers.toString()} />
+        <StatCard label={t("dashboard.company.statMonthlySpend")} value={companyMetrics.monthlyBilling} />
+        <StatCard label={t("dashboard.company.statOpenRequests")} value={companyMetrics.openRequests.toString()} />
+        <StatCard label={t("dashboard.company.statSuppliers")} value={companyMetrics.suppliers.toString()} />
       </section>
       <section className="grid gap-5 lg:grid-cols-2">
         <article className="panel">
-          <h2 className="mb-4 text-2xl font-black">Servicios solicitados</h2>
+          <h2 className="mb-4 text-2xl font-black">{t("dashboard.company.requestedServicesTitle")}</h2>
           <div className="grid gap-3">
             {companyMetrics.services.map((service) => (
               <article key={`${service.service}-${service.branch}`} className="flex justify-between rounded-2xl border border-line bg-slate-50 p-4">
@@ -757,25 +768,25 @@ export function CompanyDashboard() {
                     {service.branch} · {service.status}
                   </span>
                 </div>
-                <strong>{service.credits} créditos</strong>
+                <strong>{service.credits} {t("dashboard.common.credits")}</strong>
               </article>
             ))}
             {!companyMetrics.services.length ? (
               <EmptyState
-                eyebrow="Sin actividad"
-                title="Aun no hay servicios corporativos."
-                text="Las solicitudes de empresas piloto apareceran aqui cuando el equipo active la cuenta y cargue sus mantenciones."
+                eyebrow={t("dashboard.company.emptyServicesEyebrow")}
+                title={t("dashboard.company.emptyServicesTitle")}
+                text={t("dashboard.company.emptyServicesText")}
               />
             ) : null}
           </div>
         </article>
         <article className="panel">
-          <h2 className="mb-4 text-2xl font-black">Movimientos de créditos</h2>
+          <h2 className="mb-4 text-2xl font-black">{t("dashboard.company.creditMovementsTitle")}</h2>
           <TransactionList transactions={corporateTransactions} />
         </article>
       </section>
       <section className="panel">
-        <h2 className="mb-4 text-2xl font-black">Sucursales</h2>
+        <h2 className="mb-4 text-2xl font-black">{t("dashboard.company.branchesTitle")}</h2>
         <div className="grid gap-3 md:grid-cols-5">
           {companyMetrics.branches.map((branch) => (
             <span key={branch} className="rounded-2xl bg-slate-50 p-4 text-sm font-black text-ink">
@@ -784,7 +795,7 @@ export function CompanyDashboard() {
           ))}
           {!companyMetrics.branches.length ? (
             <div className="md:col-span-5">
-              <EmptyState eyebrow="Sin sucursales" title="Aun no hay sedes cargadas." text="Durante el piloto, OficiosPro puede ayudarte a ordenar sedes y centros de costo antes de activar solicitudes recurrentes." />
+              <EmptyState eyebrow={t("dashboard.company.emptyBranchesEyebrow")} title={t("dashboard.company.emptyBranchesTitle")} text={t("dashboard.company.emptyBranchesText")} />
             </div>
           ) : null}
         </div>
@@ -806,16 +817,17 @@ function MiniMetric({ label, value }: { label: string; value: string }) {
 }
 
 function RoleGuardMessage({ checking = false }: { checking?: boolean }) {
+  const { t } = useI18n();
   return (
     <section className="panel">
-      <p className="eyebrow">Acceso protegido</p>
-      <h2 className="text-3xl font-black">{checking ? "Validando sesión..." : "No autorizado"}</h2>
+      <p className="eyebrow">{t("dashboard.guard.eyebrow")}</p>
+      <h2 className="text-3xl font-black">{checking ? t("dashboard.guard.validating") : t("dashboard.guard.unauthorized")}</h2>
       <p className="mt-3 font-semibold leading-7 text-muted">
-        {checking ? "Estamos revisando el rol de tu sesión." : "Inicia sesión con el rol correcto para ver este dashboard."}
+        {checking ? t("dashboard.guard.checkingText") : t("dashboard.guard.unauthorizedText")}
       </p>
       {!checking ? (
         <Link className="btn-primary mt-6" href="/login">
-          Ir al login
+          {t("dashboard.guard.goLogin")}
         </Link>
       ) : null}
     </section>

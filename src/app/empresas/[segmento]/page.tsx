@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description: segment.description,
     path,
     image: segment.image,
-    keywords: [segment.shortTitle, "servicios tecnicos empresas", "OficiosPro empresas"],
+    keywords: [segment.shortTitle, "servicios técnicos empresas", "OficiosPro empresas"],
     policyContext: policyContextForBaseRoute({
       route: segment,
       pageType: "business-segment",
@@ -53,15 +53,15 @@ export default async function BusinessSegmentPage({ params }: PageProps) {
       description={segment.description}
       image={segment.image}
       imageAlt={segment.title}
-      badges={["Creditos empresa", "Historial de solicitudes", "Operacion verificable"]}
+      badges={["Creditos empresa", "Historial de solicitudes", "Operación verificable"]}
       primaryCta={{ href: "/empresas", label: "Solicitar cuenta empresa" }}
       secondaryCta={{ href: searchHref(segment.searchParams), label: "Buscar especialistas" }}
       includedTitle="Casos cubiertos"
       includedItems={segment.includedServices}
-      guidanceTitle="Operacion recomendada"
+      guidanceTitle="Operación recomendada"
       guidanceItems={[
         "Centraliza solicitudes por sede, rubro o urgencia operacional.",
-        "Usa creditos empresa para ordenar presupuestos, reservas y pagos.",
+        "Usa créditos empresa para ordenar presupuestos, reservas y pagos.",
         "Revisa trazabilidad de trabajos, estados y especialistas relacionados.",
       ]}
       specialists={specialists}

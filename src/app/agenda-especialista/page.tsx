@@ -3,11 +3,13 @@ import { AppHero, PlatformNav } from "@/components/PlatformNav";
 import { SpecialistAgendaPanel } from "@/components/SpecialistAgendaPanel";
 import { specialists } from "@/data/mock";
 import { Reveal } from "@/components/Reveal";
+import { RouteAuthGuard } from "@/components/RouteAuthGuard";
 
 export default function AgendaEspecialistaPage() {
   const specialist = specialists[0];
 
   return (
+    <RouteAuthGuard resource="specialist_dashboard">
     <main className="section grid gap-8">
       <PlatformNav />
       <AppHero
@@ -45,5 +47,6 @@ export default function AgendaEspecialistaPage() {
 
       <SpecialistAgendaPanel specialist={specialist} />
     </main>
+    </RouteAuthGuard>
   );
 }

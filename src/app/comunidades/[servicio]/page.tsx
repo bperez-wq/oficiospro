@@ -68,7 +68,7 @@ export default async function CommunityServicePage({ params }: PageProps) {
       emptySpecialistsText="Si no hay especialistas publicados para este servicio, la administracion puede dejar una solicitud y OficiosPro revisara cobertura real."
       faqs={service.faqs}
       internalLinks={[
-        { href: "/empresas", label: "Cuenta para comunidades", description: "Gestiona solicitudes y creditos para edificios." },
+        { href: "/empresas", label: "Cuenta para comunidades", description: "Gestiona solicitudes y créditos para edificios." },
         { href: searchHref(service.searchParams), label: "Busqueda relacionada", description: "Especialistas por categoria y servicio." },
         { href: "/contacto", label: "Hablar con operaciones", description: "Para casos urgentes o recurrentes." },
         { href: "/club-hogar", label: "Club Hogar", description: "Alternativa para mantenciones residenciales." },

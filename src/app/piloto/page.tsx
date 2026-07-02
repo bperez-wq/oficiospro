@@ -8,7 +8,7 @@ import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Piloto OficiosPro | Primeras comunas y especialistas",
-  description: "Revisa el piloto de OficiosPro para activar especialistas verificados, leads reales, creditos y cobertura controlada.",
+  description: "Revisa el piloto de OficiosPro para activar especialistas verificados, leads reales, créditos y cobertura controlada.",
   path: "/piloto",
   keywords: ["piloto OficiosPro", "especialistas fundadores", "cobertura inicial"],
 });

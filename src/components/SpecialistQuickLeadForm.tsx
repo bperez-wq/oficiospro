@@ -35,7 +35,7 @@ const popularTrades = [
   "Piscinas",
   "Climatizacion",
   "Mantencion industrial",
-  "Aseo tecnico",
+  "Aseo técnico",
   "Control de plagas",
 ];
 

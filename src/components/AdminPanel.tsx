@@ -355,7 +355,7 @@ export function AdminPanel() {
     { label: "Reviews nuevas", value: reviewRows.filter((review) => !review.reviewedByAdmin).length.toString() },
     { label: "Liquidaciones pendientes", value: payouts.filter((item) => item.status !== "pagado").length.toString() },
     { label: "Créditos vendidos", value: String(paymentTransactions.filter((transaction) => transaction.amount > 0).reduce((sum, transaction) => sum + transaction.amount, 0)) },
-    { label: "Comision OficiosPro", value: formatCLP(Math.round(estimatedCommission)) },
+    { label: "Comisión OficiosPro", value: formatCLP(Math.round(estimatedCommission)) },
     { label: "Comunas cubiertas", value: coverage.filter((item) => item.active).length.toString() },
   ];
 
@@ -546,7 +546,7 @@ export function AdminPanel() {
   function editQuoteMargin(id: string, platformNote: string) {
     updateQuoteAgreement(id, { platformNote, status: "platform_review" }, "OficiosPro esta revisando esta propuesta.");
     refresh();
-    setNotice("Nota de comision guardada y propuesta marcada para revision.");
+    setNotice("Nota de comisión guardada y propuesta marcada para revision.");
   }
 
   function updateAdditionalStatus(id: string, status: AdditionalRequest["status"], message: string) {
@@ -1266,7 +1266,7 @@ function SpecialistAdminRow({
         <div className="flex flex-wrap items-center gap-2">
           <strong>{request.name}</strong>
           <span className="chip bg-amber-50 text-amber-800">{request.status}</span>
-          {margin ? <span className={`chip ${margin.status === "OK" ? "bg-brand-soft text-brand-dark" : "bg-amber-50 text-amber-800"}`}>Comision {margin.status}</span> : null}
+          {margin ? <span className={`chip ${margin.status === "OK" ? "bg-brand-soft text-brand-dark" : "bg-amber-50 text-amber-800"}`}>Comisión {margin.status}</span> : null}
         </div>
         <p className="mt-2 text-sm font-bold text-muted">
           {request.rut} · {request.email} · {request.phone} · {request.commune} · {request.coverageRadiusKm} km
@@ -1542,7 +1542,7 @@ function NegotiationAdminPanel({
                   <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "specialist_reviewing", "OficiosPro solicito ajuste al especialista.")}>
                     Solicitar ajuste
                   </button>
-                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "converted_to_service", "Cotizacion aceptada convertida en servicio activo.")}>
+                  <button className="btn-secondary" type="button" onClick={() => onQuoteStatus(quote.id, "converted_to_service", "Cotización aceptada convertida en servicio activo.")}>
                     Convertir en servicio
                   </button>
                 </div>
@@ -1670,7 +1670,7 @@ function PaymentsAdminPanel({
             <MiniMetric label="Créditos usados" value={usedCredits.toString()} />
             <MiniMetric label="Saldo usuario" value={`${wallet.currentBalance} créditos`} />
             <MiniMetric label="Liquidaciones pendientes" value={pendingPayouts.length.toString()} />
-            <MiniMetric label="Comision OficiosPro" value={formatCLP(estimatedCommission)} />
+            <MiniMetric label="Comisión OficiosPro" value={formatCLP(estimatedCommission)} />
           </div>
           <div className="mt-4 flex flex-wrap gap-2">
             <button className="btn-secondary" type="button" onClick={onReconcile}>
@@ -1804,7 +1804,7 @@ function PaymentsAdminPanel({
                   <span className="chip bg-white text-brand-dark">{payout.status}</span>
                 </div>
                 <p className="mt-2 text-sm font-bold text-muted">
-                  {payout.serviceName} - cliente {formatCLP(payout.customerChargeCLP)} - especialista {formatCLP(payout.specialistPayoutCLP)} - comision {formatCLP(payout.platformMarginCLP)}
+                  {payout.serviceName} - cliente {formatCLP(payout.customerChargeCLP)} - especialista {formatCLP(payout.specialistPayoutCLP)} - comisión {formatCLP(payout.platformMarginCLP)}
                 </p>
                 {payout.status !== "pagado" ? (
                   <button className="btn-secondary mt-3" type="button" onClick={() => onMarkPayoutPaid(payout.id)}>
@@ -1925,11 +1925,11 @@ function SpecialistDetailPanel({
                 <InfoBox label="Especialidad" value={service.isOtherService ? service.otherServiceDescription ?? service.specialty : service.specialty} />
                 <InfoBox label="Modalidad" value={service.pricingMode ?? "fixed"} />
                 <InfoBox label="Estado servicio" value={service.active === false ? "Pausado" : service.pricingStatus ?? "pending_review"} />
-                <InfoBox label="Cotizacion" value={service.pricingMode === "quote_required" || service.requiresPriorEvaluation ? "Requiere evaluacion" : "No requiere cotizacion previa"} />
+                <InfoBox label="Cotización" value={service.pricingMode === "quote_required" || service.requiresPriorEvaluation ? "Requiere evaluacion" : "No requiere cotización previa"} />
                 <InfoBox label="Tarifa esperada especialista CLP" value={formatPricingCLP(expectedPayout)} />
                 <InfoBox label="Créditos cliente calculados" value={`${calculatedClientCredits} créditos`} />
                 <InfoBox label="Precio cliente CLP estimado interno" value={formatPricingCLP(estimatedClientPrice)} />
-                <InfoBox label="Comision OficiosPro estimada" value={`${formatPricingCLP(estimatedCommission)} - ${economics.status}`} />
+                <InfoBox label="Comisión OficiosPro estimada" value={`${formatPricingCLP(estimatedCommission)} - ${economics.status}`} />
                 <label className="field">
                   Créditos cliente
                   <input type="number" value={calculatedClientCredits} onChange={(event) => onUpdateService(index, { clientCredits: Number(event.target.value), pricingStatus: "adjusted_by_oficiospro" })} />

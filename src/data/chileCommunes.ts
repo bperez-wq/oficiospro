@@ -2309,7 +2309,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "12",
         "regionName":  "Magallanes y de la Antartica Chilena",
         "provinceId":  "124",
-        "provinceName":  "Ultima Esperanza",
+        "provinceName":  "Última Esperanza",
         "code":  "12401",
         "name":  "Natales",
         "slug":  "natales"
@@ -2318,7 +2318,7 @@ export const chileCommunes: ChileCommune[] = [
         "regionId":  "12",
         "regionName":  "Magallanes y de la Antartica Chilena",
         "provinceId":  "124",
-        "provinceName":  "Ultima Esperanza",
+        "provinceName":  "Última Esperanza",
         "code":  "12402",
         "name":  "Torres del Paine",
         "slug":  "torres-del-paine"

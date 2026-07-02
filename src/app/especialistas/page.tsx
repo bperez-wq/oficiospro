@@ -1,13 +1,12 @@
-import Link from "next/link";
 import { Suspense } from "react";
-import { AppHero, PlatformNav } from "@/components/PlatformNav";
-import { ConversionButton } from "@/components/ConversionModal";
+import { PlatformNav } from "@/components/PlatformNav";
+import { SpecialistsHero } from "@/components/SpecialistsHero";
 import { SpecialistsExplorer } from "@/components/SpecialistsExplorer";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Especialistas verificados por oficio y comuna",
-  description: "Busca especialistas verificados por categoria, comuna, disponibilidad, reputacion y precio en creditos dentro de OficiosPro.",
+  description: "Busca especialistas verificados por categoria, comuna, disponibilidad, reputacion y precio en créditos dentro de OficiosPro.",
   path: "/especialistas",
   keywords: ["especialistas verificados", "oficios por comuna", "gasfiter", "electricista"],
 });
@@ -16,18 +15,7 @@ export default function SpecialistsPage() {
   return (
     <main className="section grid gap-8">
       <PlatformNav />
-      <AppHero
-        eyebrow="Especialistas verificados"
-        title="Encuentra especialistas verificados"
-        subtitle="Puedes buscar sin registrarte. Filtra por oficio, comuna, disponibilidad, reputacion y precio en creditos; crea tu cuenta cuando quieras reservar o contactar."
-      >
-        <Link className="btn-secondary" href="/dashboard-cliente">
-          Ver mis créditos
-        </Link>
-        <ConversionButton type="lead_cliente" sourceButton="Crear cuenta desde especialistas" className="btn-primary">
-          Crear cuenta
-        </ConversionButton>
-      </AppHero>
+      <SpecialistsHero />
       <Suspense fallback={<div className="rounded-[28px] border border-line bg-white p-6 shadow-soft text-sm font-black text-muted">Cargando especialistas...</div>}>
         <SpecialistsExplorer />
       </Suspense>

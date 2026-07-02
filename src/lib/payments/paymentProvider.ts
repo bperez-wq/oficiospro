@@ -7,14 +7,14 @@ export const oficiosProMerchant = {
   tradeName: "OficiosPro SpA",
   incorporatedAt: "2026-06-10",
   businessPurpose:
-    "Plataforma digital para intermediacion de servicios tecnicos, verificacion de proveedores, reputacion, pagos electronicos y suscripciones recurrentes.",
+    "Plataforma digital para intermediacion de servicios técnicos, verificacion de proveedores, reputacion, pagos electronicos y suscripciones recurrentes.",
 };
 
 export const paymentProviders: { id: PaymentProvider; label: string; enabled: boolean; detail: string }[] = [
   { id: "mercado_pago", label: "Mercado Pago", enabled: true, detail: "Proveedor principal para checkout y suscripciones." },
   { id: "transbank_webpay", label: "Transbank Webpay", enabled: false, detail: "Transbank preparado, pendiente credenciales." },
   { id: "manual_bank_transfer", label: "Transferencia manual", enabled: false, detail: "Uso operativo interno para conciliaciones." },
-  { id: "internal_adjustment", label: "Ajuste interno", enabled: false, detail: "Solo para administracion de creditos." },
+  { id: "internal_adjustment", label: "Ajuste interno", enabled: false, detail: "Solo para administracion de créditos." },
 ];
 
 export const defaultPaymentProvider: PaymentProvider = "mercado_pago";
