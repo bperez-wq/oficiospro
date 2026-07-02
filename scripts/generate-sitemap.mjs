@@ -5,10 +5,12 @@ import { fileURLToPath } from "node:url";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const rootDir = path.resolve(__dirname, "..");
 const dataPath = path.join(rootDir, "src", "data", "seoRoutesData.json");
+const guidesDataPath = path.join(rootDir, "src", "data", "seoGuidesData.json");
 const outputPath = path.join(rootDir, "public", "sitemap.xml");
 const siteUrl = "https://www.oficiospro.cl";
 
 const routes = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+const guidesData = JSON.parse(fs.readFileSync(guidesDataPath, "utf8"));
 
 const publicBaseRoutes = [
   { path: "/", priority: 1, changefreq: "weekly" },
@@ -99,6 +101,17 @@ for (const segment of routes.seoBusinessSegments) {
     path: `/empresas/${segment.slug}`,
     priority: segment.priority,
     lastmod: segment.lastReviewedAt,
+    changefreq: "monthly",
+  });
+}
+
+// Guias editoriales (/guias/[slug]): solo approved con revision humana registrada.
+for (const guide of guidesData.guides ?? []) {
+  if (guide.editorialStatus !== "approved" || !guide.reviewedBy || !guide.reviewedAt) continue;
+  pushUrl(urls, {
+    path: `/guias/${guide.slug}`,
+    priority: 0.55,
+    lastmod: guide.lastUpdatedAt,
     changefreq: "monthly",
   });
 }

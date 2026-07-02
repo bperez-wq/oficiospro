@@ -1,15 +1,15 @@
-// Guias SEO controladas para una futura ruta /guias/[slug].
-// La ruta NO existe todavia en este ciclo: se deja preparada la capa de datos
-// para que Codex o un proximo ciclo cree la ruta renderizando SOLO guias con
-// editorialStatus === "approved". Ver docs/soro-seo-integration-plan.md.
+// Guias SEO controladas para la ruta /guias/[slug].
+// La ruta renderiza SOLO guias con editorialStatus === "approved".
 //
 // Reglas:
-// - Maximo 5 guias iniciales.
-// - Todas nacen en "draft": la aprobacion es una decision humana explicita.
-// - Contenido tributario lleva disclaimer obligatorio.
-// - Solo guias approved pueden entrar al sitemap (via generate-sitemap.mjs,
-//   cambio que tambien queda para el ciclo que cree la ruta).
+// - El estado editorial publicable vive en seoGuidesData.json (fuente unica
+//   compartida con scripts/generate-sitemap.mjs). Aprobar = editar ese JSON
+//   con reviewedBy y reviewedAt. Decision humana, nunca automatica.
+// - Contenido tributario lleva disclaimer obligatorio y se mantiene draft
+//   hasta revision tributaria.
+// - Solo guias approved entran al sitemap.
 
+import guidesStatusData from "./seoGuidesData.json";
 import type { SoroAudience, SoroFunnelStage } from "./soroSeoPipeline";
 
 export type GuideEditorialStatus = "draft" | "approved" | "archived";
@@ -43,7 +43,31 @@ export type SeoGuide = {
   lastUpdatedAt: string;
 };
 
-export const seoGuides: SeoGuide[] = [
+type GuideStatusEntry = {
+  slug: string;
+  editorialStatus: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  lastUpdatedAt: string;
+};
+
+const guideStatusBySlug = new Map<string, GuideStatusEntry>(
+  (guidesStatusData.guides as GuideStatusEntry[]).map((entry) => [entry.slug, entry]),
+);
+
+function applyGuideStatus(guide: SeoGuide): SeoGuide {
+  const status = guideStatusBySlug.get(guide.slug);
+  if (!status) return guide;
+  return {
+    ...guide,
+    editorialStatus: status.editorialStatus as GuideEditorialStatus,
+    reviewedBy: status.reviewedBy,
+    reviewedAt: status.reviewedAt,
+    lastUpdatedAt: status.lastUpdatedAt,
+  };
+}
+
+const seoGuidesContent: SeoGuide[] = [
   {
     slug: "como-ofrecer-mis-servicios",
     title: "Cómo ofrecer tus servicios de oficio online",
@@ -300,7 +324,9 @@ export const seoGuides: SeoGuide[] = [
   },
 ];
 
-/** Una futura ruta /guias/[slug] debe renderizar SOLO estas guias. */
+export const seoGuides: SeoGuide[] = seoGuidesContent.map(applyGuideStatus);
+
+/** La ruta /guias/[slug] renderiza SOLO estas guias. */
 export function getApprovedGuides(guides: SeoGuide[] = seoGuides): SeoGuide[] {
   return guides.filter((guide) => guide.editorialStatus === "approved" && guide.reviewedBy !== null);
 }

@@ -1,0 +1,40 @@
+{
+  "comment": "Estado editorial publicable de las guias /guias/[slug]. Fuente unica para seoGuides.ts y generate-sitemap.mjs. Solo un humano cambia editorialStatus a approved (con reviewedBy y reviewedAt).",
+  "guides": [
+    {
+      "slug": "como-ofrecer-mis-servicios",
+      "editorialStatus": "approved",
+      "reviewedBy": "Benjamin Perez",
+      "reviewedAt": "2026-07-02",
+      "lastUpdatedAt": "2026-07-02"
+    },
+    {
+      "slug": "como-encontrar-especialista-confiable",
+      "editorialStatus": "approved",
+      "reviewedBy": "Benjamin Perez",
+      "reviewedAt": "2026-07-02",
+      "lastUpdatedAt": "2026-07-02"
+    },
+    {
+      "slug": "como-formalizar-un-oficio",
+      "editorialStatus": "draft",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "lastUpdatedAt": "2026-07-02"
+    },
+    {
+      "slug": "boleta-honorarios-especialistas",
+      "editorialStatus": "draft",
+      "reviewedBy": null,
+      "reviewedAt": null,
+      "lastUpdatedAt": "2026-07-02"
+    },
+    {
+      "slug": "oficios-en-la-era-ia",
+      "editorialStatus": "approved",
+      "reviewedBy": "Benjamin Perez",
+      "reviewedAt": "2026-07-02",
+      "lastUpdatedAt": "2026-07-02"
+    }
+  ]
+}

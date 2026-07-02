@@ -3,6 +3,8 @@ import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayout
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { MarketplaceCard } from "@/components/DesignSystem";
 import { AppHero, PlatformNav } from "@/components/PlatformNav";
+import { AnswerBlockFromTopic } from "@/components/seo/AnswerBlock";
+import { getAnswerTopicsForPage } from "@/data/answerEngineTopics";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 
 export const metadata = buildPublicRouteMetadata({
@@ -72,6 +74,9 @@ export default function FormalizacionPage() {
           </Link>
         </div>
       </section>
+      {getAnswerTopicsForPage("/formalizacion").slice(0, 1).map((topic) => (
+        <AnswerBlockFromTopic key={topic.id} topic={topic} />
+      ))}
       <ContactTrustStrip />
     </main>
   );
