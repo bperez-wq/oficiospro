@@ -1,0 +1,50 @@
+---
+title: "Digitalización de oficios locales: guía para instituciones"
+metaTitle: Digitalización de oficios locales | OficiosPro Instituciones
+metaDescription: Cómo municipios e instituciones pueden apoyar la digitalización y formalización de trabajadores de oficio con pilotos comunales medibles.
+keyword: digitalizacion de oficios locales
+audience: institucion
+funnelStage: consideration
+targetPageType: institucion
+canonicalTarget: /instituciones
+seoStatus: noindex
+requiresTaxReview: true
+requiresLegalReview: true
+ctaTarget: /instituciones
+internalLinks:
+  - /instituciones
+  - /formalizacion
+  - /impacto
+factCheckNotes: No se prometen convenios ni resultados de empleabilidad. Menciona municipios e instituciones públicas, por eso requiresLegalReview=true. Modelo de piloto descrito según docs/institutional-partnerships-playbook.md.
+---
+
+# Digitalización de oficios locales: guía para instituciones
+
+Los trabajadores de oficio son parte esencial de la economía de cada comuna, pero muchos siguen invisibles digitalmente: sin perfil, sin historial verificable y, a menudo, sin formalización.
+
+Para municipios, OTEC, fundaciones y programas de empleabilidad, esto es una oportunidad concreta de impacto medible.
+
+## El problema
+
+- Especialistas con oficio y experiencia, pero sin presencia digital.
+- Vecinos que no saben a quién llamar y recurren a contactos informales.
+- Programas de capacitación que terminan sin un paso siguiente claro.
+
+## El modelo de piloto comunal
+
+Un piloto de digitalización de oficios suele incluir:
+
+1. **Mapeo** de especialistas locales por oficio.
+2. **Perfil digital** verificable para cada especialista, con trabajos realizados y cobertura.
+3. **Formalización asistida**: orientación en inicio de actividades y boletas.
+4. **Medición**: especialistas registrados, perfiles completos, solicitudes recibidas.
+
+Cada piloto se define caso a caso según la realidad de la comuna. Los resultados dependen de la participación local: un piloto serio se compromete con el proceso y la medición, no con cifras garantizadas.
+
+## Qué aporta OficiosPro
+
+OficiosPro pone la plataforma: perfiles por comuna, taxonomía de oficios, formalización asistida y reportes de avance. La institución aporta la convocatoria y el conocimiento del territorio.
+
+---
+
+**CTA:** Conversar sobre un piloto comunal → /instituciones
