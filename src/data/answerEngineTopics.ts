@@ -79,8 +79,8 @@ export const answerEngineTopics: AnswerEngineTopic[] = [
     relatedPage: "/especialistas-fundadores",
     audience: "especialista",
     schemaType: "FAQPage",
-    editorialStatus: "draft",
-    reviewedAt: null,
+    editorialStatus: "approved",
+    reviewedAt: "2026-07-02",
   },
   {
     id: "aeo-formalizacion-asistida",
@@ -92,8 +92,8 @@ export const answerEngineTopics: AnswerEngineTopic[] = [
     relatedPage: "/formalizacion",
     audience: "especialista",
     schemaType: "FAQPage",
-    editorialStatus: "draft",
-    reviewedAt: null,
+    editorialStatus: "approved",
+    reviewedAt: "2026-07-02",
   },
   {
     id: "aeo-cuanto-cobra",
@@ -144,8 +144,8 @@ export const answerEngineTopics: AnswerEngineTopic[] = [
     relatedPage: "/instituciones",
     audience: "institucion",
     schemaType: "FAQPage",
-    editorialStatus: "draft",
-    reviewedAt: null,
+    editorialStatus: "approved",
+    reviewedAt: "2026-07-02",
   },
   {
     id: "aeo-oficios-era-ia",

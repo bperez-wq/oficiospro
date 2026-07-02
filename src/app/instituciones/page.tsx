@@ -3,6 +3,8 @@ import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink
 import { PlatformNav } from "@/components/PlatformNav";
 import { InstitutionContactForm } from "@/components/institutions/InstitutionContactForm";
 import { categoryImages, teamImages } from "@/data/visualAssets";
+import { AnswerBlockFromTopic } from "@/components/seo/AnswerBlock";
+import { getAnswerTopicsForPage } from "@/data/answerEngineTopics";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
@@ -198,6 +200,10 @@ export default function InstitutionsPage() {
         </div>
       </section>
       </Reveal>
+
+      {getAnswerTopicsForPage("/instituciones").slice(0, 1).map((topic) => (
+        <AnswerBlockFromTopic key={topic.id} topic={topic} />
+      ))}
 
       <p className="max-w-3xl text-xs font-semibold leading-5 text-muted">
         Esta pagina no declara convenios vigentes: presenta una propuesta de colaboracion para pilotos y conversaciones institucionales. OficiosPro no promete empleo ni ingresos garantizados.

@@ -14,6 +14,8 @@ import {
   founderReferralHref,
 } from "@/data/specialistAcquisition";
 import { seoWorkerAcquisitionPages } from "@/data/seoRoutes";
+import { AnswerBlockFromTopic } from "@/components/seo/AnswerBlock";
+import { getAnswerTopicsForPage } from "@/data/answerEngineTopics";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
@@ -131,6 +133,10 @@ export default function FounderSpecialistsPage() {
         </div>
       </section>
       </Reveal>
+
+      {getAnswerTopicsForPage("/especialistas-fundadores").slice(0, 1).map((topic) => (
+        <AnswerBlockFromTopic key={topic.id} topic={topic} ctaLabel="Ver programa fundador" />
+      ))}
 
       <FounderFinalCta registerHref={registerHref} referralHref={referralHref} context={founderContext} />
 

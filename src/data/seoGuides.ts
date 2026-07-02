@@ -1,15 +1,15 @@
-// Guias SEO controladas para una futura ruta /guias/[slug].
-// La ruta NO existe todavia en este ciclo: se deja preparada la capa de datos
-// para que Codex o un proximo ciclo cree la ruta renderizando SOLO guias con
-// editorialStatus === "approved". Ver docs/soro-seo-integration-plan.md.
+// Guias SEO controladas para la ruta /guias/[slug].
+// La ruta renderiza SOLO guias con editorialStatus === "approved".
 //
 // Reglas:
-// - Maximo 5 guias iniciales.
-// - Todas nacen en "draft": la aprobacion es una decision humana explicita.
-// - Contenido tributario lleva disclaimer obligatorio.
-// - Solo guias approved pueden entrar al sitemap (via generate-sitemap.mjs,
-//   cambio que tambien queda para el ciclo que cree la ruta).
+// - El estado editorial publicable vive en seoGuidesData.json (fuente unica
+//   compartida con scripts/generate-sitemap.mjs). Aprobar = editar ese JSON
+//   con reviewedBy y reviewedAt. Decision humana, nunca automatica.
+// - Contenido tributario lleva disclaimer obligatorio y se mantiene draft
+//   hasta revision tributaria.
+// - Solo guias approved entran al sitemap.
 
+import guidesStatusData from "./seoGuidesData.json";
 import type { SoroAudience, SoroFunnelStage } from "./soroSeoPipeline";
 
 export type GuideEditorialStatus = "draft" | "approved" | "archived";
@@ -43,7 +43,31 @@ export type SeoGuide = {
   lastUpdatedAt: string;
 };
 
-export const seoGuides: SeoGuide[] = [
+type GuideStatusEntry = {
+  slug: string;
+  editorialStatus: string;
+  reviewedBy: string | null;
+  reviewedAt: string | null;
+  lastUpdatedAt: string;
+};
+
+const guideStatusBySlug = new Map<string, GuideStatusEntry>(
+  (guidesStatusData.guides as GuideStatusEntry[]).map((entry) => [entry.slug, entry]),
+);
+
+function applyGuideStatus(guide: SeoGuide): SeoGuide {
+  const status = guideStatusBySlug.get(guide.slug);
+  if (!status) return guide;
+  return {
+    ...guide,
+    editorialStatus: status.editorialStatus as GuideEditorialStatus,
+    reviewedBy: status.reviewedBy,
+    reviewedAt: status.reviewedAt,
+    lastUpdatedAt: status.lastUpdatedAt,
+  };
+}
+
+const seoGuidesContent: SeoGuide[] = [
   {
     slug: "como-ofrecer-mis-servicios",
     title: "Cómo ofrecer tus servicios de oficio online",
@@ -298,9 +322,186 @@ export const seoGuides: SeoGuide[] = [
     reviewedAt: null,
     lastUpdatedAt: "2026-07-02",
   },
+  {
+    slug: "donde-encontrar-pega-gasfiteria",
+    title: "Dónde encontrar pega de gasfitería en Chile",
+    metaTitle: "Dónde encontrar pega de gasfitería | OficiosPro",
+    metaDescription:
+      "Canales reales para conseguir trabajos de gasfitería: del boca a boca a las plataformas digitales, y cómo construir pega recurrente en vez de pitutos sueltos.",
+    audience: "especialista",
+    funnelStage: "consideration",
+    intro:
+      "Si eres gásfiter, sabes que la pega llega irregular: semanas llenas y semanas muertas. La diferencia entre vivir de pitutos sueltos y tener trabajo constante está en los canales que usas y en el rastro que dejas con cada trabajo bien hecho.",
+    sections: [
+      {
+        heading: "Los canales de siempre (y su límite)",
+        paragraphs: [
+          "El boca a boca, el dato de la ferretería y los grupos de WhatsApp o Facebook del barrio funcionan, y no hay que abandonarlos. Su problema es que no dejan rastro: cada trabajo termina y la recomendación queda en la memoria de un solo cliente.",
+          "Cuando ese cliente se cambia de casa o pierde tu número, esa pega se perdió. Lo que necesitas es que cada trabajo bien hecho sume a un historial que cualquier cliente nuevo pueda ver.",
+        ],
+      },
+      {
+        heading: "Qué mirar en una plataforma digital",
+        paragraphs: [
+          "Antes de sumarte a cualquier plataforma revisa tres cosas: que el perfil sea tuyo y muestre tu trabajo, que la comisión sea clara y se cobre solo cuando hay servicio real, y que no te prometa un volumen de clientes que nadie puede garantizar.",
+          "En OficiosPro crear el perfil es gratuito y la comisión es 9,5% + IVA solo sobre servicios gestionados por la plataforma. La pega depende de tu comuna y de la demanda real: lo honesto es decirlo así.",
+        ],
+      },
+      {
+        heading: "Lo que hace la diferencia real",
+        paragraphs: [
+          "Con canal digital o sin él, la pega recurrente se construye igual: fotos de trabajos terminados, cobertura honesta de comunas, respuesta rápida y cotización clara. Un perfil con evidencia siempre le gana a un aviso genérico.",
+        ],
+        steps: [
+          "Junta fotos de tus mejores trabajos terminados.",
+          "Define las comunas donde realmente puedes llegar.",
+          "Crea tu perfil en /registro-especialista (gratis).",
+          "Responde rápido las primeras solicitudes: el comienzo define tu reputación.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "¿OficiosPro me garantiza pega?",
+        answer: "No, y desconfía de quien te lo garantice. La demanda depende de tu oficio y comuna. Lo que sí obtienes es visibilidad, un perfil verificable y solicitudes ordenadas cuando hay demanda en tu zona.",
+      },
+      {
+        question: "¿Cuánto cuesta usar la plataforma?",
+        answer: "Crear y mantener tu perfil no cuesta nada. OficiosPro cobra 9,5% + IVA solo sobre servicios gestionados a través de la plataforma.",
+      },
+      {
+        question: "¿Tengo que dejar mis canales de siempre?",
+        answer: "No. El perfil digital se suma a tu boca a boca: mismo trabajo, más puertas.",
+      },
+    ],
+    ctaLabel: "Ver trabajos de gasfitería",
+    ctaTarget: "/trabajos/gasfiteria",
+    internalLinks: ["/trabajos/gasfiteria", "/registro-especialista", "/guias/como-ofrecer-mis-servicios"],
+    requiresTaxReview: false,
+    requiresLegalReview: false,
+    editorialStatus: "draft",
+    reviewedBy: null,
+    reviewedAt: null,
+    lastUpdatedAt: "2026-07-02",
+  },
+  {
+    slug: "del-pituto-al-negocio",
+    title: "Del pituto al negocio: ordena tu oficio sin perder clientes",
+    metaTitle: "Del pituto al negocio en tu oficio | OficiosPro",
+    metaDescription:
+      "El pituto paga el mes, pero no construye futuro. Cómo pasar del trabajo informal a un oficio ordenado con historial, clientes recurrentes y respaldo.",
+    audience: "especialista",
+    funnelStage: "awareness",
+    intro:
+      "El pituto tiene algo bueno: es plata rápida y sin trámites. Y algo malo: al terminar no queda nada — ni historial, ni recomendación acumulada, ni respaldo si algo sale mal. Ordenar tu oficio no significa perder esa flexibilidad; significa que cada trabajo empiece a sumar.",
+    sections: [
+      {
+        heading: "Por qué el pituto no escala",
+        paragraphs: [
+          "Trabajando a puro pituto, tu ingreso depende de que te llamen justo cuando estás disponible. No hay forma de mostrar tus 200 trabajos anteriores, así que cada cliente nuevo parte de cero confianza y negocia el precio como si fueras un desconocido.",
+        ],
+      },
+      {
+        heading: "Qué cambia con historial verificable",
+        paragraphs: [
+          "Cuando tus trabajos quedan registrados con fotos y clientes reales, dejas de ser \u201cun maestro que me dató alguien\u201d y pasas a ser un especialista con evidencia. Eso se traduce en menos regateo, clientes que llegan solos y acceso a trabajos más grandes: comunidades y empresas contratan solo con respaldo.",
+        ],
+      },
+      {
+        heading: "El paso a paso, sin apuro",
+        paragraphs: [
+          "No tienes que formalizarte mañana ni abandonar a tus caseros. El orden razonable es este:",
+        ],
+        steps: [
+          "Empieza a registrar tus trabajos: foto del antes y después, comuna y qué hiciste.",
+          "Crea tu perfil de especialista gratuito y súbelos.",
+          "Cotiza por escrito, aunque sea por WhatsApp: qué incluye y qué no.",
+          "Cuando el flujo lo justifique, avanza en la formalización con apoyo (no estás solo en eso).",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "¿Voy a perder a mis clientes de siempre?",
+        answer: "No. Tus caseros siguen llamándote igual. La diferencia es que ahora también te encuentran clientes nuevos que no te conocían.",
+      },
+      {
+        question: "¿Tengo que formalizarme de inmediato?",
+        answer: "No. Puedes crear tu perfil y partir. La formalización asistida de OficiosPro te acompaña cuando decidas dar ese paso.",
+      },
+    ],
+    ctaLabel: "Crear mi perfil gratis",
+    ctaTarget: "/registro-especialista",
+    internalLinks: ["/registro-especialista", "/formalizacion", "/guias/donde-encontrar-pega-gasfiteria"],
+    requiresTaxReview: false,
+    requiresLegalReview: false,
+    editorialStatus: "draft",
+    reviewedBy: null,
+    reviewedAt: null,
+    lastUpdatedAt: "2026-07-02",
+  },
+  {
+    slug: "como-hacer-un-presupuesto",
+    title: "Cómo hacer un presupuesto que el cliente entienda y acepte",
+    metaTitle: "Cómo hacer un presupuesto de oficio | OficiosPro",
+    metaDescription:
+      "Estructura de un presupuesto serio para trabajos de oficio: alcance claro, materiales separados, adicionales acordados antes y presentación que genera confianza.",
+    audience: "especialista",
+    funnelStage: "consideration",
+    intro:
+      "La mitad de las pegas no se pierden por precio: se pierden porque el cliente no entendió qué estaba comprando. Un presupuesto claro te diferencia de inmediato y evita las peleas de después.",
+    sections: [
+      {
+        heading: "Lo que todo presupuesto debe tener",
+        paragraphs: [
+          "Alcance: qué incluye y — igual de importante — qué NO incluye. Materiales separados de la mano de obra, para que el cliente vea dónde está el valor de tu trabajo. Plazo estimado y qué pasa si aparece algo imprevisto. Y tu garantía: qué respondes y por cuánto tiempo.",
+        ],
+      },
+      {
+        heading: "Los adicionales: la regla de oro",
+        paragraphs: [
+          "Ningún trabajo adicional se ejecuta sin acordarlo antes con el cliente. Al abrir una pared puede aparecer cualquier cosa; lo profesional es parar, mostrar, cotizar el adicional y seguir solo con el visto bueno. Eso te protege a ti y al cliente.",
+        ],
+      },
+      {
+        heading: "Cómo presentarlo",
+        paragraphs: [
+          "Por escrito siempre, aunque sea un mensaje de WhatsApp ordenado. Un presupuesto hablado no existe cuando hay desacuerdo.",
+        ],
+        steps: [
+          "Visita o revisa fotos/videos antes de dar cifras definitivas.",
+          "Desglosa: mano de obra, materiales, traslado si aplica.",
+          "Escribe qué incluye, qué no, plazo y garantía.",
+          "Define cómo se acordarán los adicionales.",
+          "Envíalo por escrito y guarda copia.",
+        ],
+      },
+    ],
+    faqs: [
+      {
+        question: "¿Doy precio por teléfono sin ver el trabajo?",
+        answer: "Es riesgoso: sin ver el problema, la cifra es adivinanza y suele jugar en tu contra. Puedes dar un rango preliminar dejando claro que el precio final requiere ver el trabajo.",
+      },
+      {
+        question: "¿Cobro por ir a cotizar?",
+        answer: "Depende de tu rubro, la distancia y la complejidad del diagnóstico. Sea cual sea tu política, dila antes de ir: las sorpresas destruyen confianza.",
+      },
+    ],
+    ctaLabel: "Crear mi perfil de especialista",
+    ctaTarget: "/registro-especialista",
+    internalLinks: ["/registro-especialista", "/guias/del-pituto-al-negocio", "/guias/como-ofrecer-mis-servicios"],
+    requiresTaxReview: false,
+    requiresLegalReview: false,
+    editorialStatus: "draft",
+    reviewedBy: null,
+    reviewedAt: null,
+    lastUpdatedAt: "2026-07-02",
+  },
 ];
 
-/** Una futura ruta /guias/[slug] debe renderizar SOLO estas guias. */
+export const seoGuides: SeoGuide[] = seoGuidesContent.map(applyGuideStatus);
+
+/** La ruta /guias/[slug] renderiza SOLO estas guias. */
 export function getApprovedGuides(guides: SeoGuide[] = seoGuides): SeoGuide[] {
   return guides.filter((guide) => guide.editorialStatus === "approved" && guide.reviewedBy !== null);
 }
