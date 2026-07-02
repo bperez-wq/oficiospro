@@ -1,6 +1,8 @@
 # Briefs de temas iniciales para Soro SEO
 
-60 oportunidades SEO priorizadas, agrupadas por audiencia. Todas nacen con estado `draft`/`noindex`. `approved_candidate` significa: buen candidato a aprobarse rápido tras revisión humana, no aprobado automático.
+78 oportunidades SEO priorizadas, agrupadas por audiencia. Todas nacen con estado `draft`/`noindex`. `approved_candidate` significa: buen candidato a aprobarse rápido tras revisión humana, no aprobado automático.
+
+> **Principio del Grupo G:** para captar especialistas hay que buscar como ellos buscan. Un gásfiter no googlea "cómo ofrecer mis servicios online"; googlea "pega de gasfiter", "cuánto cobrar por instalar un calefont" o "cómo sacar licencia SEC". El contenido de intención nativa atrae al especialista donde realmente está.
 
 Convenciones:
 
@@ -115,10 +117,61 @@ Audiencia: mixta (`especialista` + `institucion` + prensa). CTA por defecto: `/r
 | F9 | futuro de los oficios | Tesis | El futuro de los oficios en Chile | Prospectiva honesta, sin cifras inventadas | medio | draft |
 | F10 | especialistas locales y tecnología | Tesis | Especialistas locales + tecnología: el modelo OficiosPro | La tesis de producto completa | bajo | draft |
 
+## Grupo G — Búsquedas reales de especialistas (intención nativa)
+
+Audiencia: `especialista`. Lo que un trabajador de oficio busca de verdad: pega, tarifas, técnica, certificación, repuestos y herramientas. CTA por defecto: `/trabajos/[oficio]` o `/registro-especialista`. Enlaces base: `/trabajos`, `/registro-especialista`, `/formalizacion`, `/guias`.
+
+**Pega y trabajo:**
+
+| # | Keyword | Intención | Título sugerido | Ángulo | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| G1 | pega de gasfiter / trabajos de gasfitería | Encontrar trabajo YA | Dónde encontrar pega de gasfitería en Chile | Canales reales (incluida OficiosPro) + perfil que trae pega recurrente vs pituto único | medio | approved_candidate |
+| G2 | pega para electricista certificado | Encontrar trabajo | Pega para electricistas: dónde buscar y cómo destacar | Certificación SEC como ventaja, perfil verificable | medio | draft |
+| G3 | trabajos de construcción por día / maestro por día | Trabajo rápido | Trabajo de maestro por día: cómo pasar del pituto al cliente estable | Del trato informal al historial verificable | medio | draft |
+| G4 | apps para conseguir pega de oficio | Comparar canales | Apps y plataformas para conseguir pega de oficio en Chile | Comparativa honesta de canales, sin desacreditar competidores; dónde aporta OficiosPro | medio | draft |
+| G5 | cómo conseguir pituto de gasfitería/electricidad | Trabajo informal | Del pituto al negocio: ordenar tu oficio sin perder clientes | Respeta el lenguaje real ("pituto"), muestra el paso siguiente | bajo | approved_candidate |
+
+**Tarifas y cotización (regla: NUNCA publicar tarifas de mercado inventadas; enseñar a calcular):**
+
+| # | Keyword | Intención | Título sugerido | Ángulo | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| G6 | cuánto cobrar por instalar un calefont | Fijar precio | Cuánto cobrar por instalar un calefont: cómo calcular tu tarifa | Factores: materiales, traslado, riesgo, garantía. Sin cifras de mercado inventadas | medio | draft |
+| G7 | cuánto cobrar por punto eléctrico | Fijar precio | Cómo calcular cuánto cobrar por punto eléctrico | Mismo tratamiento: método, no cifra | medio | draft |
+| G8 | cómo hacer un presupuesto de gasfitería | Cotizar bien | Cómo hacer un presupuesto que el cliente entienda y acepte | Estructura de cotización seria: incluye/no incluye/adicionales | bajo | approved_candidate |
+| G9 | cobrar por hora o por trabajo terminado | Modelo de cobro | ¿Cobrar por hora o por trabajo? Pros y contras en oficios | Decisión práctica según tipo de trabajo | bajo | draft |
+
+**Técnica (atrae al especialista que se perfecciona y al aficionado que termina llamando a uno):**
+
+| # | Keyword | Intención | Título sugerido | Ángulo | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| G10 | calefont no enciende el piloto | Diagnóstico técnico | Calefont no enciende el piloto: diagnóstico paso a paso | Técnico serio; cierra con "si es la membrana/válvula, trabajo de especialista" + CTA dual | medio | draft |
+| G11 | diferencial se corta a cada rato | Diagnóstico técnico | Por qué se corta el diferencial: causas y cómo diagnosticar | Seguridad eléctrica primero; deriva a electricista certificado | medio | draft |
+| G12 | cómo destapar alcantarillado herramientas | Técnica | Destapar alcantarillado: herramientas y cuándo no insistir | Técnico + límite honesto del DIY | bajo | draft |
+| G13 | herramientas básicas para partir como gásfiter | Partir en el oficio | Herramientas para partir en gasfitería: lo esencial | Checklist realista sin marcas patrocinadas | bajo | draft |
+
+**Certificación y normativa (revisión legal obligatoria antes de aprobar):**
+
+| # | Keyword | Intención | Título sugerido | Ángulo | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| G14 | cómo sacar licencia SEC clase D | Certificarse | Licencia SEC clase D: requisitos y pasos | Solo info verificable en sec.cl; la certificación como activo del perfil | alto (legal) | draft |
+| G15 | certificación instalador de gas SEC | Certificarse | Cómo certificarte como instalador de gas en Chile | Igual: fuente oficial, sin promesas de plazos | alto (legal) | draft |
+| G16 | qué necesito para trabajar como electricista autorizado | Regularizarse | Trabajar como electricista autorizado: lo que exige la norma | Normativa + formalización asistida | alto (legal) | draft |
+
+**Repuestos y materiales:**
+
+| # | Keyword | Intención | Título sugerido | Ángulo | Riesgo | Estado |
+|---|---|---|---|---|---|---|
+| G17 | dónde comprar repuestos de calefont | Comprar repuesto | Repuestos de calefont: dónde comprarlos y cómo identificar el correcto | Guía de canales honesta (sin afiliación); autoridad técnica | medio | draft |
+| G18 | cómo identificar repuesto de calefont por modelo | Comprar repuesto | Identificar el repuesto correcto de tu calefont | Técnico útil; el especialista que sabe esto cobra mejor | bajo | draft |
+
 ## Priorización de arranque (primeras 2 semanas)
 
-1. A1, A2, A5 (captar especialistas, riesgo bajo).
-2. B1, B2, B10 (captar clientes, alta demanda).
-3. F1 (tesis de marca, diferenciación).
-4. A6, A7 solo cuando exista capacidad de revisión tributaria.
-5. E1 solo con revisión institucional disponible.
+1. G1, G5, G8 (intención nativa de especialistas: pega, pituto, presupuesto — riesgo bajo/medio).
+2. A1, A2, A5 (captar especialistas, riesgo bajo).
+3. B1, B2, B10 (captar clientes, alta demanda).
+4. F1 (tesis de marca, diferenciación).
+5. G6, G7, G10, G11 (tarifas y técnica) en semana 3-4.
+6. A6, A7 solo cuando exista capacidad de revisión tributaria; G14-G16 solo con revisión legal.
+7. E1 solo con revisión institucional disponible.
+
+**Nota sobre "pega":** el CTA natural de G1-G5 es `/trabajos/[oficio]` y `/registro-especialista`. La Bolsa interna existe pero es producto operativo (noindex, fuera de alcance SEO): no enlazarla desde contenido público.
