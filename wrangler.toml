@@ -2,6 +2,11 @@ name = "oficiospro-web"
 main = "worker/index.ts"
 compatibility_date = "2026-06-06"
 
+routes = [
+  { pattern = "www.oficiospro.cl", custom_domain = true },
+  { pattern = "oficiospro.cl", custom_domain = true },
+]
+
 [assets]
 directory = "./out"
 binding = "ASSETS"
