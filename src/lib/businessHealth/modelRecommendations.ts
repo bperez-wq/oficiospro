@@ -51,8 +51,8 @@ export function buildModelRecommendations(result: BusinessHealthResult, snapshot
     recommendations.push({
       id: "unit-economics-review",
       title: "Revisar costos variables antes de escalar transacciones",
-      evidence: "La comision neta podria no cubrir el costo variable operacional.",
-      hypothesis: "El modelo de comision necesita mas automatizacion, B2B, SaaS o servicio gestionado para sostener margen.",
+      evidence: "La comisión neta podria no cubrir el costo variable operacional.",
+      hypothesis: "El modelo de comisión necesita mas automatizacion, B2B, SaaS o servicio gestionado para sostener margen.",
       risk: "Escalar servicios con margen negativo aumenta perdida operacional.",
       experiment: "Medir costo por servicio en 10 casos reales y comparar B2B, hogar y servicio gestionado.",
       metric: "contributionMarginCLP",

@@ -192,7 +192,7 @@ function RegistrationPath({ mode, onClose }: { mode: Exclude<LoginMode, "login">
     client: {
       href: "/registro-cliente",
       title: "Crear cuenta cliente",
-      text: "Guarda creditos, solicitudes, reservas y datos de contacto para futuras mantenciones.",
+      text: "Guarda créditos, solicitudes, reservas y datos de contacto para futuras mantenciones.",
       cta: "Crear cuenta cliente",
     },
     specialist: {
@@ -204,7 +204,7 @@ function RegistrationPath({ mode, onClose }: { mode: Exclude<LoginMode, "login">
     company: {
       href: "/empresas",
       title: "Registrar empresa o comunidad",
-      text: "Centraliza mantenciones, creditos, sucursales y solicitudes operativas.",
+      text: "Centraliza mantenciones, créditos, sucursales y solicitudes operativas.",
       cta: "Ver soluciones empresa",
     },
   }[mode];

@@ -80,14 +80,14 @@ export type VirtualQuoteCreateInput = {
 const storageKey = "oficiospro.virtualQuoteRequests";
 
 export const virtualQuoteStatusLabels: Record<VirtualQuoteStatus, string> = {
-  pendiente_revision: "Cotizacion virtual pendiente",
+  pendiente_revision: "Cotización virtual pendiente",
   necesita_mas_info: "Especialista pidio mas informacion",
   cotizacion_enviada: "Revisar propuesta",
-  aprobada_cliente: "Cotizacion aprobada",
-  rechazada_cliente: "Cotizacion rechazada",
-  visita_recomendada: "Visita tecnica recomendada",
+  aprobada_cliente: "Cotización aprobada",
+  rechazada_cliente: "Cotización rechazada",
+  visita_recomendada: "Visita técnica recomendada",
   convertida_a_reserva: "Convertida en reserva",
-  expirada: "Cotizacion expirada",
+  expirada: "Cotización expirada",
 };
 
 export const virtualQuoteUrgencyLabels: Record<VirtualQuoteUrgency, string> = {

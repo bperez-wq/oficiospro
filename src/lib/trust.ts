@@ -1,8 +1,21 @@
 import type { FlexibleService } from "@/data/flexiblePricing";
 import type { Specialist } from "@/data/mock";
 import { DEFAULT_SUBSCRIBER_DISCOUNT_CREDITS, creditsForInitialHold } from "@/lib/flexiblePricing";
+import { specialistRanks } from "@/data/marketplace";
 
 export type SpecialistLevel = "Fundador" | "Bronce" | "Plata" | "Oro" | "Platino";
+
+const LEVEL_ORDER: SpecialistLevel[] = ["Fundador", "Bronce", "Plata", "Oro", "Platino"];
+
+// Nivel máximo que la evidencia (trabajos + rating) justifica, según specialistRanks.
+// Exige AMBOS umbrales (trabajos y rating) para subir de tramo.
+function evidenceLevel(jobs: number, rating: number): SpecialistLevel {
+  let level: SpecialistLevel = "Fundador";
+  for (const rule of specialistRanks) {
+    if (jobs >= rule.minJobs && rating >= rule.minRating) level = rule.rank as SpecialistLevel;
+  }
+  return level;
+}
 
 export type SpecialistReview = {
   id: string;
@@ -35,19 +48,23 @@ export type ReviewStats = {
 
 export function getSpecialistLevel(specialist: Specialist): SpecialistLevel {
   const jobs = specialist.trabajosCompletados ?? specialist.jobs;
-  if (specialist.rank) return specialist.rank as SpecialistLevel;
-  if (jobs >= 420 || specialist.rating >= 4.95) return "Platino";
-  if (jobs >= 250 || specialist.rating >= 4.9) return "Oro";
-  if (jobs >= 120 || specialist.rating >= 4.75) return "Plata";
-  if (jobs >= 40 || specialist.rating >= 4.55) return "Bronce";
-  return "Fundador";
+  const evidence = evidenceLevel(jobs, specialist.rating);
+  // El seed puede fijar un rank, pero nunca por encima de lo que la evidencia
+  // soporta: se clampa al mínimo entre el rank declarado y el nivel por evidencia.
+  // Así no aparece "Nivel Oro" con 88 trabajos ni Platino sin volumen real.
+  if (specialist.rank) {
+    const seedIdx = LEVEL_ORDER.indexOf(specialist.rank as SpecialistLevel);
+    const evidenceIdx = LEVEL_ORDER.indexOf(evidence);
+    if (seedIdx >= 0) return LEVEL_ORDER[Math.min(seedIdx, evidenceIdx)];
+  }
+  return evidence;
 }
 
 export function getTrustBadges(specialist: Specialist) {
   return [
     specialist.verified ? "Identidad verificada" : null,
     (specialist.validation?.references ?? 0) > 0 ? "Referencias revisadas" : null,
-    specialist.certifications.length || specialist.validation?.certifications === "approved" ? "Certificacion cargada" : null,
+    specialist.certifications.length || specialist.validation?.certifications === "approved" ? "Certificación cargada" : null,
     responseMinutes(specialist.responseTime) <= 60 ? "Respuesta rapida" : null,
     specialist.top || specialist.recommendation >= 95 ? "Top especialista" : null,
   ].filter(Boolean) as string[];

@@ -26,7 +26,7 @@ export function AdminCreditLedgerPreview() {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="eyebrow">Ledger interno</p>
-          <h3 className="text-xl font-black text-ink">Vista preliminar de creditos, comision y documentos.</h3>
+          <h3 className="text-xl font-black text-ink">Vista preliminar de créditos, comisión y documentos.</h3>
           <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
             El cliente ve créditos. El admin revisa CLP, payout especialista, Comisión OficiosPro estimada y documentación tributaria pendiente.
           </p>
@@ -39,9 +39,9 @@ export function AdminCreditLedgerPreview() {
         <Metric label="Creditos reservados" value={`${reserved}`} />
         <Metric label="Creditos usados" value={`${redeemed}`} />
         <Metric label="Payout pendiente" value={formatCLP(payoutPending)} />
-        <Metric label="Comision OficiosPro" value={formatCLP(estimatedCommission)} />
+        <Metric label="Comisión OficiosPro" value={formatCLP(estimatedCommission)} />
         <Metric label="Documentos pendientes" value={`${pendingDocuments}`} />
-        <Metric label="Saldo no utilizado" value={`${calculateOutstandingLiability(events)} creditos`} />
+        <Metric label="Saldo no utilizado" value={`${calculateOutstandingLiability(events)} créditos`} />
       </div>
     </article>
   );

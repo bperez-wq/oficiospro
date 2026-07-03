@@ -172,3 +172,35 @@ Si hay starts pero no submits: reducir friccion del paso con mas abandono.
 Si hay submits pero pocos especialistas publicados: revisar operacion CRM, SLA y aprobacion.
 
 Conversion real del ciclo especialista = `specialist_application_submitted` con `stored=true` y postulacion visible en admin. Los eventos previos son senales de diagnostico, no conversion final.
+
+## Medicion de contenido Soro SEO
+
+Para cada guia o pagina de contenido originada en el pipeline Soro (`src/data/soroSeoPipeline.ts`), medir:
+
+- impresiones por guia (Search Console);
+- clics organicos;
+- CTR;
+- posicion media;
+- leads por pagina (formularios/solicitudes con `path` de la guia);
+- registros de especialista por pagina (`specialist_application_submitted` con referrer/entrada en la guia);
+- solicitudes de cliente por pagina;
+- assisted conversions (guia presente en el camino a conversion, via `page_view` + `sessionId`);
+- paginas con impresiones pero sin leads (candidatas a mejorar CTA);
+- temas que deben actualizarse (posicion cayendo o contenido desactualizado);
+- temas que deben eliminarse o pasar a noindex (90 dias sin traccion).
+
+### Rutina semanal Soro
+
+1. Revisar Search Console (queries, impresiones, CTR, posicion).
+2. Revisar `/admin/crm/acquisition` para conversion por fuente organica.
+3. Revisar paginas de contenido con trafico.
+4. Revisar conversiones atribuibles a contenido.
+5. Decidir los proximos 10 briefs de Soro con estos datos.
+
+### Rutina mensual Soro
+
+1. Aprobar o rechazar temas nuevos de `docs/soro-seo-topic-briefs.md`.
+2. Actualizar sitemap solo si hubo aprobaciones (`npm run seo:sitemap` + `npm run seo:audit`).
+3. Revisar contenido de bajo desempeno: actualizar, fusionar o noindexar.
+
+Detalle operativo en `docs/search-console-playbook.md`.

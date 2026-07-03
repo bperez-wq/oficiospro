@@ -33,9 +33,9 @@ export type CommercialPricingConfig = {
   certificationRequiredByCategory: Record<string, boolean>;
 };
 
-// Configuracion interna inicial. La comision activa de servicios vive en taxConfig.ts:
-// Comision OficiosPro 9,5% + IVA. Estos campos se mantienen para compatibilidad
-// de UI/admin y reglas futuras, no para sobreescribir la comision estandar.
+// Configuracion interna inicial. La comisión activa de servicios vive en taxConfig.ts:
+// Comisión OficiosPro 9,5% + IVA. Estos campos se mantienen para compatibilidad
+// de UI/admin y reglas futuras, no para sobreescribir la comisión estandar.
 export const defaultCommercialConfig: CommercialPricingConfig = {
   customerCreditValueCLP: 1000,
   platformFeePercent: 0.095,

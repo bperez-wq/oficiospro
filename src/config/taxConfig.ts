@@ -50,9 +50,9 @@ export const chileTaxConfig2026: TaxConfigVersion = {
     maximumCommissionCLP: null,
     appliesTo: "specialist_document_amount",
     commissionBaseMode: "specialist_gross_document",
-    label: "Comision OficiosPro",
+    label: "Comisión OficiosPro",
     shortLabel: "9,5% + IVA",
-    description: "Financia tecnologia, operacion, soporte, CRM, pago protegido y gestion de plataforma.",
+    description: "Financia tecnologia, operación, soporte, CRM, pago protegido y gestion de plataforma.",
     futureRuleSlots: {
       categoryMinimumsEnabled: false,
       urgencyRulesEnabled: false,
@@ -66,7 +66,7 @@ export const chileTaxConfig2026: TaxConfigVersion = {
   notes: [
     "Valores referenciales para modelar flujos internos de OficiosPro.",
     "La tasa de retencion de boleta de honorarios y su aplicabilidad deben validarse con contador/SII antes de operar.",
-    "La venta de creditos, Club Hogar y documentacion de servicios deben validarse antes de emitir documentos reales.",
+    "La venta de créditos, Club Hogar y documentacion de servicios deben validarse antes de emitir documentos reales.",
   ],
 };
 

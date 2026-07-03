@@ -23,26 +23,26 @@ export function CreditsExplainerContent() {
     <div className="grid gap-6">
       <section>
         <p className="eyebrow">Lo basico</p>
-        <h3 className="text-xl font-black text-ink">Que es un credito</h3>
+        <h3 className="text-xl font-black text-ink">Que es un crédito</h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          Un credito es la unidad para pagar servicios en OficiosPro.
-          <strong className="text-ink"> 1 credito = {formatCLP(CREDIT_VALUE_CLP)}</strong>. Compras creditos y
+          Un crédito es la unidad para pagar servicios en OficiosPro.
+          <strong className="text-ink"> 1 crédito = {formatCLP(CREDIT_VALUE_CLP)}</strong>. Compras créditos y
           los usas para pagar a los especialistas, sin manejar efectivo.
         </p>
       </section>
 
       <section className="rounded-2xl border border-line bg-slate-50 p-4">
-        <h3 className="text-lg font-black text-ink">Por que usamos creditos</h3>
+        <h3 className="text-lg font-black text-ink">Por que usamos créditos</h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          Los creditos funcionan como una <strong className="text-ink">cuenta de ahorro para las emergencias del
+          Los créditos funcionan como una <strong className="text-ink">cuenta de ahorro para las emergencias del
           hogar</strong>: vas acumulando saldo y lo usas cuando lo necesitas, sin tener que cotizar y juntar plata
-          a ultima hora cuando se rompe el calefont o se tapa una caneria.
+          a última hora cuando se rompe el calefont o se tapa una cañería.
         </p>
         <ul className="mt-3 grid gap-1.5 text-sm font-bold text-ink">
           <li>- Los usas cuando quieras: no vencen al instante, quedan disponibles.</li>
           <li>- Listo para emergencias: ya tienes saldo para resolver al toque.</li>
           <li>- Precio claro por adelantado: sabes cuanto cuesta antes de reservar.</li>
-          <li>- Pago en un solo lugar, con respaldo y proteccion OficiosPro.</li>
+          <li>- Pago en un solo lugar, con respaldo y protección OficiosPro.</li>
         </ul>
       </section>
 
@@ -56,7 +56,7 @@ export function CreditsExplainerContent() {
             <thead className="bg-slate-50 text-xs font-black uppercase text-muted">
               <tr>
                 <th className="px-3 py-2">Servicio</th>
-                <th className="px-3 py-2">Creditos</th>
+                <th className="px-3 py-2">Créditos</th>
                 <th className="px-3 py-2">Aprox.</th>
               </tr>
             </thead>
@@ -76,12 +76,12 @@ export function CreditsExplainerContent() {
       <section className="rounded-2xl border border-brand/30 bg-brand-soft/50 p-4">
         <h3 className="text-lg font-black text-ink">Pago protegido</h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          Cuando reservas, tus creditos quedan <strong className="text-ink">retenidos</strong>, no se entregan de
+          Cuando reservas, tus créditos quedan <strong className="text-ink">retenidos</strong>, no se entregan de
           inmediato. Se liberan al especialista <strong className="text-ink">solo cuando confirmas</strong> el avance
-          o el cierre del trabajo. Si algo no resulta, tus creditos siguen protegidos.
+          o el cierre del trabajo. Si algo no resulta, tus créditos siguen protegidos.
         </p>
         <ol className="mt-3 grid gap-2 text-sm font-bold text-ink">
-          <li>1. Reservas el servicio y tus creditos quedan retenidos.</li>
+          <li>1. Reservas el servicio y tus créditos quedan retenidos.</li>
           <li>2. El especialista realiza el trabajo.</li>
           <li>3. Confirmas el avance o cierre y recien ahi se liberan.</li>
         </ol>
@@ -90,12 +90,12 @@ export function CreditsExplainerContent() {
       <section>
         <h3 className="text-lg font-black text-ink">Que recibe el especialista</h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          OficiosPro cobra una comision de servicio de <strong className="text-ink">{COMMISSION_SHORT_LABEL}</strong>,
+          OficiosPro cobra una comisión de servicio de <strong className="text-ink">{COMMISSION_SHORT_LABEL}</strong>,
           que financia la plataforma, el soporte y el pago protegido. El resto es para el especialista.
         </p>
         <div className="mt-3 grid gap-1 rounded-2xl border border-line bg-white p-4 text-sm font-bold">
-          <Row label={`Trabajo de ${PAYOUT_EXAMPLE_CREDITS} creditos`} value={formatCLP(payout.grossCLP)} strong />
-          <Row label={`Comision OficiosPro (${COMMISSION_SHORT_LABEL})`} value={`- ${formatCLP(payout.commissionTotalCLP)}`} muted />
+          <Row label={`Trabajo de ${PAYOUT_EXAMPLE_CREDITS} créditos`} value={formatCLP(payout.grossCLP)} strong />
+          <Row label={`Comisión OficiosPro (${COMMISSION_SHORT_LABEL})`} value={`- ${formatCLP(payout.commissionTotalCLP)}`} muted />
           <div className="my-1 border-t border-line" />
           <Row label="Recibe el especialista" value={formatCLP(payout.specialistCLP)} highlight />
         </div>
@@ -104,7 +104,7 @@ export function CreditsExplainerContent() {
       <section>
         <h3 className="text-lg font-black text-ink">Con Club Hogar ahorras</h3>
         <p className="mt-1 text-sm font-bold leading-6 text-muted">
-          Los socios de Club Hogar pagan <strong className="text-ink">{SUBSCRIBER_DISCOUNT_CREDITS} creditos menos</strong>
+          Los socios de Club Hogar pagan <strong className="text-ink">{SUBSCRIBER_DISCOUNT_CREDITS} créditos menos</strong>
           {" "}por solicitud en los servicios incluidos.
         </p>
       </section>
@@ -144,7 +144,7 @@ export function CreditsExplainerModal({ open, onClose }: { open: boolean; onClos
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <p className="eyebrow">OficiosPro</p>
-            <h2 className="text-2xl font-black text-ink">Como funcionan los creditos</h2>
+            <h2 className="text-2xl font-black text-ink">Como funcionan los créditos</h2>
           </div>
           <button className="rounded-full border border-line px-3 py-1.5 text-sm font-black text-muted hover:text-ink" type="button" onClick={onClose} aria-label="Cerrar">
             Cerrar
@@ -224,18 +224,22 @@ export function CreditPriceTag({
   const clp = creditsToCLPLabel(credits);
   return (
     <span className={`inline-flex flex-wrap items-baseline gap-1 ${className ?? ""}`}>
-      <span className="font-black text-ink">{prefix ? `${prefix} ` : ""}{credits} creditos</span>
-      {showClp ? <span className="text-xs font-bold text-muted" title={`1 credito = ${formatCLP(CREDIT_VALUE_CLP)}`}>({clp})</span> : null}
+      <span className="font-black text-ink">{prefix ? `${prefix} ` : ""}{credits} créditos</span>
+      {showClp ? <span className="text-xs font-bold text-muted" title={`1 crédito = ${formatCLP(CREDIT_VALUE_CLP)}`}>({clp})</span> : null}
       {showHelp ? (
         <>
+          {/* Ícono visual de 16px con área táctil ampliada a 44px (padding + margen
+              negativo para no alterar el layout). WCAG 2.5.5 objetivo táctil. */}
           <button
             type="button"
-            className="grid h-4 w-4 place-items-center rounded-full border border-line text-[10px] font-black leading-none text-muted hover:text-ink"
+            className="grid place-items-center p-[14px] -m-[14px] text-brand"
             onClick={() => setOpen(true)}
-            aria-label="Como funcionan los creditos"
-            title="Como funcionan los creditos"
+            aria-label="Cómo funcionan los créditos"
+            title="1 crédito = $1.000. Pagas los servicios con créditos y tu dinero queda protegido hasta que confirmes el trabajo."
           >
-            i
+            <span aria-hidden className="grid h-4 w-4 place-items-center rounded-full border border-brand/40 text-[10px] font-black leading-none">
+              i
+            </span>
           </button>
           <CreditsExplainerModal open={open} onClose={() => setOpen(false)} />
         </>

@@ -68,7 +68,7 @@ export function FormalizationAndPayoutPanel({
               OficiosPro calcula la liquidacion y bloquea pagos sin documento validado.
             </h2>
             <p className="mt-3 text-sm font-bold leading-6 text-brand-dark">
-              Comision OficiosPro: 9,5% + IVA. Financia tecnologia, operacion, soporte, pago protegido y gestion de plataforma.
+              Comisión OficiosPro: 9,5% + IVA. Financia tecnologia, operación, soporte, pago protegido y gestion de plataforma.
             </p>
             <p className="mt-2 text-sm font-bold leading-6 text-brand-dark">
               Calculo referencial sujeto a validacion contable/SII. El especialista no debe definir impuestos manualmente: declara su situacion y OficiosPro prepara el flujo.
@@ -107,7 +107,7 @@ export function FormalizationAndPayoutPanel({
                 value={targetCLP}
                 onChange={(event) => setTargetCLP(Number(event.target.value))}
               />
-              <span className="text-xs font-bold text-muted">Monto CLP declarado por el especialista. OficiosPro calcula creditos y documento requerido.</span>
+              <span className="text-xs font-bold text-muted">Monto CLP declarado por el especialista. OficiosPro calcula créditos y documento requerido.</span>
             </label>
             {isAdmin ? (
               <div className="grid gap-2 rounded-2xl border border-line bg-slate-50 p-4">
@@ -131,10 +131,10 @@ export function FormalizationAndPayoutPanel({
               <Metric label="Liquidacion estimada" value={formatCLP(calculation.specialistLiquidPayoutCLP)} />
               <Metric label="Retencion estimada" value={formatCLP(calculation.withholdingAmountCLP)} />
               <Metric label="IVA documento" value={formatCLP(calculation.specialistIvaAmountCLP)} />
-              <Metric label="Comision OficiosPro" value={formatCLP(calculation.platformCommissionGrossCLP)} detail={chileTaxConfig2026.platformCommission.shortLabel} />
-              <Metric label="Comision neta" value={formatCLP(calculation.platformCommissionNetCLP)} />
-              <Metric label="IVA comision" value={formatCLP(calculation.platformCommissionIvaCLP)} />
-              <Metric label="Creditos cliente" value={`${calculation.totalCreditsEstimate} creditos`} />
+              <Metric label="Comisión OficiosPro" value={formatCLP(calculation.platformCommissionGrossCLP)} detail={chileTaxConfig2026.platformCommission.shortLabel} />
+              <Metric label="Comisión neta" value={formatCLP(calculation.platformCommissionNetCLP)} />
+              <Metric label="IVA comisión" value={formatCLP(calculation.platformCommissionIvaCLP)} />
+              <Metric label="Creditos cliente" value={`${calculation.totalCreditsEstimate} créditos`} />
               {isAdmin ? <Metric label="Base de calculo" value={formatCLP(calculation.platformCommissionBaseCLP)} detail={calculation.platformCommissionBaseMode.replace(/_/g, " ")} /> : null}
               {isAdmin ? <Metric label="Regla aplicada" value={calculation.platformCommissionLabel} detail={chileTaxConfig2026.platformCommission.description} /> : null}
             </div>
@@ -201,7 +201,7 @@ function ReceiverField({
       <span className="text-xs font-black uppercase text-muted">{label}</span>
       <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
         <strong className="break-words text-sm text-ink">{value}</strong>
-        <button className="btn-secondary min-h-10 px-4 text-sm" type="button" onClick={() => onCopy(label, value)}>
+        <button className="btn-secondary min-h-11 px-4 text-sm" type="button" onClick={() => onCopy(label, value)}>
           Copiar
         </button>
       </div>

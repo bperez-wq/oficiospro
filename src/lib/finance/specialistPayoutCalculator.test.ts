@@ -42,7 +42,7 @@ test("boleta_honorarios validada permite pago y conserva el liquido objetivo", (
   // El documento bruto (con retencion bruteada) es mayor al liquido.
   assert.ok(r.specialistDocumentGrossCLP > 25000);
   assert.ok(r.withholdingAmountCLP > 0);
-  // La comision de plataforma es positiva y el precio al cliente la incluye.
+  // La comisión de plataforma es positiva y el precio al cliente la incluye.
   assert.ok(r.platformCommissionGrossCLP > 0);
   assert.equal(
     r.customerGrossPriceCLP,
@@ -64,7 +64,7 @@ test("factura_afecta agrega IVA del especialista", () => {
   assert.ok(r.customerGrossPriceCLP > r.specialistDocumentGrossCLP);
 });
 
-test("factura_exenta no lleva IVA del especialista pero la comision si", () => {
+test("factura_exenta no lleva IVA del especialista pero la comisión si", () => {
   const r = calculatePayoutFromTarget({
     specialistTargetAmountCLP: 50000,
     taxType: "factura_exenta",
@@ -73,7 +73,7 @@ test("factura_exenta no lleva IVA del especialista pero la comision si", () => {
     siiValidated: true,
   });
   assert.equal(r.specialistIvaAmountCLP, 0);
-  assert.ok(r.platformCommissionIvaCLP > 0, "la comision de plataforma debe llevar IVA");
+  assert.ok(r.platformCommissionIvaCLP > 0, "la comisión de plataforma debe llevar IVA");
 });
 
 test("tipo tributario desconocido bloquea el pago y no fija precio", () => {
@@ -139,7 +139,7 @@ test("ida y vuelta: liquido desde precio cliente reconstruye un objetivo coheren
     accountantReviewed: true,
     siiValidated: true,
   });
-  // Tolerancia por redondeos de IVA/comision.
+  // Tolerancia por redondeos de IVA/comisión.
   const diff = Math.abs(back.customerGrossPriceCLP - forward.customerGrossPriceCLP);
   assert.ok(diff <= forward.customerGrossPriceCLP * 0.02, `diff=${diff}`);
 });

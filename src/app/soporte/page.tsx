@@ -8,7 +8,7 @@ import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Soporte OficiosPro | Ayuda para clientes y especialistas",
-  description: "Encuentra ayuda para reservas, creditos, postulaciones, especialistas, empresas y solicitudes operativas en OficiosPro.",
+  description: "Encuentra ayuda para reservas, créditos, postulaciones, especialistas, empresas y solicitudes operativas en OficiosPro.",
   path: "/soporte",
   keywords: ["soporte OficiosPro", "ayuda reservas", "ayuda especialistas"],
 });
@@ -138,7 +138,7 @@ export default function SupportPage() {
       <section className="grid gap-5 rounded-[28px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-8">
         <div>
           <p className="eyebrow">Etapa piloto</p>
-          <h2 className="text-3xl font-black text-ink">La operacion se revisa con seguimiento humano.</h2>
+          <h2 className="text-3xl font-black text-ink">La operación se revisa con seguimiento humano.</h2>
           <p className="mt-3 text-sm font-bold leading-6 text-brand-dark">
             Estamos sumando especialistas fundadores y clientes reales de forma controlada. Si algo aun no esta automatizado, el equipo OficiosPro toma el caso y responde por el canal indicado.
           </p>

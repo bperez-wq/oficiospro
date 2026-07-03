@@ -19,7 +19,7 @@ const config: Config = {
         },
         sun: {
           DEFAULT: "#f2a93b",
-          dark: "#d98a24",
+          dark: "#a65600",
           soft: "#fff3dc",
         },
         mint: "#e7f7f0",
@@ -28,7 +28,7 @@ const config: Config = {
         muted: "#2c3a38",
         line: "rgba(20, 32, 31, 0.12)",
         enterprise: "#102b2b",
-        gold: "#d98a24",
+        gold: "#a65600",
       },
       boxShadow: {
         soft: "0 18px 50px rgba(11, 45, 47, 0.1)",

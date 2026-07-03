@@ -35,10 +35,10 @@ export function CreditExplainer({
     <section className={`rounded-[28px] border border-line bg-white shadow-soft ${compact ? "p-4" : "p-5"}`}>
       <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr] lg:items-start">
         <div>
-          <p className="eyebrow">Creditos protegidos</p>
+          <p className="eyebrow">Créditos protegidos</p>
           <h2 className={`${compact ? "text-2xl" : "text-3xl"} font-black text-ink`}>{title}</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-muted">
-            Tus creditos funcionan como una cuenta de ahorro para mantenciones. Se acumulan mes a mes y los usas en distintos servicios. Puedes acumular hasta el equivalente a {accumulationCapMonths} meses de tu plan ({creditCap} creditos) y, dentro de ese tope, se mantienen disponibles en el tiempo.
+            Tus créditos funcionan como una cuenta de ahorro para mantenciones. Se acumulan mes a mes y los usas en distintos servicios. Puedes acumular hasta el equivalente a {accumulationCapMonths} meses de tu plan ({creditCap} créditos) y, dentro de ese tope, se mantienen disponibles en el tiempo.
           </p>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <CreditMetric label="Disponibles" value={availableCredits} />
@@ -51,12 +51,12 @@ export function CreditExplainer({
           <span className="text-xs font-black uppercase text-brand-dark">Ejemplo de uso</span>
           <h3 className="mt-2 text-xl font-black text-ink">Gasfiteria base</h3>
           <div className="mt-4 grid gap-2">
-            <Row label="Sin suscripcion" value={`${baseServiceCredits} creditos`} />
-            <Row label="Club Hogar" value={`${clubServiceCredits} creditos`} />
-            <Row label="Ahorro por solicitud" value={`${savingsPerRequest} creditos`} strong />
+            <Row label="Sin suscripcion" value={`${baseServiceCredits} créditos`} />
+            <Row label="Club Hogar" value={`${clubServiceCredits} créditos`} />
+            <Row label="Ahorro por solicitud" value={`${savingsPerRequest} créditos`} strong />
           </div>
           <p className="mt-3 rounded-2xl bg-white/70 p-3 text-sm font-black text-brand-dark">
-            Los adicionales tambien se pueden pagar con creditos, siempre previa aprobacion.
+            Los adicionales tambien se pueden pagar con créditos, siempre previa aprobacion.
           </p>
         </article>
       </div>
@@ -65,7 +65,7 @@ export function CreditExplainer({
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <span className="text-xs font-black uppercase text-muted">Simulador</span>
-            <h3 className="text-xl font-black text-ink">Plan Basico: {monthlyCredits} creditos mensuales</h3>
+            <h3 className="text-xl font-black text-ink">Plan Basico: {monthlyCredits} créditos mensuales</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {monthOptions.map((option) => (
@@ -87,8 +87,8 @@ export function CreditExplainer({
         </div>
         <p className="mt-3 text-xs font-bold leading-5 text-muted">
           {reachesCap
-            ? `Llegas al tope de acumulacion: ${creditCap} creditos (equivalente a ${accumulationCapMonths} meses de tu plan). Sobre ese tope los creditos dejan de sumar, asi que conviene usarlos al menos un par de veces al ano.`
-            : `Tope de acumulacion: ${creditCap} creditos (equivalente a ${accumulationCapMonths} meses de tu plan).`}
+            ? `Llegas al tope de acumulacion: ${creditCap} créditos (equivalente a ${accumulationCapMonths} meses de tu plan). Sobre ese tope los créditos dejan de sumar, asi que conviene usarlos al menos un par de veces al ano.`
+            : `Tope de acumulacion: ${creditCap} créditos (equivalente a ${accumulationCapMonths} meses de tu plan).`}
         </p>
       </div>
 

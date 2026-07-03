@@ -8,7 +8,7 @@ import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Referidos de especialistas | OficiosPro",
-  description: "Programa no monetario para que especialistas aprobados recomienden a otros trabajadores tecnicos y fortalezcan la red fundadora.",
+  description: "Programa no monetario para que especialistas aprobados recomienden a otros trabajadores técnicos y fortalezcan la red fundadora.",
   path: "/referidos/especialistas",
   keywords: ["referidos especialistas", "oficiospro fundadores", "recomendar especialista"],
 });

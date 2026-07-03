@@ -150,6 +150,7 @@ export function SearchableSelect({
         disabled={disabled}
         autoComplete="off"
         role="combobox"
+        aria-haspopup="listbox"
         aria-controls={`${id}-listbox`}
         aria-expanded={open}
         aria-activedescendant={open && filtered[activeIndex] ? `${id}-option-${activeIndex}` : undefined}

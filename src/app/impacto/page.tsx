@@ -12,10 +12,10 @@ import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
-  title: "Impacto OficiosPro | Confianza para el trabajo tecnico",
-  description: "Conoce el modelo de confianza, reputacion, creditos, pago protegido y formalizacion del trabajo tecnico en OficiosPro.",
+  title: "Impacto OficiosPro | Confianza para el trabajo técnico",
+  description: "Conoce el modelo de confianza, reputacion, créditos, pago protegido y formalizacion del trabajo técnico en OficiosPro.",
   path: "/impacto",
-  keywords: ["impacto OficiosPro", "trabajo tecnico", "reputacion especialistas"],
+  keywords: ["impacto OficiosPro", "trabajo técnico", "reputacion especialistas"],
 });
 
 const impactStats = [

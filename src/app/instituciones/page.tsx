@@ -3,19 +3,21 @@ import { AcquisitionPageViewTracker } from "@/components/AcquisitionTrackingLink
 import { PlatformNav } from "@/components/PlatformNav";
 import { InstitutionContactForm } from "@/components/institutions/InstitutionContactForm";
 import { categoryImages, teamImages } from "@/data/visualAssets";
+import { AnswerBlockFromTopic } from "@/components/seo/AnswerBlock";
+import { getAnswerTopicsForPage } from "@/data/answerEngineTopics";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
 
 export const metadata = buildPublicRouteMetadata({
   title: "Instituciones y alianzas | OficiosPro",
-  description: "Propuesta de colaboracion para municipalidades, OMIL, SENCE, CFT/IP, liceos tecnicos y organizaciones de empleabilidad.",
+  description: "Propuesta de colaboracion para municipalidades, OMIL, SENCE, CFT/IP, liceos técnicos y organizaciones de empleabilidad.",
   path: "/instituciones",
-  keywords: ["OMIL oficios", "alianzas empleabilidad", "especialistas tecnicos", "formalizacion oficios"],
+  keywords: ["OMIL oficios", "alianzas empleabilidad", "especialistas técnicos", "formalizacion oficios"],
 });
 
 const context = { source: "omil" as const, campaign: "institutional_partnerships", landingPage: "/instituciones" };
 
-const partnerTypes = ["Municipalidades", "OMIL", "SENCE", "ChileValora", "CFT / IP", "Liceos tecnicos", "Fundaciones", "Programas de empleo"];
+const partnerTypes = ["Municipalidades", "OMIL", "SENCE", "ChileValora", "CFT / IP", "Liceos técnicos", "Fundaciones", "Programas de empleo"];
 
 const valueCards = [
   { tone: "bg-brand-soft text-brand-dark", title: "Difusion local", text: "Llega a vecinos con oficios reales por comuna.", icon: IconMegaphone },
@@ -54,7 +56,7 @@ export default function InstitutionsPage() {
           <div>
             <p className="eyebrow-pill border-white/20 bg-white/10 text-white">Instituciones y alianzas</p>
             <h1 className="text-4xl font-black leading-[1.05] tracking-tight md:text-5xl">
-              Un canal serio para visibilizar a los especialistas tecnicos de tu comuna.
+              Un canal serio para visibilizar a los especialistas técnicos de tu comuna.
             </h1>
             <p className="mt-5 max-w-xl text-lg font-semibold leading-8 text-white/80">
               Derivacion ordenada, talleres de perfil digital y reportes agregados por comuna y oficio. Sin prometer empleo.
@@ -74,7 +76,7 @@ export default function InstitutionsPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <img src={teamImages.mujeresPlanos} alt="Equipo tecnico revisando planos" className="col-span-2 h-48 w-full rounded-card object-cover shadow-lift" loading="eager" />
+            <img src={teamImages.mujeresPlanos} alt="Equipo técnico revisando planos" className="col-span-2 h-48 w-full rounded-card object-cover shadow-lift" loading="eager" />
             <img src={categoryImages.electricidad} alt="Especialista en electricidad" className="h-32 w-full rounded-card object-cover" loading="lazy" />
             <img src={categoryImages.climatizacion} alt="Especialista en climatizacion" className="h-32 w-full rounded-card object-cover" loading="lazy" />
           </div>
@@ -198,6 +200,10 @@ export default function InstitutionsPage() {
         </div>
       </section>
       </Reveal>
+
+      {getAnswerTopicsForPage("/instituciones").slice(0, 1).map((topic) => (
+        <AnswerBlockFromTopic key={topic.id} topic={topic} />
+      ))}
 
       <p className="max-w-3xl text-xs font-semibold leading-5 text-muted">
         Esta pagina no declara convenios vigentes: presenta una propuesta de colaboracion para pilotos y conversaciones institucionales. OficiosPro no promete empleo ni ingresos garantizados.

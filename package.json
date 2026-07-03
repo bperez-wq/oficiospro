@@ -32,7 +32,9 @@
     "seo:audit": "node scripts/seo-audit.mjs",
     "seo:live-audit": "node scripts/seo-live-audit.mjs",
     "seo:local:sync": "node --import tsx scripts/sync-seo-local-data.mjs",
-    "seo:local:verify": "node scripts/verify-seo-local-landings.mjs"
+    "seo:local:verify": "node scripts/verify-seo-local-landings.mjs",
+    "soro:audit": "node scripts/soro-content-audit.mjs",
+    "soro:import": "node scripts/import-soro-draft.mjs"
   },
   "engines": {
     "node": ">=20"

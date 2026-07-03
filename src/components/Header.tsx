@@ -2,17 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { CartButton, CartDrawer } from "@/components/CartDrawer";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { LoginEntryModal } from "@/components/LoginEntryModal";
 import { getClientMenuGroups } from "@/data/tradeTaxonomy";
+import { allSpecialtyOptions, communeOptions, normalizeSearch, OTHER_SERVICE_VALUE } from "@/lib/catalog";
 import { trackEvent } from "@/lib/analytics";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { clearMockSession, getMockSession, type MockSession } from "@/lib/storage";
 
 const quickSuggestions = ["Calefont", "Filtracion", "Electricista SEC", "Camaras", "Riego", "Piscina", "Porton"];
+
+// Pool de autocompletado: oficios/especialidades + comunas (sin la opción "Otro").
+const searchSuggestionPool: string[] = Array.from(
+  new Set([
+    ...allSpecialtyOptions.filter((option) => option.value !== OTHER_SERVICE_VALUE).map((option) => option.label),
+    ...communeOptions.map((option) => option.label),
+  ]),
+);
 
 const categoryGroups = getClientMenuGroups();
 
@@ -218,16 +227,16 @@ export function Header() {
           <BrandLogo variant="primary" size="md" />
         </Link>
 
-        <div className="hidden min-w-0 items-center gap-3 xl:flex">
-          <div className="hidden min-w-0 flex-1 xl:flex">
+        <div className="hidden min-w-0 flex-1 items-center gap-3 xl:flex">
+          <div className="hidden min-w-0 flex-1 2xl:flex">
             <HeaderSearch />
           </div>
-          <nav className="flex min-w-0 flex-1 items-center justify-center gap-0.5 overflow-hidden text-sm font-black text-muted xl:gap-1">
+          <nav className="flex min-w-0 items-center justify-center gap-0.5 text-sm font-black text-muted xl:gap-1 2xl:justify-end">
             <NavLink href="/especialistas" label={t("nav.specialists")} pathname={pathname} />
             <div ref={categoryMenuRef} className="relative" onMouseEnter={openCategoryMenu} onMouseLeave={scheduleCategoryClose}>
               <button
                 ref={categoryTriggerRef}
-                className={categoryOpen ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
+                className={categoryOpen ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}
                 type="button"
                 aria-haspopup="menu"
                 aria-expanded={categoryOpen}
@@ -253,7 +262,7 @@ export function Header() {
             <NavLink href="/#recomienda-gana" label={t("nav.refer")} pathname={pathname} />
             <Link
               href="/especialistas-fundadores?source=header&intent=offer_services"
-              className="rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
+              className="whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"
               onClick={() => {
                 void trackEvent({
                   eventName: "click_offer_services",
@@ -272,7 +281,7 @@ export function Header() {
         </div>
 
         <div className="flex items-center justify-end gap-2">
-          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
+          <button className="rounded-2xl border border-line bg-white px-3 py-2 text-sm font-black text-muted shadow-sm transition hover:border-brand hover:text-brand 2xl:hidden" type="button" onClick={() => setMobileSearchOpen((current) => !current)}>
             {t("nav.search")}
           </button>
           <CartButton onOpen={() => setCartOpen(true)} />
@@ -300,7 +309,7 @@ export function Header() {
       </div>
 
       {mobileSearchOpen ? (
-        <div className="border-t border-line bg-white px-4 py-3 xl:hidden">
+        <div className="border-t border-line bg-white px-4 py-3 2xl:hidden">
           <HeaderSearch compact onSubmit={() => setMobileSearchOpen(false)} />
         </div>
       ) : null}
@@ -331,8 +340,24 @@ export function Header() {
 
 function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubmit?: () => void }) {
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const { t } = useI18n();
+
+  // Debounce ~250ms: solo recalcula sugerencias cuando el usuario pausa de escribir.
+  useEffect(() => {
+    const handle = window.setTimeout(() => setDebouncedQuery(query.trim()), 250);
+    return () => window.clearTimeout(handle);
+  }, [query]);
+
+  const typing = debouncedQuery.length > 0;
+  const suggestions = useMemo(() => {
+    const normalized = normalizeSearch(debouncedQuery);
+    if (!normalized) return quickSuggestions;
+    return searchSuggestionPool
+      .filter((label) => normalizeSearch(label).includes(normalized))
+      .slice(0, 6);
+  }, [debouncedQuery]);
 
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -343,9 +368,13 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
   }
 
   function applySuggestion(suggestion: string) {
+    setQuery(suggestion);
     window.location.href = `/especialistas?q=${encodeURIComponent(suggestion)}`;
     onSubmit?.();
   }
+
+  const listboxId = compact ? "header-mobile-search-list" : "header-search-list";
+  const showPanel = focused && suggestions.length > 0;
 
   return (
     <form className={`relative min-w-0 ${compact ? "w-full" : "w-[min(34vw,420px)]"}`} onSubmit={submit}>
@@ -354,6 +383,11 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
         <input
           id={compact ? "header-mobile-search" : "header-search"}
           value={query}
+          role="combobox"
+          aria-expanded={showPanel}
+          aria-controls={listboxId}
+          aria-autocomplete="list"
+          autoComplete="off"
           onFocus={() => setFocused(true)}
           onBlur={() => window.setTimeout(() => setFocused(false), 120)}
           onChange={(event) => setQuery(event.target.value)}
@@ -364,12 +398,12 @@ function HeaderSearch({ compact = false, onSubmit }: { compact?: boolean; onSubm
           {t("nav.search")}
         </button>
       </div>
-      {focused ? (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] rounded-2xl border border-line bg-white p-3 shadow-card">
-          <p className="px-2 text-xs font-black uppercase text-muted">Busquedas rapidas</p>
+      {showPanel ? (
+        <div id={listboxId} role="listbox" className="absolute left-0 right-0 top-[calc(100%+8px)] z-[80] rounded-2xl border border-line bg-white p-3 shadow-card">
+          <p className="px-2 text-xs font-black uppercase text-muted">{typing ? "Sugerencias" : "Búsquedas rápidas"}</p>
           <div className="mt-2 flex flex-wrap gap-2">
-            {quickSuggestions.map((suggestion) => (
-              <button key={suggestion} className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applySuggestion(suggestion)}>
+            {suggestions.map((suggestion) => (
+              <button key={suggestion} role="option" aria-selected="false" className="rounded-full bg-slate-50 px-3 py-2 text-xs font-black text-muted transition hover:bg-brand-soft hover:text-brand-dark" type="button" onMouseDown={(event) => event.preventDefault()} onClick={() => applySuggestion(suggestion)}>
                 {suggestion}
               </button>
             ))}
@@ -565,7 +599,7 @@ function MobileMenu({
 function NavLink({ href, label, pathname }: { href: string; label: string; pathname: string }) {
   const active = isActivePath(pathname, href);
   return (
-    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "rounded-full bg-brand px-4 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "rounded-full px-4 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
+    <Link href={href} aria-current={active ? "page" : undefined} className={active ? "whitespace-nowrap rounded-full bg-brand px-3 py-2 text-white shadow-sm transition hover:bg-brand-dark" : "whitespace-nowrap rounded-full px-3 py-2 transition hover:bg-brand-soft hover:text-brand-dark"}>
       {label}
     </Link>
   );

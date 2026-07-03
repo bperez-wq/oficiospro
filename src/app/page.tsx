@@ -34,7 +34,7 @@ import { Reveal } from "@/components/Reveal";
 export const metadata: Metadata = buildPublicRouteMetadata({
   title: "OficiosPro Chile | Especialistas verificados para hogar y empresas",
   description:
-    "Encuentra especialistas verificados para hogar, empresas y comunidades con creditos, reputacion, disponibilidad y pago protegido.",
+    "Encuentra especialistas verificados para hogar, empresas y comunidades con créditos, reputacion, disponibilidad y pago protegido.",
   path: "/",
   image: "/brand/logo-worker-tile.svg",
   keywords: ["OficiosPro", "especialistas verificados", "oficios Chile", "servicios hogar"],
