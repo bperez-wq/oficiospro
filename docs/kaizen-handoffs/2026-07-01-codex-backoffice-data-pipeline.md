@@ -3,6 +3,7 @@
 Fecha: 2026-07-01
 Rama: `kaizen/codex-pipeline-datos`
 Responsable: Codex
+Actualizacion 2026-07-02: la rama fue sincronizada con `origin/main` para incluir los cambios recientes de Claude antes del PR.
 
 ## Problema
 
@@ -64,6 +65,19 @@ El script es read-only y no crea datos de prueba.
 ## Handoff para Claude
 
 No redisenar el panel admin. Si haces UX, enfocate en claridad visual del bloque "Fuente de datos backoffice", estados vacios y mensajes operativos. No cambies endpoints, Worker ni D1. Si necesitas mostrar mas detalle, enlaza a `/admin/leads` o `/admin/crm` en vez de duplicar acciones.
+
+## Estado post-merge con main
+
+- `origin/main` fue mergeado dentro de `kaizen/codex-pipeline-datos`.
+- No hubo conflictos manuales; `AdminPanel.tsx` conserva la capa viva D1 de Codex y los cambios recientes de Claude que ya estaban en main.
+- El PR debe apuntar a `main`. No hacer merge automatico si Benjamin no lo pide.
+
+## Validacion 2026-07-02
+
+- `npm.cmd run validate`: OK.
+- `npm.cmd run build`: OK.
+- `npx.cmd wrangler deploy --dry-run --assets ./out`: OK. Binding confirmado: `env.DB (oficiospro-leads)`.
+- `npm.cmd run ops:backoffice-pipeline`: ejecutado read-only contra `https://www.oficiospro.cl`; `/api/health` OK, endpoints admin respondieron `401 unauthorized` porque esta sesion local de Codex no tenia `ADMIN_TOKEN` real configurado. Repetir desde PowerShell de Benjamin con `$env:ADMIN_TOKEN` real antes de merge/deploy final.
 
 ## Pendiente
 
