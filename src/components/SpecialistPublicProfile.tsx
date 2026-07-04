@@ -309,6 +309,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
           <ConversionButton type="reserva_especialista" sourceButton="Consultar disponibilidad especialista" specialist={specialist} className="btn-secondary mt-3 w-full">
             Consultar disponibilidad
           </ConversionButton>
+          <ShareProfileButton specialist={specialist} />
         </article>
         <article className="panel">
           <h3 className="text-xl font-black">Cobertura</h3>
@@ -327,7 +328,33 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             )}
           </div>
         </article>
+        <article className="panel">
+          <h3 className="text-xl font-black">¿Qué significa verificado?</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-muted">Antes de publicar un perfil, el equipo OficiosPro revisa:</p>
+          <ul className="mt-3 grid gap-2 text-sm font-bold text-muted">
+            <li className="rounded-2xl bg-slate-50 p-3">Identidad y datos de contacto del especialista.</li>
+            <li className="rounded-2xl bg-slate-50 p-3">Oficio, servicios y cobertura declarada.</li>
+            <li className="rounded-2xl bg-slate-50 p-3">Referencias y certificaciones cuando aplican al oficio.</li>
+          </ul>
+          <p className="mt-3 text-xs font-semibold leading-5 text-muted">
+            La verificación es progresiva: cada trabajo cerrado y evaluado suma reputación real.
+            {isDemo ? " Este perfil es referencial y no representa un especialista verificado." : ""}
+          </p>
+        </article>
         <SpecialistProfileAvailability specialist={specialist} />
+        <article className="panel border-brand/15 bg-brand-soft">
+          <h3 className="text-xl font-black text-brand-dark">¿Tienes un oficio?</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark/80">
+            Crea tu perfil profesional como este: sin costo inicial, con revisión humana y reputación acumulable.
+          </p>
+          <Link
+            className="btn-secondary mt-4 w-full"
+            href="/registro-especialista?source=specialist_profile&intent=offer_services"
+            data-event="click_offer_services"
+          >
+            Crear mi perfil
+          </Link>
+        </article>
       </aside>
     </section>
     <BookingDrawer
@@ -377,6 +404,35 @@ export function ProfileLoadingSkeleton() {
         <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
       </aside>
     </section>
+  );
+}
+
+function ShareProfileButton({ specialist }: { specialist: Specialist }) {
+  const [copied, setCopied] = useState(false);
+
+  async function share() {
+    const url = `${window.location.origin}/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: `Perfil OficiosPro de ${specialist.name}`, text: `${specialist.name} · ${specialist.specialty} en OficiosPro`, url });
+        return;
+      } catch {
+        /* usuario canceló el share nativo: cae al portapapeles */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt("Copia el enlace de este perfil:", url);
+    }
+  }
+
+  return (
+    <button className="btn-secondary mt-3 w-full" type="button" data-event="profile_share" onClick={share}>
+      {copied ? "Enlace copiado ✓" : "Compartir este perfil"}
+    </button>
   );
 }
 
