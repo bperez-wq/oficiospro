@@ -50,9 +50,10 @@ Soro keyword → Soro draft → import (manual o webhook a drafts/)
 
 ## Pendientes para Codex
 
-- Ruta `/guias/[slug]` renderizando solo `getApprovedGuides()` de `src/data/seoGuides.ts`, con metadata, JSON-LD FAQPage y diseño OficiosPro (hero + respuesta corta + steps + FAQ + CTA, mobile-first). Incluir guías approved en `generate-sitemap.mjs` recién entonces.
+- ~~Ruta `/guias/[slug]`~~ Hecho (ciclo 2026-07-02b): renderiza solo `getApprovedGuides()`; estado publicable en `src/data/seoGuidesData.json`; guías approved entran a `generate-sitemap.mjs`.
+- ~~Integrar `AnswerBlock`~~ Hecho (ciclo 2026-07-02b): 1 bloque AEO aprobado en `/formalizacion`, `/especialistas-fundadores` e `/instituciones`.
 - Página interna `/admin/crm/seo-content` que lea `soroSeoPipeline.ts` + `answerEngineTopics.ts` + resultado de `soro:audit` (datos estáticos, sin backend, sin métricas inventadas).
-- Integrar `AnswerBlock` (ya creado en `src/components/seo/AnswerBlock.tsx`) en `/especialistas-fundadores`, `/formalizacion` e `/instituciones` con temas AEO una vez aprobados (1-2 bloques máximo por página).
+- Enlace a `/guias` desde el Footer o navegación secundaria (mejora descubrimiento y crawling).
 - Fase 3 de API Soro cuando exista documentación y credenciales.
 
 ## Cómo medir resultados

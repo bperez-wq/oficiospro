@@ -15,3 +15,14 @@ yarn-error.log*
 pnpm-lock.yaml
 tsconfig.tsbuildinfo
 reports/pilot-readiness/*.md
+
+# Configuracion local de agentes y caches Python
+.claude/
+__pycache__/
+*.pyc
+
+# Datos personales de outreach (PII: RUT, telefonos) - NO subir al repo
+content/outreach/*.csv
+content/outreach/*.xls
+content/outreach/sec-raw/
+content/outreach/enviados_log.csv

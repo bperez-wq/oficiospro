@@ -95,8 +95,8 @@ export function ClubHogarContent() {
 
       <Reveal delay={0}>
         <section className="grid gap-5 lg:grid-cols-2">
-          <article className="rounded-[28px] border border-line bg-white p-6 shadow-soft">
-            <span className="chip bg-slate-100 text-muted">{c.noSubChip}</span>
+          <article className="rounded-[28px] border border-line bg-slate-50/80 p-6 shadow-sm">
+            <span className="chip bg-slate-200/70 text-muted">{c.noSubChip}</span>
             <h2 className="mt-3 text-2xl font-black text-ink">{c.noSubTitle}</h2>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">{c.noSubText}</p>
             <div className="mt-4 grid gap-2">
@@ -132,7 +132,11 @@ export function ClubHogarContent() {
                 </div>
               ))}
             </div>
-            <ConversionButton type="lead_cliente" sourceButton="Elegir plan comparador Club Hogar" className="btn-primary shine mt-5 w-full">
+            <p className="mt-4 flex items-center justify-between gap-3 rounded-2xl bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-900">
+              <span>Ahorro en estos {comparison.length} ejemplos</span>
+              <span className="rounded-full bg-white px-3 py-1 text-emerald-700">−{discount * comparison.length} créditos</span>
+            </p>
+            <ConversionButton type="lead_cliente" sourceButton="Elegir plan comparador Club Hogar" className="btn-primary shine mt-4 w-full">
               {c.choosePlan}
             </ConversionButton>
           </article>
@@ -160,13 +164,23 @@ export function ClubHogarContent() {
             <p className="eyebrow">{c.simEyebrow}</p>
             <h2 className="text-3xl font-black">{c.simTitle.replace("{plan}", featuredPlan.name).replace("{n}", String(featuredPlan.monthlyCredits))}</h2>
             <p className="mt-3 font-semibold leading-7 text-muted">{c.simText.replace("{price}", formatCLP(featuredPlan.priceCLP))}</p>
-            <div className="mt-6 grid gap-3 md:grid-cols-4">
-              {simMonths.map(([label, credits]) => (
-                <div key={label} className="rounded-2xl bg-brand-soft p-5">
-                  <span className="font-black text-muted">{label}</span>
-                  <strong className="block text-2xl font-black">{credits} {c.creditsUnit}</strong>
-                </div>
-              ))}
+            <div className="mt-6 grid grid-cols-2 gap-3 md:grid-cols-4">
+              {simMonths.map(([label, credits], index) => {
+                const maxCredits = simMonths[simMonths.length - 1][1];
+                const percent = Math.max(14, Math.round((credits / maxCredits) * 100));
+                return (
+                  <div key={label} className="rounded-2xl bg-brand-soft p-4">
+                    <div aria-hidden className="flex h-24 items-end overflow-hidden rounded-xl bg-white/70 p-1.5">
+                      <div
+                        className="op-grow w-full rounded-lg bg-gradient-to-t from-brand-dark to-brand"
+                        style={{ height: `${percent}%`, animationDelay: `${index * 120}ms` }}
+                      />
+                    </div>
+                    <span className="mt-3 block text-sm font-black text-muted">{label}</span>
+                    <strong className="block text-2xl font-black">{credits} {c.creditsUnit}</strong>
+                  </div>
+                );
+              })}
             </div>
             <p className="mt-4 rounded-2xl bg-sun-soft p-4 text-sm font-black text-sun-dark">{c.simNote}</p>
           </article>

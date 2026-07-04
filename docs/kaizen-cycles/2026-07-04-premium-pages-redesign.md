@@ -57,6 +57,26 @@ oscuro existente). Mantiene los textos i18n (`t("pages.<key>.*")`).
 
 `npm.cmd run validate` ✅ · `npm.cmd run build` ✅ · `wrangler --dry-run` ✅
 
+## Segundo pase (aprobado por Benjamin): secciones intermedias
+
+- **Club Hogar — simulador de acumulación**: los 4 tiles planos (Mes 1/3/6/12)
+  ahora son un mini gráfico de barras con crecimiento animado (`.op-grow`,
+  scaleY desde la base, delay escalonado; neutralizado por el kill-switch de
+  prefers-reduced-motion). Alturas proporcionales al total de 12 meses
+  (14/25/50/100%) — matemática real del plan, no decoración.
+- **Club Hogar — comparador con/sin club**: la card "sin suscripción" se
+  atenúa (slate) para que la card Club domine; nueva franja de ahorro honesta:
+  "Ahorro en estos 4 ejemplos · −{descuento×4} créditos" (aritmética de los
+  ejemplos mostrados, config vigente).
+- **Empresas — feature cards con fotografía**: las 6 features i18n pasan de
+  cards de texto plano a cards con banda fotográfica temática (planos,
+  tablero, mantención, medidor, obra, planta), overlay de profundidad y
+  hover-zoom sutil. Imágenes decorativas (aria-hidden); el significado sigue
+  en el texto.
+- Verificado: barras con alturas correctas, franja de ahorro, 6 fotos
+  resolviendo (probe 1168×784), 390px sin overflow en ambas páginas, consola
+  limpia.
+
 ## Pendientes / próximos
 
 - Secciones intermedias de estas páginas (comparador Club Hogar, features

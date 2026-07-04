@@ -3,7 +3,7 @@
 import { PremiumPhotoHero } from "@/components/PremiumPhotoHero";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
-import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
+import { DashboardMetricCard } from "@/components/DesignSystem";
 import { HomeBusinessUseCases } from "@/components/HomeBusinessUseCases";
 import { CompanyRequestForm } from "@/components/Forms";
 import { PlanActionCard } from "@/components/PlanActionCard";
@@ -13,6 +13,16 @@ import { companyDashboard, companyUseCases } from "@/data/mock";
 import { subscriptionPlans } from "@/data/marketplace";
 import { empresasContent } from "@/data/i18nContent/empresasContent";
 import { useI18n } from "@/lib/i18n/I18nProvider";
+
+/* Fotos decorativas por feature (mismo orden que c.features en i18n). */
+const featureImages = [
+  "/assets/oficios/equipo/equipo-mujeres-planos-01.jpg",
+  "/assets/oficios/industria/industria-tablero-01.jpg",
+  "/assets/oficios/industria/industria-mantencion-01.jpg",
+  "/assets/oficios/electricidad/electricidad-medidor-01.jpg",
+  "/assets/oficios/equipo/equipo-mujeres-obra-01.jpg",
+  "/assets/oficios/industria/industria-planta-01.jpg",
+];
 
 export function EmpresasContent() {
   const { locale, t } = useI18n();
@@ -148,11 +158,23 @@ export function EmpresasContent() {
 
       <Reveal delay={210}>
         <section className="grid gap-5 md:grid-cols-3">
-          {c.features.map((feature) => (
-            <MarketplaceCard key={feature.title}>
-              <h3 className="text-xl font-black">{feature.title}</h3>
-              <p className="mt-3 text-sm font-semibold leading-6 text-muted">{feature.text}</p>
-            </MarketplaceCard>
+          {c.features.map((feature, index) => (
+            <article key={feature.title} className="group overflow-hidden rounded-[28px] border border-line bg-white shadow-soft transition duration-200 hover:-translate-y-1 hover:shadow-card">
+              <div className="relative h-28 overflow-hidden">
+                <img
+                  src={featureImages[index % featureImages.length]}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+                />
+                <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/50 to-ink/5" />
+              </div>
+              <div className="p-6">
+                <h3 className="text-xl font-black">{feature.title}</h3>
+                <p className="mt-3 text-sm font-semibold leading-6 text-muted">{feature.text}</p>
+              </div>
+            </article>
           ))}
         </section>
       </Reveal>
