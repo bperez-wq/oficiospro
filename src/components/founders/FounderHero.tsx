@@ -21,7 +21,7 @@ export function FounderHero({
             Conviertete en especialista fundador de OficiosPro
           </h1>
           <p className="mt-5 max-w-xl text-lg font-semibold leading-8 text-white/80">
-            Crea un perfil profesional, gana visibilidad local y comienza a construir reputacion verificada desde el primer grupo de especialistas.
+            Construye tu Pasaporte Profesional OficiosPro: un perfil que muestra tu oficio, tu zona y tu trabajo bien hecho, con reputacion verificada desde el primer grupo de especialistas.
           </p>
           <p className="mt-3 max-w-xl text-sm font-black text-sun">
             Toma 3 minutos. Revision manual en 48 h. No necesitas pagar para postular.
@@ -39,11 +39,11 @@ export function FounderHero({
             <AcquisitionTrackingLink
               href={registerHref}
               className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20"
-              sourceButton="Hero - Crear perfil sin costo"
+              sourceButton="Hero - Construir mi perfil sin costo"
               sourceComponent="FounderHero"
               context={context}
             >
-              Crear perfil sin costo
+              Construir mi perfil sin costo
             </AcquisitionTrackingLink>
             <a href="#proceso" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
               Ver como funciona

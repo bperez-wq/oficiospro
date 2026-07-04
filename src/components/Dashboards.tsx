@@ -7,6 +7,7 @@ import { ConversionButton } from "@/components/ConversionModal";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 import { DashboardMetricCard, EmptyState } from "@/components/DesignSystem";
 import { FormalizationAndPayoutPanel } from "@/components/FormalizationAndPayoutPanel";
+import { SpecialistPassportChecklist } from "@/components/SpecialistPassportChecklist";
 import { SpecialistProfileImage } from "@/components/SpecialistProfileImage";
 import { companyDashboard, specialists, type Booking, type CreditTransaction, type Specialist } from "@/data/mock";
 import { additionalTypeLabels, quoteStatusLabels, type AdditionalRequest, type QuoteAgreement } from "@/data/flexiblePricing";
@@ -419,12 +420,22 @@ export function SpecialistDashboard() {
   if (authorized === false) return <RoleGuardMessage />;
   if (authorized === null) return <RoleGuardMessage checking />;
   if (!specialist) {
+    // Sin datos demo igual mostramos el Pasaporte: un postulante real con su
+    // postulación guardada en este dispositivo ve su avance y qué falta.
     return (
-      <EmptyState
-        eyebrow={t("dashboard.specialist.noProfileEyebrow")}
-        title={t("dashboard.specialist.noProfileTitle")}
-        text={t("dashboard.specialist.noProfileText")}
-      />
+      <div className="grid gap-6">
+        {submittedNotice ? (
+          <div className="rounded-3xl border border-brand/20 bg-brand-soft p-4 font-black text-brand-dark">
+            {t("dashboard.specialist.profileSubmitted")}
+          </div>
+        ) : null}
+        <SpecialistPassportChecklist />
+        <EmptyState
+          eyebrow={t("dashboard.specialist.noProfileEyebrow")}
+          title={t("dashboard.specialist.noProfileTitle")}
+          text={t("dashboard.specialist.noProfileText")}
+        />
+      </div>
     );
   }
 
@@ -490,6 +501,7 @@ export function SpecialistDashboard() {
           {t("dashboard.specialist.purposeText")}
         </p>
       </section>
+      <SpecialistPassportChecklist />
       <section className="grid gap-5 lg:grid-cols-[1fr_360px]">
         <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
           <SpecialistProfileImage

@@ -345,14 +345,14 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
         <article className="panel border-brand/15 bg-brand-soft">
           <h3 className="text-xl font-black text-brand-dark">¿Tienes un oficio?</h3>
           <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark/80">
-            Crea tu perfil profesional como este: sin costo inicial, con revisión humana y reputación acumulable.
+            Este perfil es un Pasaporte Profesional OficiosPro. Construye el tuyo: tu trabajo merece una vitrina profesional, sin costo inicial y con revisión humana.
           </p>
           <Link
             className="btn-secondary mt-4 w-full"
             href="/registro-especialista?source=specialist_profile&intent=offer_services"
             data-event="click_offer_services"
           >
-            Crear mi perfil
+            Construir mi perfil
           </Link>
         </article>
       </aside>

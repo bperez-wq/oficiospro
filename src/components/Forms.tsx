@@ -1620,7 +1620,7 @@ export function SpecialistRegisterForm() {
   }
 
   return (
-    <FormShell title="Crear perfil fundador" text="Completa lo esencial para que OficiosPro revise tu oficio, servicios y zona. Podras sumar mas antecedentes cuando el equipo te contacte.">
+    <FormShell title="Construye tu Pasaporte Profesional" text="No estás llenando un formulario: estás armando tu respaldo profesional. Oficio, zona, servicios y reputación en un solo lugar; el equipo OficiosPro lo revisa contigo.">
       <form className="grid gap-6" onSubmit={submit}>
         <label className="hidden" aria-hidden="true">
           Sitio web
@@ -1677,9 +1677,9 @@ export function SpecialistRegisterForm() {
           ))}
         </div>
         <div className="rounded-3xl border border-brand/15 bg-brand-soft p-5">
-          <p className="text-sm font-black uppercase text-brand">Especialista fundador</p>
+          <p className="text-sm font-black uppercase text-brand">Tu Pasaporte Profesional OficiosPro</p>
           <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark">
-            Cada trabajo bien hecho construye tu reputacion. En esta etapa piloto revisamos perfiles manualmente antes de publicarlos y te contactaremos si falta algun antecedente.
+            Tu oficio merece verse bien. Cada dato que agregas suma confianza y cada trabajo bien hecho construye tu reputacion. En esta etapa piloto revisamos perfiles manualmente antes de publicarlos y te contactaremos si falta algun antecedente.
           </p>
         </div>
         {acquisition.source && acquisition.source !== "direct" ? (
@@ -1774,7 +1774,7 @@ export function SpecialistRegisterForm() {
             <div>
               <p className="eyebrow">Servicios ofrecidos</p>
               <h3 className="text-2xl font-black">Servicios y tarifa esperada</h3>
-              <p className="mt-2 text-sm font-bold text-muted">Indica lo que esperas recibir en CLP. OficiosPro revisara la tarifa y definira los créditos finales para el cliente.</p>
+              <p className="mt-2 text-sm font-bold text-muted">Tus servicios permiten que te encuentren mejor. Indica lo que esperas recibir en CLP: OficiosPro revisara la tarifa y definira los créditos finales para el cliente.</p>
             </div>
             <button className="btn-secondary" type="button" onClick={() => setServices((current) => [...current, createEmptyService()])}>
               Agregar servicio
@@ -1825,7 +1825,7 @@ export function SpecialistRegisterForm() {
             <p className="eyebrow">Formalizacion · opcional</p>
             <h3 className="text-2xl font-black">De boletas y facturas nos preocupamos después, juntos</h3>
             <p className="mt-2 text-sm font-bold text-muted">
-              No necesitas resolver nada de impuestos para postular. Puedes saltarte este paso: el equipo OficiosPro te guía con boletas, facturas y datos tributarios antes de activar pagos. Si ya lo tienes claro, déjalo declarado abajo.
+              No necesitas resolver nada de impuestos para postular. Puedes saltarte este paso: el equipo OficiosPro te guía con boletas, facturas y datos tributarios antes de activar pagos. Ordenar esto a tiempo puede ayudarte a cobrar mejor y acceder a mejores oportunidades. Si ya lo tienes claro, déjalo declarado abajo.
             </p>
           </div>
           <label className="field">
@@ -1883,7 +1883,7 @@ export function SpecialistRegisterForm() {
           <div>
             <p className="eyebrow">Referencias laborales</p>
             <h3 className="text-2xl font-black">Referencias opcionales para acelerar la revision</h3>
-            <p className="mt-2 text-sm font-bold text-muted">Completa lo que tengas disponible. Puedes enviarlas vacias y OficiosPro podra pedir antecedentes adicionales antes de publicar.</p>
+            <p className="mt-2 text-sm font-bold text-muted">Las referencias respaldan tu experiencia frente a clientes que aún no te conocen. Completa lo que tengas disponible; puedes enviarlas vacias y OficiosPro podra pedir antecedentes adicionales antes de publicar.</p>
           </div>
           <div className="grid gap-4">
             {references.map((reference, index) => (
@@ -2026,7 +2026,7 @@ export function SpecialistRegisterForm() {
                   <path d="M20 6 9 17l-5-5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
               </span>
-              <h3 className="mt-3 text-2xl font-black text-ink">🎉 ¡Tu perfil quedó increíble!</h3>
+              <h3 className="mt-3 text-2xl font-black text-ink">🎉 ¡Tu Pasaporte Profesional quedó en marcha!</h3>
               <p className="mx-auto mt-1 inline-flex items-center gap-2 rounded-full bg-white px-3 py-1 text-sm font-black text-brand-dark shadow-soft">
                 🥇 Desbloqueaste el Badge Fundador
               </p>

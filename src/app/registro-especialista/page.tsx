@@ -32,7 +32,7 @@ export default function SpecialistRegisterPage() {
         <section className="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
         <MarketplaceCard hover={false}>
           <p className="eyebrow">Por que postular</p>
-          <h2 className="text-3xl font-black text-ink">Un perfil profesional para que te encuentren mejor.</h2>
+          <h2 className="text-3xl font-black text-ink">Tu Pasaporte Profesional: para que te encuentren y te prefieran.</h2>
           <div className="mt-5 grid gap-3">
             {[
               "Aparece por oficio, comuna y especialidades cuando tu perfil sea aprobado.",

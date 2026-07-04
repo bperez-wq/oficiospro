@@ -141,7 +141,7 @@ export default function FounderSpecialistsPage() {
       <Reveal delay={160}>
       <section className="rounded-[32px] border border-line bg-white p-7 shadow-soft md:p-8">
         <p className="eyebrow">Hacia dónde va OficiosPro</p>
-        <h2 className="text-3xl font-black leading-tight text-ink">Tu perfil es el primer paso de un respaldo profesional mayor.</h2>
+        <h2 className="text-3xl font-black leading-tight text-ink">Tu Pasaporte Profesional es el primer paso de un respaldo mayor.</h2>
         <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-muted">
           Construimos por etapas y activamos cada beneficio solo cuando podemos operarlo de verdad. Sin fechas comprometidas y sin promesas de ingresos.
         </p>
