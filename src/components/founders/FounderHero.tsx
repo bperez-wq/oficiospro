@@ -14,8 +14,9 @@ export function FounderHero({
     <section className="enterprise-shell relative overflow-hidden p-7 md:p-12">
       <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
         <div>
-          <p className="eyebrow-pill border-white/20 bg-white/10 text-white">
-            Programa fundador · cupos limitados
+          <p className="eyebrow-pill inline-flex items-center gap-2 border-white/20 bg-white/10 text-white">
+            <span aria-hidden className="pulse-dot text-sun" />
+            Programa fundador · red en formación
           </p>
           <h1 className="max-w-2xl text-4xl font-black leading-[1.04] tracking-tight md:text-6xl">
             Conviertete en especialista fundador de OficiosPro

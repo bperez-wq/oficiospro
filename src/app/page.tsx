@@ -26,6 +26,8 @@ import { LocalSeoPanel, NationalCoveragePanel, SpecialtyCatalogPreview, Validati
 import { PlanActionCard } from "@/components/PlanActionCard";
 import { PostulationToast } from "@/components/PostulationToast";
 import { SpecialistCard } from "@/components/SpecialistCard";
+import { SpecialistHeartSection } from "@/components/SpecialistHeartSection";
+import { getTradeCoverageLabel, isTradeForming, tradeCategories } from "@/data/tradeTaxonomy";
 import { founderRegistrationHref } from "@/data/specialistAcquisition";
 import { subscriptionPlans } from "@/data/marketplace";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
@@ -131,21 +133,13 @@ export default function HomePage() {
 
       <Reveal delay={0}>
       <section className="section">
-        <div className="mb-12 grid gap-6 rounded-[32px] border border-brand/15 bg-brand-soft p-6 md:grid-cols-[0.9fr_1.1fr] md:p-10">
-          <div>
-            <p className="eyebrow">Propósito OficiosPro</p>
-            <h2 className="section-title">El buen trabajo técnico merece visibilidad.</h2>
-          </div>
-          <div className="grid gap-4">
-            <p className="text-lg font-semibold leading-8 text-ink">
-              OficiosPro ordena reputación, disponibilidad y pagos protegidos para que clientes y especialistas decidan con más confianza.
-            </p>
-            <AcquisitionTrackingLink href="/especialistas-fundadores?source=home_purpose&intent=offer_services" className="btn-sun justify-self-start" eventType="click_offer_services" sourceButton="Ofrecer mis servicios proposito" context={{ source: "campana_local", campaign: "founder_specialists_home_purpose", landingPage: "/" }}>
-              Ofrecer mis servicios
-            </AcquisitionTrackingLink>
-          </div>
+        <div className="mb-12">
+          <SpecialistHeartSection />
         </div>
         <TranslatedSectionHeader sectionKey="trust" />
+        <p className="mb-6 -mt-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3.5 py-1.5 text-xs font-black text-slate-600">
+          Testimonios referenciales: ilustran el estándar de servicio que estamos construyendo en el piloto.
+        </p>
         <div className="grid gap-5 md:grid-cols-3">
           {testimonials.map((testimonial) => (
             <article key={testimonial.author} className="panel card-hover">
@@ -224,15 +218,31 @@ export default function HomePage() {
 
 function PilotLaunchStrip() {
   const founderContext = { source: "campana_local" as const, campaign: "founder_specialists_home_pilot", landingPage: "/" };
+  const formingTrades = tradeCategories.filter((category) => isTradeForming(category)).slice(0, 5);
   return (
     <section className="section-compact">
       <div className="grid gap-5 rounded-[32px] border border-brand/15 bg-white p-5 shadow-soft md:grid-cols-[1fr_1.2fr] md:p-7">
         <div>
-          <p className="eyebrow">Etapa piloto</p>
-          <h2 className="text-3xl font-black leading-tight text-ink">Estamos sumando especialistas fundadores por comuna.</h2>
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3.5 py-1.5 text-xs font-black text-emerald-800">
+            <span aria-hidden className="pulse-dot text-emerald-500" />
+            Red en formación · piloto activo
+          </span>
+          <h2 className="mt-3 text-3xl font-black leading-tight text-ink">Estamos formando la primera red de especialistas fundadores.</h2>
           <p className="mt-3 text-sm font-semibold leading-6 text-muted">
-            OficiosPro esta en apertura controlada. Si aun no hay match exacto para tu servicio o zona, puedes dejar tu solicitud y el equipo la revisara manualmente.
+            Cada perfil revisado fortalece la red. Si aun no hay match exacto para tu servicio o zona, deja tu solicitud y el equipo la revisa manualmente.
           </p>
+          {formingTrades.length ? (
+            <div className="mt-4">
+              <p className="text-xs font-black uppercase text-muted">Categorías abriéndose por comuna</p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {formingTrades.map((trade) => (
+                  <span key={trade.id} className="rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-black text-amber-800">
+                    {trade.label} · {getTradeCoverageLabel(trade)}
+                  </span>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
         <div className="grid gap-3 sm:grid-cols-3">
           {[
@@ -257,6 +267,9 @@ function PilotLaunchStrip() {
             Ver programa fundador
           </Link>
         </div>
+        <p className="text-xs font-bold text-muted md:col-span-2">
+          ¿Qué pasa después? Postulas hoy → una persona del equipo revisa en ~48 h → tu perfil se publica por comuna.
+        </p>
       </div>
     </section>
   );
@@ -271,9 +284,9 @@ function DashboardPreview() {
         <div className="flex items-center justify-between border-b border-line pb-4">
           <div>
             <p className="text-xs font-black uppercase text-muted">Dashboard empresa</p>
-            <h3 className="text-2xl font-black">Operación activa</h3>
+            <h3 className="text-2xl font-black">Así se ve tu operación</h3>
           </div>
-          <span className="chip bg-brand-soft text-brand-dark">SLA 2.4 h</span>
+          <span className="rounded-full bg-sun-soft px-3 py-1 text-[11px] font-black text-sun-dark">Ejemplo ilustrativo</span>
         </div>
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <Metric label="Créditos disponibles" value={companyDashboard.creditsAvailable.toString()} />

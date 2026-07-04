@@ -308,3 +308,34 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Indicador de actividad de red (piloto). El kill-switch global de
+   prefers-reduced-motion ya neutraliza la animación; el punto queda estático. */
+.pulse-dot {
+  position: relative;
+  display: inline-flex;
+  height: 0.5rem;
+  width: 0.5rem;
+  border-radius: 9999px;
+  background: currentColor;
+}
+
+.pulse-dot::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: currentColor;
+  animation: op-pulse 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes op-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(2.75);
+    opacity: 0;
+  }
+}
