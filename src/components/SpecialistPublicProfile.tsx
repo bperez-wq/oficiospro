@@ -14,6 +14,7 @@ import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { bookingPrimaryAction, formatDurationRange, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
+import { DEMO_PROFILE_BADGE, DEMO_PROFILE_NOTICE, isDemoSpecialist } from "@/lib/specialists/demoProfile";
 import { getSpecialistBySlugOrId, seedMockState } from "@/lib/storage";
 import { getReviewStats, getServiceCreditPair, getSpecialistLevel, getSpecialistReviews, getTrustBadges } from "@/lib/trust";
 
@@ -101,6 +102,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
   const level = useMemo(() => getSpecialistLevel(specialist), [specialist]);
   const trustBadges = useMemo(() => getTrustBadges(specialist), [specialist]);
   const creditPair = useMemo(() => getServiceCreditPair(primaryService, specialist.credits), [primaryService, specialist.credits]);
+  const isDemo = useMemo(() => isDemoSpecialist(specialist), [specialist]);
   const relatedHelp = useMemo(
     () => Array.from(new Set([...(specialist.servicesOffered ?? []), ...(specialist.specialties ?? []), ...services.map((service) => service.name), ...services.map((service) => service.specialty)].filter(Boolean))),
     [services, specialist.servicesOffered, specialist.specialties],
@@ -114,6 +116,12 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
 
   return (
     <>
+    {isDemo ? (
+      <section className="mb-6 rounded-[24px] border border-amber-200 bg-amber-50 p-5">
+        <p className="text-sm font-black text-amber-900">{DEMO_PROFILE_BADGE}</p>
+        <p className="mt-1 text-sm font-semibold leading-6 text-amber-900">{DEMO_PROFILE_NOTICE}</p>
+      </section>
+    ) : null}
     <section className="grid gap-6 lg:grid-cols-[1fr_390px]">
       <article className="overflow-hidden rounded-[30px] border border-line bg-white shadow-soft">
         <div className="relative h-[460px]">
@@ -138,7 +146,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
                   <p className="font-bold text-white/80">{specialist.commune ?? specialist.zone}</p>
                 </div>
               </div>
-              <span className="rounded-full bg-white px-4 py-2 text-sm font-black text-brand-dark">{availabilityLabels[specialist.availability]}</span>
+              <span className="rounded-full bg-white px-4 py-2 text-sm font-black text-brand-dark">{isDemo ? DEMO_PROFILE_BADGE : availabilityLabels[specialist.availability]}</span>
             </div>
           </div>
         </div>
@@ -153,7 +161,11 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
             <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
               <div>
                 <p className="eyebrow">Reputacion destacada</p>
-                <h2 className="text-2xl font-black">Nivel {level} con {reviewStats.verifiedTotal} opiniones verificadas</h2>
+                <h2 className="text-2xl font-black">
+                  {reviewStats.verifiedTotal > 0
+                    ? `Nivel ${level} con ${reviewStats.verifiedTotal} opiniones verificadas`
+                    : `Nivel ${level} · reputación en construcción`}
+                </h2>
                 <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark">
                   Ranking basado en trabajos completados, respuesta, referencias y calificaciones de clientes.
                 </p>
@@ -165,9 +177,12 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
               </div>
               <div className="grid min-w-64 gap-2 rounded-2xl bg-white p-4">
                 <ReputationMetric label="General" value={`${reviewStats.average || specialist.rating.toFixed(1)}/5`} />
-                <ReputationMetric label="Puntualidad" value={`${reviewStats.punctuality || specialist.rating.toFixed(1)}/5`} />
-                <ReputationMetric label="Calidad" value={`${reviewStats.quality || specialist.rating.toFixed(1)}/5`} />
-                <ReputationMetric label="Comunicacion" value={`${reviewStats.communication || specialist.rating.toFixed(1)}/5`} />
+                {reviewStats.punctuality > 0 ? <ReputationMetric label="Puntualidad" value={`${reviewStats.punctuality}/5`} /> : null}
+                {reviewStats.quality > 0 ? <ReputationMetric label="Calidad" value={`${reviewStats.quality}/5`} /> : null}
+                {reviewStats.communication > 0 ? <ReputationMetric label="Comunicacion" value={`${reviewStats.communication}/5`} /> : null}
+                {reviewStats.punctuality > 0 || reviewStats.quality > 0 || reviewStats.communication > 0 ? null : (
+                  <p className="text-xs font-bold leading-5 text-muted">Aún no hay evaluaciones detalladas por dimensión.</p>
+                )}
               </div>
             </div>
           </section>
@@ -199,16 +214,18 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
               ))}
             </div>
           </section>
-          <section>
-            <h2 className="text-2xl font-black">Referencias verificadas</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3">
-              {Array.from({ length: Math.max(1, specialist.validation?.references ?? 0) }).slice(0, 3).map((_, index) => (
-                <div key={index} className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
-                  Referencia verificada {index + 1}
-                </div>
-              ))}
-            </div>
-          </section>
+          {!isDemo && (specialist.validation?.references ?? 0) > 0 ? (
+            <section>
+              <h2 className="text-2xl font-black">Referencias verificadas</h2>
+              <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                {Array.from({ length: specialist.validation?.references ?? 0 }).slice(0, 3).map((_, index) => (
+                  <div key={index} className="rounded-2xl border border-line bg-slate-50 p-4 text-sm font-bold text-muted">
+                    Referencia verificada {index + 1}
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
           <section>
             <h2 className="text-2xl font-black">Historial de trabajos</h2>
             <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -292,6 +309,7 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
           <ConversionButton type="reserva_especialista" sourceButton="Consultar disponibilidad especialista" specialist={specialist} className="btn-secondary mt-3 w-full">
             Consultar disponibilidad
           </ConversionButton>
+          <ShareProfileButton specialist={specialist} />
         </article>
         <article className="panel">
           <h3 className="text-xl font-black">Cobertura</h3>
@@ -303,10 +321,40 @@ export function SpecialistProfileView({ specialist }: { specialist: Specialist }
         <article className="panel">
           <h3 className="text-xl font-black">Certificaciones</h3>
           <div className="mt-4 flex flex-wrap gap-2">
-            {(specialist.certifications.length ? specialist.certifications : ["Validación OficiosPro"]).map((item) => <span key={item} className="chip bg-brand-soft text-brand-dark">{item}</span>)}
+            {specialist.certifications.length ? (
+              specialist.certifications.map((item) => <span key={item} className="chip bg-brand-soft text-brand-dark">{item}</span>)
+            ) : (
+              <p className="text-sm font-bold text-muted">Aún no hay certificaciones cargadas para este perfil.</p>
+            )}
           </div>
         </article>
+        <article className="panel">
+          <h3 className="text-xl font-black">¿Qué significa verificado?</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-muted">Antes de publicar un perfil, el equipo OficiosPro revisa:</p>
+          <ul className="mt-3 grid gap-2 text-sm font-bold text-muted">
+            <li className="rounded-2xl bg-slate-50 p-3">Identidad y datos de contacto del especialista.</li>
+            <li className="rounded-2xl bg-slate-50 p-3">Oficio, servicios y cobertura declarada.</li>
+            <li className="rounded-2xl bg-slate-50 p-3">Referencias y certificaciones cuando aplican al oficio.</li>
+          </ul>
+          <p className="mt-3 text-xs font-semibold leading-5 text-muted">
+            La verificación es progresiva: cada trabajo cerrado y evaluado suma reputación real.
+            {isDemo ? " Este perfil es referencial y no representa un especialista verificado." : ""}
+          </p>
+        </article>
         <SpecialistProfileAvailability specialist={specialist} />
+        <article className="panel border-brand/15 bg-brand-soft">
+          <h3 className="text-xl font-black text-brand-dark">¿Tienes un oficio?</h3>
+          <p className="mt-2 text-sm font-semibold leading-6 text-brand-dark/80">
+            Este perfil es un Pasaporte Profesional OficiosPro. Construye el tuyo: tu trabajo merece una vitrina profesional, sin costo inicial y con revisión humana.
+          </p>
+          <Link
+            className="btn-secondary mt-4 w-full"
+            href="/registro-especialista?source=specialist_profile&intent=offer_services"
+            data-event="click_offer_services"
+          >
+            Construir mi perfil
+          </Link>
+        </article>
       </aside>
     </section>
     <BookingDrawer
@@ -356,6 +404,35 @@ export function ProfileLoadingSkeleton() {
         <div className="h-36 animate-pulse rounded-[28px] bg-slate-100" />
       </aside>
     </section>
+  );
+}
+
+function ShareProfileButton({ specialist }: { specialist: Specialist }) {
+  const [copied, setCopied] = useState(false);
+
+  async function share() {
+    const url = `${window.location.origin}/especialistas/perfil?id=${encodeURIComponent(specialist.slug ?? specialist.id)}`;
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: `Perfil OficiosPro de ${specialist.name}`, text: `${specialist.name} · ${specialist.specialty} en OficiosPro`, url });
+        return;
+      } catch {
+        /* usuario canceló el share nativo: cae al portapapeles */
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt("Copia el enlace de este perfil:", url);
+    }
+  }
+
+  return (
+    <button className="btn-secondary mt-3 w-full" type="button" data-event="profile_share" onClick={share}>
+      {copied ? "Enlace copiado ✓" : "Compartir este perfil"}
+    </button>
   );
 }
 

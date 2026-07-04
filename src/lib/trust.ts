@@ -2,6 +2,7 @@ import type { FlexibleService } from "@/data/flexiblePricing";
 import type { Specialist } from "@/data/mock";
 import { DEFAULT_SUBSCRIBER_DISCOUNT_CREDITS, creditsForInitialHold } from "@/lib/flexiblePricing";
 import { specialistRanks } from "@/data/marketplace";
+import { isDemoSpecialist } from "@/lib/specialists/demoProfile";
 
 export type SpecialistLevel = "Fundador" | "Bronce" | "Plata" | "Oro" | "Platino";
 
@@ -22,10 +23,11 @@ export type SpecialistReview = {
   specialistId: string;
   customerName: string;
   ratingGeneral: number;
-  ratingPuntualidad: number;
-  ratingCalidad: number;
-  ratingComunicacion: number;
-  ratingPrecio: number;
+  // Sub-ratings solo existen si la fuente los declaró; nunca se derivan.
+  ratingPuntualidad?: number;
+  ratingCalidad?: number;
+  ratingComunicacion?: number;
+  ratingPrecio?: number;
   comment: string;
   serviceName: string;
   comuna: string;
@@ -61,10 +63,13 @@ export function getSpecialistLevel(specialist: Specialist): SpecialistLevel {
 }
 
 export function getTrustBadges(specialist: Specialist) {
+  // Los perfiles referenciales (catálogo demo) no muestran badges que afirman
+  // verificación documental: esa promesa aplica solo a especialistas reales.
+  const demo = isDemoSpecialist(specialist);
   return [
-    specialist.verified ? "Identidad verificada" : null,
-    (specialist.validation?.references ?? 0) > 0 ? "Referencias revisadas" : null,
-    specialist.certifications.length || specialist.validation?.certifications === "approved" ? "Certificación cargada" : null,
+    !demo && specialist.verified ? "Identidad verificada" : null,
+    !demo && (specialist.validation?.references ?? 0) > 0 ? "Referencias revisadas" : null,
+    !demo && (specialist.certifications.length || specialist.validation?.certifications === "approved") ? "Certificación cargada" : null,
     responseMinutes(specialist.responseTime) <= 60 ? "Respuesta rapida" : null,
     specialist.top || specialist.recommendation >= 95 ? "Top especialista" : null,
   ].filter(Boolean) as string[];
@@ -90,17 +95,19 @@ export function getSpecialistReviews(specialist: Specialist): SpecialistReview[]
       specialistId: review.specialistId ?? specialist.id,
       customerName: review.customerName ?? review.author,
       ratingGeneral: rating,
-      ratingPuntualidad: clampRating(review.ratingPuntualidad ?? rating - (index % 3 === 0 ? 0.2 : 0)),
-      ratingCalidad: clampRating(review.ratingCalidad ?? rating + (index % 2 === 0 ? 0.1 : 0)),
-      ratingComunicacion: clampRating(review.ratingComunicacion ?? rating - (index % 4 === 0 ? 0.1 : 0)),
-      ratingPrecio: clampRating(review.ratingPrecio ?? rating - (index % 5 === 0 ? 0.2 : 0)),
+      // Señales de confianza solo desde datos explícitos: si la fuente no
+      // declara el sub-rating o la verificación, no se fabrica ni se asume.
+      ratingPuntualidad: review.ratingPuntualidad != null ? clampRating(review.ratingPuntualidad) : undefined,
+      ratingCalidad: review.ratingCalidad != null ? clampRating(review.ratingCalidad) : undefined,
+      ratingComunicacion: review.ratingComunicacion != null ? clampRating(review.ratingComunicacion) : undefined,
+      ratingPrecio: review.ratingPrecio != null ? clampRating(review.ratingPrecio) : undefined,
       comment: review.comment ?? review.text,
       serviceName: review.serviceName ?? fallbackServices[index % fallbackServices.length] ?? specialist.specialty,
       comuna: review.comuna ?? specialist.commune ?? specialist.zone,
       date: review.date,
-      verifiedService: review.verifiedService ?? index % 3 !== 2,
+      verifiedService: review.verifiedService === true,
       hidden: review.hidden,
-      reviewedByAdmin: review.reviewedByAdmin ?? index % 4 !== 0,
+      reviewedByAdmin: review.reviewedByAdmin === true,
     };
   });
 }
@@ -128,24 +135,49 @@ export function getReviewStats(reviews: SpecialistReview[]): ReviewStats {
       const bucket = Math.max(1, Math.min(5, Math.round(review.ratingGeneral))) as 1 | 2 | 3 | 4 | 5;
       acc.distribution[bucket] += 1;
       acc.general += review.ratingGeneral;
-      acc.punctuality += review.ratingPuntualidad;
-      acc.quality += review.ratingCalidad;
-      acc.communication += review.ratingComunicacion;
-      acc.price += review.ratingPrecio;
+      if (review.ratingPuntualidad != null) {
+        acc.punctuality += review.ratingPuntualidad;
+        acc.punctualityCount += 1;
+      }
+      if (review.ratingCalidad != null) {
+        acc.quality += review.ratingCalidad;
+        acc.qualityCount += 1;
+      }
+      if (review.ratingComunicacion != null) {
+        acc.communication += review.ratingComunicacion;
+        acc.communicationCount += 1;
+      }
+      if (review.ratingPrecio != null) {
+        acc.price += review.ratingPrecio;
+        acc.priceCount += 1;
+      }
       return acc;
     },
-    { distribution: { ...emptyDistribution }, general: 0, punctuality: 0, quality: 0, communication: 0, price: 0 },
+    {
+      distribution: { ...emptyDistribution },
+      general: 0,
+      punctuality: 0,
+      punctualityCount: 0,
+      quality: 0,
+      qualityCount: 0,
+      communication: 0,
+      communicationCount: 0,
+      price: 0,
+      priceCount: 0,
+    },
   );
 
+  // Promedios por dimensión solo sobre reseñas que traen esa dimensión; 0
+  // significa "sin datos", y la UI no debe mostrar la fila en ese caso.
   return {
     average: roundOne(sums.general / total),
     total,
     verifiedTotal: visibleReviews.filter((review) => review.verifiedService).length,
     distribution: sums.distribution,
-    punctuality: roundOne(sums.punctuality / total),
-    quality: roundOne(sums.quality / total),
-    communication: roundOne(sums.communication / total),
-    price: roundOne(sums.price / total),
+    punctuality: sums.punctualityCount ? roundOne(sums.punctuality / sums.punctualityCount) : 0,
+    quality: sums.qualityCount ? roundOne(sums.quality / sums.qualityCount) : 0,
+    communication: sums.communicationCount ? roundOne(sums.communication / sums.communicationCount) : 0,
+    price: sums.priceCount ? roundOne(sums.price / sums.priceCount) : 0,
   };
 }
 

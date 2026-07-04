@@ -138,6 +138,47 @@ export default function FounderSpecialistsPage() {
         <AnswerBlockFromTopic key={topic.id} topic={topic} ctaLabel="Ver programa fundador" />
       ))}
 
+      <Reveal delay={160}>
+      <section className="rounded-[32px] border border-line bg-white p-7 shadow-soft md:p-8">
+        <p className="eyebrow">Hacia dónde va OficiosPro</p>
+        <h2 className="text-3xl font-black leading-tight text-ink">Tu Pasaporte Profesional es el primer paso de un respaldo mayor.</h2>
+        <p className="mt-3 max-w-3xl text-sm font-bold leading-6 text-muted">
+          Construimos por etapas y activamos cada beneficio solo cuando podemos operarlo de verdad. Sin fechas comprometidas y sin promesas de ingresos.
+        </p>
+        <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <article className="rounded-2xl border border-emerald-100 bg-emerald-50 p-5">
+            <p className="text-xs font-black uppercase text-emerald-800">Disponible hoy</p>
+            <ul className="mt-3 grid gap-2 text-sm font-bold text-emerald-950">
+              <li>Perfil profesional por comuna y oficio.</li>
+              <li>Revisión humana antes de publicar.</li>
+              <li>Solicitudes con seguimiento del equipo.</li>
+              <li>Reputación acumulable por trabajo.</li>
+            </ul>
+          </article>
+          <article className="rounded-2xl border border-brand/15 bg-brand-soft p-5">
+            <p className="text-xs font-black uppercase text-brand-dark">En construcción</p>
+            <ul className="mt-3 grid gap-2 text-sm font-bold text-brand-dark">
+              <li>Evidencia por trabajo (antes y después).</li>
+              <li>Pago protegido de punta a punta.</li>
+              <li>Carpeta documental privada y segura.</li>
+              <li>Formalización asistida paso a paso.</li>
+            </ul>
+          </article>
+          <article className="rounded-2xl border border-line bg-slate-50 p-5">
+            <p className="text-xs font-black uppercase text-muted">Más adelante</p>
+            <ul className="mt-3 grid gap-2 text-sm font-bold text-muted">
+              <li>Capacitaciones y certificaciones por oficio.</li>
+              <li>Beneficios y convenios, solo con partners reales.</li>
+              <li>Acceso a mejores oportunidades según tu historial.</li>
+            </ul>
+          </article>
+        </div>
+        <p className="mt-4 text-xs font-semibold leading-5 text-muted">
+          Nada de esta hoja de ruta es una promesa contractual: cada etapa se activa cuando la operación y los acuerdos existen de verdad.
+        </p>
+      </section>
+      </Reveal>
+
       <FounderFinalCta registerHref={registerHref} referralHref={referralHref} context={founderContext} />
 
       <footer className="grid gap-3 border-t border-line pt-6">

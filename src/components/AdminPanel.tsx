@@ -1736,10 +1736,10 @@ function ReviewsAdminPanel({
             </div>
             <p className="mt-3 text-sm font-semibold leading-6 text-muted">{review.comment}</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-4">
-              <MiniMetric label="Puntualidad" value={`${review.ratingPuntualidad}/5`} />
-              <MiniMetric label="Calidad" value={`${review.ratingCalidad}/5`} />
-              <MiniMetric label="Comunicacion" value={`${review.ratingComunicacion}/5`} />
-              <MiniMetric label="Precio" value={`${review.ratingPrecio}/5`} />
+              <MiniMetric label="Puntualidad" value={review.ratingPuntualidad != null ? `${review.ratingPuntualidad}/5` : "Sin dato"} />
+              <MiniMetric label="Calidad" value={review.ratingCalidad != null ? `${review.ratingCalidad}/5` : "Sin dato"} />
+              <MiniMetric label="Comunicacion" value={review.ratingComunicacion != null ? `${review.ratingComunicacion}/5` : "Sin dato"} />
+              <MiniMetric label="Precio" value={review.ratingPrecio != null ? `${review.ratingPrecio}/5` : "Sin dato"} />
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <button className="btn-secondary" type="button" onClick={() => onReviewed(review.id)}>

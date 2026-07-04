@@ -31,10 +31,12 @@ export const weekdayLabels: Record<Weekday, string> = {
 
 export const weekdayOrder: Weekday[] = [1, 2, 3, 4, 5, 6, 0];
 
+/* Los horarios provienen de agendas referenciales o declaradas por el
+ * especialista, sin confirmación en tiempo real: el copy no promete "ahora". */
 export const statusLabels: Record<AvailabilityStatus, string> = {
-  available_now: "Disponible ahora",
-  available_today: "Disponible hoy",
-  next_available: "Próximo horario",
+  available_now: "Agenda abierta hoy · por confirmar",
+  available_today: "Horarios hoy · por confirmar",
+  next_available: "Próximo horario referencial",
   limited: "Disponibilidad limitada",
   unavailable: "Sin horarios visibles",
 };

@@ -36,6 +36,7 @@ import {
 } from "@/lib/catalog";
 import { submitConversionEvent } from "@/lib/leadClient";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
+import { isDemoSpecialist } from "@/lib/specialists/demoProfile";
 import { getSpecialistLevel, recommendationScore } from "@/lib/trust";
 import {
   categoryRoutes,
@@ -51,9 +52,9 @@ import {
 
 const availabilityOptions = [
   { value: "all", label: "Cualquier horario" },
-  { value: "now", label: "Disponible ahora" },
-  { value: "today", label: "Disponible hoy" },
-  { value: "tomorrow", label: "Disponible mañana" },
+  { value: "now", label: "Prioridad inmediata (por confirmar)" },
+  { value: "today", label: "Para hoy (por confirmar)" },
+  { value: "tomorrow", label: "Para mañana (por confirmar)" },
 ];
 
 const sortOptions = [
@@ -550,7 +551,7 @@ export function SpecialistsExplorer() {
               <div aria-hidden className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/30 to-transparent" />
               <span className="absolute bottom-3 left-4 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-3 py-1.5 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
                 <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-brand" />
-                Especialistas verificados en tu búsqueda
+                {visible.some((item) => !isDemoSpecialist(item)) ? "Especialistas verificados en tu búsqueda" : "Perfiles referenciales en tu búsqueda"}
               </span>
             </div>
           ) : null}
@@ -575,10 +576,24 @@ export function SpecialistsExplorer() {
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-3">
-            <DashboardMetricCard label="Promedio rating" value={`${resultMetrics.averageRating}/5`} detail="Basado en resultados visibles" />
+            <DashboardMetricCard label="Promedio rating" value={`${resultMetrics.averageRating}/5`} detail="Referencial · según perfiles visibles" />
             <DashboardMetricCard label="Nivel Oro/Platino" value={resultMetrics.premium.toString()} detail="Perfiles con mayor reputacion" tone="brand" />
-            <DashboardMetricCard label="Respuesta rapida" value={resultMetrics.fast.toString()} detail="Especialistas con respuesta menor a 1 h" />
+            <DashboardMetricCard label="Respuesta rapida" value={resultMetrics.fast.toString()} detail="Respuesta declarada menor a 1 h" />
           </div>
+          {visible.length > 0 && visible.every((item) => isDemoSpecialist(item)) ? (
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4">
+              <p className="max-w-2xl text-sm font-bold leading-6 text-amber-900">
+                Estás viendo perfiles referenciales mientras publicamos a los primeros especialistas fundadores por comuna. Deja tu solicitud igual: el equipo la gestiona con la red real.
+              </p>
+              <Link
+                className="btn-secondary px-4 py-2 text-sm"
+                href="/registro-especialista?source=specialists_explorer&intent=offer_services"
+                data-event="click_offer_services"
+              >
+                ¿Tienes un oficio? Postula
+              </Link>
+            </div>
+          ) : null}
           <div className="flex flex-wrap gap-2">
             {["Perfiles revisados antes de publicarse", "Pago protegido al finalizar", "Red en crecimiento por comuna"].map((item) => (
               <span key={item} className="inline-flex items-center gap-1.5 rounded-full border border-line bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
@@ -610,7 +625,7 @@ export function SpecialistsExplorer() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm font-bold text-muted">Explora todos los especialistas verificados disponibles en OficiosPro.</p>
+              <p className="text-sm font-bold text-muted">Explora la red OficiosPro: perfiles revisados antes de publicarse y referenciales mientras crece la cobertura.</p>
             )}
           </div>
           {suggestedChips.length ? (

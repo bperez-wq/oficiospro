@@ -6,6 +6,7 @@ import { availabilityLabels, type Specialist } from "@/data/mock";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
+import { DEMO_PROFILE_BADGE, isDemoSpecialist } from "@/lib/specialists/demoProfile";
 import { getSpecialistLevel, type SpecialistLevel } from "@/lib/trust";
 
 const defaultSourceSection = "featured_specialists_strip";
@@ -18,9 +19,11 @@ export const levelChipStyles: Record<SpecialistLevel, string> = {
   Fundador: "bg-brand-soft text-brand-dark",
 };
 
+/* Dots neutros: el enum de disponibilidad no está respaldado por agenda real,
+ * así que no se colorea como si fuera estado en vivo. */
 export const availabilityDotStyles: Record<Specialist["availability"], string> = {
-  now: "bg-emerald-500",
-  today: "bg-amber-400",
+  now: "bg-slate-300",
+  today: "bg-slate-300",
   tomorrow: "bg-slate-300",
 };
 
@@ -77,8 +80,8 @@ export function SpecialistCompactCard({
       <div className="mt-3 flex items-center justify-between gap-2 text-[11px] font-black text-muted">
         <span className="truncate">{specialist.commune ?? specialist.zone}</span>
         <span className="flex shrink-0 items-center gap-1.5 text-brand-dark">
-          <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />
-          {availabilityLabels[specialist.availability]}
+          {isDemoSpecialist(specialist) ? null : <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />}
+          {isDemoSpecialist(specialist) ? DEMO_PROFILE_BADGE : availabilityLabels[specialist.availability]}
         </span>
       </div>
 
