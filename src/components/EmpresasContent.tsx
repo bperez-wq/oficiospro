@@ -1,6 +1,6 @@
 "use client";
 
-import { TranslatedAppHero } from "@/components/TranslatedAppHero";
+import { PremiumPhotoHero } from "@/components/PremiumPhotoHero";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
 import { DashboardMetricCard, MarketplaceCard } from "@/components/DesignSystem";
@@ -15,20 +15,56 @@ import { empresasContent } from "@/data/i18nContent/empresasContent";
 import { useI18n } from "@/lib/i18n/I18nProvider";
 
 export function EmpresasContent() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const c = empresasContent[locale] ?? empresasContent.es;
   const enterprisePlans = subscriptionPlans.filter((plan) => plan.audience === "empresa");
 
   return (
     <>
-      <TranslatedAppHero pageKey="empresas">
-        <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-primary shine">
+      <PremiumPhotoHero
+        eyebrow={t("pages.empresas.eyebrow")}
+        title={t("pages.empresas.title")}
+        subtitle={t("pages.empresas.subtitle")}
+        image="/assets/oficios/industria/industria-tablero-01.jpg"
+        tone="enterprise"
+        chips={["Centros de costo por sucursal", "Historial y trazabilidad", "Facturación consolidada", "Piloto con acompañamiento"]}
+        footnote="Estamos en apertura controlada: las cuentas empresa se coordinan con contacto operacional del equipo OficiosPro."
+        aside={
+          <div className="rounded-card border border-white/10 bg-white/10 p-4 backdrop-blur">
+            <div className="rounded-[20px] bg-white p-5 text-ink">
+              <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+                <p className="text-xs font-black uppercase text-muted">{c.dashboardTitle}</p>
+                <span className="rounded-full bg-sun-soft px-3 py-1 text-[11px] font-black text-sun-dark">{c.dashboardExample}</span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-slate-50 p-3.5">
+                  <span className="text-[11px] font-black uppercase text-muted">{c.mCredits}</span>
+                  <strong className="block text-2xl font-black">{companyDashboard.creditsAvailable}</strong>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3.5">
+                  <span className="text-[11px] font-black uppercase text-muted">{c.mUsed}</span>
+                  <strong className="block text-2xl font-black">{companyDashboard.creditsUsed}</strong>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-3.5">
+                  <span className="text-[11px] font-black uppercase text-muted">{c.mBranches}</span>
+                  <strong className="block text-2xl font-black">{companyDashboard.activeBranches}</strong>
+                </div>
+                <div className="rounded-2xl bg-brand-soft p-3.5">
+                  <span className="text-[11px] font-black uppercase text-brand-dark">{c.mResponse}</span>
+                  <strong className="block text-2xl font-black text-brand-dark">{companyDashboard.responseTime}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+        }
+      >
+        <ConversionButton type="contacto_empresa" sourceButton="Solicitar cuenta empresa" className="btn-sun shine">
           {c.heroRequestAccount}
         </ConversionButton>
-        <ConversionButton type="contacto_empresa" sourceButton="Hablar con ventas empresa" className="btn-secondary">
+        <ConversionButton type="contacto_empresa" sourceButton="Hablar con ventas empresa" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
           {c.heroTalkSales}
         </ConversionButton>
-      </TranslatedAppHero>
+      </PremiumPhotoHero>
 
       <Reveal delay={0}>
         <section>

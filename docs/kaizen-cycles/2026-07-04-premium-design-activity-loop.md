@@ -106,6 +106,26 @@ consola sin errores.
 - Persisten: instrumentación de `profile_share`/`click_offer_services` por
   source, storage R2 de identidad, bloqueo de pago para perfiles referenciales.
 
+## Continuación (aprobada por Benjamin): /trabajos y /bolsa
+
+- **/trabajos/[oficio]**: badge "Perfil verificado" → "Revision humana antes de
+  publicar" (en el hero y en el beneficio editorial de `seoRoutesData.json`;
+  `soro:audit` OK). Nuevo mini-timeline "qué pasa después" en el box de
+  cobertura: postulas → revisión ~48 h → tu Pasaporte se publica por comuna.
+- **/bolsa**: línea de claridad bajo el título — "La disponibilidad se confirma
+  antes de reservar · todo cobro adicional requiere tu aprobación." (solo copy;
+  cero cambios de lógica de carrito/checkout).
+- **Club Hogar**: NO se tocó el copy de activación de planes — la expectativa
+  post-"Elegir plan" es una promesa pública ligada al flujo de pago (decisión
+  Benjamin, ver abajo).
+
+## Decisión pendiente para Benjamin
+
+- Club Hogar: definir el mensaje honesto post-"Elegir plan" (¿"confirmas el
+  pago en checkout y el equipo te acompaña en la activación"?). Hoy el CTA abre
+  captura de lead + agrega el plan a la Bolsa; conviene alinear la expectativa
+  sin tocar pagos.
+
 ## Próximos loops recomendados
 
 1. `/trabajos/[oficio]` y `/bolsa`: aplicar el mismo estándar de vida honesta y

@@ -69,7 +69,7 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
         description={page.description}
         image={page.image}
         imageAlt={page.title}
-        badges={["Perfil verificado", "Servicios multiples", "Formalizacion asistida", "Sin prometer ingresos"]}
+        badges={["Revision humana antes de publicar", "Servicios multiples", "Formalizacion asistida", "Sin prometer ingresos"]}
         primaryCta={{ href: founderRegistrationHref(acquisitionContext), label: "Ofrecer mis servicios" }}
         secondaryCta={{ href: searchHref(page.searchParams), label: "Ver especialistas publicados" }}
         closingCta={{
@@ -102,6 +102,18 @@ export default async function WorkerAcquisitionPage({ params }: PageProps) {
                   <span key={item} className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-brand-dark">
                     {item}
                   </span>
+                ))}
+              </div>
+              <div className="mt-5 grid gap-2">
+                {[
+                  ["1", "Postulas hoy con lo que tengas listo."],
+                  ["2", "Una persona del equipo revisa tu perfil en ~48 h."],
+                  ["3", "Tu Pasaporte Profesional se publica por comuna."],
+                ].map(([step, text]) => (
+                  <div key={step} className="flex items-center gap-2.5 rounded-2xl bg-white/80 px-3 py-2">
+                    <span className="grid h-6 w-6 shrink-0 place-items-center rounded-full bg-brand text-xs font-black text-white">{step}</span>
+                    <span className="text-xs font-black text-brand-dark">{text}</span>
+                  </div>
                 ))}
               </div>
             </div>

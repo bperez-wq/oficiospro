@@ -137,6 +137,9 @@ export default function BolsaPage() {
         <p className="mt-2 max-w-2xl text-base font-semibold leading-7 text-muted">
           Guarda especialistas, créditos y solicitudes para compararlos con calma antes de confirmar.
         </p>
+        <p className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-full bg-white px-3.5 py-1.5 text-xs font-black text-brand-dark shadow-soft">
+          La disponibilidad se confirma antes de reservar · todo cobro adicional requiere tu aprobación.
+        </p>
 
         {!loaded ? (
           <div className="mt-8 grid gap-3 lg:max-w-3xl" aria-hidden>
