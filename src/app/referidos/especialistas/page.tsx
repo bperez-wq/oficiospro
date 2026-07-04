@@ -49,9 +49,13 @@ export default function SpecialistReferralsPage() {
 
       {/* HERO */}
       <Reveal delay={0}>
-      <section className="grid items-center gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+      <section className="relative isolate grid items-center gap-8 overflow-hidden rounded-[32px] border border-brand/10 bg-gradient-to-br from-brand-soft via-white to-sun-soft p-7 md:p-10 lg:grid-cols-[1.05fr_0.95fr]">
+        <div aria-hidden className="hero-aura pointer-events-none absolute inset-0 -z-10 opacity-60" />
         <div>
-          <p className="eyebrow">Referidos de especialistas</p>
+          <p className="eyebrow-pill inline-flex items-center gap-2">
+            <span aria-hidden className="pulse-dot text-brand" />
+            Recomienda y gana reconocimiento
+          </p>
           <h1 className="text-4xl font-black leading-[1.05] tracking-tight text-ink md:text-5xl">
             Invita a buenos especialistas y fortalece la red OficiosPro.
           </h1>

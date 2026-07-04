@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { TranslatedAppHero } from "@/components/TranslatedAppHero";
+import { PremiumPhotoHero } from "@/components/PremiumPhotoHero";
 import { CreditExplainer } from "@/components/CreditExplainer";
 import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { ConversionButton } from "@/components/ConversionModal";
@@ -27,7 +27,7 @@ const comparisonMeta: { credits: number; image: string }[] = [
 ];
 
 export function ClubHogarContent() {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
   const c = clubHogarContent[locale] ?? clubHogarContent.es;
   const discount = defaultCommercialConfig.subscriberDiscountCredits;
   const clientPlans = subscriptionPlans.filter((plan) => plan.audience === "cliente");
@@ -44,17 +44,43 @@ export function ClubHogarContent() {
 
   return (
     <>
-      <TranslatedAppHero pageKey="clubHogar">
-        <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-primary">
+      <PremiumPhotoHero
+        eyebrow={t("pages.clubHogar.eyebrow")}
+        title={t("pages.clubHogar.title")}
+        subtitle={t("pages.clubHogar.subtitle")}
+        image="/assets/hero-hogar.webp"
+        tone="brand"
+        chips={[`${featuredPlan.monthlyCredits} créditos al mes`, `Acumulables hasta ${featuredPlan.accumulatesMonths} meses`, `−${discount} créditos por servicio`, "Pago protegido al finalizar"]}
+        footnote="Los créditos y descuentos mostrados corresponden a la configuración vigente de los planes."
+        aside={
+          <div className="relative">
+            <div className="rounded-card bg-white p-6 text-ink shadow-lift">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-wide text-muted">Plan destacado</p>
+                <span className="rounded-full bg-sun-soft px-3 py-1 text-[11px] font-black text-sun-dark">{featuredPlan.name}</span>
+              </div>
+              <strong className="mt-2 block text-4xl font-black">{formatCLP(featuredPlan.priceCLP)}<span className="text-base font-black text-muted">/mes</span></strong>
+              <div className="mt-4 rounded-2xl bg-brand-soft p-4">
+                <span className="text-sm font-black text-brand-dark">Créditos mensuales</span>
+                <strong className="block text-3xl font-black text-ink">{featuredPlan.monthlyCredits}</strong>
+                <span className="text-xs font-bold text-muted">Acumulables hasta {featuredPlan.accumulatesMonths} meses</span>
+              </div>
+              <a href="#planes" className="btn-primary mt-5 w-full">Comparar planes</a>
+              <p className="mt-3 text-xs font-bold leading-5 text-muted">Compara con calma: el detalle de cada plan está más abajo, sin letra chica.</p>
+            </div>
+          </div>
+        }
+      >
+        <ConversionButton type="consulta_general" sourceButton="Usar créditos Club Hogar" className="btn-sun shine">
           {c.heroUseCredits}
         </ConversionButton>
-        <ConversionButton type="lead_cliente" sourceButton="Crear cuenta Club Hogar" className="btn-secondary">
+        <ConversionButton type="lead_cliente" sourceButton="Crear cuenta Club Hogar" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
           {c.heroCreateAccount}
         </ConversionButton>
-        <CreditsHelpTrigger className="text-sm font-black text-brand-dark underline underline-offset-2 hover:opacity-80">
+        <CreditsHelpTrigger className="text-sm font-black text-white underline underline-offset-2 hover:opacity-80">
           {c.heroCreditsHelp}
         </CreditsHelpTrigger>
-      </TranslatedAppHero>
+      </PremiumPhotoHero>
 
       <VisualRail eyebrow={c.railEyebrow} title={c.railTitle} text={c.railText}>
         <div className="grid gap-3 sm:grid-cols-3">

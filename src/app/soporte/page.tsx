@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { ConversionButton } from "@/components/ConversionModal";
 import { EmptyState } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
+import { PremiumPhotoHero } from "@/components/PremiumPhotoHero";
 import { VisualFaqAccordion, type FaqItem } from "@/components/VisualFaqAccordion";
 import { buildPublicRouteMetadata } from "@/lib/seo/baseRouteMetadata";
 import { Reveal } from "@/components/Reveal";
@@ -15,7 +16,7 @@ export const metadata = buildPublicRouteMetadata({
 
 const supportTopics = ["Créditos", "Reservas", "Pagos", "Adicionales", "Documentos", "Cuenta"];
 
-const supportBlocks: { icon: ReactNode; image: string; imageAlt: string; title: string; detail: string; faqs: FaqItem[] }[] = [
+const supportBlocks: { anchor: string; icon: ReactNode; image: string; imageAlt: string; title: string; detail: string; faqs: FaqItem[] }[] = [
   {
     icon: (
       <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
@@ -25,6 +26,7 @@ const supportBlocks: { icon: ReactNode; image: string; imageAlt: string; title: 
     ),
     image: "/assets/oficios/pintura/pintura-interior-01.jpg",
     imageAlt: "Pintor realizando un trabajo de interior en un hogar",
+    anchor: "soy-cliente",
     title: "Soy cliente",
     detail: "Reservas, créditos y pago protegido",
     faqs: [
@@ -54,6 +56,7 @@ const supportBlocks: { icon: ReactNode; image: string; imageAlt: string; title: 
     ),
     image: "/assets/oficios/carpinteria/carpinteria-taller-01.jpg",
     imageAlt: "Carpintero trabajando en su taller",
+    anchor: "soy-especialista",
     title: "Soy especialista",
     detail: "Postulación, perfil y pagos",
     faqs: [
@@ -84,6 +87,7 @@ const supportBlocks: { icon: ReactNode; image: string; imageAlt: string; title: 
     ),
     image: "/assets/oficios/electricidad/electricidad-medidor-01.jpg",
     imageAlt: "Técnico revisando un medidor en una instalación comercial",
+    anchor: "soy-empresa",
     title: "Soy empresa o comunidad",
     detail: "Cuenta corporativa y facturación",
     faqs: [
@@ -108,30 +112,41 @@ export default function SupportPage() {
     <main className="section grid gap-8">
       <PlatformNav />
       <Reveal delay={0}>
-      <section className="overflow-hidden rounded-[32px] border border-line bg-white shadow-card">
-        <div className="surface-grid p-6 md:p-10">
-          <p className="eyebrow">Soporte</p>
-          <h1 className="max-w-4xl text-4xl font-black leading-tight text-ink md:text-6xl">¿En qué te ayudamos?</h1>
-          <p className="mt-4 max-w-2xl text-base font-semibold leading-7 text-muted md:text-lg">
-            Ayuda para reservar, usar créditos, postular como especialista o coordinar mantenciones de empresas y comunidades.
-          </p>
-          <div className="mt-5 flex flex-wrap gap-2">
-            {supportTopics.map((topic) => (
-              <span key={topic} className="chip bg-brand-soft text-brand-dark">
-                {topic}
-              </span>
+      <PremiumPhotoHero
+        eyebrow="Soporte con seguimiento humano"
+        title="¿En qué te ayudamos?"
+        subtitle="Ayuda para reservar, usar créditos, postular como especialista o coordinar mantenciones de empresas y comunidades."
+        image="/assets/oficios/equipo/equipo-mujeres-planos-01.jpg"
+        tone="brand"
+        chips={supportTopics}
+        footnote="En etapa piloto preferimos tomar tu caso con una persona real antes que prometer respuestas automáticas."
+        aside={
+          <nav aria-label="Ir directo a tu tipo de ayuda" className="grid gap-2.5 rounded-card bg-white/10 p-4 backdrop-blur">
+            <p className="px-1 text-xs font-black uppercase tracking-wide text-white/70">Ir directo a</p>
+            {supportBlocks.map((block) => (
+              <a
+                key={block.anchor}
+                href={`#${block.anchor}`}
+                className="group flex items-center gap-3 rounded-2xl bg-white p-3.5 text-ink shadow-sm transition hover:-translate-y-0.5 hover:shadow-card"
+              >
+                <span aria-hidden className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-soft text-brand-dark">{block.icon}</span>
+                <span className="min-w-0">
+                  <strong className="block text-sm">{block.title}</strong>
+                  <span className="block truncate text-xs font-bold text-muted">{block.detail}</span>
+                </span>
+                <span aria-hidden className="ml-auto font-black text-brand-dark transition group-hover:translate-x-0.5">→</span>
+              </a>
             ))}
-          </div>
-          <div className="mt-7 flex flex-wrap gap-3">
-            <ConversionButton type="consulta_general" sourceButton="Contactar soporte" className="btn-primary shine">
-              Contactar soporte
-            </ConversionButton>
-            <ConversionButton type="consulta_general" sourceButton="Quiero que me contacten soporte" className="btn-secondary">
-              Quiero que me contacten
-            </ConversionButton>
-          </div>
-        </div>
-      </section>
+          </nav>
+        }
+      >
+        <ConversionButton type="consulta_general" sourceButton="Contactar soporte" className="btn-sun shine">
+          Contactar soporte
+        </ConversionButton>
+        <ConversionButton type="consulta_general" sourceButton="Quiero que me contacten soporte" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
+          Quiero que me contacten
+        </ConversionButton>
+      </PremiumPhotoHero>
       </Reveal>
 
       <Reveal delay={70}>
@@ -161,7 +176,7 @@ export default function SupportPage() {
       <Reveal delay={140}>
       <section className="grid items-start gap-5 lg:grid-cols-3">
         {supportBlocks.map((block) => (
-          <article key={block.title} className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft">
+          <article key={block.title} id={block.anchor} className="overflow-hidden rounded-[28px] border border-line bg-white shadow-soft scroll-mt-28">
             <div className="relative h-24">
               <img src={block.image} alt={block.imageAlt} loading="lazy" className="h-full w-full object-cover" />
               <div aria-hidden className="absolute inset-0 bg-gradient-to-t from-ink/60 to-ink/10" />
