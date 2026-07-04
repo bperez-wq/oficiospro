@@ -1,8 +1,8 @@
-# Registro publico externo de especialistas certificados
+# Registro publico externo de personas certificadas
 
 ## Proposito
 
-OficiosPro puede ayudar a usuarios a descubrir que existen especialistas certificados en fuentes publicas, partiendo por instaladores SEC. Esta capa no reemplaza la validacion operacional de OficiosPro ni convierte un registro publico en un perfil activo.
+OficiosPro puede ayudar a usuarios a descubrir que existen personas certificadas en fuentes publicas, partiendo por instaladores SEC. Esta capa no reemplaza la validacion operacional de OficiosPro ni convierte un registro publico en un perfil activo.
 
 La primera version es solo un prototipo no indexable con datos ficticios. No se debe cargar una base masiva sin revision legal previa.
 
@@ -39,9 +39,9 @@ La primera version es solo un prototipo no indexable con datos ficticios. No se 
 
 Usar:
 
-- "Registro publico externo".
-- "Aun no activo en OficiosPro".
-- "Soy este especialista".
+- "Ficha informativa no reclamada".
+- "Verificado en fuente publica".
+- "Activar/Reclamar perfil".
 - "Activar mi perfil".
 - "Activar mi vitrina".
 - "Actualizar mi informacion".
@@ -75,23 +75,20 @@ Una referencia publica externa de empresa tampoco debe mostrar email, telefono, 
 
 ## Estados
 
-- `public_reference`: referencia publica externa, no activa en OficiosPro.
-- `activation_requested`: el especialista pidio activar su perfil o vitrina.
-- `active_profile_created`: se creo perfil OficiosPro.
-- `verified_by_oficiospro`: OficiosPro completo validacion operacional.
-- `update_requested`: se solicito actualizar informacion.
-- `removal_requested`: se solicito retiro.
-- `opted_out`: el registro fue excluido por solicitud.
-- `archived`: registro archivado por antiguedad, error o decision operacional.
+- `UNCLAIMED_PUBLIC_REFERENCE`: ficha informativa no reclamada, no activa en OficiosPro.
+- `CLAIMED_PROFESSIONAL_PROFILE`: perfil de persona natural activado por el titular.
+- `COMPANY_SHOWCASE`: vitrina de empresa prestadora, separada de la certificacion personal.
+- `SUSPENDED`: perfil o vitrina suspendida.
+- `HIDDEN_BY_REQUEST`: ficha oculta por solicitud o revision de titular.
 
 ## Reglas de UI
 
-- Cada ficha debe mostrar el badge "Registro publico externo".
-- Cada ficha inicial debe mostrar "Aun no activo en OficiosPro".
+- Cada ficha debe mostrar el badge "Ficha informativa no reclamada".
+- Cada ficha inicial debe estar en estado `UNCLAIMED_PUBLIC_REFERENCE`.
 - No debe haber botones "Cotizar" o "Reservar" en referencias no activas.
-- Debe existir un boton "Validar en fuente oficial".
-- Debe existir un CTA "Soy este especialista".
-- Debe existir un CTA "Solicitar actualizacion o retiro".
+- Debe existir un boton "Verificar en SEC".
+- Debe existir un CTA "Activar/Reclamar perfil".
+- Debe existir un CTA "Reportar error o solicitar correccion/eliminacion".
 - Los datos ficticios de prototipo deben estar marcados como tales.
 
 ## Indexacion

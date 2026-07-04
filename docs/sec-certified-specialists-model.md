@@ -25,32 +25,28 @@ Campos:
 | Campo | Uso | Regla |
 | --- | --- | --- |
 | `id` | Identificador interno | No debe contener RUT completo |
-| `displayName` | Nombre publico visible | Debe venir de fuente autorizada o ser ficticio en prototipo |
+| `fullName` / `displayName` | Nombre publico visible | Debe venir de fuente autorizada o ser fake data en prototipo |
 | `providerType` | Tipo de prestador | `natural_person` o `legal_entity` |
 | `certificationAuthority` | Autoridad certificadora | Inicialmente `SEC` |
-| `certificationName` | Certificacion | Ej. instalador electrico autorizado SEC |
-| `specialty` | Especialidad legible | No debe inferir servicios no certificados |
+| `serviceType` | Rubro u oficio | `electrico`, `gas` u otro autorizado |
+| `licenseClass` | Clase/tipo de licencia | Solo si existe en fuente publica |
 | `commune` | Comuna | Permitido |
 | `region` | Region | Permitido |
-| `status` | Estado OficiosPro | Ver estados |
+| `profileStatus` | Estado OficiosPro | Ver estados |
 | `sourceName` | Nombre de fuente | Ej. Registro publico SEC |
-| `officialSourceUrl` | URL fuente oficial | Generica o especifica si legalmente corresponde |
-| `prototypeOnly` | Marca de prototipo | `true` para datos ficticios |
-| `legalReviewRequired` | Bloqueo legal | `true` hasta aprobacion |
-| `lastReviewedAt` | Fecha de revision | Auditoria operacional |
+| `sourceUrl` | URL fuente oficial | Generica o especifica si legalmente corresponde |
+| `fakeData` | Marca de prototipo | `true` para seeds ficticios |
+| `indexable` | Control SEO | `false` para fichas no reclamadas |
+| `lastVerifiedAt` | Fecha de revision | Auditoria operacional |
 
 ## Estados
 
 | Estado | Significado | Accion permitida |
 | --- | --- | --- |
-| `public_reference` | Referencia externa, aun no activa | Validar fuente, Soy este especialista, Solicitar actualizacion o retiro |
-| `activation_requested` | El especialista pidio activar | Revision interna |
-| `active_profile_created` | Perfil creado | Puede pasar al flujo normal si cumple reglas |
-| `verified_by_oficiospro` | Validado por OficiosPro | Puede mostrarse como perfil activo separado |
-| `update_requested` | Cambio solicitado | Bloquear o revisar campos |
-| `removal_requested` | Retiro solicitado | Retirar u ocultar mientras se revisa |
-| `opted_out` | Excluido por solicitud | No mostrar publicamente |
-| `archived` | Archivado | No mostrar publicamente |
+| `UNCLAIMED_PUBLIC_REFERENCE` | Ficha informativa no reclamada | Verificar en SEC, Activar/Reclamar perfil, Reportar error/correccion/eliminacion |
+| `CLAIMED_PROFESSIONAL_PROFILE` | Perfil activado por persona natural | Puede pasar al flujo normal si cumple consentimiento y reglas |
+| `SUSPENDED` | Suspendido | No mostrar acciones comerciales |
+| `HIDDEN_BY_REQUEST` | Oculto por solicitud | No mostrar publicamente mientras se revisa |
 
 ## Datos sensibles excluidos
 
@@ -68,7 +64,7 @@ Si en una carga interna futura se necesita guardar datos de trazabilidad, debe s
 
 ## Activacion de especialista
 
-CTA publico: "Soy este especialista".
+CTA publico: "Activar/Reclamar perfil".
 
 Flujo esperado para persona natural:
 
@@ -94,7 +90,7 @@ Regla: una empresa no debe aparecer como "especialista verificado" por el solo h
 
 ## Actualizacion o retiro
 
-CTA publico: "Solicitar actualizacion o retiro".
+CTA publico: "Reportar error o solicitar correccion/eliminacion".
 
 Toda solicitud debe registrar:
 

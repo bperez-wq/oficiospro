@@ -19,6 +19,11 @@ import {
   hitRateLimit,
   rateLimitKeys,
 } from "./lib/rateLimit";
+import {
+  assertRealSecImportAllowed,
+  externalRegistryActionError,
+  isExternalRegistryPath,
+} from "./lib/externalRegistryGuard";
 
 type AssetsBinding = {
   fetch(request: Request): Promise<Response>;
@@ -59,6 +64,7 @@ type Env = {
   LEADS_FROM_EMAIL?: string;
   LEADS_REPLY_TO_EMAIL?: string;
   CRM_AUTO_SYNC?: string;
+  ALLOW_REAL_SEC_IMPORT?: string;
 };
 
 type Plan = {
@@ -211,6 +217,19 @@ export default {
       try {
         if (url.pathname === "/api/health" && request.method === "GET") {
           return withCors(healthCheck(env));
+        }
+        if (url.pathname === "/api/privacy/data-subject-requests" && request.method === "POST") {
+          return withCors(await createDataSubjectRequest(request, env));
+        }
+        if (url.pathname === "/api/admin/external-registry/sec/import" && request.method === "POST") {
+          const auth = await requireAdmin(request, env);
+          if (auth) return withCors(auth);
+          try {
+            assertRealSecImportAllowed(env.ALLOW_REAL_SEC_IMPORT);
+          } catch (error) {
+            throw new SafeHttpError(403, error instanceof Error ? error.message : "real_sec_import_blocked_pending_legal_review");
+          }
+          return withCors(json({ ok: false, error: "real_sec_import_requires_approved_importer" }, 501));
         }
         if ((url.pathname === "/api/auth/admin-login" || url.pathname === "/api/admin/auth/login") && request.method === "POST") {
           return withCors(await loginAdmin(request, env));
@@ -365,8 +384,8 @@ export default {
       return env.ASSETS.fetch(new Request(fallbackUrl, request));
     }
     const assetResponse = await env.ASSETS.fetch(request);
-    if (assetResponse.status !== 404) return withSecurityHeaders(assetResponse);
-    return withSecurityHeaders(assetResponse);
+    if (assetResponse.status !== 404) return withRouteSecurityHeaders(assetResponse, url.pathname);
+    return withRouteSecurityHeaders(assetResponse, url.pathname);
   },
 };
 
@@ -430,6 +449,10 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
 
   const leadType = forcedType ?? body.leadType;
   if (!leadType || !isLeadType(leadType)) return json({ ok: false, error: "invalid_lead_type" }, 400);
+  if (leadType === "booking_request") {
+    const blocked = externalRegistryActionError("booking", { ...body, ...(body.payload ?? {}) });
+    if (blocked) throw new SafeHttpError(403, blocked);
+  }
   await enforceRateLimit(request, `lead:${leadType}`, { email: body.email, phone: body.phone, limit: leadType === "specialist_application" ? 5 : 10, windowMs: 60 * 60 * 1000 });
   validateLeadPayload(body, leadType);
   const suspiciousFastSubmit = typeof body.formElapsedMs === "number" && body.formElapsedMs > 0 && body.formElapsedMs < 2000;
@@ -488,6 +511,55 @@ async function createLead(request: Request, env: Env, forcedType?: LeadType) {
     emailError: emailResult.error ?? undefined,
     error: stored ? undefined : "database_not_configured",
   });
+}
+
+async function createDataSubjectRequest(request: Request, env: Env) {
+  const body = await readFlexibleBody(request);
+  const requesterName = sanitizeText(body.requesterName, 160);
+  const requesterEmail = sanitizeEmail(textFrom(body.requesterEmail));
+  const requestType = sanitizeText(body.requestType, 40);
+  const message = sanitizeText(body.message, 3000);
+  if (!requesterName || !requesterEmail || !requestType || !message) throw new SafeHttpError(400, "missing_required_fields");
+
+  await enforceRateLimit(request, "privacy:data-subject-request", { email: requesterEmail, limit: 4, windowMs: 60 * 60 * 1000 });
+  const lead = normalizeLead(
+    {
+      leadType: "contact_message",
+      fullName: requesterName,
+      email: requesterEmail,
+      service: "Solicitud de privacidad",
+      problemDescription: message,
+      sourcePage: "/privacidad/solicitudes",
+      sourceComponent: "DataSubjectRequestForm",
+      sourceButton: "submit_data_subject_request",
+      consentContact: true,
+      payload: {
+        dataSubjectRequest: true,
+        requestType,
+        status: "RECEIVED",
+        professionalId: sanitizeText(body.professionalId, 160) ?? "",
+        companyId: sanitizeText(body.companyId, 160) ?? "",
+        source: sanitizeText(body.source, 120) ?? "",
+        registry: sanitizeText(body.registry, 80) ?? "",
+      },
+    },
+    "contact_message",
+    request.headers.get("user-agent") ?? "",
+  );
+
+  const stored = Boolean(env.DB);
+  if (env.DB) {
+    await insertLead(env.DB, lead);
+    await insertOperationalRecord(env.DB, lead);
+    await insertConversionEventRecord(env.DB, {
+      type: "data_subject_request_received",
+      source: "privacy",
+      page: "/privacidad/solicitudes",
+      payloadJson: JSON.stringify({ leadId: lead.id, requestType, professionalId: body.professionalId ?? "", companyId: body.companyId ?? "" }),
+    });
+  }
+  const emailResult = await notifyLead(env, lead);
+  return json({ ok: true, id: lead.id, stored, emailSent: emailResult.sent, emailError: emailResult.error ?? undefined });
 }
 
 async function listAdminLeads(request: Request, env: Env) {
@@ -765,6 +837,8 @@ async function createConversionEvent(request: Request, env: Env) {
 
 async function createVirtualQuoteRequest(request: Request, env: Env) {
   const body = await readJsonBody<Record<string, unknown>>(request);
+  const blocked = externalRegistryActionError("quotation", body);
+  if (blocked) throw new SafeHttpError(403, blocked);
   await enforceRateLimit(request, "virtual_quote:create", { email: textFrom(body.customerEmail), phone: textFrom(body.customerPhone), limit: 8, windowMs: 60 * 60 * 1000 });
   if (!env.DB) return json({ ok: false, stored: false, error: "database_not_configured" }, 503);
 
@@ -2189,6 +2263,16 @@ async function readLeadPayload(request: Request) {
   return readJsonBody<LeadPayload>(request);
 }
 
+async function readFlexibleBody(request: Request) {
+  const contentType = (request.headers.get("content-type") ?? "").toLowerCase();
+  if (contentType.includes("application/json")) return readJsonBody<Record<string, unknown>>(request);
+  if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+    const form = await request.formData();
+    return Object.fromEntries([...form.entries()].map(([key, value]) => [key, typeof value === "string" ? value : value.name]));
+  }
+  throw new SafeHttpError(415, "unsupported_content_type");
+}
+
 async function readJsonBody<T = Record<string, unknown>>(request: Request) {
   const contentType = request.headers.get("content-type") ?? "";
   if (!contentType.toLowerCase().includes("application/json")) throw new SafeHttpError(415, "unsupported_content_type");
@@ -3590,6 +3674,14 @@ function withCors(response: Response) {
   headers.set("Access-Control-Allow-Methods", "GET,POST,PATCH,OPTIONS");
   headers.set("Access-Control-Allow-Headers", "Content-Type,Authorization,x-admin-token,x-signature,x-request-id");
   return withSecurityHeaders(new Response(response.body, { status: response.status, statusText: response.statusText, headers }));
+}
+
+function withRouteSecurityHeaders(response: Response, pathname: string) {
+  const secured = withSecurityHeaders(response);
+  if (!isExternalRegistryPath(pathname)) return secured;
+  const headers = new Headers(secured.headers);
+  headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  return new Response(secured.body, { status: secured.status, statusText: secured.statusText, headers });
 }
 
 function withSecurityHeaders(response: Response) {

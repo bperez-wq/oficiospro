@@ -3,8 +3,8 @@ import { MarketplaceCard } from "@/components/DesignSystem";
 import { PlatformNav } from "@/components/PlatformNav";
 import { Reveal } from "@/components/Reveal";
 import {
-  externalCertifiedSpecialistPolicy,
-  externalCertifiedSpecialistsPrototype,
+  externalCertifiedRegistryPolicy,
+  externalCertifiedProfessionalsPrototype,
 } from "@/data/externalCertifiedSpecialists";
 import { buildSeoMetadata } from "@/lib/seo/metadata";
 
@@ -41,14 +41,15 @@ export default function SecExternalPublicRegistryPage() {
               Registro publico externo de instaladores SEC
             </h1>
             <p className="mt-5 max-w-3xl text-base font-semibold leading-7 text-muted md:text-lg">
-              Esta primera version prueba como OficiosPro podria mostrar referencias de especialistas certificados en
-              fuentes publicas, sin publicar datos personales de contacto y sin presentarlos como perfiles activos.
+              Esta primera version prueba como OficiosPro podria mostrar referencias de personas certificadas en
+              fuentes publicas, separando persona natural y empresa, sin publicar datos personales de contacto y sin
+              presentarlas como perfiles activos.
             </p>
           </div>
           <MarketplaceCard hover={false} className="border-amber-200 bg-amber-50">
             <p className="text-xs font-black uppercase text-amber-950">Uso prudente</p>
             <p className="mt-2 text-sm font-bold leading-6 text-amber-950">
-              Los registros visibles son ficticios y estan marcados como prototipo. La carga masiva de una base publica
+              Los registros visibles son fake data y estan marcados como prototipo. La carga masiva de una base publica
               requiere revision legal, criterios de minimizacion de datos y mecanismo de actualizacion o retiro.
             </p>
           </MarketplaceCard>
@@ -60,21 +61,21 @@ export default function SecExternalPublicRegistryPage() {
           <MarketplaceCard hover={false}>
             <p className="eyebrow">Campos permitidos</p>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">
-              Nombre, certificacion o especialidad, comuna y region. No se publica email, telefono, direccion exacta ni
-              RUT completo.
+              Nombre publico, rubro, clase de licencia si existe, comuna, region, fuente y fecha de ultima verificacion.
+              No se publica email, telefono, WhatsApp, direccion exacta, foto ni RUT completo.
             </p>
           </MarketplaceCard>
           <MarketplaceCard hover={false}>
             <p className="eyebrow">Estado inicial</p>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">
-              Todo registro parte como "Aun no activo en OficiosPro" y no habilita cotizar, reservar ni contacto directo.
+              Todo registro parte como ficha informativa no reclamada, noindex y sin acciones comerciales.
             </p>
           </MarketplaceCard>
           <MarketplaceCard hover={false}>
             <p className="eyebrow">Control del especialista</p>
             <p className="mt-2 text-sm font-bold leading-6 text-muted">
-              Cada ficha debe ofrecer "Soy este especialista" y "Solicitar actualizacion o retiro" antes de cualquier
-              operacion masiva.
+              Cada ficha debe ofrecer Activar/Reclamar perfil y Reportar error o solicitar correccion/eliminacion antes
+              de cualquier operacion masiva.
             </p>
           </MarketplaceCard>
         </section>
@@ -87,11 +88,11 @@ export default function SecExternalPublicRegistryPage() {
             <h2 className="text-3xl font-black text-ink">Prototipo con instaladores SEC referenciales</h2>
           </div>
           <span className="rounded-full bg-slate-100 px-4 py-2 text-xs font-black uppercase text-muted">
-            {externalCertifiedSpecialistsPrototype.length} registros de prueba
+            {externalCertifiedProfessionalsPrototype.length} registros de prueba
           </span>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
-          {externalCertifiedSpecialistsPrototype.map((specialist) => (
+          {externalCertifiedProfessionalsPrototype.map((specialist) => (
             <ExternalCertifiedSpecialistCard key={specialist.id} specialist={specialist} />
           ))}
         </div>
@@ -113,9 +114,9 @@ export default function SecExternalPublicRegistryPage() {
           ))}
         </div>
         <p className="mt-5 text-xs font-bold text-white/60">
-          Politica activa: {externalCertifiedSpecialistPolicy.initialRegistry}, noindex=
-          {externalCertifiedSpecialistPolicy.pageIsNoIndex ? "true" : "false"}, revision legal=
-          {externalCertifiedSpecialistPolicy.massiveImportRequiresLegalReview ? "required" : "not_required"}.
+          Politica activa: {externalCertifiedRegistryPolicy.initialRegistry}, noindex=
+          {externalCertifiedRegistryPolicy.unclaimedNoIndex ? "true" : "false"}, revision legal=
+          {externalCertifiedRegistryPolicy.massiveImportRequiresLegalReview ? "required" : "not_required"}.
         </p>
       </section>
     </main>
