@@ -18,6 +18,7 @@ const publicBaseRoutes = [
   { path: "/servicios", priority: 0.86, changefreq: "weekly" },
   { path: "/club-hogar", priority: 0.78, changefreq: "monthly" },
   { path: "/empresas", priority: 0.78, changefreq: "monthly" },
+  { path: "/comunidades", priority: 0.72, changefreq: "monthly" },
   { path: "/registro-especialista", priority: 0.74, changefreq: "monthly" },
   { path: "/especialistas-fundadores", priority: 0.72, changefreq: "monthly" },
   { path: "/instituciones", priority: 0.58, changefreq: "monthly" },

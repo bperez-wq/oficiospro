@@ -76,6 +76,27 @@ perfil completo, confiable y revisable; billion-dollar-backlog asigna a Claude
 - **Decisión**: continuar → cierre del loop (5/5 iteraciones evaluadas, 4
   implementadas, 1 descartada por diseño).
 
+## Loop 4b — Landing B2B comunidades (aprobado por Benjamin, implementado)
+
+- **Aprobación**: Benjamin aprobó la decisión 1 del loop ("test landing
+  específica" del billion-dollar backlog, pilar Demand).
+- **Evidencia**: no existía `/comunidades` como hub — solo las páginas SEO
+  `/comunidades/[servicio]` (portones, salas-de-bombas, camaras), que enlazaban
+  a `/empresas` genérico.
+- **Cambio**: nueva landing `src/app/comunidades/page.tsx` orientada a
+  administradores/comités/condominios: posicionamiento "red técnica externa
+  para la continuidad de tu comunidad", dolores frecuentes, bloque honesto
+  "Disponible hoy en el piloto / En construcción" (sin prometer SLA ni
+  cobertura), enlaces a los 3 servicios SEO existentes, pasos del piloto con
+  acompañamiento y `CompanyRequestForm` reutilizado (pipeline `company_request`
+  existente — cero cambios de worker). `/comunidades` agregado al sitemap.
+- **Métrica**: leads `company_request` originados en la landing
+  (sourceComponent CompanyRequestForm desde /comunidades); visitas a
+  /comunidades; avance de b2bDemandShare (hoy insufficient_data).
+- **Riesgo**: bajo — página nueva estática, formulario y endpoint ya operativos.
+- **Decisión**: continuar; siguiente paso natural es instrumentar la vista de
+  la landing como evento de conversión (handoff Codex, abajo).
+
 ## Patrones de benchmarks aplicados (sin copiar)
 
 - **Directorio reputacional**: perfil compartible como activo (pasaporte) — el
@@ -102,6 +123,9 @@ perfil completo, confiable y revisable; billion-dollar-backlog asigna a Claude
   checkout/payment intent (ver kaizen 2026-07-04-honest-trust-signals).
 - Instrumentar `profile_share` y `click_offer_services` por source en el panel
   `/admin/crm/acquisition` para que las métricas de este loop sean visibles.
+- Agregar evento de vista para `/comunidades` (tipo `community_landing_view` o
+  equivalente permitido por el worker) y distinguir en CRM los `company_request`
+  que nacen en esa landing, para medir el test B2B comunidades.
 - Storage privado R2 para documentos de identidad (sigue siendo el No-Go de
   escala a 1.000 especialistas).
 
