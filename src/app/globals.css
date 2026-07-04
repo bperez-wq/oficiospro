@@ -339,3 +339,19 @@ a {
     opacity: 0;
   }
 }
+
+/* Barra de acumulación (simulador de créditos). Crece desde la base; el
+   kill-switch global de prefers-reduced-motion la deja estática. */
+.op-grow {
+  transform-origin: bottom;
+  animation: op-grow-y 0.7s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+@keyframes op-grow-y {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
