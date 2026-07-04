@@ -9,6 +9,7 @@ import type { FlexibleService } from "@/data/flexiblePricing";
 import { addSpecialistToBagAndProceed, bagActionLabel } from "@/lib/bag";
 import { getPrimaryFlexibleService, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
+import { DEMO_PROFILE_BADGE, isDemoSpecialist } from "@/lib/specialists/demoProfile";
 import { getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 
 const shortBadgeLabels: Record<string, string> = {
@@ -66,8 +67,8 @@ export function SpecialistGridCard({
         />
         <div aria-hidden className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-ink/55 to-transparent" />
         <span className="absolute left-2.5 top-2.5 inline-flex items-center gap-1.5 rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-black text-brand-dark shadow-soft backdrop-blur">
-          <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />
-          {availabilityLabels[specialist.availability]}
+          {isDemoSpecialist(specialist) ? null : <span aria-hidden className={`h-1.5 w-1.5 rounded-full ${availabilityDotStyles[specialist.availability]}`} />}
+          {isDemoSpecialist(specialist) ? DEMO_PROFILE_BADGE : availabilityLabels[specialist.availability]}
         </span>
         <span
           role="img"

@@ -16,6 +16,7 @@ import { CreditsHelpTrigger } from "@/components/credits/CreditsExplainer";
 import { getBookingRequests, getSpecialistAvailabilityProfile } from "@/lib/bookingStorage";
 import { bookingPrimaryAction, getPrimaryFlexibleService, pricingDetail, pricingModeLabel, pricingSummary } from "@/lib/flexiblePricing";
 import { preserveSpecialistIntent } from "@/lib/intendedAction";
+import { DEMO_PROFILE_BADGE, isDemoSpecialist } from "@/lib/specialists/demoProfile";
 import { getServiceCreditPair, getSpecialistLevel, getTrustBadges } from "@/lib/trust";
 
 export function SpecialistCard({
@@ -106,7 +107,7 @@ export function SpecialistCard({
         />
         <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-ink/75 to-transparent" />
         <span className="absolute left-4 top-4 rounded-full bg-white/95 px-4 py-2 text-xs font-black text-brand-dark shadow-soft backdrop-blur">
-          {availabilityLabels[specialist.availability]}
+          {isDemoSpecialist(specialist) ? DEMO_PROFILE_BADGE : availabilityLabels[specialist.availability]}
         </span>
         <span
           role="img"

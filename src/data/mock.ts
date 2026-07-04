@@ -119,10 +119,12 @@ export type CreditTransaction = {
   date: string;
 };
 
+/* El enum de disponibilidad es declarativo (no hay agenda real conectada),
+ * por eso el copy visible nunca promete "ahora/hoy": siempre por confirmar. */
 export const availabilityLabels: Record<Availability, string> = {
-  now: "Disponible ahora",
-  today: "Disponible hoy",
-  tomorrow: "Disponible mañana",
+  now: "Disponibilidad por confirmar",
+  today: "Disponibilidad por confirmar",
+  tomorrow: "Disponibilidad por confirmar",
 };
 
 /* Imágenes neutras de trabajos para perfiles y galerías (sin rostros que
