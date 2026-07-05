@@ -13,6 +13,8 @@ export const acquisitionSourceIds = [
   "seo_trabajos",
   "referido_especialista",
   "campana_local",
+  "sec_mailing",
+  "sec_registro_publico",
 ] as const;
 
 export type AcquisitionSource = (typeof acquisitionSourceIds)[number];
@@ -48,6 +50,8 @@ export const acquisitionSourceLabels: Record<AcquisitionSource | "direct", strin
   seo_trabajos: "SEO trabajos",
   referido_especialista: "Referido especialista",
   campana_local: "Campana local",
+  sec_mailing: "Mailing SEC",
+  sec_registro_publico: "Registro público SEC",
 };
 
 export const institutionalSources: AcquisitionSource[] = ["omil", "sence", "chilevalora", "cft_ip", "liceo_tecnico"];
@@ -111,6 +115,11 @@ const sourceAliases: Record<string, AcquisitionSource> = {
   "referido": "referido_especialista",
   "seo": "seo_trabajos",
   "seo_jobs": "seo_trabajos",
+  // Funnel SEC: el mailing usa ?source=sec y las fichas del registro externo
+  // usan external_public_registry; sin estos alias la atribución caía a "direct".
+  "sec": "sec_mailing",
+  "sec_outreach": "sec_mailing",
+  "external_public_registry": "sec_registro_publico",
 };
 
 export function normalizeAcquisitionSource(value?: string | null): AcquisitionSource | "direct" {
