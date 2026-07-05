@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ContactTrustStrip } from "@/components/ContactTrustStrip";
 import { ConversionButton } from "@/components/ConversionModal";
 import { OperationalDashboardMock } from "@/components/OperationalDashboardMock";
-import { PageHero } from "@/components/PageHero";
+import { PremiumPhotoHero } from "@/components/PremiumPhotoHero";
 import { PageShell } from "@/components/PageShell";
 import { PremiumCard } from "@/components/PremiumCard";
 import { SectionHeader } from "@/components/SectionHeader";
@@ -59,19 +59,22 @@ export default function ImpactPage() {
   return (
     <PageShell className="pb-28 md:pb-24">
       <PlatformNav />
-      <PageHero
+      <PremiumPhotoHero
         eyebrow="Impacto OficiosPro"
         title="OficiosPro: infraestructura de confianza para el trabajo técnico en Chile"
         subtitle="Una plataforma preparada para profesionalizar el oficio, formalizar oportunidades y ordenar servicios técnicos con créditos, pago protegido, reputación y evidencia de trabajo."
-        badges={["Profesionalizar el oficio", "Formalizar oportunidades", "Pago protegido y evidencia"]}
+        image="/assets/oficios/equipo/equipo-mujeres-cascos-01.jpg"
+        tone="brand"
+        chips={["Profesionalizar el oficio", "Formalizar oportunidades", "Pago protegido y evidencia"]}
+        footnote="Construimos por etapas: cada capacidad se activa cuando la operación real la respalda."
       >
-        <ConversionButton type="lead_cliente" sourceButton="Impacto CTA hogares" className="btn-primary">
+        <ConversionButton type="lead_cliente" sourceButton="Impacto CTA hogares" className="btn-sun shine">
           Activar Club Hogar
         </ConversionButton>
-        <ConversionButton type="contacto_empresa" sourceButton="Impacto CTA empresas" className="btn-secondary">
+        <ConversionButton type="contacto_empresa" sourceButton="Impacto CTA empresas" className="btn-secondary border-white/25 bg-white/10 text-white hover:bg-white/20">
           Solicitar plan empresa
         </ConversionButton>
-      </PageHero>
+      </PremiumPhotoHero>
 
       <Reveal delay={0}>
       <section className="grid gap-4 md:grid-cols-4">
