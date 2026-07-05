@@ -21,6 +21,7 @@ const publicBaseRoutes = [
   { path: "/comunidades", priority: 0.72, changefreq: "monthly" },
   { path: "/registro-especialista", priority: 0.74, changefreq: "monthly" },
   { path: "/especialistas-fundadores", priority: 0.72, changefreq: "monthly" },
+  { path: "/sec", priority: 0.6, changefreq: "monthly" },
   { path: "/instituciones", priority: 0.58, changefreq: "monthly" },
   { path: "/referidos/especialistas", priority: 0.46, changefreq: "monthly" },
   { path: "/contacto", priority: 0.62, changefreq: "monthly" },
