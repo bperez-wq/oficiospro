@@ -45,6 +45,22 @@ Preview: 5/5 páginas con hero premium, imágenes resolviendo, chips y footnotes
 presentes, "Panel de Víctor Mendoza" ausente, 390px sin overflow, consola
 limpia. `npm.cmd run validate` ✅ · `build` ✅ · `wrangler --dry-run` ✅
 
+## Segundo pase (aprobado): agenda especialista + admin
+
+- **/agenda-especialista**: hero premium con foto de climatización; se elimina
+  el enlace del hero al perfil demo y el claim "Crear mi perfil verificado" →
+  "Completar mi Pasaporte" (tracked) + "Volver a mi panel"; footnote honesto
+  ("la disponibilidad que declares es referencial; cada reserva se confirma");
+  la card interna con lenguaje de developer ("Listo para backend / conectar
+  D1") pasa a lenguaje de especialista ("Conectada a tu Pasaporte").
+- **/admin** (root): el header pasa a consola de operación enterprise oscura
+  con pill "Operación interna OficiosPro" + pulso, y quick-links a CRM,
+  captación, salud del negocio y formalización. Solo JSX del header; cero
+  cambios en AdminPanel ni en lógica interna.
+- Verificado con sesión mock de especialista: hero, chips, footnote y CTA
+  presentes; 390px sin overflow real (una medición inicial dio falso positivo
+  por viewport a 0 y se re-midió); consola limpia; sesión QA eliminada.
+
 ## Próximo
 
 - Interiores de ClientDashboard/CompanyDashboard (demo-gated) podrían recibir
