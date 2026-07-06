@@ -28,7 +28,8 @@ El objetivo no es hacer mas cambios, sino hacer mejores cambios: pequenos, traza
 
 ### Codex
 
-- Implementa cambios en el repo.
+- Queda como apoyo tecnico puntual desde 2026-07-06 cuando Benjamin o Claude requieran Worker, D1, scripts, tests, release gates, pagos, auth, seguridad o integraciones.
+- Implementa cambios en el repo cuando el ciclo lo requiera.
 - Revisa codigo antes de modificar.
 - Mantiene cambios pequenos y verificables.
 - Ejecuta validaciones locales.
@@ -36,10 +37,12 @@ El objetivo no es hacer mas cambios, sino hacer mejores cambios: pequenos, traza
 
 ### Claude
 
+- Lidera la continuidad Kaizen de OficiosPro desde 2026-07-06.
 - Apoya UX, copy, flujos, jerarquia visual y consistencia de interfaz.
 - Propone mejoras incrementales sobre componentes existentes.
 - No debe rehacer pantallas completas si el objetivo es ajuste quirurgico.
 - Debe respetar Home, CRM, Bolsa, checkout, pagos, filtros y arquitectura actual.
+- Debe pedir apoyo tecnico a Codex cuando el ciclo toque Worker, D1, scripts, tests, pagos, auth, seguridad o integraciones sensibles.
 
 ### Grok
 

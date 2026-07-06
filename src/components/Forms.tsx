@@ -1606,8 +1606,8 @@ export function SpecialistRegisterForm() {
           : specialistSuccessMessage,
     );
     window.setTimeout(() => {
-      window.location.href = "/?postulacion=recibida";
-    }, 2500);
+      document.getElementById("registro-exito")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 150);
     } catch (error) {
       if (process.env.NODE_ENV === "development") console.error(error);
       trackSpecialistFunnelEvent("specialist_application_failed", "Crear perfil fundador", step, {
@@ -1626,6 +1626,7 @@ export function SpecialistRegisterForm() {
           Sitio web
           <input value={websiteTrap} onChange={(event) => setWebsiteTrap(event.target.value)} tabIndex={-1} autoComplete="off" />
         </label>
+        {!submitted ? (<>
         <div className="grid gap-2">
           <div className="flex items-center justify-between text-xs font-black uppercase tracking-wide text-muted">
             <span>Paso {step} de 6 · {specialistStepLabels[step - 1]}</span>
@@ -1690,6 +1691,11 @@ export function SpecialistRegisterForm() {
               {acquisition.trade ? ` para ${acquisition.trade.replace(/[-_]/g, " ")}` : ""}
               {acquisition.commune ? ` en ${acquisition.commune}` : ""}. Guardaremos este dato para seguimiento interno.
             </p>
+            {acquisition.source === "sec_mailing" || acquisition.source === "sec_registro_publico" ? (
+              <p className="mt-2 rounded-2xl bg-brand-soft p-3 text-sm font-bold leading-6 text-brand-dark">
+                Tu autorización SEC es tu mejor carta: marca la casilla SEC en Certificaciones antes de enviar y quedará destacada en tu perfil cuando el equipo la revise.
+              </p>
+            ) : null}
           </div>
         ) : null}
         {draftNotice ? <SuccessMessage>{draftNotice}</SuccessMessage> : null}
@@ -2017,9 +2023,10 @@ export function SpecialistRegisterForm() {
             )}
           </div>
         </div>
+        </>) : null}
 
         {submitted ? (
-          <div className="grid gap-5 rounded-3xl border border-brand/20 bg-gradient-to-br from-brand-soft to-emerald-50 p-6">
+          <div id="registro-exito" className="grid gap-5 rounded-3xl border border-brand/20 bg-gradient-to-br from-brand-soft to-emerald-50 p-6">
             <div className="text-center">
               <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-emerald-500 text-white">
                 <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" stroke="currentColor" strokeWidth={3}>
