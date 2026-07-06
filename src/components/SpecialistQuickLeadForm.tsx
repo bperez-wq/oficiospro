@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from "react";
 import { contactConfig, specialistWhatsappMessage, supportMailtoHref, whatsappHref } from "@/config/contactConfig";
-import type { AcquisitionContext } from "@/data/specialistAcquisition";
+import { founderRegistrationHref, type AcquisitionContext } from "@/data/specialistAcquisition";
 import { getAttributionContext, trackEvent } from "@/lib/analytics";
 import { DEFAULT_REGION_CODE, communeRegionCode, normalizeSearch, regionNameForCode, registrationServiceTypeOptions } from "@/lib/catalog";
 import { submitLead } from "@/lib/leadClient";
@@ -64,6 +64,7 @@ export function SpecialistQuickLeadForm({
   const [websiteTrap, setWebsiteTrap] = useState("");
   const [status, setStatus] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [saved, setSaved] = useState(false);
   const startedRef = useRef(false);
   const formId = useId();
   const channelHref = contactConfig.whatsappEnabled
@@ -221,11 +222,12 @@ export function SpecialistQuickLeadForm({
     }
 
     setSubmitting(false);
-    setStatus(
-      result.stored
-        ? "Ya guardamos tu avance. Puedes terminar tu perfil ahora o pedir ayuda."
-        : result.message,
-    );
+    if (result.stored) {
+      setSaved(true);
+      setStatus("");
+    } else {
+      setStatus(result.message);
+    }
   }
 
   function trackWhatsapp() {
@@ -280,14 +282,27 @@ export function SpecialistQuickLeadForm({
           ))}
         </datalist>
         <div className="flex flex-col gap-2 sm:flex-row">
-          <button className="btn-primary flex-1" type="submit" disabled={submitting}>
-            {submitting ? "Guardando..." : submitLabel}
+          <button className="btn-primary flex-1" type="submit" disabled={submitting || saved}>
+            {submitting ? "Guardando..." : saved ? "Datos guardados ✓" : submitLabel}
           </button>
           <a className="btn-secondary flex-1 text-center" href={channelHref} onClick={trackWhatsapp} target={contactConfig.whatsappEnabled ? "_blank" : undefined} rel={contactConfig.whatsappEnabled ? "noopener noreferrer" : undefined}>
             {contactConfig.whatsappEnabled ? "Hablar por WhatsApp" : "Escribir por email"}
           </a>
         </div>
       </form>
+      {saved ? (
+        <div className="mt-3 grid gap-2.5 rounded-2xl border border-brand/15 bg-brand-soft p-4">
+          <p className="text-sm font-black leading-6 text-brand-dark">
+            Listo, guardamos tus datos. Una persona del equipo te contactará, normalmente dentro de 48 h.
+          </p>
+          <a className="btn-primary text-center" href={founderRegistrationHref({ ...context, sourceDetail: "quick_lead_continue" })}>
+            Completar mi Pasaporte ahora
+          </a>
+          <p className="text-xs font-bold leading-5 text-brand-dark/80">
+            Tu avance ya quedó guardado: si continúas, el formulario parte con tus datos. También puedes esperar nuestro contacto, sin costo ni compromiso.
+          </p>
+        </div>
+      ) : null}
       {status ? <p className="mt-3 rounded-2xl bg-brand-soft p-3 text-sm font-black leading-6 text-brand-dark">{status}</p> : null}
       <p className="mt-3 text-xs font-bold leading-5 text-muted">
         No necesitas tener todo resuelto para postular. Revision humana en 48 h y sin promesas de trabajos garantizados.
